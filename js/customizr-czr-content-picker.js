@@ -1,4 +1,10 @@
+/* global _wpCustomizeNavMenusSettings, wpNavMenu, console */
+( function( api, wp, $ ) {
+	'use strict';
+
 var CZRInputMethods = CZRInputMethods || {};
+console.log(CZRInputMethods);
+
 $.extend( CZRInputMethods , {
     setupImageUploader : function() {
          var input  = this;
@@ -163,3 +169,5 @@ $.extend( CZRInputMethods , {
        return true;
   }
 });//$.extend
+
+})( wp.customize, wp, jQuery );

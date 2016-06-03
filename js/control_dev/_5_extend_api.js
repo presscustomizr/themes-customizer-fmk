@@ -12,6 +12,8 @@
   api.CZRStaticControl         = api.CZRBaseControl.extend( CZRStaticMethods || {} );
 
   api.CZRBackgroundControl     = api.CZRStaticControl.extend( CZRBackgroundMethods || {} );
+ 
+  api.CZRDummyContentPickerControl = api.CZRStaticControl.extend( CZRDummyContentPickerMethods || {} );
 
   api.CZRWidgetAreasControl    = api.CZRDynamicControl.extend( CZRWidgetAreasMethods || {} );
   api.CZRSocialControl         = api.CZRDynamicControl.extend( CZRSocialMethods || {} );
@@ -29,6 +31,7 @@
     czr_multiple_picker : api.CZRMultiplePickerControl,
     czr_layouts    : api.CZRLayoutControl,
     czr_background : api.CZRBackgroundControl,
+    czr_dummy_picker : api.CZRDummyContentPickerControl,
     czr_sektions   : api.CZRSektionsControl
   });
 

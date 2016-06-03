@@ -24,6 +24,7 @@ $.extend( CZRInputMethods , {
           select : 'setupSelect',
           upload : 'setupImageUploader',
           color : 'setupColorPicker',
+          content_picker : 'setupContentPicker'
         };
         if ( _.has( input.type_map, input.type ) ) {
           var _meth = input.type_map[input.type];
