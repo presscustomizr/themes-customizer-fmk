@@ -16,7 +16,6 @@
     padding: 10px 15px;
     height: auto;
     min-height: 20px;
-    width: 382px;
     line-height: 30px;
     overflow: hidden;
     word-wrap: break-word;
@@ -70,3 +69,16 @@
 .content-item-handle.item-added .item-add:before {
     content: "\f147";
 }
+
+.available-content-items-search.accordion-section.cannot-expand.open + .available-content-items-items {
+    display: none;
+}
+[data-input-type="content_picker"] ul.accordion-section-contents {
+    max-height: 300px;
+    overflow: auto;
+    width: 100%;
+}
+/*
+[data-input-type="content_picker"] .available-content-items-search:not(.open) ul.accordion-section-contents {
+	display: none !important;
+}*/

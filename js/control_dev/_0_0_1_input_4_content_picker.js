@@ -36,37 +36,62 @@ $.extend( CZRInputMethods , {
     if ( ! input.renderContentPickerTemplate() )
       return;
 
-   /* A single available menu item model. See PHP's WP_Customize_Nav_Menu_Item_Setting class.
-    *
-    * @constructor
-    * @augments Backbone.Model
-    */
-    this.czr_ContentItemModel = new api.Value();
-    this.czr_ContentItemModel.model = { id : '', title : '', object_type : '' };
+    input.pages = [];
 
     /* Setup Search */
     this.$search = this.container.find('.content-items-search');
-    this.$search.on(
-       'input keyup', input._debounce_search
-    );     
-
     this._debounce_search = _.debounce( input.czrSearch, 500 );
+    
+         
+    /* Binding */
+    _.bindAll( input, '_submit', '_debounce_search');
+    /* Bind select */
+    this.container.on('click', '.content-item-tpl', input._submit);
+    /* Bind search*/
+    this.$search.on('input keyup', input._debounce_search);  
+    /* First filling */
+    this.czrInitList();
 
-     /* First filling */
-     this.initList();
   },
-
   // Search input change handler.
   czrSearch: function( event ) {
-    console.log('cerco cerco cerco');
-    //TODO
+    var input = this,
+      $searchSection = input.container.find( '.available-content-items-search' ),
+      $otherSections = input.container.find( '.available-content-items .accordion-section' ).not( $searchSection );
+
+      if ( ! event ) {
+        return;
+      }
+
+      if ( input.searchTerm === event.target.value ) {
+        return;
+      }
+
+      if ( '' !== event.target.value && ! $searchSection.hasClass( 'open' ) ) {
+        $otherSections.fadeOut( 100 );
+        $searchSection.find( '.accordion-section-contents' ).slideDown( 'fast' );
+        $searchSection.addClass( 'open' );
+        $searchSection.find( '.clear-results' )
+          .prop( 'tabIndex', 0 )
+          .addClass( 'is-visible' );
+      } else if ( '' === event.target.value ) {
+        $searchSection.removeClass( 'open' );
+        $otherSections.show();
+        $searchSection.find( '.clear-results' )
+          .prop( 'tabIndex', -1 )
+          .removeClass( 'is-visible' );
+      }
+
+      input.searchTerm = event.target.value;
+      input.pages.search = 1;
+      input.czrDoSearch( 1, 'post_type', 'page');
   },
   // Get search results.
-  czrDoSearch: function( page ) {
+  czrDoSearch: function( page, type, object ) {
     var self = this, params,
-    $section = $( 'available-menu-items-search' ),
-    $content = $section.find( '.accordion-section-content' ),
-    itemTemplate = wp.template( 'available-menu-item' );
+    $section = self.container.find( '.available-content-items-search' ),
+    $content = $section.find( '.accordion-section-contents' ),
+    itemTemplate = wp.template( 'czr-content-item-view-content' );
 
     if ( self.currentRequest ) {
       self.currentRequest.abort();
@@ -96,9 +121,10 @@ $.extend( CZRInputMethods , {
         'page': page
     };
 
-    self.currentRequest = wp.ajax.post( 'search-available-menu-items-customizer', params );
+    self.currentRequest = wp.ajax.post( 'search-available-content-items-customizer', params );
 
     self.currentRequest.done(function( data ) {
+
       var items;
       if ( 1 === page ) {
         // Clear previous results as it's a new search.
@@ -108,10 +134,11 @@ $.extend( CZRInputMethods , {
       $content.attr( 'aria-busy', 'false' );
       $section.addClass( 'open' );
       self.loading = false;
-      items = new api.Menus.AvailableItemCollection( data.items );
-      self.collection.add( items.models );
-      items.each( function( menuItem ) {
-        $content.append( itemTemplate( menuItem.attributes ) );
+      //items = new api.Menus.AvailableItemCollection( data.items );
+      items = data.items;
+      //self.collection.add( items.models );
+      _.each( items, function( contentItem ) {
+        $content.append( itemTemplate( contentItem ) );
       } );
       if ( 20 > items.length ) {
         self.pages.search = -1; // Up to 20 posts and 20 terms in results, if <20, no more results for either.
@@ -143,26 +170,26 @@ $.extend( CZRInputMethods , {
   },
 
   // Render the individual items.
-  initList: function() {
+  czrInitList: function() {
     var input = this;
 
-    input.pages = 0;
-    input.loadItems( 'post_type', 'page' );
+    input.pages.p = 0;
+    input.czrLoadItems( 'post_type', 'page' );
   },
 
   // Load available menu items.
-  loadItems: function( type, object ) {
+  czrLoadItems: function( type, object ) {
     var self = this, params, request, itemTemplate;
     // availableMenuItemContainer;
     itemTemplate = wp.template( 'czr-content-item-view-content' );
 
-    if ( -1 === self.pages ) {
+    if ( -1 === self.pages.p ) {
       return;
     }
     //availableMenuItemContainer = $( '#available-menu-items-' + type + '-' + object );
     //availableMenuItemContainer.find( '.accordion-section-title' ).addClass( 'loading' );
     self.loading = true;
-      
+ 
     params = {
         //'customize-menus-nonce': api.settings.nonce['customize-menus'],
        'wp_customize': 'on',
@@ -173,26 +200,24 @@ $.extend( CZRInputMethods , {
     request = wp.ajax.post( 'load-available-content-items-customizer', params );
 
     request.done(function( data ) {
-      console.log(data.items);
-
       var items, typeInner;
           items = data.items;
       
       if ( 0 === items.length ) {
-        if ( 0 === self.pages) {
+        if ( 0 === self.pages.p) {
           //TODO: Treat no results
         }
-        self.pages = -1;
+        self.pages.p = -1;
         return;
       }
       
       //items = new api.Menus.AvailableItemCollection( items ); // @todo Why is this collection created and then thrown away?
       //self.collection.add( items.models );
-      typeInner = $('.available-content-items-items .accordion-section-contents');
+      typeInner = self.container.find('.available-content-items-items .accordion-section-contents[data-type="items"]');
       _.each( items, function( menuItem ) {
         typeInner.append( itemTemplate( menuItem ) );
       });
-      self.pages += 1;
+      self.pages.p += 1;
     });
       
     request.fail(function( data ) {
@@ -205,4 +230,43 @@ $.extend( CZRInputMethods , {
       self.loading = false;
     });
   },
+  
+  // Highlights a menu item.
+  select: function( menuitemTpl ) {
+    this.selected = $( menuitemTpl );
+    this.selected.siblings( '.menu-item-tpl' ).removeClass( 'selected' );
+    this.selected.addClass( 'selected' );
+  },
+
+  // Highlights a menu item on focus.
+  focus: function( event ) {
+    this.select( $( event.currentTarget ) );
+  },
+
+  // Submit handler for keypress and click on menu item.
+  _submit: function( event ) {
+
+    // Only proceed with keypress if it is Enter or Spacebar
+    if ( 'keypress' === event.type && ( 13 !== event.which && 32 !== event.which ) ) {
+      return;
+    }
+
+    this.submit( $( event.currentTarget ) );
+  },
+
+  // Adds a selected menu item to the menu.
+  submit: function(  contentitemTpl ) {
+
+      $( contentitemTpl ).find( '.content-item-handle' ).addClass( 'item-added' );
+      //If NOT MULTI
+      $( contentitemTpl ).siblings().find( '.content-item-handle').removeClass('item-added');
+      //All thsi will be handled in the future with a collection in which we enter with the item-id
+      //to retrieve all the other info.
+      this.container.find('input[data-type="content-picker"]').val(JSON.stringify([{
+        'id' : contentitemTpl.data( 'item-id' ).replace('post-', ''),
+        'type' : 'page', //static for now
+        'title' : contentitemTpl.find('span.item-title').text().trim()
+      }])).trigger('change');
+
+    },
 });//$.extend
