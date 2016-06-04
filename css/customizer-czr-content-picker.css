@@ -1,0 +1,72 @@
+.czr-sub-set[data-input-type="content_picker"] .customize-control-title {
+    width: 100%;
+}
+.czr-sub-set[data-input-type="content_picker"] .czr-input {
+    width: 100%;
+}
+.content-item-bar {
+    clear: both;
+    line-height: 1.5em;
+    position: relative;
+    margin: 9px 0 0;
+}
+.content-item-handle {
+    border: 1px solid #ddd;
+    position: relative;
+    padding: 10px 15px;
+    height: auto;
+    min-height: 20px;
+    width: 382px;
+    line-height: 30px;
+    overflow: hidden;
+    word-wrap: break-word;
+    box-sizing: border-box;
+}
+.czr-sub-set[data-input-type="content_picker"] span.item-title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 20px;
+    display: block;
+    margin-right: 0;
+    padding-left: 20px;
+}
+
+.czr-sub-set[data-input-type="content_picker"] span.item-type {
+    display: inline-block;
+    padding: 0;
+    color: #666;
+    font-size: 12px;
+    line-height: 18px;
+    padding-right: 0;
+    float: right;
+}
+.czr-sub-set[data-input-type="content_picker"] .item-add {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    color: #82878c;
+    width: 30px;
+    height: 38px;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    outline: 0;
+    cursor: pointer;
+}
+.wp-customizer [data-input-type="content_picker"] .content-item-handle:hover .item-add,
+.wp-customizer [data-input-type="content_picker"] .content-item-handle:hover {
+    color: #00a0d2;
+}
+.item-add:before {
+    content: "\f543";
+    position: relative;
+    left: 2px;
+    top: 3px;
+    display: inline-block;
+    height: 20px;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    font: 400 20px/1.05 dashicons;
+}
+.content-item-handle.item-added .item-add:before {
+    content: "\f147";
+}
