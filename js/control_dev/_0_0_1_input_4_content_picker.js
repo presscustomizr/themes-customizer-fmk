@@ -1,3 +1,4 @@
+/* Fix caching, select2 default one seems to not correctly work, or it doesn't what I think it should */
 var CZRInputMethods = CZRInputMethods || {};
 $.extend( CZRInputMethods , {
   setupContentPicker: function() {
@@ -5,9 +6,26 @@ $.extend( CZRInputMethods , {
 
     input.pages = [];
 
-    input.object = 'page';
-    input.type   = 'post_type';
-             
+    /* Dummy for the prototype purpose */
+    input.object = ['page']; //this.control.params.object_types  - array('page', 'post')
+    input.type   = 'post_type'; //this.control.params.type  - post_type
+
+    //setup initial value (/* TODO: treat multipicking */)
+    /*var picker_value = input.control.params.selected_content.content_picker;
+    console.log(input.control.params.selected_content);
+    if ( picker_value ) {
+      var _title = picker_value.title.length ? picker_value.title : '',
+          _id    = picker_value.id.length ? picker_value.id : '',
+          _type  = picker_value.type.length ? picker_value.type : '';  
+      console.log(_title);
+      if ( _id && _title && _type ){
+        console.log('here');
+        input.container.find('select').select2("data", 
+          { title: _title, id: _id, type: _type }
+        );
+      }
+    }*/
+    //binding             
     _.bindAll( input, 'submit');
 
     input.container.find('select').select2({
@@ -36,10 +54,18 @@ $.extend( CZRInputMethods , {
             object: input.object
           };
         },
+        transport: function (params, success, failure) {
+          var $request = $.ajax(params);
+
+          $request.then(success);
+          $request.fail(failure);
+
+          return $request;
+        },
         processResults: function (data, params) {
-          console.log(params);
           if ( ! data.success )
             return {results: [] };
+
           return {
             results: data.data.items,
             pagination: { more: data.data.items.length == 10 }
@@ -49,21 +75,21 @@ $.extend( CZRInputMethods , {
       templateSelection: input.czrFormatItem,
       templateResult: input.czrFormatItem,
       escapeMarkup: function (markup) { return markup; },
-      select: input.submit, // let our custom formatter work
    })
-   .on('select2:select', input.submit );
+   .on('select2:select', input.submit )
+   .on('select2:unselect', input.submit );
   },
   czrFormatItem: function (item) {
       if (item.loading) return item.title;
-      var markup = "<div class='select2-result-repository clearfix'>" +
-        "<div class='select2-result-repository__meta'>" +
-          "<div class='select2-result-repository__title'>" + item.title + "</div>";
+      var markup = "<div class='content-picker-item clearfix'>" +
+        "<div class='content-item-bar'>" +
+          "<span class='item-title'>" + item.title + "</span>";
 
       if (item.type_label) {
-        markup += "<div class='select2-result-repository__description'>" + item.type_label + "</div>";
+        markup += "<span class='item-type'>" + item.type_label + "</span>";
       }
 
-      markup += "</div>";
+      markup += "</div></div>";
 
       return markup;
   },
@@ -72,9 +98,15 @@ $.extend( CZRInputMethods , {
     var item = event.params.data;
 
     //If NOT MULTI
-    this.container.find('input[data-type="content-picker"]').val(JSON.stringify([{
+    //for the multi we need to match the removed one
+    if ( ! item.selected ) {
+      this.container.find('input').val('').trigger('change');
+    }else {
+      this.container.find('input').val(JSON.stringify([{
         'id'    : item.object_id,
         'type'  : item.object,
-    }])).trigger('change');
+        'title' : item.title
+      }])).trigger('change');
+    }
   },
 });//$.extend
