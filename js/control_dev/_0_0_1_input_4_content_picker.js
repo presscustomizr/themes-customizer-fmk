@@ -10,29 +10,18 @@ $.extend( CZRInputMethods , {
     input.object = ['page']; //this.control.params.object_types  - array('page', 'post')
     input.type   = 'post_type'; //this.control.params.type  - post_type
 
-    //setup initial value (/* TODO: treat multipicking */)
-    /*var picker_value = input.control.params.selected_content.content_picker;
-    console.log(input.control.params.selected_content);
-    if ( picker_value ) {
-      var _title = picker_value.title.length ? picker_value.title : '',
-          _id    = picker_value.id.length ? picker_value.id : '',
-          _type  = picker_value.type.length ? picker_value.type : '';  
-      console.log(_title);
-      if ( _id && _title && _type ){
-        console.log('here');
-        input.container.find('select').select2("data", 
-          { title: _title, id: _id, type: _type }
-        );
-      }
-    }*/
     //binding             
     _.bindAll( input, 'submit');
+
+    //setup selectedData
+    input.selectedData = [];//input.setupSelectedContents();
 
     input.container.find('select').select2({
       placeholder: {
         id: '-1', // the value of the option
         title: 'Select'
       },
+      data : input.selectedData,
       allowClear: true,
       ajax: {
         url: serverControlParams.AjaxUrl,
@@ -64,7 +53,7 @@ $.extend( CZRInputMethods , {
         },
         processResults: function (data, params) {
           if ( ! data.success )
-            return {results: [] };
+            return { results: [] };
 
           return {
             results: data.data.items,
@@ -74,13 +63,17 @@ $.extend( CZRInputMethods , {
       },
       templateSelection: input.czrFormatItem,
       templateResult: input.czrFormatItem,
+      closeOnSelect: false,
       escapeMarkup: function (markup) { return markup; },
    })
    .on('select2:select', input.submit )
    .on('select2:unselect', input.submit );
+
+   //input.setupSelectedContents();
   },
   czrFormatItem: function (item) {
-      if (item.loading) return item.title;
+      console.log(item);
+      if (item.loading) return item.text;
       var markup = "<div class='content-picker-item clearfix'>" +
         "<div class='content-item-bar'>" +
           "<span class='item-title'>" + item.title + "</span>";
@@ -93,6 +86,16 @@ $.extend( CZRInputMethods , {
 
       return markup;
   },
+  setupSelectedContents : function() {
+    /* TODO */
+    var input = this,
+    _attributes = {
+      value : '2',
+      title: 'Sample page',
+      //selected: 'selected'
+    };
+    return [_attributes];
+  },
   // Adds a selected menu item to the menu.
   submit: function( event ) {
     var item = event.params.data;
@@ -102,10 +105,11 @@ $.extend( CZRInputMethods , {
     if ( ! item.selected ) {
       this.container.find('input').val('').trigger('change');
     }else {
+      console.log( this.container.find('select').select2('data'));
       this.container.find('input').val(JSON.stringify([{
         'id'    : item.object_id,
         'type'  : item.object,
-        'title' : item.title
+        'title'  : item.title
       }])).trigger('change');
     }
   },
