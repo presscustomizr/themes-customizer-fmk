@@ -3244,6 +3244,106 @@ $.extend( CZRSlideModuleMths, {
                 $( '.' + module.control.css_attr.view_title , item.container ).html( _title );
           }  
   }
+});//extends api.CZRDynModule
+
+var CZRWidgetSearchModuleMths = CZRWidgetSearchModuleMths || {};
+
+$.extend( CZRWidgetSearchModuleMths, {
+  initialize: function( id, options ) {
+          var module = this;
+          api.CZRModule.prototype.initialize.call( module, id, options );
+          $.extend( module, {
+                viewTemplateEl : 'czr-module-item-view',
+                viewContentTemplateEl : 'czr-module-widget-search-view-content',
+          } );
+          module.inputConstructor = api.CZRInput.extend( module.CZRWidgetSearchInputMths || {} );
+          module.itemConstructor = api.CZRItem.extend( module.CZRWidgetSearchItem || {} );
+          this.defaultItemModel = {
+              id : '',
+              title : 'Search: ',
+              'widget-title' : '',
+          };
+          module.savedItems = _.isEmpty( options.items ) ? [ module._initNewItem( module.defaultItemModel ) ] : options.items;
+
+          api.section( module.control.section() ).expanded.bind(function(to) {
+            if ( ! to || ! _.isEmpty( module.get() ) )
+              return;
+            module.ready();
+          });
+  },//initialize
+
+
+  CZRWidgetSearchInputMths : {
+          ready : function() {
+                var input = this;
+                input.bind('widget-title:changed', function(){
+                  input.updateItemTitle();
+                });
+                api.CZRInput.prototype.ready.call( input);
+          },
+          updateItemTitle : function( _new_val ) {
+                var input = this,
+                    item = this.item;
+
+                var _new_model  = _.clone( item.get() ),
+                    _new_title  = _new_model.title.substr(0, _new_model.title.indexOf(':') + 1) + _new_model['widget-title'];
+
+                $.extend( _new_model, { title : _new_title} );
+                item.set( _new_model );
+          },
+  },//CZRwidgetssInputMths
+  CZRWidgetSearchItem : {
+  }
+});//extends api.CZRDynModule
+
+var CZRWidgetCalendarModuleMths = CZRWidgetCalendarModuleMths || {};
+
+$.extend( CZRWidgetCalendarModuleMths, {
+  initialize: function( id, options ) {
+          var module = this;
+          api.CZRModule.prototype.initialize.call( module, id, options );
+          $.extend( module, {
+                viewTemplateEl : 'czr-module-item-view',
+                viewContentTemplateEl : 'czr-module-widget-calendar-view-content',
+          } );
+          module.inputConstructor = api.CZRInput.extend( module.CZRWidgetCalendarInputMths || {} );
+          module.itemConstructor = api.CZRItem.extend( module.CZRWidgetCalendarItem || {} );
+          this.defaultItemModel = {
+              id : '',
+              title : 'Calendar: ',
+              'widget-title' : '',
+          };
+          module.savedItems = _.isEmpty( options.items ) ? [ module._initNewItem( module.defaultItemModel ) ] : options.items;
+
+          api.section( module.control.section() ).expanded.bind(function(to) {
+            if ( ! to || ! _.isEmpty( module.get() ) )
+              return;
+            module.ready();
+          });
+  },//initialize
+
+
+  CZRWidgetCalendarInputMths : {
+          ready : function() {
+                var input = this;
+                input.bind('widget-title:changed', function(){
+                  input.updateItemTitle();
+                });
+                api.CZRInput.prototype.ready.call( input);
+          },
+          updateItemTitle : function( _new_val ) {
+                var input = this,
+                    item = this.item;
+
+                var _new_model  = _.clone( item.get() ),
+                    _new_title  = _new_model.title.substr(0, _new_model.title.indexOf(':') + 1) + _new_model['widget-title'];
+
+                $.extend( _new_model, { title : _new_title} );
+                item.set( _new_model );
+          },
+  },//CZRwidgetssInputMths
+  CZRWidgetCalendarItem : {
+  }
 });//BASE CONTROL CLASS
 
 var CZRBaseControlMths = CZRBaseControlMths || {};
@@ -3282,7 +3382,9 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_social_module    : api.CZRSocialModule,
                 czr_sektion_module    : api.CZRSektionModule,
                 czr_fp_module    : api.CZRFeaturedPageModule,
-                czr_slide_module    : api.CZRSlideModule
+                czr_slide_module    : api.CZRSlideModule,
+                czr_widget_search_module : api.CZRWidgetSearchModule,
+                czr_widget_calendar_module : api.CZRWidgetCalendarModule,
           };
 
           control.czr_Module = new api.Values();
@@ -3418,7 +3520,7 @@ $.extend( CZRMultiModuleControlMths, {
 
           console.log('MODULE COLLECTION, SAVED MODULES', control.savedModules);
           $.extend( control.moduleConstructors , {
-                  czr_text_module : api.CZRTextModule,
+                  czr_text_module          : api.CZRTextModule,
           });
 
           control.czr_Module = new api.Values();
@@ -3837,6 +3939,9 @@ $.extend( CZRBackgroundMths , {
   api.CZRFeaturedPageModule   = api.CZRDynModule.extend( CZRFeaturedPageModuleMths || {} );
   api.CZRTextModule           = api.CZRModule.extend( CZRTextModuleMths || {} );
 
+  api.CZRWidgetSearchModule   = api.CZRModule.extend( CZRWidgetSearchModuleMths || {} );
+  api.CZRWidgetCalendarModule = api.CZRModule.extend( CZRWidgetCalendarModuleMths || {} );
+
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );
   api.CZRBaseControl           = api.Control.extend( CZRBaseControlMths || {} );
   api.CZRBaseModuleControl    = api.CZRBaseControl.extend( CZRBaseModuleControlMths || {} );
@@ -3854,6 +3959,7 @@ $.extend( CZRBackgroundMths , {
 
         czr_modules : api.CZRBaseModuleControl,
         czr_multi_modules : api.CZRMultiModulesControl,
+        czr_single_module : api.CZRBaseModuleControl,
 
         czr_multiple_picker : api.CZRMultiplePickerControl,
         czr_layouts    : api.CZRLayoutControl

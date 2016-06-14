@@ -29,7 +29,9 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_social_module    : api.CZRSocialModule,
                 czr_sektion_module    : api.CZRSektionModule,
                 czr_fp_module    : api.CZRFeaturedPageModule,
-                czr_slide_module    : api.CZRSlideModule
+                czr_slide_module    : api.CZRSlideModule,
+                czr_widget_search_module : api.CZRWidgetSearchModule,
+                czr_widget_calendar_module : api.CZRWidgetCalendarModule,
           };
 
           control.czr_Module = new api.Values();
@@ -63,6 +65,7 @@ $.extend( CZRBaseModuleControlMths, {
   //@fired in control ready on api('ready')
   populateModuleCollection : function() {
           var control = this;
+
           //inits the collection with the saved modules
           //populates the collection with the saved module
           _.each( control.savedModules, function( module, key ) {

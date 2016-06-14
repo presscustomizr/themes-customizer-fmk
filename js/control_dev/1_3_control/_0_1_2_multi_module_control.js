@@ -25,7 +25,7 @@ $.extend( CZRMultiModuleControlMths, {
 
           //define a default Constructor
           $.extend( control.moduleConstructors , {
-                  czr_text_module : api.CZRTextModule,
+                  czr_text_module          : api.CZRTextModule,
           });
 
           control.czr_Module = new api.Values();
