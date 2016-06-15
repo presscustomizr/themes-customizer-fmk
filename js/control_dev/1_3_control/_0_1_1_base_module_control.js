@@ -31,9 +31,10 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_fp_module    : api.CZRFeaturedPageModule,
                 czr_slide_module    : api.CZRSlideModule,
                 /* widgets */
-                czr_widget_search_module   : api.CZRWidgetSearchModule,
-                czr_widget_calendar_module : api.CZRWidgetCalendarModule,
-                czr_widget_text_module     : api.CZRWidgetTextModule,
+                czr_widget_search_module     : api.CZRWidgetSearchModule,
+                czr_widget_calendar_module   : api.CZRWidgetCalendarModule,
+                czr_widget_text_module       : api.CZRWidgetTextModule,
+                czr_widget_categories_module : api.CZRWidgetCategoriesModule,
           };
 
           control.czr_Module = new api.Values();

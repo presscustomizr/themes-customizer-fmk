@@ -32,10 +32,11 @@
   api.CZRTextModule           = api.CZRModule.extend( CZRTextModuleMths || {} );
 
   //WIDGET MODULES
-  api.CZRWidgetModule         = api.CZRModule.extend( CZRWidgetModuleMths || {} );
-  api.CZRWidgetSearchModule   = api.CZRWidgetModule.extend( CZRWidgetSearchModuleMths || {} );
-  api.CZRWidgetCalendarModule = api.CZRWidgetModule.extend( CZRWidgetCalendarModuleMths || {} );
-  api.CZRWidgetTextModule     = api.CZRWidgetModule.extend( CZRWidgetTextModuleMths || {} );
+  api.CZRWidgetModule           = api.CZRModule.extend( CZRWidgetModuleMths || {} );
+  api.CZRWidgetSearchModule     = api.CZRWidgetModule.extend( CZRWidgetSearchModuleMths || {} );
+  api.CZRWidgetCalendarModule   = api.CZRWidgetModule.extend( CZRWidgetCalendarModuleMths || {} );
+  api.CZRWidgetTextModule       = api.CZRWidgetModule.extend( CZRWidgetTextModuleMths || {} );
+  api.CZRWidgetCategoriesModule = api.CZRWidgetModule.extend( CZRWidgetCategoriesModuleMths || {} );
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );
 
