@@ -38,7 +38,7 @@ $.extend( CZRWidgetPagesModuleMths, {
           setupSelect : function() {
                 var input   = this,
                     _model  = this.item.get(),
-                    _choices = serverControlParams.translatedStrings.selectPagesWidget;
+                    _choices = serverControlParams.selectPagesWidgetsortby;
 
                 //generates the options
                 _.each( _choices , function( value, k ) {

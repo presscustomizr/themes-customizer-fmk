@@ -3459,7 +3459,7 @@ $.extend( CZRWidgetPagesModuleMths, {
           setupSelect : function() {
                 var input   = this,
                     _model  = this.item.get(),
-                    _choices = serverControlParams.translatedStrings.selectPagesWidget;
+                    _choices = serverControlParams.selectPagesWidgetsortby;
                 _.each( _choices , function( value, k ) {
 
                       var _attributes = {
@@ -3498,6 +3498,38 @@ $.extend( CZRWidgetMetaModuleMths, {
   CZRWidgetMetaInputMths : {
   },//CZRwidgetssInputMths
   CZRWidgetMetaItem : {
+  }
+});//extends api.CZRWidgetModule
+
+var CZRWidgetArchivesModuleMths = CZRWidgetArchivesModuleMths || {};
+
+$.extend( CZRWidgetArchivesModuleMths, {
+  initialize: function( id, options ) {
+          var module = this;
+          api.CZRWidgetModule.prototype.initialize.call( module, id, options );
+          module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetArchivesInputMths || {} );
+          module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetArchivesItem || {} );
+
+  },//initialize
+  getItemTemplates : function() {
+          return {
+                viewTemplateEl : 'czr-module-item-view',
+                viewContentTemplateEl : 'czr-module-widget-archives-view-content',
+          };
+  },
+  getItemDefaultModel : function() {
+          return {
+              id                    : '',
+              title                 : 'Archives:',
+              type                  : 'WP_Widget_Archives',
+              'widget-title'        : '',
+              'widget-dropdown'     : false,
+              'widget-count'        : false,
+          };
+  },
+  CZRWidgetArchivesInputMths : {
+  },//CZRwidgetssInputMths
+  CZRWidgetArchivesItem : {
   }
 });//BASE CONTROL CLASS
 
@@ -3543,7 +3575,9 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_widget_text_module       : api.CZRWidgetTextModule,
                 czr_widget_categories_module : api.CZRWidgetCategoriesModule,
                 czr_widget_pages_module      : api.CZRWidgetPagesModule,
-                czr_widget_meta_module      : api.CZRWidgetMetaModule,
+                czr_widget_meta_module       : api.CZRWidgetMetaModule,
+                czr_widget_archives_module   : api.CZRWidgetArchivesModule,
+
           };
 
           control.czr_Module = new api.Values();
@@ -4104,6 +4138,7 @@ $.extend( CZRBackgroundMths , {
   api.CZRWidgetCategoriesModule = api.CZRWidgetModule.extend( CZRWidgetCategoriesModuleMths || {} );
   api.CZRWidgetPagesModule      = api.CZRWidgetModule.extend( CZRWidgetPagesModuleMths || {} );
   api.CZRWidgetMetaModule       = api.CZRWidgetModule.extend( CZRWidgetMetaModuleMths || {} );
+  api.CZRWidgetArchivesModule   = api.CZRWidgetModule.extend( CZRWidgetArchivesModuleMths || {} );
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );
   api.CZRBaseControl           = api.Control.extend( CZRBaseControlMths || {} );
