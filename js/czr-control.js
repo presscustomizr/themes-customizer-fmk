@@ -3427,6 +3427,55 @@ $.extend( CZRWidgetCategoriesModuleMths, {
   },//CZRwidgetssInputMths
   CZRWidgetCategoriesItem : {
   }
+});//extends api.CZRWidgetModule
+
+var CZRWidgetPagesModuleMths = CZRWidgetPagesModuleMths || {};
+
+$.extend( CZRWidgetPagesModuleMths, {
+  initialize: function( id, options ) {
+          var module = this;
+          api.CZRWidgetModule.prototype.initialize.call( module, id, options );
+          module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetPagesInputMths || {} );
+          module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetPagesItem || {} );
+
+  },//initialize
+  getItemTemplates : function() {
+          return {
+                viewTemplateEl : 'czr-module-item-view',
+                viewContentTemplateEl : 'czr-module-widget-pages-view-content',
+          };
+  },
+  getItemDefaultModel : function() {
+          return {
+              id                    : '',
+              title                 : 'Pages:',
+              type                  : 'WP_Widget_Pages',
+              'widget-title'        : '',
+              'widget-sortby'       : 'post-title',
+              'widget-exclude'      : '',
+          };
+  },
+  CZRWidgetPagesInputMths : {
+          setupSelect : function() {
+                var input   = this,
+                    _model  = this.item.get(),
+                    _choices = serverControlParams.translatedStrings.selectPagesWidget;
+                _.each( _choices , function( value, k ) {
+
+                      var _attributes = {
+                            value : k,
+                            html: value
+                          };
+                      if ( k == _model['widget-sortby'] )
+                        $.extend( _attributes, { selected : "selected" } );
+
+                      $( 'select[data-type="widget-sortby"]', input.container ).append( $('<option>', _attributes) );
+                });
+                $( 'select[data-type="widget-sortby"]', input.container ).select2();
+          },    
+  },//CZRwidgetssInputMths
+  CZRWidgetPagesItem : {
+  }
 });//BASE CONTROL CLASS
 
 var CZRBaseControlMths = CZRBaseControlMths || {};
@@ -3470,6 +3519,7 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_widget_calendar_module   : api.CZRWidgetCalendarModule,
                 czr_widget_text_module       : api.CZRWidgetTextModule,
                 czr_widget_categories_module : api.CZRWidgetCategoriesModule,
+                czr_widget_pages_module      : api.CZRWidgetPagesModule,
           };
 
           control.czr_Module = new api.Values();
@@ -4028,6 +4078,7 @@ $.extend( CZRBackgroundMths , {
   api.CZRWidgetCalendarModule   = api.CZRWidgetModule.extend( CZRWidgetCalendarModuleMths || {} );
   api.CZRWidgetTextModule       = api.CZRWidgetModule.extend( CZRWidgetTextModuleMths || {} );
   api.CZRWidgetCategoriesModule = api.CZRWidgetModule.extend( CZRWidgetCategoriesModuleMths || {} );
+  api.CZRWidgetPagesModule      = api.CZRWidgetModule.extend( CZRWidgetPagesModuleMths || {} );
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );
   api.CZRBaseControl           = api.Control.extend( CZRBaseControlMths || {} );

@@ -35,6 +35,7 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_widget_calendar_module   : api.CZRWidgetCalendarModule,
                 czr_widget_text_module       : api.CZRWidgetTextModule,
                 czr_widget_categories_module : api.CZRWidgetCategoriesModule,
+                czr_widget_pages_module      : api.CZRWidgetPagesModule,
           };
 
           control.czr_Module = new api.Values();
