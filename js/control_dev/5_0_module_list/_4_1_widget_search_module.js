@@ -1,4 +1,4 @@
-//extends api.CZRDynModule
+//extends api.CZRWidgetModule
 
 var CZRWidgetSearchModuleMths = CZRWidgetSearchModuleMths || {};
 

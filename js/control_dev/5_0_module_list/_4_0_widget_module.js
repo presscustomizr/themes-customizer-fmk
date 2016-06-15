@@ -1,4 +1,4 @@
-//extends api.CZRDynModule
+//extends api.CZRModule
 
 var CZRWidgetModuleMths = CZRWidgetModuleMths || {};
 
@@ -32,7 +32,7 @@ $.extend( CZRWidgetModuleMths, {
   getItemTemplates : function() {
           return {
                 viewTemplateEl : 'czr-module-item-view',
-                viewContentTemplateEl : 'czr-module-widget-search-view-content',
+                viewContentTemplateEl : 'czr-module-widget-view-content',
           };
   },
   getItemDefaultModel : function() {
@@ -52,14 +52,30 @@ $.extend( CZRWidgetModuleMths, {
                 });
                 api.CZRInput.prototype.ready.call( input);
           },
-      
+          setupIcheck : function( obj ) {
+                var input      = this;
+
+                $( 'input[type=checkbox]', input.container ).each( function(e) {
+                      if ( 0 !== $(this).closest('div[class^="icheckbox"]').length )
+                        return;
+
+                      $(this).iCheck({
+                            checkboxClass: 'icheckbox_flat-grey',
+                            checkedClass: 'checked',
+                            radioClass: 'iradio_flat-grey',
+                      })
+                      .on( 'ifChanged', function(e){
+                            $(this).val( false === $(this).is(':checked') ? 0 : 1 );
+                            $(e.currentTarget).trigger('change');
+                      });
+                });
+          },
           //ACTIONS ON slide-title change
           //Fired on 'slide-title:changed'
           //Don't fire in pre item case
           updateItemTitle : function( _new_val ) {
                 var input = this,
                     item = this.item;
-                console.log('sono qui');
                 var _new_model  = _.clone( item.get() ),
                     _new_title  = _new_model.title.substr(0, _new_model.title.indexOf(':') + 1) + _new_model['widget-title'];
 

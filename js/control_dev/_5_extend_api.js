@@ -35,6 +35,7 @@
   api.CZRWidgetModule         = api.CZRModule.extend( CZRWidgetModuleMths || {} );
   api.CZRWidgetSearchModule   = api.CZRWidgetModule.extend( CZRWidgetSearchModuleMths || {} );
   api.CZRWidgetCalendarModule = api.CZRWidgetModule.extend( CZRWidgetCalendarModuleMths || {} );
+  api.CZRWidgetTextModule     = api.CZRWidgetModule.extend( CZRWidgetTextModuleMths || {} );
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );
 
