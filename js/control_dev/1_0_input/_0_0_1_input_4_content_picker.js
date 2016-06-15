@@ -2,12 +2,11 @@
 var CZRInputMths = CZRInputMths || {};
 $.extend( CZRInputMths , {
   setupContentPicker: function() {
-          var input  = this,
-          _event_map = [];
+          var input  = this;
 
           /* Dummy for the prototype purpose */
-          input.object = ['post']; //this.control.params.object_types  - array('page', 'post')
-          input.type   = 'post_type'; //this.control.params.type  - post_type
+          input.object = input.object || ['post']; //this.control.params.object_types  - array('page', 'post')
+          input.type   = input.type || 'post_type'; //this.control.params.type  - post_type
 
           /* Methodize this or use a template */
           input.container.find('.czr-input').append('<select data-select-type="content-picker-select" class="js-example-basic-simple"></select>');

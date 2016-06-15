@@ -876,10 +876,9 @@ $.extend( CZRInputMths , {
 var CZRInputMths = CZRInputMths || {};
 $.extend( CZRInputMths , {
   setupContentPicker: function() {
-          var input  = this,
-          _event_map = [];
-          input.object = ['post']; //this.control.params.object_types  - array('page', 'post')
-          input.type   = 'post_type'; //this.control.params.type  - post_type
+          var input  = this;
+          input.object = input.object || ['post']; //this.control.params.object_types  - array('page', 'post')
+          input.type   = input.type || 'post_type'; //this.control.params.type  - post_type
           input.container.find('.czr-input').append('<select data-select-type="content-picker-select" class="js-example-basic-simple"></select>');
           _event_map = [
               {
@@ -3603,6 +3602,57 @@ $.extend( CZRWidgetRecentCommentsModuleMths, {
   },//CZRwidgetssInputMths
   CZRWidgetRecentCommentsItem : {
   }
+});//extends api.CZRWidgetModule
+
+var CZRWidgetRSSModuleMths = CZRWidgetRSSModuleMths || {};
+
+$.extend( CZRWidgetRSSModuleMths, {
+  initialize: function( id, options ) {
+          var module = this;
+          api.CZRWidgetModule.prototype.initialize.call( module, id, options );
+          module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetRSSInputMths || {} );
+          module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetRSSItem || {} );
+
+  },//initialize
+  getItemTemplates : function() {
+          return {
+                viewTemplateEl : 'czr-module-item-view',
+                viewContentTemplateEl : 'czr-module-widget-rss-view-content',
+          };
+  },
+  getItemDefaultModel : function() {
+          return {
+              id                    : '',
+              title                 : 'RSS:',
+              type                  : 'WP_Widget_RSS',
+              'widget-title'        : '',
+              'widget-items'        : 10,
+              'widget-show_summary' : false,
+              'widget-show_date'    : false,
+              'widget-show_author'  : false
+          };
+  },
+  CZRWidgetRSSInputMths : {
+          setupSelect : function() {
+                var input    = this,
+                    _model   = this.item.get(),
+                    _choices = _.range(10, 20);
+                _.each( _choices , function( value ) {
+
+                      var _attributes = {
+                            value : value,
+                            html: value
+                          };
+                      if ( value == _model['widget-items'] )
+                        $.extend( _attributes, { selected : "selected" } );
+
+                      $( 'select[data-type="widget-items"]', input.container ).append( $('<option>', _attributes) );
+                });
+                $( 'select[data-type="widget-items"]', input.container ).select2();
+          }, 
+  },//CZRwidgetssInputMths
+  CZRWidgetRSSItem : {
+  }
 });//BASE CONTROL CLASS
 
 var CZRBaseControlMths = CZRBaseControlMths || {};
@@ -3650,7 +3700,8 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_widget_meta_module            : api.CZRWidgetMetaModule,
                 czr_widget_archives_module        : api.CZRWidgetArchivesModule,
                 czr_widget_recent_posts_module    : api.CZRWidgetRecentPostsModule,
-                czr_widget_recent_comments_module : api.CZRWidgetRecentCommentsModule
+                czr_widget_recent_comments_module : api.CZRWidgetRecentCommentsModule,
+                czr_widget_rss_module             : api.CZRWidgetRSSModule                
           };
 
           control.czr_Module = new api.Values();
@@ -4214,6 +4265,8 @@ $.extend( CZRBackgroundMths , {
   api.CZRWidgetArchivesModule       = api.CZRWidgetModule.extend( CZRWidgetArchivesModuleMths || {} );
   api.CZRWidgetRecentPostsModule    = api.CZRWidgetModule.extend( CZRWidgetRecentPostsModuleMths || {} );
   api.CZRWidgetRecentCommentsModule = api.CZRWidgetModule.extend( CZRWidgetRecentCommentsModuleMths || {} );
+  api.CZRWidgetRSSModule            = api.CZRWidgetModule.extend( CZRWidgetRSSModuleMths || {} );
+
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );
   api.CZRBaseControl           = api.Control.extend( CZRBaseControlMths || {} );

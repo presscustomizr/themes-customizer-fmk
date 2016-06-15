@@ -40,7 +40,8 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_widget_meta_module            : api.CZRWidgetMetaModule,
                 czr_widget_archives_module        : api.CZRWidgetArchivesModule,
                 czr_widget_recent_posts_module    : api.CZRWidgetRecentPostsModule,
-                czr_widget_recent_comments_module : api.CZRWidgetRecentCommentsModule
+                czr_widget_recent_comments_module : api.CZRWidgetRecentCommentsModule,
+                czr_widget_rss_module             : api.CZRWidgetRSSModule                
           };
 
           control.czr_Module = new api.Values();
