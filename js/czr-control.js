@@ -3476,6 +3476,29 @@ $.extend( CZRWidgetPagesModuleMths, {
   },//CZRwidgetssInputMths
   CZRWidgetPagesItem : {
   }
+});//extends api.CZRWidgetModule
+
+var CZRWidgetMetaModuleMths = CZRWidgetMetaModuleMths || {};
+
+$.extend( CZRWidgetMetaModuleMths, {
+  initialize: function( id, options ) {
+          var module = this;
+          api.CZRWidgetModule.prototype.initialize.call( module, id, options );
+          module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetMetaInputMths || {} );
+          module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetMetaItem || {} );
+  },//initialize
+  getItemDefaultModel : function() {
+          return {
+              id             : '',
+              title          : 'Meta:',
+              'widget-title' : '',
+              type           : 'WP_Widget_Meta'
+          };
+  },
+  CZRWidgetMetaInputMths : {
+  },//CZRwidgetssInputMths
+  CZRWidgetMetaItem : {
+  }
 });//BASE CONTROL CLASS
 
 var CZRBaseControlMths = CZRBaseControlMths || {};
@@ -3520,6 +3543,7 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_widget_text_module       : api.CZRWidgetTextModule,
                 czr_widget_categories_module : api.CZRWidgetCategoriesModule,
                 czr_widget_pages_module      : api.CZRWidgetPagesModule,
+                czr_widget_meta_module      : api.CZRWidgetMetaModule,
           };
 
           control.czr_Module = new api.Values();
@@ -4079,6 +4103,7 @@ $.extend( CZRBackgroundMths , {
   api.CZRWidgetTextModule       = api.CZRWidgetModule.extend( CZRWidgetTextModuleMths || {} );
   api.CZRWidgetCategoriesModule = api.CZRWidgetModule.extend( CZRWidgetCategoriesModuleMths || {} );
   api.CZRWidgetPagesModule      = api.CZRWidgetModule.extend( CZRWidgetPagesModuleMths || {} );
+  api.CZRWidgetMetaModule       = api.CZRWidgetModule.extend( CZRWidgetMetaModuleMths || {} );
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );
   api.CZRBaseControl           = api.Control.extend( CZRBaseControlMths || {} );

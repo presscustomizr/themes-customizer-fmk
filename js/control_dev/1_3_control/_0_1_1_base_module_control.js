@@ -36,6 +36,7 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_widget_text_module       : api.CZRWidgetTextModule,
                 czr_widget_categories_module : api.CZRWidgetCategoriesModule,
                 czr_widget_pages_module      : api.CZRWidgetPagesModule,
+                czr_widget_meta_module      : api.CZRWidgetMetaModule,
           };
 
           control.czr_Module = new api.Values();
