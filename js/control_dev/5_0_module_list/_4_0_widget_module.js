@@ -70,6 +70,14 @@ $.extend( CZRWidgetModuleMths, {
                       });
                 });
           },
+          setupStepper: function( obj ) {
+                var input     = this;
+                  
+                $('input[type="number"]', input.container ).each( function() {
+
+                  $(this).stepper();
+                });
+          },
           //ACTIONS ON slide-title change
           //Fired on 'slide-title:changed'
           //Don't fire in pre item case

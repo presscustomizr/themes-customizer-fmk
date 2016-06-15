@@ -626,6 +626,7 @@ $.extend( CZRInputMths , {
                   upload : 'setupImageUploader',
                   color : 'setupColorPicker',
                   content_picker : 'setupContentPicker',
+                  numeric        : 'setupStepper',
                   password : ''
             };
 
@@ -3304,6 +3305,14 @@ $.extend( CZRWidgetModuleMths, {
                       });
                 });
           },
+          setupStepper: function( obj ) {
+                var input     = this;
+                  
+                $('input[type="number"]', input.container ).each( function() {
+
+                  $(this).stepper();
+                });
+          },
           updateItemTitle : function( _new_val ) {
                 var input = this,
                     item = this.item;
@@ -3531,6 +3540,69 @@ $.extend( CZRWidgetArchivesModuleMths, {
   },//CZRwidgetssInputMths
   CZRWidgetArchivesItem : {
   }
+});//extends api.CZRWidgetModule
+
+var CZRWidgetRecentPostsModuleMths = CZRWidgetRecentPostsModuleMths || {};
+
+$.extend( CZRWidgetRecentPostsModuleMths, {
+  initialize: function( id, options ) {
+          var module = this;
+          api.CZRWidgetModule.prototype.initialize.call( module, id, options );
+          module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetRecentPostsInputMths || {} );
+          module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetRecentPostsItem || {} );
+
+  },//initialize
+  getItemTemplates : function() {
+          return {
+                viewTemplateEl : 'czr-module-item-view',
+                viewContentTemplateEl : 'czr-module-widget-recent_posts-view-content',
+          };
+  },
+  getItemDefaultModel : function() {
+          return {
+              id                    : '',
+              title                 : 'Recent Posts:',
+              type                  : 'WP_Widget_Recent_Posts',
+              'widget-title'        : '',
+              'widget-number'       : 5,
+              'widget-show_date'    : false,
+          };
+  },
+  CZRWidgetRecentPostsInputMths : {
+  },//CZRwidgetssInputMths
+  CZRWidgetRecentPostsItem : {
+  }
+});//extends api.CZRWidgetModule
+
+var CZRWidgetRecentCommentsModuleMths = CZRWidgetRecentCommentsModuleMths || {};
+
+$.extend( CZRWidgetRecentCommentsModuleMths, {
+  initialize: function( id, options ) {
+          var module = this;
+          api.CZRWidgetModule.prototype.initialize.call( module, id, options );
+          module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetRecentCommentsInputMths || {} );
+          module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetRecentCommentsItem || {} );
+
+  },//initialize
+  getItemTemplates : function() {
+          return {
+                viewTemplateEl : 'czr-module-item-view',
+                viewContentTemplateEl : 'czr-module-widget-recent_comments-view-content',
+          };
+  },
+  getItemDefaultModel : function() {
+          return {
+              id                    : '',
+              title                 : 'Recent Comments:',
+              type                  : 'WP_Widget_Recent_Comments',
+              'widget-title'        : '',
+              'widget-number'       : 5,
+          };
+  },
+  CZRWidgetRecentCommentsInputMths : {
+  },//CZRwidgetssInputMths
+  CZRWidgetRecentCommentsItem : {
+  }
 });//BASE CONTROL CLASS
 
 var CZRBaseControlMths = CZRBaseControlMths || {};
@@ -3570,14 +3642,15 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_sektion_module    : api.CZRSektionModule,
                 czr_fp_module    : api.CZRFeaturedPageModule,
                 czr_slide_module    : api.CZRSlideModule,
-                czr_widget_search_module     : api.CZRWidgetSearchModule,
-                czr_widget_calendar_module   : api.CZRWidgetCalendarModule,
-                czr_widget_text_module       : api.CZRWidgetTextModule,
-                czr_widget_categories_module : api.CZRWidgetCategoriesModule,
-                czr_widget_pages_module      : api.CZRWidgetPagesModule,
-                czr_widget_meta_module       : api.CZRWidgetMetaModule,
-                czr_widget_archives_module   : api.CZRWidgetArchivesModule,
-
+                czr_widget_search_module          : api.CZRWidgetSearchModule,
+                czr_widget_calendar_module        : api.CZRWidgetCalendarModule,
+                czr_widget_text_module            : api.CZRWidgetTextModule,
+                czr_widget_categories_module      : api.CZRWidgetCategoriesModule,
+                czr_widget_pages_module           : api.CZRWidgetPagesModule,
+                czr_widget_meta_module            : api.CZRWidgetMetaModule,
+                czr_widget_archives_module        : api.CZRWidgetArchivesModule,
+                czr_widget_recent_posts_module    : api.CZRWidgetRecentPostsModule,
+                czr_widget_recent_comments_module : api.CZRWidgetRecentCommentsModule
           };
 
           control.czr_Module = new api.Values();
@@ -4131,14 +4204,16 @@ $.extend( CZRBackgroundMths , {
   api.CZRSektionModule        = api.CZRDynModule.extend( CZRSektionMths || {} );
   api.CZRFeaturedPageModule   = api.CZRDynModule.extend( CZRFeaturedPageModuleMths || {} );
   api.CZRTextModule           = api.CZRModule.extend( CZRTextModuleMths || {} );
-  api.CZRWidgetModule           = api.CZRModule.extend( CZRWidgetModuleMths || {} );
-  api.CZRWidgetSearchModule     = api.CZRWidgetModule.extend( CZRWidgetSearchModuleMths || {} );
-  api.CZRWidgetCalendarModule   = api.CZRWidgetModule.extend( CZRWidgetCalendarModuleMths || {} );
-  api.CZRWidgetTextModule       = api.CZRWidgetModule.extend( CZRWidgetTextModuleMths || {} );
-  api.CZRWidgetCategoriesModule = api.CZRWidgetModule.extend( CZRWidgetCategoriesModuleMths || {} );
-  api.CZRWidgetPagesModule      = api.CZRWidgetModule.extend( CZRWidgetPagesModuleMths || {} );
-  api.CZRWidgetMetaModule       = api.CZRWidgetModule.extend( CZRWidgetMetaModuleMths || {} );
-  api.CZRWidgetArchivesModule   = api.CZRWidgetModule.extend( CZRWidgetArchivesModuleMths || {} );
+  api.CZRWidgetModule               = api.CZRModule.extend( CZRWidgetModuleMths || {} );
+  api.CZRWidgetSearchModule         = api.CZRWidgetModule.extend( CZRWidgetSearchModuleMths || {} );
+  api.CZRWidgetCalendarModule       = api.CZRWidgetModule.extend( CZRWidgetCalendarModuleMths || {} );
+  api.CZRWidgetTextModule           = api.CZRWidgetModule.extend( CZRWidgetTextModuleMths || {} );
+  api.CZRWidgetCategoriesModule     = api.CZRWidgetModule.extend( CZRWidgetCategoriesModuleMths || {} );
+  api.CZRWidgetPagesModule          = api.CZRWidgetModule.extend( CZRWidgetPagesModuleMths || {} );
+  api.CZRWidgetMetaModule           = api.CZRWidgetModule.extend( CZRWidgetMetaModuleMths || {} );
+  api.CZRWidgetArchivesModule       = api.CZRWidgetModule.extend( CZRWidgetArchivesModuleMths || {} );
+  api.CZRWidgetRecentPostsModule    = api.CZRWidgetModule.extend( CZRWidgetRecentPostsModuleMths || {} );
+  api.CZRWidgetRecentCommentsModule = api.CZRWidgetModule.extend( CZRWidgetRecentCommentsModuleMths || {} );
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );
   api.CZRBaseControl           = api.Control.extend( CZRBaseControlMths || {} );

@@ -30,15 +30,17 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_sektion_module    : api.CZRSektionModule,
                 czr_fp_module    : api.CZRFeaturedPageModule,
                 czr_slide_module    : api.CZRSlideModule,
-                /* widgets */
-                czr_widget_search_module     : api.CZRWidgetSearchModule,
-                czr_widget_calendar_module   : api.CZRWidgetCalendarModule,
-                czr_widget_text_module       : api.CZRWidgetTextModule,
-                czr_widget_categories_module : api.CZRWidgetCategoriesModule,
-                czr_widget_pages_module      : api.CZRWidgetPagesModule,
-                czr_widget_meta_module       : api.CZRWidgetMetaModule,
-                czr_widget_archives_module   : api.CZRWidgetArchivesModule,
 
+                /* widgets */
+                czr_widget_search_module          : api.CZRWidgetSearchModule,
+                czr_widget_calendar_module        : api.CZRWidgetCalendarModule,
+                czr_widget_text_module            : api.CZRWidgetTextModule,
+                czr_widget_categories_module      : api.CZRWidgetCategoriesModule,
+                czr_widget_pages_module           : api.CZRWidgetPagesModule,
+                czr_widget_meta_module            : api.CZRWidgetMetaModule,
+                czr_widget_archives_module        : api.CZRWidgetArchivesModule,
+                czr_widget_recent_posts_module    : api.CZRWidgetRecentPostsModule,
+                czr_widget_recent_comments_module : api.CZRWidgetRecentCommentsModule
           };
 
           control.czr_Module = new api.Values();
