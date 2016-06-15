@@ -3246,23 +3246,16 @@ $.extend( CZRSlideModuleMths, {
   }
 });//extends api.CZRDynModule
 
-var CZRWidgetSearchModuleMths = CZRWidgetSearchModuleMths || {};
+var CZRWidgetModuleMths = CZRWidgetModuleMths || {};
 
-$.extend( CZRWidgetSearchModuleMths, {
+$.extend( CZRWidgetModuleMths, {
   initialize: function( id, options ) {
           var module = this;
           api.CZRModule.prototype.initialize.call( module, id, options );
-          $.extend( module, {
-                viewTemplateEl : 'czr-module-item-view',
-                viewContentTemplateEl : 'czr-module-widget-search-view-content',
-          } );
-          module.inputConstructor = api.CZRInput.extend( module.CZRWidgetSearchInputMths || {} );
-          module.itemConstructor = api.CZRItem.extend( module.CZRWidgetSearchItem || {} );
-          this.defaultItemModel = {
-              id : '',
-              title : 'Search: ',
-              'widget-title' : '',
-          };
+          $.extend( module, this.getItemTemplates() );
+          module.inputConstructor = api.CZRInput.extend( module.CZRWidgetInputMths || {} );
+          module.itemConstructor  = api.CZRItem.extend( module.CZRWidgetItem || {} );
+          this.defaultItemModel   = this.getItemDefaultModel();
           module.savedItems = _.isEmpty( options.items ) ? [ module._initNewItem( module.defaultItemModel ) ] : options.items;
 
           api.section( module.control.section() ).expanded.bind(function(to) {
@@ -3271,9 +3264,21 @@ $.extend( CZRWidgetSearchModuleMths, {
             module.ready();
           });
   },//initialize
-
-
-  CZRWidgetSearchInputMths : {
+  getItemTemplates : function() {
+          return {
+                viewTemplateEl : 'czr-module-item-view',
+                viewContentTemplateEl : 'czr-module-widget-search-view-content',
+          };
+  },
+  getItemDefaultModel : function() {
+          return {
+              id             : '',
+              title          : '',
+              'widget-title' : '',
+              type           : ''
+          };
+  },
+  CZRWidgetInputMths : {
           ready : function() {
                 var input = this;
                 input.bind('widget-title:changed', function(){
@@ -3284,13 +3289,36 @@ $.extend( CZRWidgetSearchModuleMths, {
           updateItemTitle : function( _new_val ) {
                 var input = this,
                     item = this.item;
-
+                console.log('sono qui');
                 var _new_model  = _.clone( item.get() ),
                     _new_title  = _new_model.title.substr(0, _new_model.title.indexOf(':') + 1) + _new_model['widget-title'];
 
                 $.extend( _new_model, { title : _new_title} );
                 item.set( _new_model );
           },
+  },//CZRwidgetssInputMths
+  CZRWidgetItem : {
+  }
+});//extends api.CZRDynModule
+
+var CZRWidgetSearchModuleMths = CZRWidgetSearchModuleMths || {};
+
+$.extend( CZRWidgetSearchModuleMths, {
+  initialize: function( id, options ) {
+          var module = this;
+          api.CZRWidgetModule.prototype.initialize.call( module, id, options );
+          module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetSearchInputMths || {} );
+          module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetSearchItem || {} );
+  },//initialize
+  getItemDefaultModel : function() {
+          return {
+              id             : '',
+              title          : 'Search:',
+              'widget-title' : '',
+              type           : 'WP_Widget_Search'
+          };
+  },
+  CZRWidgetSearchInputMths : {
   },//CZRwidgetssInputMths
   CZRWidgetSearchItem : {
   }
@@ -3301,46 +3329,19 @@ var CZRWidgetCalendarModuleMths = CZRWidgetCalendarModuleMths || {};
 $.extend( CZRWidgetCalendarModuleMths, {
   initialize: function( id, options ) {
           var module = this;
-          api.CZRModule.prototype.initialize.call( module, id, options );
-          $.extend( module, {
-                viewTemplateEl : 'czr-module-item-view',
-                viewContentTemplateEl : 'czr-module-widget-calendar-view-content',
-          } );
-          module.inputConstructor = api.CZRInput.extend( module.CZRWidgetCalendarInputMths || {} );
-          module.itemConstructor = api.CZRItem.extend( module.CZRWidgetCalendarItem || {} );
-          this.defaultItemModel = {
-              id : '',
-              title : 'Calendar: ',
-              'widget-title' : '',
-          };
-          module.savedItems = _.isEmpty( options.items ) ? [ module._initNewItem( module.defaultItemModel ) ] : options.items;
-
-          api.section( module.control.section() ).expanded.bind(function(to) {
-            if ( ! to || ! _.isEmpty( module.get() ) )
-              return;
-            module.ready();
-          });
+          api.CZRWidgetModule.prototype.initialize.call( module, id, options );
+          module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetCalendarInputMths || {} );
+          module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetCalendarItem || {} );
   },//initialize
-
-
+  getItemDefaultModel : function() {
+          return {
+              id             : '',
+              title          : 'Calendar:',
+              'widget-title' : '',
+              type           : 'WP_Widget_Calendar'
+          };
+  },
   CZRWidgetCalendarInputMths : {
-          ready : function() {
-                var input = this;
-                input.bind('widget-title:changed', function(){
-                  input.updateItemTitle();
-                });
-                api.CZRInput.prototype.ready.call( input);
-          },
-          updateItemTitle : function( _new_val ) {
-                var input = this,
-                    item = this.item;
-
-                var _new_model  = _.clone( item.get() ),
-                    _new_title  = _new_model.title.substr(0, _new_model.title.indexOf(':') + 1) + _new_model['widget-title'];
-
-                $.extend( _new_model, { title : _new_title} );
-                item.set( _new_model );
-          },
   },//CZRwidgetssInputMths
   CZRWidgetCalendarItem : {
   }
@@ -3938,9 +3939,9 @@ $.extend( CZRBackgroundMths , {
   api.CZRSektionModule        = api.CZRDynModule.extend( CZRSektionMths || {} );
   api.CZRFeaturedPageModule   = api.CZRDynModule.extend( CZRFeaturedPageModuleMths || {} );
   api.CZRTextModule           = api.CZRModule.extend( CZRTextModuleMths || {} );
-
-  api.CZRWidgetSearchModule   = api.CZRModule.extend( CZRWidgetSearchModuleMths || {} );
-  api.CZRWidgetCalendarModule = api.CZRModule.extend( CZRWidgetCalendarModuleMths || {} );
+  api.CZRWidgetModule         = api.CZRModule.extend( CZRWidgetModuleMths || {} );
+  api.CZRWidgetSearchModule   = api.CZRWidgetModule.extend( CZRWidgetSearchModuleMths || {} );
+  api.CZRWidgetCalendarModule = api.CZRWidgetModule.extend( CZRWidgetCalendarModuleMths || {} );
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );
   api.CZRBaseControl           = api.Control.extend( CZRBaseControlMths || {} );
