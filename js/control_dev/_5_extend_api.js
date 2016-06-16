@@ -44,6 +44,7 @@
   api.CZRWidgetRecentCommentsModule = api.CZRWidgetModule.extend( CZRWidgetRecentCommentsModuleMths || {} );
   api.CZRWidgetRSSModule            = api.CZRWidgetModule.extend( CZRWidgetRSSModuleMths || {} );
   api.CZRWidgetTagCloudModule       = api.CZRWidgetModule.extend( CZRWidgetTagCloudModuleMths || {} );
+  api.CZRWidgetCustomMenuModule     = api.CZRWidgetModule.extend( CZRWidgetCustomMenuModuleMths || {} );
 
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );

@@ -42,8 +42,8 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_widget_recent_posts_module    : api.CZRWidgetRecentPostsModule,
                 czr_widget_recent_comments_module : api.CZRWidgetRecentCommentsModule,
                 czr_widget_rss_module             : api.CZRWidgetRSSModule,
-                czr_widget_tag_cloud_module       : api.CZRWidgetTagCloudModule                
-                
+                czr_widget_tag_cloud_module       : api.CZRWidgetTagCloudModule,
+                czr_widget_custom_menu_module     : api.CZRWidgetCustomMenuModule,  
           };
 
           control.czr_Module = new api.Values();

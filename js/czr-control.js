@@ -3712,6 +3712,43 @@ $.extend( CZRWidgetTagCloudModuleMths, {
   },//CZRwidgetssInputMths
   CZRWidgetTagCloudItem : {
   }
+});//extends api.CZRWidgetModule
+
+var CZRWidgetCustomMenuModuleMths = CZRWidgetCustomMenuModuleMths || {};
+
+$.extend( CZRWidgetCustomMenuModuleMths, {
+  initialize: function( id, options ) {
+          var module = this;
+          api.CZRWidgetModule.prototype.initialize.call( module, id, options );
+          module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetCustomMenuInputMths || {} );
+          module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetCustomMenuItem || {} );
+          module.custom_params = new api.Values();
+
+          module.custom_params.add( 'widget-nav_menu', new api.Value({
+            'object'                  : [],
+            'type'                    : 'menus',
+            'minimumResultsForSearch' : Infinity //do not display search form
+          }) );
+
+  },//initialize
+  getItemTemplates : function() {
+          return {
+                viewTemplateEl : 'czr-module-item-view',
+                viewContentTemplateEl : 'czr-module-widget-custom_menu-view-content',
+          };
+  },
+  getItemDefaultModel : function() {
+          return {
+              id                    : '',
+              title                 : 'Custom Menu:',
+              type                  : 'WP_Nav_Menu_Widget',
+              'widget-nav_menu'     : '',
+          };
+  },
+  CZRWidgetCustomMenuInputMths : {
+  },//CZRwidgetssInputMths
+  CZRWidgetCustomMenuItem : {
+  }
 });//BASE CONTROL CLASS
 
 var CZRBaseControlMths = CZRBaseControlMths || {};
@@ -3761,8 +3798,8 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_widget_recent_posts_module    : api.CZRWidgetRecentPostsModule,
                 czr_widget_recent_comments_module : api.CZRWidgetRecentCommentsModule,
                 czr_widget_rss_module             : api.CZRWidgetRSSModule,
-                czr_widget_tag_cloud_module       : api.CZRWidgetTagCloudModule                
-                
+                czr_widget_tag_cloud_module       : api.CZRWidgetTagCloudModule,
+                czr_widget_custom_menu_module     : api.CZRWidgetCustomMenuModule,  
           };
 
           control.czr_Module = new api.Values();
@@ -4328,6 +4365,7 @@ $.extend( CZRBackgroundMths , {
   api.CZRWidgetRecentCommentsModule = api.CZRWidgetModule.extend( CZRWidgetRecentCommentsModuleMths || {} );
   api.CZRWidgetRSSModule            = api.CZRWidgetModule.extend( CZRWidgetRSSModuleMths || {} );
   api.CZRWidgetTagCloudModule       = api.CZRWidgetModule.extend( CZRWidgetTagCloudModuleMths || {} );
+  api.CZRWidgetCustomMenuModule     = api.CZRWidgetModule.extend( CZRWidgetCustomMenuModuleMths || {} );
 
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );

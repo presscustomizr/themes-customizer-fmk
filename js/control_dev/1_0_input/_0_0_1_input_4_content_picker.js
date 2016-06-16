@@ -55,7 +55,7 @@ $.extend( CZRInputMths , {
                   delay: 250,
                   debug: true,
                   data: function ( params ) {
-                        //for some reason I'm not getting at the moment the params.page returned when searching is different
+                        //for some reason I'm not getting at the moment why the params.page returned when searching is different
                         var page = params.page ? params.page - 1 : 0,
                             input_params = input.custom_params.get();
                         page = params.term ? params.page : page;
