@@ -13,15 +13,6 @@ $.extend( CZRWidgetCustomMenuModuleMths, {
           //EXTEND THE WIDGET BASE CONSTRUCTORS FOR MONOMODEL
           module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetCustomMenuItem || {} );
 
-          //Set Content Picker params
-          module.custom_params = new api.Values();
-
-          module.custom_params.add( 'widget-nav_menu', new api.Value({
-            'object'                  : [],
-            'type'                    : 'menus',
-            'minimumResultsForSearch' : Infinity //do not display search form
-          }) );
-
   },//initialize
   //@override 
   //to use a different viewContentTemplateEl
@@ -42,6 +33,48 @@ $.extend( CZRWidgetCustomMenuModuleMths, {
           };
   },
   CZRWidgetCustomMenuInputMths : {
+          setupSelect : function() {
+                var input      = this,
+                    item       = input.item,
+                    request,
+                    _model     = item.get(),
+                    $_select   = $( 'select[data-type="widget-nav_menu"]', input.container );
+
+                $_select.hide();
+
+                request = wp.ajax.post( 'load-nav-menus', {
+                    'wp_customize'    : 'on',
+                    'CZRWidgetsNonce' : serverControlParams.CZRWidgetsNonce 
+                });
+                  
+                request.fail( function( data ) {
+                  /* TODO HANDLE UNAVAILABILITY */
+                  if ( typeof console !== 'undefined' && console.error ) {
+                    console.error( data );
+                  }
+                });
+
+                request.done( function( data ) {
+                  var navs = data;
+
+                  _.each( navs , function( nav, k ) {
+                      var _attributes = {
+                        value : nav.id,
+                        html: nav.title
+                      };
+                      if ( nav.id == _model['widget-nav_menu'] )
+                        $.extend( _attributes, { selected : "selected" } ); 
+                    
+                    $_select.append( $('<option>', _attributes) );
+                  });
+
+                  //fire select2
+                  $_select.select2({
+                    'placeholder' : { id: '', text : 'Select' /* TODO:localize */ }
+                  })
+                  .show();
+                });
+          },          
   },//CZRwidgetssInputMths
   CZRWidgetCustomMenuItem : {
   }

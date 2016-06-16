@@ -32,11 +32,14 @@ $.extend( CZRFeaturedPageModuleMths, {
 
           //Set Content Picker params
           module.custom_params = new api.Values();
-
-          module.custom_params.add( 'fp-post', new api.Value({
-            'object' : ['post'],
-            'type'   : 'post_type'
-          }) );
+          module.custom_params.create( 'fp-post' );
+          module.custom_params('fp-post').set({
+            'query' : { 
+                object_types          : [ 'page' ],
+                excluded_object_types : []
+            },
+            'type'  : 'post_type'
+          });
 
           //overrides the default success message
           this.itemAddedMessage = serverControlParams.translatedStrings.featuredPageAdded;

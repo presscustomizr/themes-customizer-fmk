@@ -4,15 +4,18 @@ $.extend( CZRInputMths , {
   setupContentPicker: function() {
           var input  = this,
             _default_params = {
-              'object'                  : ['page'],   //this.control.params.object_types  - array('page', 'post')
-              'type'                    : 'post_type', //this.control.params.type  - post_type
+              'query' : { 
+                object_types          : [ 'page' ],
+                excluded_object_types : []
+              },
+              'type'  : 'post_type',
               'minimumResultsForSearch' : false //always show
             },
             _custom_params  = input.custom_params.get();
 
           //Parse custom params
           var _parsed_params = {
-            'object'                  : _custom_params.object || _default_params.object,
+            'query'                   : _custom_params.query || _default_params.query,
             'type'                    : _custom_params.type  || _default_params.type,
             'minimumResultsForSearch' : _custom_params.minimumResultsForSearch || _default_params.minimumResultsForSearch
           };
@@ -65,7 +68,7 @@ $.extend( CZRInputMths , {
                               wp_customize: 'on',
                               page: page,
                               type: input_params.type,
-                              object: input_params.object,
+                              query: input_params.query,
                               CZRCpNonce: serverControlParams.CZRCpNonce
                         };
               },

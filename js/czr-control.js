@@ -878,13 +878,16 @@ $.extend( CZRInputMths , {
   setupContentPicker: function() {
           var input  = this,
             _default_params = {
-              'object'                  : ['page'],   //this.control.params.object_types  - array('page', 'post')
-              'type'                    : 'post_type', //this.control.params.type  - post_type
+              'query' : { 
+                object_types          : [ 'page' ],
+                excluded_object_types : []
+              },
+              'type'  : 'post_type',
               'minimumResultsForSearch' : false //always show
             },
             _custom_params  = input.custom_params.get();
           var _parsed_params = {
-            'object'                  : _custom_params.object || _default_params.object,
+            'query'                   : _custom_params.query || _default_params.query,
             'type'                    : _custom_params.type  || _default_params.type,
             'minimumResultsForSearch' : _custom_params.minimumResultsForSearch || _default_params.minimumResultsForSearch
           };
@@ -931,7 +934,7 @@ $.extend( CZRInputMths , {
                               wp_customize: 'on',
                               page: page,
                               type: input_params.type,
-                              object: input_params.object,
+                              query: input_params.query,
                               CZRCpNonce: serverControlParams.CZRCpNonce
                         };
               },
@@ -2906,11 +2909,14 @@ $.extend( CZRFeaturedPageModuleMths, {
               'fp-image' : '',
           };
           module.custom_params = new api.Values();
-
-          module.custom_params.add( 'fp-post', new api.Value({
-            'object' : ['post'],
-            'type'   : 'post_type'
-          }) );
+          module.custom_params.create( 'fp-post' );
+          module.custom_params('fp-post').set({
+            'query' : { 
+                object_types          : [ 'page' ],
+                excluded_object_types : []
+            },
+            'type'  : 'post_type'
+          });
           this.itemAddedMessage = serverControlParams.translatedStrings.featuredPageAdded;
           api.section( module.control.section() ).expanded.bind(function(to) {
             if ( ! to || ! _.isEmpty( module.get() ) )
@@ -3685,14 +3691,6 @@ $.extend( CZRWidgetTagCloudModuleMths, {
           api.CZRWidgetModule.prototype.initialize.call( module, id, options );
           module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetTagCloudInputMths || {} );
           module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetTagCloudItem || {} );
-          module.custom_params = new api.Values();
-
-          module.custom_params.add( 'widget-taxonomy', new api.Value({
-            'object'                  : [],
-            'type'                    : 'taxonomies',
-            'minimumResultsForSearch' : Infinity //do not display search form
-          }) );
-
   },//initialize
   getItemTemplates : function() {
           return {
@@ -3709,6 +3707,47 @@ $.extend( CZRWidgetTagCloudModuleMths, {
           };
   },
   CZRWidgetTagCloudInputMths : {
+          setupSelect : function() {
+                var input      = this,
+                    item       = input.item,
+                    request,
+                    _model     = item.get(),
+                    $_select   = $( 'select[data-type="widget-taxonomy"]', input.container );
+
+                $_select.hide();
+
+                request = wp.ajax.post( 'load-tag-cloud-taxonomies', {
+                    'wp_customize'    : 'on',
+                    'CZRWidgetsNonce' : serverControlParams.CZRWidgetsNonce 
+                });
+                  
+                request.fail( function( data ) {
+                  if ( typeof console !== 'undefined' && console.error ) {
+                    console.error( data );
+                  }
+                });
+
+                request.done( function( data ) {
+                  var taxonomies = data;
+
+                  _.each( taxonomies , function( tax, k ) {
+                      var _attributes = {
+                        value : tax.id,
+                        html: tax.title
+                      };
+
+                      if ( tax.id == _model['widget-taxonomy'] )
+                        $.extend( _attributes, { selected : "selected" } ); 
+                    
+                    $_select.append( $('<option>', _attributes) );
+                  });
+                  $_select.select2({
+                    'placeholder' : { id: '', text : 'Select' /* TODO:localize */ }
+                  })
+                  .show();
+                  
+                });
+          },           
   },//CZRwidgetssInputMths
   CZRWidgetTagCloudItem : {
   }
@@ -3722,13 +3761,6 @@ $.extend( CZRWidgetCustomMenuModuleMths, {
           api.CZRWidgetModule.prototype.initialize.call( module, id, options );
           module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetCustomMenuInputMths || {} );
           module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetCustomMenuItem || {} );
-          module.custom_params = new api.Values();
-
-          module.custom_params.add( 'widget-nav_menu', new api.Value({
-            'object'                  : [],
-            'type'                    : 'menus',
-            'minimumResultsForSearch' : Infinity //do not display search form
-          }) );
 
   },//initialize
   getItemTemplates : function() {
@@ -3746,6 +3778,45 @@ $.extend( CZRWidgetCustomMenuModuleMths, {
           };
   },
   CZRWidgetCustomMenuInputMths : {
+          setupSelect : function() {
+                var input      = this,
+                    item       = input.item,
+                    request,
+                    _model     = item.get(),
+                    $_select   = $( 'select[data-type="widget-nav_menu"]', input.container );
+
+                $_select.hide();
+
+                request = wp.ajax.post( 'load-nav-menus', {
+                    'wp_customize'    : 'on',
+                    'CZRWidgetsNonce' : serverControlParams.CZRWidgetsNonce 
+                });
+                  
+                request.fail( function( data ) {
+                  if ( typeof console !== 'undefined' && console.error ) {
+                    console.error( data );
+                  }
+                });
+
+                request.done( function( data ) {
+                  var navs = data;
+
+                  _.each( navs , function( nav, k ) {
+                      var _attributes = {
+                        value : nav.id,
+                        html: nav.title
+                      };
+                      if ( nav.id == _model['widget-nav_menu'] )
+                        $.extend( _attributes, { selected : "selected" } ); 
+                    
+                    $_select.append( $('<option>', _attributes) );
+                  });
+                  $_select.select2({
+                    'placeholder' : { id: '', text : 'Select' /* TODO:localize */ }
+                  })
+                  .show();
+                });
+          },          
   },//CZRwidgetssInputMths
   CZRWidgetCustomMenuItem : {
   }

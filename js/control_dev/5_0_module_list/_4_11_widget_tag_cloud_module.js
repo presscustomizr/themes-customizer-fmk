@@ -12,16 +12,6 @@ $.extend( CZRWidgetTagCloudModuleMths, {
           module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetTagCloudInputMths || {} );
           //EXTEND THE WIDGET BASE CONSTRUCTORS FOR MONOMODEL
           module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetTagCloudItem || {} );
-
-          //Set Content Picker params
-          module.custom_params = new api.Values();
-
-          module.custom_params.add( 'widget-taxonomy', new api.Value({
-            'object'                  : [],
-            'type'                    : 'taxonomies',
-            'minimumResultsForSearch' : Infinity //do not display search form
-          }) );
-
   },//initialize
   //@override 
   //to use a different viewContentTemplateEl
@@ -42,6 +32,49 @@ $.extend( CZRWidgetTagCloudModuleMths, {
           };
   },
   CZRWidgetTagCloudInputMths : {
+          setupSelect : function() {
+                var input      = this,
+                    item       = input.item,
+                    request,
+                    _model     = item.get(),
+                    $_select   = $( 'select[data-type="widget-taxonomy"]', input.container );
+
+                $_select.hide();
+
+                request = wp.ajax.post( 'load-tag-cloud-taxonomies', {
+                    'wp_customize'    : 'on',
+                    'CZRWidgetsNonce' : serverControlParams.CZRWidgetsNonce 
+                });
+                  
+                request.fail( function( data ) {
+                  /* TODO HANDLE UNAVAILABILITY */
+                  if ( typeof console !== 'undefined' && console.error ) {
+                    console.error( data );
+                  }
+                });
+
+                request.done( function( data ) {
+                  var taxonomies = data;
+
+                  _.each( taxonomies , function( tax, k ) {
+                      var _attributes = {
+                        value : tax.id,
+                        html: tax.title
+                      };
+
+                      if ( tax.id == _model['widget-taxonomy'] )
+                        $.extend( _attributes, { selected : "selected" } ); 
+                    
+                    $_select.append( $('<option>', _attributes) );
+                  });
+                  //fire select2
+                  $_select.select2({
+                    'placeholder' : { id: '', text : 'Select' /* TODO:localize */ }
+                  })
+                  .show();
+                  
+                });
+          },           
   },//CZRwidgetssInputMths
   CZRWidgetTagCloudItem : {
   }
