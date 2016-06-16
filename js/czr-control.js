@@ -891,7 +891,7 @@ $.extend( CZRInputMths , {
             'type'                    : _custom_params.type  || _default_params.type,
             'minimumResultsForSearch' : _custom_params.minimumResultsForSearch || _default_params.minimumResultsForSearch
           };
-          console.log(_parsed_params);
+          
           input.custom_params.set( _parsed_params );
           input.container.find('.czr-input').append('<select data-select-type="content-picker-select" class="js-example-basic-simple"></select>');
           _event_map = [
@@ -1127,9 +1127,10 @@ $.extend( CZRItemMths , {
                   console.log('No data-type found in the input wrapper index : ' + _index + ' in item : '+ item.id );
                   return;
               }
+
               var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index,
                   _value = _.has( initial_item_model, _id) ? initial_item_model[_id] : '',
-                  _custom_params = ( _.has( module, 'custom_params' ) && module.custom_params( _id ) ) ? module.custom_params( _id ) : '';
+                  _custom_params = ( _.has( module, 'custom_params' ) && module.custom_params.has( _id ) ) ? module.custom_params( _id ) : new api.Value();
 
               item.czr_Input.add( _id, new item.inputConstructor( _id, {
                     id : _id,
@@ -1652,14 +1653,18 @@ $.extend( CZRDynModuleMths, {
           var module = this;
           $('.' + module.control.css_attr.pre_add_wrapper, module.container).find( '.' + module.control.css_attr.sub_set_wrapper)
           .each( function(_index) {
-                var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index;
+                var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index,
+                    _custom_params = ( _.has( module, 'custom_params' ) && module.custom_params.has( _id ) ) ? module.custom_params( _id ) : new api.Value();
+
+
                 module.czr_preItemInput.add( _id, new module.preItemInputConstructor( _id, {
                     id : _id,
                     type : $(this).attr('data-input-type'),
                     container : $(this),
                     item : module.czr_preItem('item'),
                     module : module,
-                    is_preItemInput : true
+                    is_preItemInput : true,
+                    custom_params : _custom_params
                 } ) );
           });//each
   },

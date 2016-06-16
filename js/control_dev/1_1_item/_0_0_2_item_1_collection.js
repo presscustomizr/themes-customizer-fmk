@@ -40,9 +40,10 @@ $.extend( CZRItemMths , {
                   console.log('No data-type found in the input wrapper index : ' + _index + ' in item : '+ item.id );
                   return;
               }
+
               var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index,
                   _value = _.has( initial_item_model, _id) ? initial_item_model[_id] : '',
-                  _custom_params = ( _.has( module, 'custom_params' ) && module.custom_params( _id ) ) ? module.custom_params( _id ) : '';
+                  _custom_params = ( _.has( module, 'custom_params' ) && module.custom_params.has( _id ) ) ? module.custom_params( _id ) : new api.Value();
 
               item.czr_Input.add( _id, new item.inputConstructor( _id, {
                     id : _id,

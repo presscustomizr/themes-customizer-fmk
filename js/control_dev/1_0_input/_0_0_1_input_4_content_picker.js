@@ -19,7 +19,7 @@ $.extend( CZRInputMths , {
             'type'                    : _custom_params.type  || _default_params.type,
             'minimumResultsForSearch' : _custom_params.minimumResultsForSearch || _default_params.minimumResultsForSearch
           };
-          console.log(_parsed_params);
+          
           input.custom_params.set( _parsed_params );
 
           /* Methodize this or use a template */

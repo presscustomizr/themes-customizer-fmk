@@ -93,14 +93,18 @@ $.extend( CZRDynModuleMths, {
           //creates the inputs based on the rendered items
           $('.' + module.control.css_attr.pre_add_wrapper, module.container).find( '.' + module.control.css_attr.sub_set_wrapper)
           .each( function(_index) {
-                var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index;
+                var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index,
+                    _custom_params = ( _.has( module, 'custom_params' ) && module.custom_params.has( _id ) ) ? module.custom_params( _id ) : new api.Value();
+
+
                 module.czr_preItemInput.add( _id, new module.preItemInputConstructor( _id, {
                     id : _id,
                     type : $(this).attr('data-input-type'),
                     container : $(this),
                     item : module.czr_preItem('item'),
                     module : module,
-                    is_preItemInput : true
+                    is_preItemInput : true,
+                    custom_params : _custom_params
                 } ) );
           });//each
   },
