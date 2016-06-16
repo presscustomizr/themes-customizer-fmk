@@ -4,15 +4,19 @@ $.extend( CZRInputMths , {
   setupContentPicker: function() {
           var input  = this,
             _default_params = {
-              'object' : ['page'],   //this.control.params.object_types  - array('page', 'post')
-              'type'   : 'post_type', //this.control.params.type  - post_type              
-            };
+              'object'                  : ['page'],   //this.control.params.object_types  - array('page', 'post')
+              'type'                    : 'post_type', //this.control.params.type  - post_type
+              'minimumResultsForSearch' : false //always show
+            },
+            _custom_params  = input.custom_params.get();
 
           //Parse custom params
           var _parsed_params = {
-            'object' : input.custom_params.get().object || _default_params.object,
-            'type'   : input.custom_params.get().type  || _default_params.type
+            'object'                  : _custom_params.object || _default_params.object,
+            'type'                    : _custom_params.type  || _default_params.type,
+            'minimumResultsForSearch' : _custom_params.minimumResultsForSearch || _default_params.minimumResultsForSearch
           };
+          console.log(_parsed_params);
           input.custom_params.set( _parsed_params );
 
           /* Methodize this or use a template */
@@ -34,7 +38,8 @@ $.extend( CZRInputMths , {
   },
 
   setupContentSelecter : function() {
-          var input = this;
+          var input        = this,
+              input_params = input.custom_params.get();
 
           input.container.find('select').select2({
             placeholder: {
@@ -42,7 +47,7 @@ $.extend( CZRInputMths , {
               title: 'Select'
             },
             data : input.setupSelectedContents(),
-            //  allowClear: true,
+            allowClear: true,
             ajax: {
                   url: serverControlParams.AjaxUrl,
                   type: 'POST',
@@ -96,6 +101,7 @@ $.extend( CZRInputMths , {
             templateSelection: input.czrFormatContentSelected,
             templateResult: input.czrFormatContentSelected,
             escapeMarkup: function (markup) { return markup; },
+            minimumResultsForSearch : input_params.minimumResultsForSearch
          });
   },
 
@@ -140,6 +146,5 @@ $.extend( CZRInputMths , {
         }
 
         input.set(_new_val);
-        return;
   }
 });//$.extend

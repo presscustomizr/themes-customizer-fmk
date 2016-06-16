@@ -878,13 +878,17 @@ $.extend( CZRInputMths , {
   setupContentPicker: function() {
           var input  = this,
             _default_params = {
-              'object' : ['page'],   //this.control.params.object_types  - array('page', 'post')
-              'type'   : 'post_type', //this.control.params.type  - post_type              
-            };
+              'object'                  : ['page'],   //this.control.params.object_types  - array('page', 'post')
+              'type'                    : 'post_type', //this.control.params.type  - post_type
+              'minimumResultsForSearch' : false //always show
+            },
+            _custom_params  = input.custom_params.get();
           var _parsed_params = {
-            'object' : input.custom_params.get().object || _default_params.object,
-            'type'   : input.custom_params.get().type  || _default_params.type
+            'object'                  : _custom_params.object || _default_params.object,
+            'type'                    : _custom_params.type  || _default_params.type,
+            'minimumResultsForSearch' : _custom_params.minimumResultsForSearch || _default_params.minimumResultsForSearch
           };
+          console.log(_parsed_params);
           input.custom_params.set( _parsed_params );
           input.container.find('.czr-input').append('<select data-select-type="content-picker-select" class="js-example-basic-simple"></select>');
           _event_map = [
@@ -901,7 +905,8 @@ $.extend( CZRInputMths , {
   },
 
   setupContentSelecter : function() {
-          var input = this;
+          var input        = this,
+              input_params = input.custom_params.get();
 
           input.container.find('select').select2({
             placeholder: {
@@ -909,6 +914,7 @@ $.extend( CZRInputMths , {
               title: 'Select'
             },
             data : input.setupSelectedContents(),
+            allowClear: true,
             ajax: {
                   url: serverControlParams.AjaxUrl,
                   type: 'POST',
@@ -953,6 +959,7 @@ $.extend( CZRInputMths , {
             templateSelection: input.czrFormatContentSelected,
             templateResult: input.czrFormatContentSelected,
             escapeMarkup: function (markup) { return markup; },
+            minimumResultsForSearch : input_params.minimumResultsForSearch
          });
   },
 
@@ -995,7 +1002,6 @@ $.extend( CZRInputMths , {
         }
 
         input.set(_new_val);
-        return;
   }
 });//$.extend
 var CZRItemMths = CZRItemMths || {};
@@ -3669,6 +3675,43 @@ $.extend( CZRWidgetRSSModuleMths, {
   },//CZRwidgetssInputMths
   CZRWidgetRSSItem : {
   }
+});//extends api.CZRWidgetModule
+
+var CZRWidgetTagCloudModuleMths = CZRWidgetTagCloudModuleMths || {};
+
+$.extend( CZRWidgetTagCloudModuleMths, {
+  initialize: function( id, options ) {
+          var module = this;
+          api.CZRWidgetModule.prototype.initialize.call( module, id, options );
+          module.inputConstructor = module.inputConstructor.extend( module.CZRWidgetTagCloudInputMths || {} );
+          module.itemConstructor  = module.itemConstructor.extend( module.CZRWidgetTagCloudItem || {} );
+          module.custom_params = new api.Values();
+
+          module.custom_params.add( 'widget-taxonomy', new api.Value({
+            'object'                  : [],
+            'type'                    : 'taxonomies',
+            'minimumResultsForSearch' : Infinity //do not display search form
+          }) );
+
+  },//initialize
+  getItemTemplates : function() {
+          return {
+                viewTemplateEl : 'czr-module-item-view',
+                viewContentTemplateEl : 'czr-module-widget-tag_cloud-view-content',
+          };
+  },
+  getItemDefaultModel : function() {
+          return {
+              id                    : '',
+              title                 : 'Tag Cloud:',
+              type                  : 'WP_Widget_Tag_Cloud',
+              'widget-taxonomy'     : '',
+          };
+  },
+  CZRWidgetTagCloudInputMths : {
+  },//CZRwidgetssInputMths
+  CZRWidgetTagCloudItem : {
+  }
 });//BASE CONTROL CLASS
 
 var CZRBaseControlMths = CZRBaseControlMths || {};
@@ -3717,7 +3760,9 @@ $.extend( CZRBaseModuleControlMths, {
                 czr_widget_archives_module        : api.CZRWidgetArchivesModule,
                 czr_widget_recent_posts_module    : api.CZRWidgetRecentPostsModule,
                 czr_widget_recent_comments_module : api.CZRWidgetRecentCommentsModule,
-                czr_widget_rss_module             : api.CZRWidgetRSSModule                
+                czr_widget_rss_module             : api.CZRWidgetRSSModule,
+                czr_widget_tag_cloud_module       : api.CZRWidgetTagCloudModule                
+                
           };
 
           control.czr_Module = new api.Values();
@@ -4282,6 +4327,7 @@ $.extend( CZRBackgroundMths , {
   api.CZRWidgetRecentPostsModule    = api.CZRWidgetModule.extend( CZRWidgetRecentPostsModuleMths || {} );
   api.CZRWidgetRecentCommentsModule = api.CZRWidgetModule.extend( CZRWidgetRecentCommentsModuleMths || {} );
   api.CZRWidgetRSSModule            = api.CZRWidgetModule.extend( CZRWidgetRSSModuleMths || {} );
+  api.CZRWidgetTagCloudModule       = api.CZRWidgetModule.extend( CZRWidgetTagCloudModuleMths || {} );
 
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );
