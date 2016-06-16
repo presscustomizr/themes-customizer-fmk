@@ -2,15 +2,21 @@
 var CZRInputMths = CZRInputMths || {};
 $.extend( CZRInputMths , {
   setupContentPicker: function() {
-          var input  = this;
+          var input  = this,
+            _default_params = {
+              'object' : ['page'],   //this.control.params.object_types  - array('page', 'post')
+              'type'   : 'post_type', //this.control.params.type  - post_type              
+            };
 
-          /* Dummy for the prototype purpose */
-          input.object = input.object || ['post']; //this.control.params.object_types  - array('page', 'post')
-          input.type   = input.type || 'post_type'; //this.control.params.type  - post_type
+          //Parse custom params
+          var _parsed_params = {
+            'object' : input.custom_params.get().object || _default_params.object,
+            'type'   : input.custom_params.get().type  || _default_params.type
+          };
+          input.custom_params.set( _parsed_params );
 
           /* Methodize this or use a template */
           input.container.find('.czr-input').append('<select data-select-type="content-picker-select" class="js-example-basic-simple"></select>');
-
 
           //binding
           _event_map = [
@@ -22,8 +28,8 @@ $.extend( CZRInputMths , {
                 actions   : 'updateContentPickerModel'
               }
           ];
-
           input.setupDOMListeners( _event_map , { dom_el : input.container }, input );
+
           input.setupContentSelecter();
   },
 
@@ -45,15 +51,16 @@ $.extend( CZRInputMths , {
                   debug: true,
                   data: function ( params ) {
                         //for some reason I'm not getting at the moment the params.page returned when searching is different
-                        var page = params.page ? params.page - 1 : 0;
+                        var page = params.page ? params.page - 1 : 0,
+                            input_params = input.custom_params.get();
                         page = params.term ? params.page : page;
                         return {
                               action: params.term ? "search-available-content-items-customizer" : "load-available-content-items-customizer",
                               search: params.term,
                               wp_customize: 'on',
                               page: page,
-                              type: input.type,
-                              object: input.object,
+                              type: input_params.type,
+                              object: input_params.object,
                               CZRCpNonce: serverControlParams.CZRCpNonce
                         };
               },

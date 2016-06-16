@@ -41,7 +41,8 @@ $.extend( CZRItemMths , {
                   return;
               }
               var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index,
-                  _value = _.has( initial_item_model, _id) ? initial_item_model[_id] : '';
+                  _value = _.has( initial_item_model, _id) ? initial_item_model[_id] : '',
+                  _custom_params = ( _.has( module, 'custom_params' ) && module.custom_params( _id ) ) ? module.custom_params( _id ) : '';
 
               item.czr_Input.add( _id, new item.inputConstructor( _id, {
                     id : _id,
@@ -49,7 +50,8 @@ $.extend( CZRItemMths , {
                     input_value : _value,
                     container : $(this),
                     item : item,
-                    module : module
+                    module : module,
+                    custom_params : _custom_params
               } ) );
               //populate the collection
               input_collection[_id] = _value;

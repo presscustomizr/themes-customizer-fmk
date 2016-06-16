@@ -876,9 +876,16 @@ $.extend( CZRInputMths , {
 var CZRInputMths = CZRInputMths || {};
 $.extend( CZRInputMths , {
   setupContentPicker: function() {
-          var input  = this;
-          input.object = input.object || ['post']; //this.control.params.object_types  - array('page', 'post')
-          input.type   = input.type || 'post_type'; //this.control.params.type  - post_type
+          var input  = this,
+            _default_params = {
+              'object' : ['page'],   //this.control.params.object_types  - array('page', 'post')
+              'type'   : 'post_type', //this.control.params.type  - post_type              
+            };
+          var _parsed_params = {
+            'object' : input.custom_params.get().object || _default_params.object,
+            'type'   : input.custom_params.get().type  || _default_params.type
+          };
+          input.custom_params.set( _parsed_params );
           input.container.find('.czr-input').append('<select data-select-type="content-picker-select" class="js-example-basic-simple"></select>');
           _event_map = [
               {
@@ -888,8 +895,8 @@ $.extend( CZRInputMths , {
                 actions   : 'updateContentPickerModel'
               }
           ];
-
           input.setupDOMListeners( _event_map , { dom_el : input.container }, input );
+
           input.setupContentSelecter();
   },
 
@@ -909,15 +916,16 @@ $.extend( CZRInputMths , {
                   delay: 250,
                   debug: true,
                   data: function ( params ) {
-                        var page = params.page ? params.page - 1 : 0;
+                        var page = params.page ? params.page - 1 : 0,
+                            input_params = input.custom_params.get();
                         page = params.term ? params.page : page;
                         return {
                               action: params.term ? "search-available-content-items-customizer" : "load-available-content-items-customizer",
                               search: params.term,
                               wp_customize: 'on',
                               page: page,
-                              type: input.type,
-                              object: input.object,
+                              type: input_params.type,
+                              object: input_params.object,
                               CZRCpNonce: serverControlParams.CZRCpNonce
                         };
               },
@@ -1111,7 +1119,8 @@ $.extend( CZRItemMths , {
                   return;
               }
               var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index,
-                  _value = _.has( initial_item_model, _id) ? initial_item_model[_id] : '';
+                  _value = _.has( initial_item_model, _id) ? initial_item_model[_id] : '',
+                  _custom_params = ( _.has( module, 'custom_params' ) && module.custom_params( _id ) ) ? module.custom_params( _id ) : '';
 
               item.czr_Input.add( _id, new item.inputConstructor( _id, {
                     id : _id,
@@ -1119,7 +1128,8 @@ $.extend( CZRItemMths , {
                     input_value : _value,
                     container : $(this),
                     item : item,
-                    module : module
+                    module : module,
+                    custom_params : _custom_params
               } ) );
               input_collection[_id] = _value;
         });//each
@@ -2889,6 +2899,12 @@ $.extend( CZRFeaturedPageModuleMths, {
               'fp-text'  : '',
               'fp-image' : '',
           };
+          module.custom_params = new api.Values();
+
+          module.custom_params.add( 'fp-post', new api.Value({
+            'object' : ['post'],
+            'type'   : 'post_type'
+          }) );
           this.itemAddedMessage = serverControlParams.translatedStrings.featuredPageAdded;
           api.section( module.control.section() ).expanded.bind(function(to) {
             if ( ! to || ! _.isEmpty( module.get() ) )

@@ -30,6 +30,14 @@ $.extend( CZRFeaturedPageModuleMths, {
               'fp-image' : '',
           };
 
+          //Set Content Picker params
+          module.custom_params = new api.Values();
+
+          module.custom_params.add( 'fp-post', new api.Value({
+            'object' : ['post'],
+            'type'   : 'post_type'
+          }) );
+
           //overrides the default success message
           this.itemAddedMessage = serverControlParams.translatedStrings.featuredPageAdded;
           api.section( module.control.section() ).expanded.bind(function(to) {
