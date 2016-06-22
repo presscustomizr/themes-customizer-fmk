@@ -33,7 +33,7 @@
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );
 
-  api.CZRTextEditorModule     = api.CZRModule.extend( CZRTextEditorModuleMths || {} );
+  api.CZRTextEditorModule     = api.CZRDynModule.extend( CZRTextEditorModuleMths || {} );
 
   //CONTROLS
   api.CZRBaseControl           = api.Control.extend( CZRBaseControlMths || {} );

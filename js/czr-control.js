@@ -3772,10 +3772,9 @@ var CZRTextEditorModuleMths = CZRTextEditorModuleMths || {};
 $.extend( CZRTextEditorModuleMths, {
   initialize: function( id, options ) {
           var module = this;
-          api.CZRModule.prototype.initialize.call( module, id, options );
+          api.CZRDynModule.prototype.initialize.call( module, id, options );
           module.is_sortable = false;
           $.extend( module, {
-                singleModuleWrapper : 'czr-single-module-wrapper',
                 viewTemplateEl : 'czr-module-item-view',
                 viewContentTemplateEl : 'czr-module-text_editor-view-content',
           } );
@@ -3785,28 +3784,10 @@ $.extend( CZRTextEditorModuleMths, {
             id : '',
             text: ''
           };
-          module.savedItems = _.isEmpty( options.items ) ? [ module._initNewItem( module.defaultItemModel ) ] : options.items;
- 
-          module.embedded = $.Deferred();
-          
-          var module_wrapper_tmpl = wp.template( module.singleModuleWrapper ),
-            tmpl_data = {
-                id : module.id,
-                type : module.module_type
-            };
-
-          var $_module_el = $(  module_wrapper_tmpl( tmpl_data ) );
-
+          this.itemAddedMessage = serverControlParams.translatedStrings.featuredPageAdded;
           api.section( module.control.section() ).expanded.bind(function(to) {
-
-            if ( ! to || ! _.isEmpty( module.get() ) )
-              return;
-
-            if ( false !== module.container.length ) {
-              module.container.append( $_module_el );
-              module.embedded.resolve();
-            }
-
+            if ( 'resolved' == module.isReady.state() )
+                  return;
             module.ready();
           });
   },//initialize
@@ -4579,7 +4560,7 @@ $.extend( CZRBackgroundMths , {
 
   api.CZRSlideModule          = api.CZRDynModule.extend( CZRSlideModuleMths || {} );
 
-  api.CZRTextEditorModule     = api.CZRModule.extend( CZRTextEditorModuleMths || {} );
+  api.CZRTextEditorModule     = api.CZRDynModule.extend( CZRTextEditorModuleMths || {} );
   api.CZRBaseControl           = api.Control.extend( CZRBaseControlMths || {} );
   api.CZRBaseModuleControl    = api.CZRBaseControl.extend( CZRBaseModuleControlMths || {} );
   api.CZRMultiModulesControl        = api.CZRBaseModuleControl.extend( CZRMultiModuleControlMths || {} );
