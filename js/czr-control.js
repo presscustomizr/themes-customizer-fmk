@@ -1024,7 +1024,6 @@ $.extend( CZRInputMths , {
           input.czrTextEditorBinding();
 
           input.czrResizeEditorOnUserRequest();
-          console.log( input.prototype );
   },
 
   czrTextEditorBinding : function() {
@@ -1064,6 +1063,7 @@ $.extend( CZRInputMths , {
 
               if ( expanded ) {
                 editor.setContent( wp.editor.autop( input.get() ) );
+                textarea.val( wp.editor.removep( input.get() ) );
                 editor.on( 'input change keyup', input.czrOnVisualEditorChange );
                 textarea.on( 'input', input.czrOnTextEditorChange );
                 input.czrResizeEditor( window.innerHeight - editorPane.height() );
