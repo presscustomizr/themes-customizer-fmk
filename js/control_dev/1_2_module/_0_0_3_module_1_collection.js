@@ -10,26 +10,25 @@ var CZRModuleMths = CZRModuleMths || {};
 $.extend( CZRModuleMths, {
 
   //@fired in module ready on api('ready')
+  //the module().items has been set in initialize
   populateSavedItemCollection : function() {
           var module = this;
+          if ( ! _.isArray( module().items ) ) {
+              throw new Error( 'The saved items collection must be an array in module ' + module.id );
+          }
 
-          console.log('module.savedItems', module.savedItems );
           //populates the collection with the saved items
-          _.each( module.savedItems, function( item, key ) {
+          _.each( module().items, function( item, key ) {
                 //normalizes the item
                 item = module._normalizeItem(item, _.has( item, 'id' ) ? item.id : key );
                 if ( false === item ) {
                   throw new Error('populateItemCollection : an item could not be added in : ' + module.id );
                 }
-
-                //adds it to the collection
-                module.instantiateItem(item);
+                //adds it to the collection and fire item.ready()
+                module.instantiateItem(item).ready();
           });
-
-          //The collection of item is ready now. Say it.
-          module.savedItemCollectionReady.resolve();
-
-          return this;
+          //do we need to chain this method ?
+          //return this;
   },
 
 
@@ -42,14 +41,9 @@ $.extend( CZRModuleMths, {
           item_candidate = module.prepareItemForAPI( item );
           //instanciate the item with the default constructor
           module.czr_Item.add( item.id, new module.itemConstructor( item.id, item_candidate ) );
-          //push it to the collection
-          module.updateItemsCollection( { item : module.getInitialItemModel( item ) } );
-          //listen to each single item change
-          module.czr_Item(item.id).callbacks.add( function() { return module.itemReact.apply(module, arguments ); } );
           //the item is now ready and will listen to changes
-          module.czr_Item(item.id).ready();
-          //@todo not sure this is needed now.
-          module.trigger('item_instanciated', { item: item, is_added_by_user : is_added_by_user || false } );
+          //return the instance
+          return module.czr_Item(item.id);
   },
 
 
@@ -112,15 +106,6 @@ $.extend( CZRModuleMths, {
           return item;
   },
 
-
-
-  //React to a single item change
-  //cb of module.czr_Item(item.id).callbacks
-  itemReact : function( to, from ) {
-        var module = this;
-        //update the collection
-        module.updateItemsCollection( {item : to });
-  },
 
 
 

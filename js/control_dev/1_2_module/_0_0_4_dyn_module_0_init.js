@@ -118,7 +118,8 @@ $.extend( CZRDynModuleMths, {
             throw new Error('addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
           }
 
-          module.instantiateItem( item, true ); //true == Added by user
+          //instantiates and fires ready
+          module.instantiateItem( item, true ).ready(); //true == Added by user
 
           module.toggleSuccessMessage('on');
           setTimeout( function() {
