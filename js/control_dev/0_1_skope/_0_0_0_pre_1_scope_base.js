@@ -1,7 +1,7 @@
 (function (api, $, _) {
   //WHAT IS A SCOPE ?
   //A scope is an object describing a set of options for a given customization context
-  //It is constructed by the czr_scopeModel constructor
+  //It is constructed by the czr_skopeModel constructor
   //it has a model with the following properties
   // - a name : 'global', 'all_posts'
   // - a corresponding database option name
@@ -117,18 +117,18 @@
   //
   //
   // HOW DOES THIS WORK ?
-  // CZR_scopeBase listens to scope collection changes
-  // 1) instantiate new models (CZR_scopeModel), remove old ones and their view
+  // CZR_skopeBase listens to scope collection changes
+  // 1) instantiate new models (CZR_skope), remove old ones and their view
   // 2) sets each scope models active scope state changes
 
 
-  // CZR_scopeModel
-  // 1) instantiate, the scope view (CZR_scopeView)
+  // CZR_skope
+  // 1) instantiate, the scope view (CZR_skopeView)
   // 2) listens to the active state
   //   => store dirtyness on switch
   //   => fetch the db values, build the full set of values ( db + dirties + default) and update the settings
 
-  // CZR_scopeView
+  // CZR_skopeView
   // 1) renders the view
   // 2) listens to model active state
   //   => change the view display elements
@@ -139,46 +139,176 @@
 
 
 
-
   /*****************************************************************************
   * THE SCOPE BASE OBJECT
   *****************************************************************************/
+  /* SCOPE COLLECTION AND ACTIVE SKOPE => stores and observes the collection sent by the preview */
+  api.czr_skopeCollection = new api.Value([]);//all available scope, including the current scope
+  api.czr_activeSkope = new api.Value();//the currently active scope
+
   api.bind( 'ready' , function() {
-    if ( serverControlParams.isCtxEnabled ) {
-      api.czr_scopeBase = new api.CZR_scopeBase();
+    if ( serverControlParams.isSkopOn ) {
+      api.czr_skopeBase = new api.CZR_skopeBase();
     }
   } );
 
-  api.CZR_scopeBase = api.Class.extend( {
+  api.CZR_skopeBase = api.Class.extend( {
     globalSettingVal : {},//will store the global setting val. Populated on init.
 
     initialize: function() {
           var self = this;
+          //declare the collection
+          api.czr_skope = new api.Values();
+          //store the embed state
+          self.scopeWrapperEmbedded = $.Deferred();
 
           //Embed the scopes wrapper if needed
-          if ( ! $('#customize-header-actions').find('.czr-scope-switcher').length ) {
-            $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher'}) );
+          if ( 'pending' == self.scopeWrapperEmbedded.state() ) {
+              $.when( self.embedSkopeWrapper() ).done( function() {
+                  self.scopeWrapperEmbedded.resolve();
+              });
           }
 
           //store the initial state of the global option
           this.initialGlobalSettingVal = this.getGlobalSettingVal();
+
+          //REACT TO ACTIVE SCOPE UPDATE
+          api.czr_activeSkope.callbacks.add( function() { return self.setSkopeStates.apply(self, arguments ); } );
 
           //SCOPE COLLECTION LISTENER
           //The scope collection is set on 'czr-scopes-ready' triggered by the preview
           //setup the callbacks of the scope collection update
           //on init and on preview change : the collection of scopes is populated with new scopes
           //=> instanciate the relevant scope object + render them
-          api.czr_scopeCollection('collection').callbacks.add( function() { return self.initScopeModels.apply(self, arguments ); } );
+          api.czr_skopeCollection.callbacks.add( function() { return self.instantiateSkopes.apply(self, arguments ); } );
 
-          //REACT TO ACTIVE SCOPE UPDATE
-          api.czr_scopeCollection('active').callbacks.add( function() { return self.setScopeStates.apply(self, arguments ); } );
+
     },
 
 
 
-    //setup the czr_scopeCollection('collection') callbacks
+
+
+    //fired on 'czr-scopes-ready' triggered by the preview
+    updateSkopeCollection : function( collection ) {
+          console.log('skope Collection?', collection );
+          var self = this;
+              _api_ready_collection = [];
+          _.each( collection, function( _skope, _key ) {
+              _api_ready_collection.push( self.prepareSkopeForAPI( _skope ) );
+          });
+          api.czr_skopeCollection.set( _api_ready_collection );
+    },
+
+
+
+    prepareSkopeForAPI : function( skope_candidate ) {
+          if ( ! _.isObject( skope_candidate ) ) {
+              throw new Error('prepareSkopeForAPI : a skope must be an object to be API ready');
+          }
+          console.log('in prepareSkope', serverControlParams.defaultSkopeModel, skope_candidate );
+          return skope_candidate;
+          // var control = this,
+          //     api_ready_skope = {};
+
+          // _.each( control.getDefaultModuleApiModel() , function( _value, _key ) {
+          //       var _candidate_val = skope_candidate[_key];
+          //       switch( _key ) {
+          //             //PROPERTIES COMMON TO ALL MODULES IN ALL CONTEXTS
+          //             case 'id' :
+          //                 if ( _.isEmpty( _candidate_val ) ) {
+          //                     api_ready_skope[_key] = control.generateModuleId( skope_candidate.module_type );
+          //                 } else {
+          //                     api_ready_skope[_key] = _candidate_val;
+          //                 }
+          //             break;
+          //             case 'module_type' :
+          //                 if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+          //                     throw new Error('prepareModuleForAPI : a module type must a string not empty');
+          //                 }
+          //                 api_ready_skope[_key] = _candidate_val;
+          //             break;
+          //             case 'items' :
+          //                 if ( ! _.isArray( _candidate_val )  ) {
+          //                     throw new Error('prepareModuleForAPI : a module item list must be an array');
+          //                 }
+          //                 api_ready_skope[_key] = _candidate_val;
+          //             break;
+          //             case 'crud' :
+          //                 if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+          //                     throw new Error('prepareModuleForAPI : the module param "crud" must be a boolean');
+          //                 }
+          //                 api_ready_skope[_key] = _candidate_val || false;
+          //             break;
+          //             case 'multi_item' :
+          //                 if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+          //                     throw new Error('prepareModuleForAPI : the module param "multi_item" must be a boolean');
+          //                 }
+          //                 api_ready_skope[_key] = _candidate_val || false;
+          //             break;
+          //             case  'control' :
+          //                 api_ready_skope[_key] = control;//this
+          //             break;
+
+
+
+          //             //PROPERTIES FOR MODULE EMBEDDED IN A CONTROL
+          //             case  'section' :
+          //                 if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+          //                     throw new Error('prepareModuleForAPI : a module section must be a string not empty');
+          //                 }
+          //                 api_ready_skope[_key] = _candidate_val;
+          //             break;
+
+
+
+          //             //PROPERTIES FOR MODULE EMBEDDED IN A SEKTION
+          //             case  'column_id' :
+          //                 if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+          //                     throw new Error('prepareModuleForAPI : a module column id must a string not empty');
+          //                 }
+          //                 api_ready_skope[_key] = _candidate_val;
+          //             break;
+          //             case  'sektion' :
+          //                 if ( ! _.isObject( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+          //                     throw new Error('prepareModuleForAPI : a module sektion must be an object not empty');
+          //                 }
+          //                 api_ready_skope[_key] = _candidate_val;
+          //             break;
+          //             case  'sektion_id' :
+          //                 if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+          //                     throw new Error('prepareModuleForAPI : a module sektion id must be a string not empty');
+          //                 }
+          //                 api_ready_skope[_key] = _candidate_val;
+          //             break;
+          //       }//switch
+          // });
+          // return api_ready_skope;
+    },
+
+
+
+
+
+
+
+
+
+
+
+
+
     //fired in initialize
-    initScopeModels : function(to, from) {
+    embedSkopeWrapper : function() {
+        var self = this;
+        $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher'}) );
+    },
+
+
+
+    //setup the czr_skopeCollection callbacks
+    //fired in initialize
+    instantiateSkopes : function(to, from) {
           console.log('SCOPES SENT BY THE PREVIEW, FROM AND TO : ', from, to);
           var self = this,
               _new_collection = _.clone(to) || {},
@@ -186,43 +316,50 @@
 
           //destroy the previous scopes views and models
           //Instantiate the scopes collection
-          _.map( _old_collection, function( data , name ) {
-            //remove the view DOM el
-            api.czr_scope(name).view.container.remove();
-            //remove the model from the collection
-            api.czr_scope.remove(name);
+          _.each( _old_collection, function( _skope ) {
+              //remove the view DOM el
+              api.czr_skope( _skope.id ).container.remove();
+              //remove the model from the collection
+              api.czr_skope.remove( _skope.id );
           });
 
 
           //Instantiate the scopes collection
-          _.map( _new_collection, function( data , name ) {
-            var params = _.clone(data);//IMPORTANT => otherwise the data object is actually a copy and share the same reference as the model and view params
-            api.czr_scope.add( name, new api.CZR_scopeModel( name, $.extend( params, {name : name} ) ) );
-            //fire this right after instantiation for the views (we need the model instances in the views)
-            api.czr_scope(name).ready();
+          _.each( _new_collection, function( _skope ) {
+              var params = $.extend( true, {}, _skope );//IMPORTANT => otherwise the data object is actually a copy and share the same reference as the model and view params
+              api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
+
+              //fire this right after instantiation for the views (we need the model instances in the views)
+              if ( ! api.czr_skope.has( _skope.id ) ) {
+                  throw new Error( 'Skope id : ' + _skope.id + ' has not been instantiated.');
+              }
+              api.czr_skope( _skope.id ).ready();
           });
 
           //set the defaut scope as active as global
-          api.czr_scopeCollection('active').set( self.getActiveScopeOnInit(_new_collection) );
+          api.czr_activeSkope.set( self.getActiveSkopeOnInit( _new_collection ) );
 
           //LISTEN TO API SETTING CHANGES => POPULATE THE DIRTYNESS OF THE ACTIVE SCOPE
           this.addAPISettingsListener();
-    },//listenToScopeCollection()
+    },//listenToSkopeCollection()
+
+
 
 
     //fired in initialize
-    setScopeStates : function(to, from) {
+    setSkopeStates : function(to, from) {
+      console.log('in set skope state', to, from );
           var self = this;
           //set the to and from scope state on init and switch
-          if ( ! _.isUndefined(from) && api.czr_scope.has(from) )
-            api.czr_scope(from).active.set(false);
+          if ( ! _.isUndefined(from) && api.czr_skope.has(from) )
+            api.czr_skope(from).active.set(false);
           else if ( ! _.isUndefined(from) )
-            throw new Error('listenToActiveScope : previous scope does not exist in the collection');
+            throw new Error('listenToActiveSkope : previous scope does not exist in the collection');
 
-          if ( ! _.isUndefined(to) && api.czr_scope.has(to) )
-            api.czr_scope(to).active.set(true);
+          if ( ! _.isUndefined(to) && api.czr_skope.has(to) )
+            api.czr_skope(to).active.set(true);
           else
-            throw new Error('listenToActiveScope : requested scope ' + to + ' does not exist in the collection');
+            throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
     },
 
 
@@ -257,10 +394,10 @@
                   return;
 
                 api(key).callbacks.add( function(to, from) {
-                      var current_scope = api.czr_scope( api.czr_scopeCollection('active').get() );//the active scope instance
+                      var current_scope = api.czr_skope( api.czr_activeSkope() );//the active scope instance
 
                       if ( _.isUndefined(current_scope) ) {
-                        throw new Error('Scope base class : the active scope is not defined.');
+                        throw new Error('Skope base class : the active scope is not defined.');
                       }
 
                       var current_dirties = _.clone( current_scope.dirtyValues.get() ),
@@ -281,8 +418,8 @@
     * HELPERS
     *****************************************************************************/
     //@return the
-    getActiveScopeOnInit : function(collection) {
-          _def = _.findWhere(collection, {is_default : true }).name;
+    getActiveSkopeOnInit : function(collection) {
+          _def = _.findWhere( collection, {is_default : true } ).id;
           return ! _.isUndefined(_def) ? _def : 'global';
     },
 

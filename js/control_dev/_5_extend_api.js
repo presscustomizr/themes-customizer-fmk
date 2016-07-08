@@ -5,11 +5,16 @@
   $.extend( CZRModuleMths, api.Events || {} );
   $.extend( CZRItemMths, api.Events || {} );
   $.extend( CZRInputMths, api.Events || {} );
+  $.extend( CZRSkopeMths, api.Events || {} );
 
   //Add the DOM helpers (addAction, ...) to the Control Base Class + Input Base Class
   $.extend( CZRBaseControlMths, api.CZR_Helpers || {} );
   $.extend( CZRInputMths, api.CZR_Helpers || {} );
   $.extend( CZRModuleMths, api.CZR_Helpers || {} );
+  $.extend( CZRSkopeMths, api.CZR_Helpers || {} );
+
+  //SKOPE => used as constructor when creating the collection of skopes
+  api.CZR_skope                 = api.Value.extend( CZRSkopeMths || {} );
 
   //INPUTS => used as constructor when creating the collection of inputs
   api.CZRInput                 = api.Value.extend( CZRInputMths || {} );

@@ -16,10 +16,6 @@ if ( 'function' != typeof(jQuery.fn.stepper) ) {
 var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).is("option")?(a.element.selected=!1,void this.$element.trigger("change")):void this.current(function(d){for(var e=[],f=0;f<d.length;f++){var g=d[f].id;g!==a.id&&-1===c.inArray(g,e)&&e.push(g)}b.$element.val(e),b.$element.trigger("change")})},d.prototype.bind=function(a,b){var c=this;this.container=a,a.on("select",function(a){c.select(a.data)}),a.on("unselect",function(a){c.unselect(a.data)})},d.prototype.destroy=function(){this.$element.find("*").each(function(){c.removeData(this,"data")})},d.prototype.query=function(a,b){var d=[],e=this,f=this.$element.children();f.each(function(){var b=c(this);if(b.is("option")||b.is("optgroup")){var f=e.item(b),g=e.matches(a,f);null!==g&&d.push(g)}}),b({results:d})},d.prototype.addOptions=function(a){b.appendMany(this.$element,a)},d.prototype.option=function(a){var b;a.children?(b=document.createElement("optgroup"),b.label=a.text):(b=document.createElement("option"),void 0!==b.textContent?b.textContent=a.text:b.innerText=a.text),a.id&&(b.value=a.id),a.disabled&&(b.disabled=!0),a.selected&&(b.selected=!0),a.title&&(b.title=a.title);var d=c(b),e=this._normalizeItem(a);return e.element=b,c.data(b,"data",e),d},d.prototype.item=function(a){var b={};if(b=c.data(a[0],"data"),null!=b)return b;if(a.is("option"))b={id:a.val(),text:a.text(),disabled:a.prop("disabled"),selected:a.prop("selected"),title:a.prop("title")};else if(a.is("optgroup")){b={text:a.prop("label"),children:[],title:a.prop("title")};for(var d=a.children("option"),e=[],f=0;f<d.length;f++){var g=c(d[f]),h=this.item(g);e.push(h)}b.children=e}return b=this._normalizeItem(b),b.element=a[0],c.data(a[0],"data",b),b},d.prototype._normalizeItem=function(a){c.isPlainObject(a)||(a={id:a,text:a}),a=c.extend({},{text:""},a);var b={selected:!1,disabled:!1};return null!=a.id&&(a.id=a.id.toString()),null!=a.text&&(a.text=a.text.toString()),null==a._resultId&&a.id&&null!=this.container&&(a._resultId=this.generateResultId(this.container,a)),c.extend({},b,a)},d.prototype.matches=function(a,b){var c=this.options.get("matcher");return c(a,b)},d}),b.define("select2/data/array",["./select","../utils","jquery"],function(a,b,c){function d(a,b){var c=b.get("data")||[];d.__super__.constructor.call(this,a,b),this.addOptions(this.convertToOptions(c))}return b.Extend(d,a),d.prototype.select=function(a){var b=this.$element.find("option").filter(function(b,c){return c.value==a.id.toString()});0===b.length&&(b=this.option(a),this.addOptions(b)),d.__super__.select.call(this,a)},d.prototype.convertToOptions=function(a){function d(a){return function(){return c(this).val()==a.id}}for(var e=this,f=this.$element.find("option"),g=f.map(function(){return e.item(c(this)).id}).get(),h=[],i=0;i<a.length;i++){var j=this._normalizeItem(a[i]);if(c.inArray(j.id,g)>=0){var k=f.filter(d(j)),l=this.item(k),m=c.extend(!0,{},l,j),n=this.option(m);k.replaceWith(n)}else{var o=this.option(j);if(j.children){var p=this.convertToOptions(j.children);b.appendMany(o,p)}h.push(o)}}return h},d}),b.define("select2/data/ajax",["./array","../utils","jquery"],function(a,b,c){function d(a,b){this.ajaxOptions=this._applyDefaults(b.get("ajax")),null!=this.ajaxOptions.processResults&&(this.processResults=this.ajaxOptions.processResults),d.__super__.constructor.call(this,a,b)}return b.Extend(d,a),d.prototype._applyDefaults=function(a){var b={data:function(a){return c.extend({},a,{q:a.term})},transport:function(a,b,d){var e=c.ajax(a);return e.then(b),e.fail(d),e}};return c.extend({},b,a,!0)},d.prototype.processResults=function(a){return a},d.prototype.query=function(a,b){function d(){var d=f.transport(f,function(d){var f=e.processResults(d,a);e.options.get("debug")&&window.console&&console.error&&(f&&f.results&&c.isArray(f.results)||console.error("Select2: The AJAX results did not return an array in the `results` key of the response.")),b(f)},function(){});e._request=d}var e=this;null!=this._request&&(c.isFunction(this._request.abort)&&this._request.abort(),this._request=null);var f=c.extend({type:"GET"},this.ajaxOptions);"function"==typeof f.url&&(f.url=f.url.call(this.$element,a)),"function"==typeof f.data&&(f.data=f.data.call(this.$element,a)),this.ajaxOptions.delay&&""!==a.term?(this._queryTimeout&&window.clearTimeout(this._queryTimeout),this._queryTimeout=window.setTimeout(d,this.ajaxOptions.delay)):d()},d}),b.define("select2/data/tags",["jquery"],function(a){function b(b,c,d){var e=d.get("tags"),f=d.get("createTag");if(void 0!==f&&(this.createTag=f),b.call(this,c,d),a.isArray(e))for(var g=0;g<e.length;g++){var h=e[g],i=this._normalizeItem(h),j=this.option(i);this.$element.append(j)}}return b.prototype.query=function(a,b,c){function d(a,f){for(var g=a.results,h=0;h<g.length;h++){var i=g[h],j=null!=i.children&&!d({results:i.children},!0),k=i.text===b.term;if(k||j)return f?!1:(a.data=g,void c(a))}if(f)return!0;var l=e.createTag(b);if(null!=l){var m=e.option(l);m.attr("data-select2-tag",!0),e.addOptions([m]),e.insertTag(g,l)}a.results=g,c(a)}var e=this;return this._removeOldTags(),null==b.term||null!=b.page?void a.call(this,b,c):void a.call(this,b,d)},b.prototype.createTag=function(b,c){var d=a.trim(c.term);return""===d?null:{id:d,text:d}},b.prototype.insertTag=function(a,b,c){b.unshift(c)},b.prototype._removeOldTags=function(b){var c=(this._lastTag,this.$element.find("option[data-select2-tag]"));c.each(function(){this.selected||a(this).remove()})},b}),b.define("select2/data/tokenizer",["jquery"],function(a){function b(a,b,c){var d=c.get("tokenizer");void 0!==d&&(this.tokenizer=d),a.call(this,b,c)}return b.prototype.bind=function(a,b,c){a.call(this,b,c),this.$search=b.dropdown.$search||b.selection.$search||c.find(".select2-search__field")},b.prototype.query=function(a,b,c){function d(a){e.trigger("select",{data:a})}var e=this;b.term=b.term||"";var f=this.tokenizer(b,this.options,d);f.term!==b.term&&(this.$search.length&&(this.$search.val(f.term),this.$search.focus()),b.term=f.term),a.call(this,b,c)},b.prototype.tokenizer=function(b,c,d,e){for(var f=d.get("tokenSeparators")||[],g=c.term,h=0,i=this.createTag||function(a){return{id:a.term,text:a.term}};h<g.length;){var j=g[h];if(-1!==a.inArray(j,f)){var k=g.substr(0,h),l=a.extend({},c,{term:k}),m=i(l);null!=m?(e(m),g=g.substr(h+1)||"",h=0):h++}else h++}return{term:g}},b}),b.define("select2/data/minimumInputLength",[],function(){function a(a,b,c){this.minimumInputLength=c.get("minimumInputLength"),a.call(this,b,c)}return a.prototype.query=function(a,b,c){return b.term=b.term||"",b.term.length<this.minimumInputLength?void this.trigger("results:message",{message:"inputTooShort",args:{minimum:this.minimumInputLength,input:b.term,params:b}}):void a.call(this,b,c)},a}),b.define("select2/data/maximumInputLength",[],function(){function a(a,b,c){this.maximumInputLength=c.get("maximumInputLength"),a.call(this,b,c)}return a.prototype.query=function(a,b,c){return b.term=b.term||"",this.maximumInputLength>0&&b.term.length>this.maximumInputLength?void this.trigger("results:message",{message:"inputTooLong",args:{maximum:this.maximumInputLength,input:b.term,params:b}}):void a.call(this,b,c)},a}),b.define("select2/data/maximumSelectionLength",[],function(){function a(a,b,c){this.maximumSelectionLength=c.get("maximumSelectionLength"),a.call(this,b,c)}return a.prototype.query=function(a,b,c){var d=this;this.current(function(e){var f=null!=e?e.length:0;return d.maximumSelectionLength>0&&f>=d.maximumSelectionLength?void d.trigger("results:message",{message:"maximumSelected",args:{maximum:d.maximumSelectionLength}}):void a.call(d,b,c)})},a}),b.define("select2/dropdown",["jquery","./utils"],function(a,b){function c(a,b){this.$element=a,this.options=b,c.__super__.constructor.call(this)}return b.Extend(c,b.Observable),c.prototype.render=function(){var b=a('<span class="select2-dropdown"><span class="select2-results"></span></span>');return b.attr("dir",this.options.get("dir")),this.$dropdown=b,b},c.prototype.bind=function(){},c.prototype.position=function(a,b){},c.prototype.destroy=function(){this.$dropdown.remove()},c}),b.define("select2/dropdown/search",["jquery","../utils"],function(a,b){function c(){}return c.prototype.render=function(b){var c=b.call(this),d=a('<span class="select2-search select2-search--dropdown"><input class="select2-search__field" type="search" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="textbox" /></span>');return this.$searchContainer=d,this.$search=d.find("input"),c.prepend(d),c},c.prototype.bind=function(b,c,d){var e=this;b.call(this,c,d),this.$search.on("keydown",function(a){e.trigger("keypress",a),e._keyUpPrevented=a.isDefaultPrevented()}),this.$search.on("input",function(b){a(this).off("keyup")}),this.$search.on("keyup input",function(a){e.handleSearch(a)}),c.on("open",function(){e.$search.attr("tabindex",0),e.$search.focus(),window.setTimeout(function(){e.$search.focus()},0)}),c.on("close",function(){e.$search.attr("tabindex",-1),e.$search.val("")}),c.on("results:all",function(a){if(null==a.query.term||""===a.query.term){var b=e.showSearch(a);b?e.$searchContainer.removeClass("select2-search--hide"):e.$searchContainer.addClass("select2-search--hide")}})},c.prototype.handleSearch=function(a){if(!this._keyUpPrevented){var b=this.$search.val();this.trigger("query",{term:b})}this._keyUpPrevented=!1},c.prototype.showSearch=function(a,b){return!0},c}),b.define("select2/dropdown/hidePlaceholder",[],function(){function a(a,b,c,d){this.placeholder=this.normalizePlaceholder(c.get("placeholder")),a.call(this,b,c,d)}return a.prototype.append=function(a,b){b.results=this.removePlaceholder(b.results),a.call(this,b)},a.prototype.normalizePlaceholder=function(a,b){return"string"==typeof b&&(b={id:"",text:b}),b},a.prototype.removePlaceholder=function(a,b){for(var c=b.slice(0),d=b.length-1;d>=0;d--){var e=b[d];this.placeholder.id===e.id&&c.splice(d,1)}return c},a}),b.define("select2/dropdown/infiniteScroll",["jquery"],function(a){function b(a,b,c,d){this.lastParams={},a.call(this,b,c,d),this.$loadingMore=this.createLoadingMore(),this.loading=!1}return b.prototype.append=function(a,b){this.$loadingMore.remove(),this.loading=!1,a.call(this,b),this.showLoadingMore(b)&&this.$results.append(this.$loadingMore)},b.prototype.bind=function(b,c,d){var e=this;b.call(this,c,d),c.on("query",function(a){e.lastParams=a,e.loading=!0}),c.on("query:append",function(a){e.lastParams=a,e.loading=!0}),this.$results.on("scroll",function(){var b=a.contains(document.documentElement,e.$loadingMore[0]);if(!e.loading&&b){var c=e.$results.offset().top+e.$results.outerHeight(!1),d=e.$loadingMore.offset().top+e.$loadingMore.outerHeight(!1);c+50>=d&&e.loadMore()}})},b.prototype.loadMore=function(){this.loading=!0;var b=a.extend({},{page:1},this.lastParams);b.page++,this.trigger("query:append",b)},b.prototype.showLoadingMore=function(a,b){return b.pagination&&b.pagination.more},b.prototype.createLoadingMore=function(){var b=a('<li class="select2-results__option select2-results__option--load-more"role="treeitem" aria-disabled="true"></li>'),c=this.options.get("translations").get("loadingMore");return b.html(c(this.lastParams)),b},b}),b.define("select2/dropdown/attachBody",["jquery","../utils"],function(a,b){function c(b,c,d){this.$dropdownParent=d.get("dropdownParent")||a(document.body),b.call(this,c,d)}return c.prototype.bind=function(a,b,c){var d=this,e=!1;a.call(this,b,c),b.on("open",function(){d._showDropdown(),d._attachPositioningHandler(b),e||(e=!0,b.on("results:all",function(){d._positionDropdown(),d._resizeDropdown()}),b.on("results:append",function(){d._positionDropdown(),d._resizeDropdown()}))}),b.on("close",function(){d._hideDropdown(),d._detachPositioningHandler(b)}),this.$dropdownContainer.on("mousedown",function(a){a.stopPropagation()})},c.prototype.destroy=function(a){a.call(this),this.$dropdownContainer.remove()},c.prototype.position=function(a,b,c){b.attr("class",c.attr("class")),b.removeClass("select2"),b.addClass("select2-container--open"),b.css({position:"absolute",top:-999999}),this.$container=c},c.prototype.render=function(b){var c=a("<span></span>"),d=b.call(this);return c.append(d),this.$dropdownContainer=c,c},c.prototype._hideDropdown=function(a){this.$dropdownContainer.detach()},c.prototype._attachPositioningHandler=function(c,d){var e=this,f="scroll.select2."+d.id,g="resize.select2."+d.id,h="orientationchange.select2."+d.id,i=this.$container.parents().filter(b.hasScroll);i.each(function(){a(this).data("select2-scroll-position",{x:a(this).scrollLeft(),y:a(this).scrollTop()})}),i.on(f,function(b){var c=a(this).data("select2-scroll-position");a(this).scrollTop(c.y)}),a(window).on(f+" "+g+" "+h,function(a){e._positionDropdown(),e._resizeDropdown()})},c.prototype._detachPositioningHandler=function(c,d){var e="scroll.select2."+d.id,f="resize.select2."+d.id,g="orientationchange.select2."+d.id,h=this.$container.parents().filter(b.hasScroll);h.off(e),a(window).off(e+" "+f+" "+g)},c.prototype._positionDropdown=function(){var b=a(window),c=this.$dropdown.hasClass("select2-dropdown--above"),d=this.$dropdown.hasClass("select2-dropdown--below"),e=null,f=(this.$container.position(),this.$container.offset());f.bottom=f.top+this.$container.outerHeight(!1);var g={height:this.$container.outerHeight(!1)};g.top=f.top,g.bottom=f.top+g.height;var h={height:this.$dropdown.outerHeight(!1)},i={top:b.scrollTop(),bottom:b.scrollTop()+b.height()},j=i.top<f.top-h.height,k=i.bottom>f.bottom+h.height,l={left:f.left,top:g.bottom};if("static"!==this.$dropdownParent[0].style.position){var m=this.$dropdownParent.offset();l.top-=m.top,l.left-=m.left}c||d||(e="below"),k||!j||c?!j&&k&&c&&(e="below"):e="above",("above"==e||c&&"below"!==e)&&(l.top=g.top-h.height),null!=e&&(this.$dropdown.removeClass("select2-dropdown--below select2-dropdown--above").addClass("select2-dropdown--"+e),this.$container.removeClass("select2-container--below select2-container--above").addClass("select2-container--"+e)),this.$dropdownContainer.css(l)},c.prototype._resizeDropdown=function(){var a={width:this.$container.outerWidth(!1)+"px"};this.options.get("dropdownAutoWidth")&&(a.minWidth=a.width,a.width="auto"),this.$dropdown.css(a)},c.prototype._showDropdown=function(a){this.$dropdownContainer.appendTo(this.$dropdownParent),this._positionDropdown(),this._resizeDropdown()},c}),b.define("select2/dropdown/minimumResultsForSearch",[],function(){function a(b){for(var c=0,d=0;d<b.length;d++){var e=b[d];e.children?c+=a(e.children):c++}return c}function b(a,b,c,d){this.minimumResultsForSearch=c.get("minimumResultsForSearch"),this.minimumResultsForSearch<0&&(this.minimumResultsForSearch=1/0),a.call(this,b,c,d)}return b.prototype.showSearch=function(b,c){return a(c.data.results)<this.minimumResultsForSearch?!1:b.call(this,c)},b}),b.define("select2/dropdown/selectOnClose",[],function(){function a(){}return a.prototype.bind=function(a,b,c){var d=this;a.call(this,b,c),b.on("close",function(){d._handleSelectOnClose()})},a.prototype._handleSelectOnClose=function(){var a=this.getHighlightedResults();if(!(a.length<1)){var b=a.data("data");null!=b.element&&b.element.selected||null==b.element&&b.selected||this.trigger("select",{data:b})}},a}),b.define("select2/dropdown/closeOnSelect",[],function(){function a(){}return a.prototype.bind=function(a,b,c){var d=this;a.call(this,b,c),b.on("select",function(a){d._selectTriggered(a)}),b.on("unselect",function(a){d._selectTriggered(a)})},a.prototype._selectTriggered=function(a,b){var c=b.originalEvent;c&&c.ctrlKey||this.trigger("close",{})},a}),b.define("select2/i18n/en",[],function(){return{errorLoading:function(){return"The results could not be loaded."},inputTooLong:function(a){var b=a.input.length-a.maximum,c="Please delete "+b+" character";return 1!=b&&(c+="s"),c},inputTooShort:function(a){var b=a.minimum-a.input.length,c="Please enter "+b+" or more characters";return c},loadingMore:function(){return"Loading more results…"},maximumSelected:function(a){var b="You can only select "+a.maximum+" item";return 1!=a.maximum&&(b+="s"),b},noResults:function(){return"No results found"},searching:function(){return"Searching…"}}}),b.define("select2/defaults",["jquery","require","./results","./selection/single","./selection/multiple","./selection/placeholder","./selection/allowClear","./selection/search","./selection/eventRelay","./utils","./translation","./diacritics","./data/select","./data/array","./data/ajax","./data/tags","./data/tokenizer","./data/minimumInputLength","./data/maximumInputLength","./data/maximumSelectionLength","./dropdown","./dropdown/search","./dropdown/hidePlaceholder","./dropdown/infiniteScroll","./dropdown/attachBody","./dropdown/minimumResultsForSearch","./dropdown/selectOnClose","./dropdown/closeOnSelect","./i18n/en"],function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C){function D(){this.reset()}D.prototype.apply=function(l){if(l=a.extend({},this.defaults,l),null==l.dataAdapter){if(null!=l.ajax?l.dataAdapter=o:null!=l.data?l.dataAdapter=n:l.dataAdapter=m,l.minimumInputLength>0&&(l.dataAdapter=j.Decorate(l.dataAdapter,r)),l.maximumInputLength>0&&(l.dataAdapter=j.Decorate(l.dataAdapter,s)),l.maximumSelectionLength>0&&(l.dataAdapter=j.Decorate(l.dataAdapter,t)),l.tags&&(l.dataAdapter=j.Decorate(l.dataAdapter,p)),(null!=l.tokenSeparators||null!=l.tokenizer)&&(l.dataAdapter=j.Decorate(l.dataAdapter,q)),null!=l.query){var C=b(l.amdBase+"compat/query");l.dataAdapter=j.Decorate(l.dataAdapter,C)}if(null!=l.initSelection){var D=b(l.amdBase+"compat/initSelection");l.dataAdapter=j.Decorate(l.dataAdapter,D)}}if(null==l.resultsAdapter&&(l.resultsAdapter=c,null!=l.ajax&&(l.resultsAdapter=j.Decorate(l.resultsAdapter,x)),null!=l.placeholder&&(l.resultsAdapter=j.Decorate(l.resultsAdapter,w)),l.selectOnClose&&(l.resultsAdapter=j.Decorate(l.resultsAdapter,A))),null==l.dropdownAdapter){if(l.multiple)l.dropdownAdapter=u;else{var E=j.Decorate(u,v);l.dropdownAdapter=E}if(0!==l.minimumResultsForSearch&&(l.dropdownAdapter=j.Decorate(l.dropdownAdapter,z)),l.closeOnSelect&&(l.dropdownAdapter=j.Decorate(l.dropdownAdapter,B)),null!=l.dropdownCssClass||null!=l.dropdownCss||null!=l.adaptDropdownCssClass){var F=b(l.amdBase+"compat/dropdownCss");l.dropdownAdapter=j.Decorate(l.dropdownAdapter,F)}l.dropdownAdapter=j.Decorate(l.dropdownAdapter,y)}if(null==l.selectionAdapter){if(l.multiple?l.selectionAdapter=e:l.selectionAdapter=d,null!=l.placeholder&&(l.selectionAdapter=j.Decorate(l.selectionAdapter,f)),l.allowClear&&(l.selectionAdapter=j.Decorate(l.selectionAdapter,g)),l.multiple&&(l.selectionAdapter=j.Decorate(l.selectionAdapter,h)),null!=l.containerCssClass||null!=l.containerCss||null!=l.adaptContainerCssClass){var G=b(l.amdBase+"compat/containerCss");l.selectionAdapter=j.Decorate(l.selectionAdapter,G)}l.selectionAdapter=j.Decorate(l.selectionAdapter,i)}if("string"==typeof l.language)if(l.language.indexOf("-")>0){var H=l.language.split("-"),I=H[0];l.language=[l.language,I]}else l.language=[l.language];if(a.isArray(l.language)){var J=new k;l.language.push("en");for(var K=l.language,L=0;L<K.length;L++){var M=K[L],N={};try{N=k.loadPath(M)}catch(O){try{M=this.defaults.amdLanguageBase+M,N=k.loadPath(M)}catch(P){l.debug&&window.console&&console.warn&&console.warn('Select2: The language file for "'+M+'" could not be automatically loaded. A fallback will be used instead.');continue}}J.extend(N)}l.translations=J}else{var Q=k.loadPath(this.defaults.amdLanguageBase+"en"),R=new k(l.language);R.extend(Q),l.translations=R}return l},D.prototype.reset=function(){function b(a){function b(a){return l[a]||a}return a.replace(/[^\u0000-\u007E]/g,b)}function c(d,e){if(""===a.trim(d.term))return e;if(e.children&&e.children.length>0){for(var f=a.extend(!0,{},e),g=e.children.length-1;g>=0;g--){var h=e.children[g],i=c(d,h);null==i&&f.children.splice(g,1)}return f.children.length>0?f:c(d,f)}var j=b(e.text).toUpperCase(),k=b(d.term).toUpperCase();return j.indexOf(k)>-1?e:null}this.defaults={amdBase:"./",amdLanguageBase:"./i18n/",closeOnSelect:!0,debug:!1,dropdownAutoWidth:!1,escapeMarkup:j.escapeMarkup,language:C,matcher:c,minimumInputLength:0,maximumInputLength:0,maximumSelectionLength:0,minimumResultsForSearch:0,selectOnClose:!1,sorter:function(a){return a},templateResult:function(a){return a.text},templateSelection:function(a){return a.text},theme:"default",width:"resolve"}},D.prototype.set=function(b,c){var d=a.camelCase(b),e={};e[d]=c;var f=j._convertData(e);a.extend(this.defaults,f)};var E=new D;return E}),b.define("select2/options",["require","jquery","./defaults","./utils"],function(a,b,c,d){function e(b,e){if(this.options=b,null!=e&&this.fromElement(e),this.options=c.apply(this.options),e&&e.is("input")){var f=a(this.get("amdBase")+"compat/inputData");this.options.dataAdapter=d.Decorate(this.options.dataAdapter,f)}}return e.prototype.fromElement=function(a){var c=["select2"];null==this.options.multiple&&(this.options.multiple=a.prop("multiple")),null==this.options.disabled&&(this.options.disabled=a.prop("disabled")),null==this.options.language&&(a.prop("lang")?this.options.language=a.prop("lang").toLowerCase():a.closest("[lang]").prop("lang")&&(this.options.language=a.closest("[lang]").prop("lang"))),null==this.options.dir&&(a.prop("dir")?this.options.dir=a.prop("dir"):a.closest("[dir]").prop("dir")?this.options.dir=a.closest("[dir]").prop("dir"):this.options.dir="ltr"),a.prop("disabled",this.options.disabled),a.prop("multiple",this.options.multiple),a.data("select2Tags")&&(this.options.debug&&window.console&&console.warn&&console.warn('Select2: The `data-select2-tags` attribute has been changed to use the `data-data` and `data-tags="true"` attributes and will be removed in future versions of Select2.'),a.data("data",a.data("select2Tags")),a.data("tags",!0)),a.data("ajaxUrl")&&(this.options.debug&&window.console&&console.warn&&console.warn("Select2: The `data-ajax-url` attribute has been changed to `data-ajax--url` and support for the old attribute will be removed in future versions of Select2."),a.attr("ajax--url",a.data("ajaxUrl")),a.data("ajax--url",a.data("ajaxUrl")));var e={};e=b.fn.jquery&&"1."==b.fn.jquery.substr(0,2)&&a[0].dataset?b.extend(!0,{},a[0].dataset,a.data()):a.data();var f=b.extend(!0,{},e);f=d._convertData(f);for(var g in f)b.inArray(g,c)>-1||(b.isPlainObject(this.options[g])?b.extend(this.options[g],f[g]):this.options[g]=f[g]);return this},e.prototype.get=function(a){return this.options[a]},e.prototype.set=function(a,b){this.options[a]=b},e}),b.define("select2/core",["jquery","./options","./utils","./keys"],function(a,b,c,d){var e=function(a,c){null!=a.data("select2")&&a.data("select2").destroy(),this.$element=a,this.id=this._generateId(a),c=c||{},this.options=new b(c,a),e.__super__.constructor.call(this);var d=a.attr("tabindex")||0;a.data("old-tabindex",d),a.attr("tabindex","-1");var f=this.options.get("dataAdapter");this.dataAdapter=new f(a,this.options);var g=this.render();this._placeContainer(g);var h=this.options.get("selectionAdapter");this.selection=new h(a,this.options),this.$selection=this.selection.render(),this.selection.position(this.$selection,g);var i=this.options.get("dropdownAdapter");this.dropdown=new i(a,this.options),this.$dropdown=this.dropdown.render(),this.dropdown.position(this.$dropdown,g);var j=this.options.get("resultsAdapter");this.results=new j(a,this.options,this.dataAdapter),this.$results=this.results.render(),this.results.position(this.$results,this.$dropdown);var k=this;this._bindAdapters(),this._registerDomEvents(),this._registerDataEvents(),this._registerSelectionEvents(),this._registerDropdownEvents(),this._registerResultsEvents(),this._registerEvents(),this.dataAdapter.current(function(a){k.trigger("selection:update",{data:a})}),a.addClass("select2-hidden-accessible"),a.attr("aria-hidden","true"),this._syncAttributes(),a.data("select2",this)};return c.Extend(e,c.Observable),e.prototype._generateId=function(a){var b="";return b=null!=a.attr("id")?a.attr("id"):null!=a.attr("name")?a.attr("name")+"-"+c.generateChars(2):c.generateChars(4),b="select2-"+b},e.prototype._placeContainer=function(a){a.insertAfter(this.$element);var b=this._resolveWidth(this.$element,this.options.get("width"));null!=b&&a.css("width",b)},e.prototype._resolveWidth=function(a,b){var c=/^width:(([-+]?([0-9]*\.)?[0-9]+)(px|em|ex|%|in|cm|mm|pt|pc))/i;if("resolve"==b){var d=this._resolveWidth(a,"style");return null!=d?d:this._resolveWidth(a,"element")}if("element"==b){var e=a.outerWidth(!1);return 0>=e?"auto":e+"px"}if("style"==b){var f=a.attr("style");if("string"!=typeof f)return null;for(var g=f.split(";"),h=0,i=g.length;i>h;h+=1){var j=g[h].replace(/\s/g,""),k=j.match(c);if(null!==k&&k.length>=1)return k[1]}return null}return b},e.prototype._bindAdapters=function(){this.dataAdapter.bind(this,this.$container),this.selection.bind(this,this.$container),this.dropdown.bind(this,this.$container),this.results.bind(this,this.$container)},e.prototype._registerDomEvents=function(){var b=this;this.$element.on("change.select2",function(){b.dataAdapter.current(function(a){b.trigger("selection:update",{data:a})})}),this._sync=c.bind(this._syncAttributes,this),this.$element[0].attachEvent&&this.$element[0].attachEvent("onpropertychange",this._sync);var d=window.MutationObserver||window.WebKitMutationObserver||window.MozMutationObserver;null!=d?(this._observer=new d(function(c){a.each(c,b._sync)}),this._observer.observe(this.$element[0],{attributes:!0,subtree:!1})):this.$element[0].addEventListener&&this.$element[0].addEventListener("DOMAttrModified",b._sync,!1)},e.prototype._registerDataEvents=function(){var a=this;this.dataAdapter.on("*",function(b,c){a.trigger(b,c)})},e.prototype._registerSelectionEvents=function(){var b=this,c=["toggle","focus"];this.selection.on("toggle",function(){b.toggleDropdown()}),this.selection.on("focus",function(a){b.focus(a)}),this.selection.on("*",function(d,e){-1===a.inArray(d,c)&&b.trigger(d,e)})},e.prototype._registerDropdownEvents=function(){var a=this;this.dropdown.on("*",function(b,c){a.trigger(b,c)})},e.prototype._registerResultsEvents=function(){var a=this;this.results.on("*",function(b,c){a.trigger(b,c)})},e.prototype._registerEvents=function(){var a=this;this.on("open",function(){a.$container.addClass("select2-container--open")}),this.on("close",function(){a.$container.removeClass("select2-container--open")}),this.on("enable",function(){a.$container.removeClass("select2-container--disabled")}),this.on("disable",function(){a.$container.addClass("select2-container--disabled")}),this.on("blur",function(){a.$container.removeClass("select2-container--focus")}),this.on("query",function(b){a.isOpen()||a.trigger("open",{}),this.dataAdapter.query(b,function(c){a.trigger("results:all",{data:c,query:b})})}),this.on("query:append",function(b){this.dataAdapter.query(b,function(c){a.trigger("results:append",{data:c,query:b})})}),this.on("keypress",function(b){var c=b.which;a.isOpen()?c===d.ESC||c===d.TAB||c===d.UP&&b.altKey?(a.close(),b.preventDefault()):c===d.ENTER?(a.trigger("results:select",{}),b.preventDefault()):c===d.SPACE&&b.ctrlKey?(a.trigger("results:toggle",{}),b.preventDefault()):c===d.UP?(a.trigger("results:previous",{}),b.preventDefault()):c===d.DOWN&&(a.trigger("results:next",{}),b.preventDefault()):(c===d.ENTER||c===d.SPACE||c===d.DOWN&&b.altKey)&&(a.open(),b.preventDefault())})},e.prototype._syncAttributes=function(){this.options.set("disabled",this.$element.prop("disabled")),this.options.get("disabled")?(this.isOpen()&&this.close(),this.trigger("disable",{})):this.trigger("enable",{})},e.prototype.trigger=function(a,b){var c=e.__super__.trigger,d={open:"opening",close:"closing",select:"selecting",unselect:"unselecting"};if(void 0===b&&(b={}),a in d){var f=d[a],g={prevented:!1,name:a,args:b};if(c.call(this,f,g),g.prevented)return void(b.prevented=!0)}c.call(this,a,b)},e.prototype.toggleDropdown=function(){this.options.get("disabled")||(this.isOpen()?this.close():this.open())},e.prototype.open=function(){this.isOpen()||this.trigger("query",{})},e.prototype.close=function(){this.isOpen()&&this.trigger("close",{})},e.prototype.isOpen=function(){return this.$container.hasClass("select2-container--open")},e.prototype.hasFocus=function(){return this.$container.hasClass("select2-container--focus")},e.prototype.focus=function(a){this.hasFocus()||(this.$container.addClass("select2-container--focus"),this.trigger("focus",{}))},e.prototype.enable=function(a){this.options.get("debug")&&window.console&&console.warn&&console.warn('Select2: The `select2("enable")` method has been deprecated and will be removed in later Select2 versions. Use $element.prop("disabled") instead.'),(null==a||0===a.length)&&(a=[!0]);var b=!a[0];this.$element.prop("disabled",b)},e.prototype.data=function(){this.options.get("debug")&&arguments.length>0&&window.console&&console.warn&&console.warn('Select2: Data can no longer be set using `select2("data")`. You should consider setting the value instead using `$element.val()`.');var a=[];return this.dataAdapter.current(function(b){a=b}),a},e.prototype.val=function(b){if(this.options.get("debug")&&window.console&&console.warn&&console.warn('Select2: The `select2("val")` method has been deprecated and will be removed in later Select2 versions. Use $element.val() instead.'),null==b||0===b.length)return this.$element.val();var c=b[0];a.isArray(c)&&(c=a.map(c,function(a){return a.toString()})),this.$element.val(c).trigger("change")},e.prototype.destroy=function(){this.$container.remove(),this.$element[0].detachEvent&&this.$element[0].detachEvent("onpropertychange",this._sync),null!=this._observer?(this._observer.disconnect(),this._observer=null):this.$element[0].removeEventListener&&this.$element[0].removeEventListener("DOMAttrModified",this._sync,!1),this._sync=null,this.$element.off(".select2"),this.$element.attr("tabindex",this.$element.data("old-tabindex")),this.$element.removeClass("select2-hidden-accessible"),this.$element.attr("aria-hidden","false"),this.$element.removeData("select2"),this.dataAdapter.destroy(),this.selection.destroy(),this.dropdown.destroy(),this.results.destroy(),this.dataAdapter=null,this.selection=null,this.dropdown=null,this.results=null},e.prototype.render=function(){var b=a('<span class="select2 select2-container"><span class="selection"></span><span class="dropdown-wrapper" aria-hidden="true"></span></span>');return b.attr("dir",this.options.get("dir")),this.$container=b,this.$container.addClass("select2-container--"+this.options.get("theme")),b.data("element",this.$element),b},e}),b.define("jquery-mousewheel",["jquery"],function(a){return a}),b.define("jquery.select2",["jquery","jquery-mousewheel","./select2/core","./select2/defaults"],function(a,b,c,d){if(null==a.fn.select2){var e=["open","close","destroy"];a.fn.select2=function(b){if(b=b||{},"object"==typeof b)return this.each(function(){var d=a.extend(!0,{},b);new c(a(this),d)}),this;if("string"==typeof b){var d;return this.each(function(){var c=a(this).data("select2");null==c&&window.console&&console.error&&console.error("The select2('"+b+"') method was called on an element that is not using Select2.");var e=Array.prototype.slice.call(arguments,1);d=c[b].apply(c,e)}),a.inArray(b,e)>-1?this:d}throw new Error("Invalid arguments for Select2: "+b)}}return null==a.fn.select2.defaults&&(a.fn.select2.defaults=d),c}),{define:b.define,require:b.require}}(),c=b.require("jquery.select2");return a.fn.select2.amd=b,c});var api = api || wp.customize, $ = $ || jQuery;
 (function (api, $, _) {
   api.czr_wp_conditionals = new api.Value();
-  api.czr_scopeCollection = new api.Values();
-  api.czr_scopeCollection.create('collection');//all available scope, including the current scope
-  api.czr_scopeCollection.create('active');//the currently active scope
-  api.czr_scope = new api.Values();
   api.sidebar_insights = new api.Values();
   api.sidebar_insights.create('candidates');//will store the sidebar candidates on preview refresh
   api.sidebar_insights.create('actives');//will record the refreshed active list of active sidebars sent from the preview
@@ -29,52 +25,88 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
   api.czr_partials = new api.Value();
 
 })( wp.customize , jQuery, _);(function (api, $, _) {
+  api.czr_skopeCollection = new api.Value([]);//all available scope, including the current scope
+  api.czr_activeSkope = new api.Value();//the currently active scope
+
   api.bind( 'ready' , function() {
-    if ( serverControlParams.isCtxEnabled ) {
-      api.czr_scopeBase = new api.CZR_scopeBase();
+    if ( serverControlParams.isSkopOn ) {
+      api.czr_skopeBase = new api.CZR_skopeBase();
     }
   } );
 
-  api.CZR_scopeBase = api.Class.extend( {
+  api.CZR_skopeBase = api.Class.extend( {
     globalSettingVal : {},//will store the global setting val. Populated on init.
 
     initialize: function() {
           var self = this;
-          if ( ! $('#customize-header-actions').find('.czr-scope-switcher').length ) {
-            $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher'}) );
+          api.czr_skope = new api.Values();
+          self.scopeWrapperEmbedded = $.Deferred();
+          if ( 'pending' == self.scopeWrapperEmbedded.state() ) {
+              $.when( self.embedSkopeWrapper() ).done( function() {
+                  self.scopeWrapperEmbedded.resolve();
+              });
           }
           this.initialGlobalSettingVal = this.getGlobalSettingVal();
-          api.czr_scopeCollection('collection').callbacks.add( function() { return self.initScopeModels.apply(self, arguments ); } );
-          api.czr_scopeCollection('active').callbacks.add( function() { return self.setScopeStates.apply(self, arguments ); } );
+          api.czr_activeSkope.callbacks.add( function() { return self.setSkopeStates.apply(self, arguments ); } );
+          api.czr_skopeCollection.callbacks.add( function() { return self.instantiateSkopes.apply(self, arguments ); } );
+
+
     },
-    initScopeModels : function(to, from) {
+    updateSkopeCollection : function( collection ) {
+          console.log('skope Collection?', collection );
+          var self = this;
+              _api_ready_collection = [];
+          _.each( collection, function( _skope, _key ) {
+              _api_ready_collection.push( self.prepareSkopeForAPI( _skope ) );
+          });
+          api.czr_skopeCollection.set( _api_ready_collection );
+    },
+
+
+
+    prepareSkopeForAPI : function( skope_candidate ) {
+          if ( ! _.isObject( skope_candidate ) ) {
+              throw new Error('prepareSkopeForAPI : a skope must be an object to be API ready');
+          }
+          console.log('in prepareSkope', serverControlParams.defaultSkopeModel, skope_candidate );
+          return skope_candidate;
+    },
+    embedSkopeWrapper : function() {
+        var self = this;
+        $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher'}) );
+    },
+    instantiateSkopes : function(to, from) {
           console.log('SCOPES SENT BY THE PREVIEW, FROM AND TO : ', from, to);
           var self = this,
               _new_collection = _.clone(to) || {},
               _old_collection = _.clone(from) || {};
-          _.map( _old_collection, function( data , name ) {
-            api.czr_scope(name).view.container.remove();
-            api.czr_scope.remove(name);
+          _.each( _old_collection, function( _skope ) {
+              api.czr_skope( _skope.id ).container.remove();
+              api.czr_skope.remove( _skope.id );
           });
-          _.map( _new_collection, function( data , name ) {
-            var params = _.clone(data);//IMPORTANT => otherwise the data object is actually a copy and share the same reference as the model and view params
-            api.czr_scope.add( name, new api.CZR_scopeModel( name, $.extend( params, {name : name} ) ) );
-            api.czr_scope(name).ready();
+          _.each( _new_collection, function( _skope ) {
+              var params = $.extend( true, {}, _skope );//IMPORTANT => otherwise the data object is actually a copy and share the same reference as the model and view params
+              api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
+              if ( ! api.czr_skope.has( _skope.id ) ) {
+                  throw new Error( 'Skope id : ' + _skope.id + ' has not been instantiated.');
+              }
+              api.czr_skope( _skope.id ).ready();
           });
-          api.czr_scopeCollection('active').set( self.getActiveScopeOnInit(_new_collection) );
+          api.czr_activeSkope.set( self.getActiveSkopeOnInit( _new_collection ) );
           this.addAPISettingsListener();
-    },//listenToScopeCollection()
-    setScopeStates : function(to, from) {
+    },//listenToSkopeCollection()
+    setSkopeStates : function(to, from) {
+      console.log('in set skope state', to, from );
           var self = this;
-          if ( ! _.isUndefined(from) && api.czr_scope.has(from) )
-            api.czr_scope(from).active.set(false);
+          if ( ! _.isUndefined(from) && api.czr_skope.has(from) )
+            api.czr_skope(from).active.set(false);
           else if ( ! _.isUndefined(from) )
-            throw new Error('listenToActiveScope : previous scope does not exist in the collection');
+            throw new Error('listenToActiveSkope : previous scope does not exist in the collection');
 
-          if ( ! _.isUndefined(to) && api.czr_scope.has(to) )
-            api.czr_scope(to).active.set(true);
+          if ( ! _.isUndefined(to) && api.czr_skope.has(to) )
+            api.czr_skope(to).active.set(true);
           else
-            throw new Error('listenToActiveScope : requested scope ' + to + ' does not exist in the collection');
+            throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
     },
     getGlobalSettingVal : function() {
           var self = this, _vals = {};
@@ -96,10 +128,10 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
                   return;
 
                 api(key).callbacks.add( function(to, from) {
-                      var current_scope = api.czr_scope( api.czr_scopeCollection('active').get() );//the active scope instance
+                      var current_scope = api.czr_skope( api.czr_activeSkope() );//the active scope instance
 
                       if ( _.isUndefined(current_scope) ) {
-                        throw new Error('Scope base class : the active scope is not defined.');
+                        throw new Error('Skope base class : the active scope is not defined.');
                       }
 
                       var current_dirties = _.clone( current_scope.dirtyValues.get() ),
@@ -112,8 +144,8 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
 
           });
     },
-    getActiveScopeOnInit : function(collection) {
-          _def = _.findWhere(collection, {is_default : true }).name;
+    getActiveSkopeOnInit : function(collection) {
+          _def = _.findWhere( collection, {is_default : true } ).id;
           return ! _.isUndefined(_def) ? _def : 'global';
     },
 
@@ -128,47 +160,103 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
   });//api.Class.extend()
 
 
-})( wp.customize , jQuery, _);(function (api, $, _) {
-  api.CZR_scopeModel = api.Class.extend( {
-    initialize: function( name, options ) {
-          var scope = this;
-          scope.options = options;
-          $.extend( scope, options || {} );
-          scope.winner      = new api.Value(); //is this scope the one that will be applied on front end in the current context?
-          scope.priority    = new api.Value(); //shall this scope always win or respect the default scopes priority
-          scope.active      = new api.Value(); //active, inactive. Are we currently customizing this scope ?
-          scope.dirtyness   = new api.Value(); //true or false : has this scope been customized ?
-          scope.dbValues    = new api.Value();
-          scope.dirtyValues = new api.Value();//stores the current customized value.
+})( wp.customize , jQuery, _);
+var CZRSkopeMths = CZRSkopeMths || {};
+$.extend( CZRSkopeMths, {
+    initialize: function( skope_id, constructor_options ) {
+          var skope = this;
+          api.Value.prototype.initialize.call( skope, null, constructor_options );
+          skope.options = constructor_options;
+
+          skope.isReady = $.Deferred();
+          skope.embedded = $.Deferred();
+          skope.el = 'czr-scope-' + skope_id;//@todo replace with a css selector based on the scope name
+
+          skope.set(constructor_options);
+          $.extend( skope, constructor_options || {} );
+          skope.winner      = new api.Value( skope().is_winner ); //is this skope the one that will be applied on front end in the current context?
+          skope.priority    = new api.Value(); //shall this skope always win or respect the default skopes priority
+          skope.active      = new api.Value( false ); //active, inactive. Are we currently customizing this skope ?
+          skope.dirtyness   = new api.Value( false ); //true or false : has this skope been customized ?
+          skope.dbValues    = new api.Value( _.isEmpty( skope().db ) ? {} : skope().db );
+          skope.dirtyValues = new api.Value({});//stores the current customized value.
+          skope.userEventMap = new api.Value( [
+                {
+                  trigger   : 'click keydown',
+                  selector  : '.czr-scope-switch',
+                  name      : 'skope_switch',
+                  actions   : function() {
+                      api.czr_activeSkope.set( skope().id );
+                      api.previewer.refresh();
+                  }
+                }
+          ]);//module.userEventMap
+
+
+          console.log('SKOPE : '  + skope().id + ' INSTANTIATED' );
+          skope.setupSkopeAPIListeners();
+
+          skope.isReady.done( function() {
+              console.log('SKOPE : '  + skope().id + ' IS READY');
+          });
     },
     ready : function() {
-          var scope = this;
-          scope.view = new api.CZR_scopeView( name, scope.options );
-          scope.active.callbacks.add(function() { return scope.activeStateModelCallbacks.apply(scope, arguments ); } );
-          scope.dirtyValues.callbacks.add( function(to){
-            scope.dirtyness.set( ! _.isEmpty(to) );
+          var skope = this;
+          $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
+              if ( false !== $_container.length ) {
+                  skope.container = $_container;
+                  skope.embedded.resolve();
+              } else {
+                  throw new Error('The container of skope ' + skope().id + ' has not been embededd');
+              }
           });
-          scope.dirtyValues.set({});
-          scope.dbValues.set( _.isEmpty(scope.db) ? {} : scope.db );
-          scope.active.set( scope.is_default );
-          scope.dirtyness.set( false );
-          scope.winner.set( scope.is_winner );
+
+          skope.embedded.done( function() {
+              console.log('SKOPE : '  + skope().id + ' EMBEDDED');
+              skope.active( skope().is_default );
+              skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
+          });
+
+          skope.isReady.resolve();
     },
-    activeStateModelCallbacks : function(to){
-          var scope = this;
+    setupSkopeAPIListeners : function() {
+          var skope = this;
+          skope.active.callbacks.add(function() { return skope.activeStateReact.apply(skope, arguments ); } );
+          skope.dirtyness.callbacks.add(function() { return skope.dirtynessReact.apply(skope, arguments ); } );
+          skope.dbValues.callbacks.add(function() { return skope.dbValuesReact.apply(skope, arguments ); } );
+          skope.winner.callbacks.add(function() { return skope.winnerReact.apply(skope, arguments ); } );
+          skope.dirtyValues.callbacks.add( function(to){
+              skope.dirtyness.set( ! _.isEmpty(to) );
+          });
+    },
+    activeStateReact : function(to, from){
+          var skope = this;
+          skope.container.toggleClass('active', to);
+          $('.czr-scope-switch', skope.container).toggleClass('fa-toggle-on', to).toggleClass('fa-toggle-off', !to);
+    },
 
+    dirtynessReact : function(to, from) {
+        var view = this;
+        this.container.toggleClass('dirty', to);
+    },
 
+    dbValuesReact : function(to, from) {
+        this.container.toggleClass('has_db_val', ! _.isEmpty(to) );
+    },
+
+    winnerReact : function(to, from) {
+        this.container.toggleClass('is_winner', ! _.isEmpty(to) );
     },
 
 
     storeDirtyness : function() {
-          var scope = this;
-          scope.dirtyValues.set( scope.getDirties() );
+          var skope = this;
+          skope.dirtyValues.set( skope.getDirties() );
     },
 
 
     getDirties : function() {
-          var scope = this,
+          var skope = this,
               _dirtyCustomized = {};
           api.each( function ( value, key ) {
             if ( value._dirty ) {
@@ -179,130 +267,32 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
           return _dirtyCustomized;
     },
 
-
-
-    setSettingsValue : function() {
-          if ( 'trans' == to.dyn_type ) {
-            api('hu_theme_options[dynamic-styles]').set(true);
-            $('input[type=checkbox]', api.control('hu_theme_options[dynamic-styles]').container ).iCheck('update');
-          }
-          if ( 'trans' == to.dyn_type ) {
-            api('hu_theme_options[font]').set('raleway');
-            $('select[data-customize-setting-link]', api.control('hu_theme_options[font]').container ).selecter('destroy').selecter();
-          }
-
-          var _img_id = 'trans' == to.dyn_type ? 23 : 25;
-          api.control('hu_theme_options[custom-logo]').container.remove();
-
-          api.control.remove('hu_theme_options[custom-logo]');
-
-          var _constructor = api.controlConstructor['czr_cropped_image'];
-          var _data = api.settings.controls['hu_theme_options[custom-logo]'];
-          api('hu_theme_options[custom-logo]').set(_img_id);
-          wp.media.attachment( _img_id ).fetch().done( function() {
-            _data.attachment = this.attributes;
-            api.control.add(
-            'hu_theme_options[custom-logo]',
-              new _constructor('hu_theme_options[custom-logo]', { params : _data, previewer :api.previewer })
-            );
-          } );
-
-    },
-    getDBOptions : function( opt_name, dyn_type ) {
-          if ( serverControlParams.themeOptions == opt_name ) {
-            return api.czr_scopeBase.getGlobalSettingVal();
-          }
-          var _options = '',
-              _query = {
-                data : {
-                  action : serverControlParams.optionAjaxAction,//theme dependant
-                  opt_name: opt_name,
-                  dyn_type: dyn_type,
-                  stylesheet : api.settings.theme.stylesheet
-                }
-              };
-
-          wp.ajax.send( _query ).done( function( resp ){
-            _options = resp;
-          });
-          return _options;
-    },
-  });//api.Class.extend()
-
-
-})( wp.customize , jQuery, _);(function (api, $, _) {
-  api.CZR_scopeView = api.Class.extend( {
-    initialize: function( name, options ) {
-          var view = this;
-          $.extend( view, options || {} );
-          view.params = options;
-
-          view.el = 'czr-scope-' + view.name;//@todo replace with a css selector based on the scope name
-          view.container = view.embedScopeDialogBox();
-          view.listenToScopeSwitch();
-          api.czr_scope(view.name).active.callbacks.add(function() { return view.activeStateViewCallbacks.apply(view, arguments ); } );
-          api.czr_scope(view.name).dirtyness.callbacks.add(function() { return view.dirtynessViewCallbacks.apply(view, arguments ); } );
-          api.czr_scope(view.name).dbValues.callbacks.add(function() { return view.dbValuesViewCallbacks.apply(view, arguments ); } );
-          api.czr_scope(view.name).winner.callbacks.add(function() { return view.winnerViewCallbacks.apply(view, arguments ); } );
-    },
-
-    activeStateViewCallbacks : function(to, from){
-      var view = this;
-      view.container.toggleClass('active', to);
-      $('.czr-scope-switch',view.container).toggleClass('fa-toggle-on', to).toggleClass('fa-toggle-off', !to);
-    },
-
-    dirtynessViewCallbacks : function(to, from) {
-      var view = this;
-      this.container.toggleClass('dirty', to);
-    },
-
-    dbValuesViewCallbacks : function(to, from) {
-      this.container.toggleClass('has_db_val', ! _.isEmpty(to) );
-    },
-
-    winnerViewCallbacks : function(to, from) {
-      this.container.toggleClass('is_winner', ! _.isEmpty(to) );
-    },
-    embedScopeDialogBox : function() {
-          var view = this;
+  } );//$.extend(
+var CZRSkopeMths = CZRSkopeMths || {};
+$.extend( CZRSkopeMths, {
+    embedSkopeDialogBox : function() {
+          var skope = this,
+              skope_model = $.extend( true, {}, skope() ),
+              _tmpl = '';
           if ( ! $('#customize-header-actions').find('.czr-scope-switcher').length ) {
-            throw new Error('The scope switcher wrapper is not printed, the scope view can not be embedded.');
+              throw new Error('The skope switcher wrapper is not printed, the skope can not be embedded.');
           }
-          var $view = $( wp.template('customize-scope')( _.extend(view.params, {el : view.el}) ) );
-          $('.czr-scope-switcher', '#customize-header-actions').append($view);
-          return $view;
-    },
+          try {
+            _tmpl =  wp.template('customize-scope')( _.extend( skope_model, { el : skope.el } ) );
+          }
+          catch(e) {
+            throw new Error('Error when parsing the template of a skope' + e );
+          }
 
-    listenToScopeSwitch : function() {
-          var view = this;
-          $('.czr-scope-switch', view.container ).on('click keydown', function( e, event_params ) {
-              if ( api.utils.isKeydownButNotEnterEvent( e ) ) {
-                return;
-              }
-              e.preventDefault(); // Keep this AFTER the key filter above)
-
-              var _new_scope = $(this).closest('.czr-scope').attr('data-scope-id');
-              if ( api.czr_scope.has( _new_scope ) ) {
-                api.czr_scopeCollection('active').set( _new_scope );
-              }
-
-          });//.on()
-    },
-
-    setScopeSwitcherButtonActive : function( dyn_type ) {
-          $('.button', '.czr-scope-switcher').each( function( ind ) {
-            $(this).toggleClass( 'active', dyn_type == $(this).attr('data-dyn-type') );
-          });
+          $('.czr-scope-switcher', '#customize-header-actions').append( $( _tmpl ) );
+          return $( '.' + skope.el , '.czr-scope-switcher' );
     },
     getEl : function() {
-          var view = this;
-          return $( view.el, '#customize-header-actions');
+          var skope = this;
+          return $( skope.el, '#customize-header-actions');
     }
-  });//api.Class.extend()
-
-
-})( wp.customize , jQuery, _);(function (api, $, _) {
+});//$.extend()
+(function (api, $, _) {
   var _old_initialize = api.PreviewFrame.prototype.initialize;
   api.PreviewFrame.prototype.initialize = function( params, options ) {
         _old_initialize.call( this, params, options );
@@ -340,7 +330,7 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
         });
 
         this.bind( 'czr-scopes-ready', function(data) {
-          api.czr_scopeCollection('collection').set( data );
+          api.czr_skopeBase.updateSkopeCollection( data );
         });
   };//api.PreviewFrame.prototype.initialize
   api.Value.prototype.set = function( to, o ) {
@@ -373,12 +363,12 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
 
         return this;
   };
-  if ( serverControlParams.isCtxEnabled ) {
-    api.czr_isPreviewerScopeAware = new api.Value();
-    api.czr_isPreviewerScopeAware.set(false);
+  if ( serverControlParams.isSkopOn ) {
+    api.czr_isPreviewerSkopeAware = new api.Value();
+    api.czr_isPreviewerSkopeAware.set(false);
     var _old_preview = api.Setting.prototype.preview;
     api.Setting.prototype.preview = function() {
-      if ( ! api.czr_isPreviewerScopeAware.get() )
+      if ( ! api.czr_isPreviewerSkopeAware.get() )
         return this.previewer.refresh();
       _old_preview.call(this);
     };
@@ -386,7 +376,7 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
 
 
   api.bind('ready', function() {
-        if ( ! serverControlParams.isCtxEnabled )
+        if ( ! serverControlParams.isSkopOn )
           return;
         api.previewer.query =  function() {
           var dirtyCustomized = {};
@@ -395,13 +385,13 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
               dirtyCustomized[ key ] = value();
             }
           } );
-          api.czr_isPreviewerScopeAware.set(true);
+          api.czr_isPreviewerSkopeAware.set(true);
 
           return {
             wp_customize: 'on',
-            dyn_type:     api.czr_scope( api.czr_scopeCollection('active').get() ).dyn_type,//post_meta, term_meta, user_meta, trans, option
-            opt_name:     api.czr_scope( api.czr_scopeCollection('active').get() ).opt_name,
-            obj_id:       api.czr_scope( api.czr_scopeCollection('active').get() ).obj_id,
+            dyn_type:     api.czr_skope( api.czr_activeSkope() ).dyn_type,//post_meta, term_meta, user_meta, trans, option
+            opt_name:     api.czr_skope( api.czr_activeSkope() ).opt_name,
+            obj_id:       api.czr_skope( api.czr_activeSkope() ).obj_id,
             theme:        _wpCustomizeSettings.theme.stylesheet,
             customized:   JSON.stringify( dirtyCustomized ),
             nonce:        this.nonce.preview
@@ -508,8 +498,8 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
           });
         };
   }
-
-})( wp.customize , jQuery, _);(function (api, $, _) {
+})( wp.customize , jQuery, _ );
+(function (api, $, _) {
   api.CZR_Helpers = api.CZR_Helpers || {};
   api.CZR_Helpers = $.extend( api.CZR_Helpers, {
         getDocSearchLink : function( text ) {
@@ -554,7 +544,8 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
         }
 
   });//$.extend
-})( wp.customize , jQuery, _);(function (api, $, _) {
+})( wp.customize , jQuery, _);
+(function (api, $, _) {
   api.CZR_Helpers = api.CZR_Helpers || {};
   api.CZR_Helpers = $.extend( api.CZR_Helpers, {
         addActions : function( event_map, new_events, instance ) {
@@ -5158,9 +5149,12 @@ $.extend( CZRBackgroundMths , {
   $.extend( CZRModuleMths, api.Events || {} );
   $.extend( CZRItemMths, api.Events || {} );
   $.extend( CZRInputMths, api.Events || {} );
+  $.extend( CZRSkopeMths, api.Events || {} );
   $.extend( CZRBaseControlMths, api.CZR_Helpers || {} );
   $.extend( CZRInputMths, api.CZR_Helpers || {} );
   $.extend( CZRModuleMths, api.CZR_Helpers || {} );
+  $.extend( CZRSkopeMths, api.CZR_Helpers || {} );
+  api.CZR_skope                 = api.Value.extend( CZRSkopeMths || {} );
   api.CZRInput                 = api.Value.extend( CZRInputMths || {} );
   api.CZRItem                  = api.Value.extend( CZRItemMths || {} );
   api.CZRModule               = api.Value.extend( CZRModuleMths || {} );

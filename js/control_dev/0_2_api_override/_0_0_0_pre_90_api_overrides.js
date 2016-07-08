@@ -1,3 +1,4 @@
+
 (function (api, $, _) {
   /*****************************************************************************
   * CAPTURE PREVIEW INFORMATIONS ON REFRESH + REACT TO THEM
@@ -47,7 +48,7 @@
         });
 
         this.bind( 'czr-scopes-ready', function(data) {
-          api.czr_scopeCollection('collection').set( data );
+          api.czr_skopeBase.updateSkopeCollection( data );
         });
   };//api.PreviewFrame.prototype.initialize
 
@@ -114,12 +115,12 @@
   * A SCOPE AWARE PREVIEWER
   *****************************************************************************/
   //PREPARE THE SCOPE AWARE PREVIEWER
-  if ( serverControlParams.isCtxEnabled ) {
-    api.czr_isPreviewerScopeAware = new api.Value();
-    api.czr_isPreviewerScopeAware.set(false);
+  if ( serverControlParams.isSkopOn ) {
+    api.czr_isPreviewerSkopeAware = new api.Value();
+    api.czr_isPreviewerSkopeAware.set(false);
     var _old_preview = api.Setting.prototype.preview;
     api.Setting.prototype.preview = function() {
-      if ( ! api.czr_isPreviewerScopeAware.get() )
+      if ( ! api.czr_isPreviewerSkopeAware.get() )
         return this.previewer.refresh();
       //as soon as the previewer is setup, let's behave as usual
       _old_preview.call(this);
@@ -128,7 +129,7 @@
 
 
   api.bind('ready', function() {
-        if ( ! serverControlParams.isCtxEnabled )
+        if ( ! serverControlParams.isSkopOn )
           return;
 
         /**
@@ -145,13 +146,13 @@
           } );
 
           //the previewer is now scope aware :
-          api.czr_isPreviewerScopeAware.set(true);
+          api.czr_isPreviewerSkopeAware.set(true);
 
           return {
             wp_customize: 'on',
-            dyn_type:     api.czr_scope( api.czr_scopeCollection('active').get() ).dyn_type,//post_meta, term_meta, user_meta, trans, option
-            opt_name:     api.czr_scope( api.czr_scopeCollection('active').get() ).opt_name,
-            obj_id:       api.czr_scope( api.czr_scopeCollection('active').get() ).obj_id,
+            dyn_type:     api.czr_skope( api.czr_activeSkope() ).dyn_type,//post_meta, term_meta, user_meta, trans, option
+            opt_name:     api.czr_skope( api.czr_activeSkope() ).opt_name,
+            obj_id:       api.czr_skope( api.czr_activeSkope() ).obj_id,
             theme:        _wpCustomizeSettings.theme.stylesheet,
             customized:   JSON.stringify( dirtyCustomized ),
             nonce:        this.nonce.preview
@@ -279,6 +280,4 @@
           });
         };
   }
-  /* end monkey patch */
-
-})( wp.customize , jQuery, _);
+})( wp.customize , jQuery, _ );
