@@ -69,7 +69,70 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
               throw new Error('prepareSkopeForAPI : a skope must be an object to be API ready');
           }
           console.log('in prepareSkope', serverControlParams.defaultSkopeModel, skope_candidate );
-          return skope_candidate;
+
+          var control = this,
+              api_ready_skope = {};
+
+          _.each( serverControlParams.defaultSkopeModel , function( _value, _key ) {
+                var _candidate_val = skope_candidate[_key];
+                switch( _key ) {
+                      case 'id' :
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                              throw new Error('prepareSkopeForAPI : a skope id must a string not empty');
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
+                      case 'level' :
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                              throw new Error('prepareSkopeForAPI : a skope level must a string not empty for skope ' + _candidate_val.id );
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
+                      case 'dyn_type' :
+                          if ( ! _.isString( _candidate_val ) || ! _.contains( serverControlParams.skopeDynTypes, _candidate_val ) ) {
+                              throw new Error('prepareSkopeForAPI : missing or invalid dyn type for skope ' + _candidate_val.id );
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
+                      case 'opt_name' :
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                              throw new Error('prepareSkopeForAPI : invalid "opt_name" property for skope ' + _candidate_val.id );
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
+                      case 'obj_id' :
+                          if ( ! _.isString( _candidate_val ) ) {
+                              throw new Error('prepareSkopeForAPI : invalid "obj_id" for skope ' + _candidate_val.id );
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
+                      case  'is_default' :
+                          if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                              throw new Error('prepareSkopeForAPI : skope property "is_default" must be a boolean');
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
+                      case  'is_winner' :
+                          if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                              throw new Error('prepareSkopeForAPI : skope property "is_winner" must be a boolean');
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
+                      case  'is_primary' :
+                          if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                              throw new Error('prepareSkopeForAPI : skope property "is_primary" must be a boolean');
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
+                      case  'db' :
+                          if ( _.isUndefined( _candidate_val) && ! _.isArray( _candidate_val ) && ! _.isObject( _candidate_val ) ) {
+                              throw new Error('prepareSkopeForAPI : skope property "db" must be a empty array or an object');
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
+                }//switch
+          });
+          return api_ready_skope;
     },
     embedSkopeWrapper : function() {
         var self = this;
