@@ -47,9 +47,9 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
               });
           }
           this.initialGlobalSettingVal = this.getGlobalSettingVal();
-          api.czr_activeSkope.callbacks.add( function() { return self.setSkopeStates.apply(self, arguments ); } );
+          api.czr_activeSkope.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
           api.czr_skopeCollection.callbacks.add( function() { return self.instantiateSkopes.apply(self, arguments ); } );
-
+          this.addAPISettingsListener();
 
     },
     updateSkopeCollection : function( collection ) {
@@ -59,7 +59,7 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
           _.each( collection, function( _skope, _key ) {
               _api_ready_collection.push( self.prepareSkopeForAPI( _skope ) );
           });
-          api.czr_skopeCollection.set( _api_ready_collection );
+          api.czr_skopeCollection( _api_ready_collection );
     },
 
 
@@ -155,21 +155,33 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
               }
               api.czr_skope( _skope.id ).ready();
           });
-          api.czr_activeSkope.set( self.getActiveSkopeOnInit( _new_collection ) );
-          this.addAPISettingsListener();
+          api.czr_activeSkope( self.getActiveSkopeOnInit( _new_collection ) );
     },//listenToSkopeCollection()
-    setSkopeStates : function(to, from) {
-      console.log('in set skope state', to, from );
+    activeSkopeReact : function( to, from ) {
           var self = this;
           if ( ! _.isUndefined(from) && api.czr_skope.has(from) )
-            api.czr_skope(from).active.set(false);
+            api.czr_skope(from).active(false);
           else if ( ! _.isUndefined(from) )
             throw new Error('listenToActiveSkope : previous scope does not exist in the collection');
 
           if ( ! _.isUndefined(to) && api.czr_skope.has(to) )
-            api.czr_skope(to).active.set(true);
+            api.czr_skope(to).active(true);
           else
             throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
+          console.log( 'ACTIVE SKOPE MODEL', api.czr_skope( api.czr_activeSkope() )() );
+          var _save_state = api.state('saved')(),
+              current_skope_instance = api.czr_skope( api.czr_activeSkope() );//the active scope instance
+
+          $.when( self.updateSettingValues( 'copyright', current_skope_instance.getSkopeSettingVal( 'copyright' ) ) ).done( function() {
+              api.state('saved')( _save_state );
+          });
+    },
+    updateSettingValues : function( setId, val ) {
+          var self = this,
+              current_skope_instance = api.czr_skope( api.czr_activeSkope() );
+
+          api( api.CZR_Helpers.build_setId(setId) ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+
     },
     getGlobalSettingVal : function() {
           var self = this, _vals = {};
@@ -181,8 +193,6 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
           });
           return _vals;
     },
-
-
     addAPISettingsListener : function() {
           var self = this;
           console.log('BEFORE SETTING UP DIRTY VALUE LISTENER');
@@ -190,41 +200,65 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
                 if ( ! self.isSettingEligible(key) )
                   return;
 
-                api(key).callbacks.add( function(to, from) {
-                      var current_scope = api.czr_skope( api.czr_activeSkope() );//the active scope instance
+                api(key).callbacks.add( function(to, from, o) {
+                      console.log('in api cb ', key, to, from, o);
+                      console.log('DIRTY', api(key)._dirty  );
 
-                      if ( _.isUndefined(current_scope) ) {
+                      if( ! api(key)._dirty )
+                        return;
+
+                      var current_skope_instance = api.czr_skope( api.czr_activeSkope() );//the active scope instance
+
+                      console.log('getSkopeSettingDirtyness', current_skope_instance.getSkopeSettingDirtyness( key ) );
+
+                      if ( _.isUndefined(current_skope_instance) ) {
                         throw new Error('Skope base class : the active scope is not defined.');
                       }
 
-                      var current_dirties = _.clone( current_scope.dirtyValues.get() ),
+                      var current_dirties = _.clone( current_skope_instance.dirtyValues.get() ),
                           _dirtyCustomized = {},
                           _k = self._extractOptName(key);
 
-                      _dirtyCustomized[ _k ] = { value : to, dirty : true };
-                      current_scope.dirtyValues.set( $.extend( current_dirties , _dirtyCustomized ) );
+                      _dirtyCustomized[ _k ] = { value : to, dirty : api(key)._dirty };
+                      current_skope_instance.dirtyValues.set( $.extend( current_dirties , _dirtyCustomized ) );
                 });
 
           });
     },
-    getActiveSkopeOnInit : function(collection) {
-          _def = _.findWhere( collection, {is_default : true } ).id;
-          return ! _.isUndefined(_def) ? _def : 'global';
+    getActiveSkopeOnInit : function( collection ) {
+          var _active_candidates = [],
+              _def = _.findWhere( collection, {is_default : true } ).id;
+          _def = ! _.isUndefined(_def) ? _def : 'global';
+
+          _.each( collection, function( _skop ) {
+              if ( ! _.isEmpty( _skop.db ) )
+                _active_candidates.push( _skop.id );
+          });
+          if ( _.contains( _active_candidates, 'local' ) )
+            return 'local';
+          if ( _.contains( _active_candidates, 'group' ) )
+            return 'group';
+          if ( _.contains( _active_candidates, 'special_group' ) )
+            return 'special_group';
+          return _def;
     },
 
+
     isSettingEligible : function( setId ) {
-      return -1 != setId.indexOf(serverControlParams.themeOptions) || _.contains( serverControlParams.wpBuiltinSettings, setId );
+          return -1 != setId.indexOf(serverControlParams.themeOptions) || _.contains( serverControlParams.wpBuiltinSettings, setId );
     },
 
     _extractOptName : function( setId ) {
-      return setId.replace(serverControlParams.themeOptions, '').replace(/\[|\]/gi, '' );
+          return setId.replace(serverControlParams.themeOptions, '').replace(/\[|\]/gi, '' );
     }
 
   });//api.Class.extend()
 
 
 })( wp.customize , jQuery, _);
+
 var CZRSkopeMths = CZRSkopeMths || {};
+
 $.extend( CZRSkopeMths, {
     initialize: function( skope_id, constructor_options ) {
           var skope = this;
@@ -234,8 +268,7 @@ $.extend( CZRSkopeMths, {
           skope.isReady = $.Deferred();
           skope.embedded = $.Deferred();
           skope.el = 'czr-scope-' + skope_id;//@todo replace with a css selector based on the scope name
-
-          skope.set(constructor_options);
+          skope(constructor_options);
           $.extend( skope, constructor_options || {} );
           skope.winner      = new api.Value( skope().is_winner ); //is this skope the one that will be applied on front end in the current context?
           skope.priority    = new api.Value(); //shall this skope always win or respect the default skopes priority
@@ -249,7 +282,7 @@ $.extend( CZRSkopeMths, {
                   selector  : '.czr-scope-switch',
                   name      : 'skope_switch',
                   actions   : function() {
-                      api.czr_activeSkope.set( skope().id );
+                      api.czr_activeSkope( skope().id );
                       api.previewer.refresh();
                   }
                 }
@@ -276,7 +309,6 @@ $.extend( CZRSkopeMths, {
 
           skope.embedded.done( function() {
               console.log('SKOPE : '  + skope().id + ' EMBEDDED');
-              skope.active( skope().is_default );
               skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
           });
 
@@ -288,8 +320,8 @@ $.extend( CZRSkopeMths, {
           skope.dirtyness.callbacks.add(function() { return skope.dirtynessReact.apply(skope, arguments ); } );
           skope.dbValues.callbacks.add(function() { return skope.dbValuesReact.apply(skope, arguments ); } );
           skope.winner.callbacks.add(function() { return skope.winnerReact.apply(skope, arguments ); } );
-          skope.dirtyValues.callbacks.add( function(to){
-              skope.dirtyness.set( ! _.isEmpty(to) );
+          skope.dirtyValues.callbacks.add( function(to) {
+              skope.dirtyness( ! _.isEmpty(to) );
           });
     },
     activeStateReact : function(to, from){
@@ -313,8 +345,9 @@ $.extend( CZRSkopeMths, {
 
 
     storeDirtyness : function() {
+        console.log('in store dirtyness');
           var skope = this;
-          skope.dirtyValues.set( skope.getDirties() );
+          skope.dirtyValues( skope.getDirties() );
     },
 
 
@@ -322,13 +355,58 @@ $.extend( CZRSkopeMths, {
           var skope = this,
               _dirtyCustomized = {};
           api.each( function ( value, key ) {
-            if ( value._dirty ) {
-              var _k = key.replace(serverControlParams.themeOptions, '').replace(/[|]/gi, '' );
-              _dirtyCustomized[ _k ] = { value : value(), dirty : value._dirty };
-            }
+              if ( value._dirty ) {
+                var _k = key.replace(serverControlParams.themeOptions, '').replace(/[|]/gi, '' );
+                _dirtyCustomized[ _k ] = { value : value(), dirty : value._dirty };
+              }
           } );
           return _dirtyCustomized;
     },
+    getSkopeSettingDirtyness : function( setId ) {
+        var skope = this;
+
+        setId = api.czr_skopeBase._extractOptName(setId);
+
+        console.log('skope.dirtyValues()', skope.dirtyValues(), setId );
+
+        if ( ! _.isUndefined( skope.dirtyValues()[ setId ] ) )
+          return skope.dirtyValues()[ setId ].dirty;
+        return false;
+    },
+    getSkopeSettingVal : function( setId ) {
+        var skope = this,
+            _val;
+
+        setId = api.czr_skopeBase._extractOptName(setId);
+
+        console.log('getSkopeSettingVal', setId );
+
+        if ( skope.getSkopeSettingDirtyness( setId ) ) {
+            return skope.dirtyValues()[ setId ].value;
+        } else {
+            return skope._getDBSettingVal( setId );
+        }
+    },
+    _getDBSettingVal : function( setId ) {
+          var skope = this,
+              wpSetId = api.CZR_Helpers.build_setId(setId),
+              _val;
+
+          console.log( 'api.settings.settings[wpSetId]', skope().id, setId , api.settings.settings, api.settings.settings[wpSetId] );
+
+          switch ( skope().id ) {
+              case 'global' :
+                _val = api.settings.settings[wpSetId].value;
+              break;
+              default :
+                if ( _.has( skope().db, setId ) )
+                  _val = skope().db[setId];
+                else
+                  _val = api.settings.settings[wpSetId].value;
+              break;
+          }
+          return _val;
+    }
 
   } );//$.extend(
 var CZRSkopeMths = CZRSkopeMths || {};
@@ -412,7 +490,8 @@ $.extend( CZRSkopeMths, {
 
         return this;
   };
-  api.Setting.prototype.silent_set =function( to ) {
+  api.Setting.prototype.silent_set =function( to, dirtyness ) {
+        console.log('in silent set', to, ( _.isUndefined( dirtyness ) || ! _.isBoolean( dirtyness ) ) ? this._dirty : dirtyness );
         var from = this._value;
 
         to = this._setter.apply( this, arguments );
@@ -422,7 +501,9 @@ $.extend( CZRSkopeMths, {
         }
 
         this._value = to;
-        this._dirty = true;
+        this._dirty = ( _.isUndefined( dirtyness ) || ! _.isBoolean( dirtyness ) ) ? this._dirty : dirtyness;
+
+        this.callbacks.fireWith( this, [ to, from, o ] );
 
         return this;
   };

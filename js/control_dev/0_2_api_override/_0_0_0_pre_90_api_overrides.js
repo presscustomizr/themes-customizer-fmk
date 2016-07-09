@@ -87,9 +87,11 @@
 
 
   /*****************************************************************************
-  * A SILENT SET METHOD
+  * A SILENT SET METHOD :
+  * => disable the _dirty + add a dirtyness param
   *****************************************************************************/
-  api.Setting.prototype.silent_set =function( to ) {
+  api.Setting.prototype.silent_set =function( to, dirtyness ) {
+        console.log('in silent set', to, ( _.isUndefined( dirtyness ) || ! _.isBoolean( dirtyness ) ) ? this._dirty : dirtyness );
         var from = this._value;
 
         to = this._setter.apply( this, arguments );
@@ -101,9 +103,9 @@
         }
 
         this._value = to;
-        this._dirty = true;
+        this._dirty = ( _.isUndefined( dirtyness ) || ! _.isBoolean( dirtyness ) ) ? this._dirty : dirtyness;
 
-        //this.callbacks.fireWith( this, [ to, from ] );
+        this.callbacks.fireWith( this, [ to, from, o ] );
 
         return this;
   };

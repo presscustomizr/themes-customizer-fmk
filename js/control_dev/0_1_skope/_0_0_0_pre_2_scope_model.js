@@ -1,5 +1,10 @@
 
+
 var CZRSkopeMths = CZRSkopeMths || {};
+
+
+//The Active state is delegated to the scope base class
+
 $.extend( CZRSkopeMths, {
   /*****************************************************************************
   * THE SCOPE MODEL
@@ -22,7 +27,8 @@ $.extend( CZRSkopeMths, {
           skope.embedded = $.Deferred();
           skope.el = 'czr-scope-' + skope_id;//@todo replace with a css selector based on the scope name
 
-          skope.set(constructor_options);
+          //set skope model
+          skope(constructor_options);
 
           //write the options as properties, skope_id is included
           $.extend( skope, constructor_options || {} );
@@ -48,7 +54,7 @@ $.extend( CZRSkopeMths, {
                   selector  : '.czr-scope-switch',
                   name      : 'skope_switch',
                   actions   : function() {
-                      api.czr_activeSkope.set( skope().id );
+                      api.czr_activeSkope( skope().id );
                       api.previewer.refresh();
                   }
                 }
@@ -82,8 +88,6 @@ $.extend( CZRSkopeMths, {
 
           skope.embedded.done( function() {
               console.log('SKOPE : '  + skope().id + ' EMBEDDED');
-              //set active state
-              skope.active( skope().is_default );
               //Setup the user event listeners
               skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
           });
@@ -106,9 +110,9 @@ $.extend( CZRSkopeMths, {
           skope.winner.callbacks.add(function() { return skope.winnerReact.apply(skope, arguments ); } );
 
           //LISTEN TO DIRTYNESS
-          skope.dirtyValues.callbacks.add( function(to){
+          skope.dirtyValues.callbacks.add( function(to) {
               //set the model dirtyness boolean state value
-              skope.dirtyness.set( ! _.isEmpty(to) );
+              skope.dirtyness( ! _.isEmpty(to) );
           });
     },
 
@@ -174,8 +178,9 @@ $.extend( CZRSkopeMths, {
 
 
     storeDirtyness : function() {
+        console.log('in store dirtyness');
           var skope = this;
-          skope.dirtyValues.set( skope.getDirties() );
+          skope.dirtyValues( skope.getDirties() );
     },
 
 
@@ -184,53 +189,67 @@ $.extend( CZRSkopeMths, {
               _dirtyCustomized = {};
           //populate with the current skope settings dirtyValues
           api.each( function ( value, key ) {
-            if ( value._dirty ) {
-              var _k = key.replace(serverControlParams.themeOptions, '').replace(/[|]/gi, '' );
-              _dirtyCustomized[ _k ] = { value : value(), dirty : value._dirty };
-            }
+              if ( value._dirty ) {
+                var _k = key.replace(serverControlParams.themeOptions, '').replace(/[|]/gi, '' );
+                _dirtyCustomized[ _k ] = { value : value(), dirty : value._dirty };
+              }
           } );
           return _dirtyCustomized;
     },
 
+    //@return the dirtyness state of a given setId for a given skope
+    getSkopeSettingDirtyness : function( setId ) {
+        var skope = this;
+
+        setId = api.czr_skopeBase._extractOptName(setId);
+
+        console.log('skope.dirtyValues()', skope.dirtyValues(), setId );
+
+        if ( ! _.isUndefined( skope.dirtyValues()[ setId ] ) )
+          return skope.dirtyValues()[ setId ].dirty;
+        return false;
+    },
 
 
-    // setSettingsValue : function() {
-    //       //TEST UPDATE DYNAMIC STYLE CHECKBOX ON SWITCH
-    //       if ( 'trans' == to.dyn_type ) {
-    //         api('hu_theme_options[dynamic-styles]').set(true);
-    //         //api('hu_theme_options[dynamic-styles]').set(23);
-    //         $('input[type=checkbox]', api.control('hu_theme_options[dynamic-styles]').container ).iCheck('update');
-    //       }
+    //if is dirty, get the dirty val
+    //if not, get the db val
+    getSkopeSettingVal : function( setId ) {
+        var skope = this,
+            _val;
 
-    //       //TEST UPDATE FONT SELECT ON SWITCH
-    //       if ( 'trans' == to.dyn_type ) {
-    //         api('hu_theme_options[font]').set('raleway');
-    //         //api('hu_theme_options[dynamic-styles]').set(23);
-    //         $('select[data-customize-setting-link]', api.control('hu_theme_options[font]').container ).selecter('destroy').selecter();
-    //       }
+        setId = api.czr_skopeBase._extractOptName(setId);
 
-    //       var _img_id = 'trans' == to.dyn_type ? 23 : 25;
-    //       //TEST UPDATE LOGO ON SWITCH
-    //       api.control('hu_theme_options[custom-logo]').container.remove();
+        console.log('getSkopeSettingVal', setId );
 
-    //       api.control.remove('hu_theme_options[custom-logo]');
-
-    //       var _constructor = api.controlConstructor.czr_cropped_image;
-    //       var _data = api.settings.controls['hu_theme_options[custom-logo]'];
-    //       api('hu_theme_options[custom-logo]').set(_img_id);
-
-    //       //add the control when the new image has been fetched asynchronously.
-    //       wp.media.attachment( _img_id ).fetch().done( function() {
-    //         _data.attachment = this.attributes;
-    //         api.control.add(
-    //         'hu_theme_options[custom-logo]',
-    //           new _constructor('hu_theme_options[custom-logo]', { params : _data, previewer :api.previewer })
-    //         );
-    //       } );
-
-    // },
+        if ( skope.getSkopeSettingDirtyness( setId ) ) {
+            return skope.dirtyValues()[ setId ].value;
+        } else {
+            return skope._getDBSettingVal( setId );
+        }
+    },
 
 
+    //return the server send db value for a pair setId / skope
+    _getDBSettingVal : function( setId ) {
+          var skope = this,
+              wpSetId = api.CZR_Helpers.build_setId(setId),
+              _val;
+
+          console.log( 'api.settings.settings[wpSetId]', skope().id, setId , api.settings.settings, api.settings.settings[wpSetId] );
+
+          switch ( skope().id ) {
+              case 'global' :
+                _val = api.settings.settings[wpSetId].value;
+              break;
+              default :
+                if ( _.has( skope().db, setId ) )
+                  _val = skope().db[setId];
+                else
+                  _val = api.settings.settings[wpSetId].value;
+              break;
+          }
+          return _val;
+    }
 
 
 
