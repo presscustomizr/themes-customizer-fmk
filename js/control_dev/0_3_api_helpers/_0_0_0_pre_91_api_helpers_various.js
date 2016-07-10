@@ -22,16 +22,15 @@
                 ].join('');
         },
 
-
         /*
         * @return string
-        * simple helper to build the setting id name
+        * simple helper to build the setting wp api ready id
         */
-        build_setId : function ( name ) {
+        build_setId : function ( setId ) {
                 //exclude the WP built-in settings like blogdescription, show_on_front, etc
-                if ( _.contains( serverControlParams.wpBuiltinSettings, name ) )
-                  return name;
-                return -1 == name.indexOf( serverControlParams.themeOptions ) ? [ serverControlParams.themeOptions +'[' , name  , ']' ].join('') : name;
+                if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
+                  return setId;
+                return -1 == setId.indexOf( serverControlParams.themeOptions ) ? [ serverControlParams.themeOptions +'[' , setId  , ']' ].join('') : setId;
         },
 
         /*
@@ -42,6 +41,8 @@
               var self = this;
               return name.replace(/\[|\]/g, '').replace(serverControlParams.themeOptions, '');
         },
+
+
 
         //@return bool
         //@uses api.czr_partials

@@ -170,6 +170,7 @@
           }
 
           //store the initial state of the global option
+          //@todo do we need this ?
           this.initialGlobalSettingVal = this.getGlobalSettingVal();
 
           //REACT TO ACTIVE SCOPE UPDATE
@@ -185,6 +186,11 @@
           //LISTEN TO API SETTING CHANGES => POPULATE THE DIRTYNESS OF THE ACTIVE SCOPE
           this.addAPISettingsListener();
 
+          //LISTEN TO SAVE EVENT
+          api.bind( 'save', function( request ) {
+              console.log('SAVE EVENT', request, request.prototype );
+          });
+
     },
 
 
@@ -192,6 +198,7 @@
 
 
     //fired on 'czr-scopes-ready' triggered by the preview
+    //@see api_overrides
     updateSkopeCollection : function( collection ) {
           console.log('skope Collection?', collection );
           var self = this;
@@ -210,7 +217,7 @@
           }
           console.log('in prepareSkope', serverControlParams.defaultSkopeModel, skope_candidate );
 
-          var control = this,
+          var self = this,
               api_ready_skope = {};
 
           _.each( serverControlParams.defaultSkopeModel , function( _value, _key ) {
@@ -265,6 +272,8 @@
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
+                      //when the global db values have been changed, typically on save,
+                      //the 'db' property will store the difference between api.settings.settings and the db options server generated
                       case  'db' :
                           if ( _.isUndefined( _candidate_val) && ! _.isArray( _candidate_val ) && ! _.isObject( _candidate_val ) ) {
                               throw new Error('prepareSkopeForAPI : skope property "db" must be a empty array or an object');
@@ -278,7 +287,21 @@
 
 
 
+    getChangedGlobalDBSettingValues : function( serverGlobalDBValues ) {
+          var _changedDbVal = {};
 
+          _.each( serverGlobalDBValues, function( _val, _setId ){
+              _wpSetId = api.CZR_Helpers.build_setId( _setId);
+
+              if ( ! _.has( api.settings.settings, _wpSetId ) )
+                return;
+              if ( _.isEqual( _val , api.settings.settings[ _wpSetId ].value ) )
+                return;
+              _changedDbVal[_setId] = _val;
+          });
+          console.log('CHANGED DB VAL', _changedDbVal );
+          return _changedDbVal;
+    },
 
 
 
@@ -301,12 +324,60 @@
     instantiateSkopes : function(to, from) {
           console.log('SCOPES SENT BY THE PREVIEW, FROM AND TO : ', from, to);
           var self = this,
-              _new_collection = _.clone(to) || {},
-              _old_collection = _.clone(from) || {};
+              _new_collection = _.clone(to) || [],
+              _old_collection = _.clone(from) || [];
 
-          //destroy the previous scopes views and models
+          //what are the skope to instantiate ?
+          //=>on init, instantiate them all
+          //=>on refresh, instantiate the new ones and remove the non relevant
+          var _to_instantiate = [];
+          var _to_remove = [];
+          var _to_update = [];
+
+          //TO INSTANTIATE
+          _.each( _new_collection, function( _skope ) {
+              if ( ! api.czr_skope.has( _skope.id ) )
+                  _to_instantiate.push( _skope );
+          });
+
+          //TO REMOVE
+          api.czr_skope.each( function( _skope ){
+              if ( _.isUndefined( _.findWhere( _new_collection, { id : _skope().id } ) ) )
+                  _to_remove.push( _skope() );
+          });
+
+
+          console.log( 'api.czr_skopeCollection()??', api.czr_skopeCollection() );
+
+          _to_update = _.filter( api.czr_skopeCollection(), function( _skope ) {
+              if ( api.czr_skope.has(_skope.id) ) {
+                console.log('in to update', _skope.id);
+                console.log('has changed', _skope.id, ! _.isEqual( api.czr_skope( _skope.id)(), _skope ) );
+                console.log('skope API model', api.czr_skope( _skope.id )() );
+                console.log('collection model', _skope );
+                console.log('server sent model', _.findWhere( _new_collection , { id : _skope.id } ) );
+                return ! _.isEqual( api.czr_skope( _skope.id)(), _skope );
+              }
+              return false;
+          });
+
+          console.log( '_to_instantiate', _to_instantiate);
+          console.log( '_to_remove', _to_remove);
+          console.log( '_to_update', _to_update);
+
+          //Update the skope models
+          _.each( _to_update, function( _skope ) {
+              var _new_model = $.extend( api.czr_skope( _skope.id )(), _skope );
+              if ( 'global' == _skope.id ) {
+                  _new_model.db = self.getChangedGlobalDBSettingValues( _skope.db );
+              }
+              api.czr_skope( _skope.id )( _new_model );
+          });
+
+
+          //Destroy the previous scopes views and models
           //Instantiate the scopes collection
-          _.each( _old_collection, function( _skope ) {
+          _.each( _to_remove, function( _skope ) {
               //remove the view DOM el
               api.czr_skope( _skope.id ).container.remove();
               //remove the model from the collection
@@ -315,7 +386,7 @@
 
 
           //Instantiate the scopes collection
-          _.each( _new_collection, function( _skope ) {
+          _.each( _to_instantiate, function( _skope ) {
               var params = $.extend( true, {}, _skope );//IMPORTANT => otherwise the data object is actually a copy and share the same reference as the model and view params
               api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
 
@@ -326,8 +397,12 @@
               api.czr_skope( _skope.id ).ready();
           });
 
-          //set relevant scope as active. Falls back on 'global'
-          api.czr_activeSkope( self.getActiveSkopeOnInit( _new_collection ) );
+          //on init
+          //OR
+          //if the current active skope has been removed from the collection
+          //=> set relevant scope as active. Falls back on 'global'
+          if ( ! api.czr_skope.has( api.czr_activeSkope() ) )
+            api.czr_activeSkope( self.getActiveSkopeOnInit( _new_collection ) );
     },//listenToSkopeCollection()
 
 
@@ -436,11 +511,10 @@
           var self = this, _vals = {};
           //parse the current eligible scope settings and write an setting val object
           api.each( function ( value, key ) {
-            //only the current theme options are eligible
-            if ( ! self.isSettingEligible(key) )
-              return;
-            var _k = self._extractOptName(key);
-            _vals[_k] = { value : value(), dirty : value._dirty };
+              //only the current theme options are eligible
+              if ( ! self.isSettingEligible(key) )
+                return;
+              _vals[key] = value();
           });
           return _vals;
     },
@@ -450,32 +524,32 @@
           var self = this;
           console.log('BEFORE SETTING UP DIRTY VALUE LISTENER');
           //parse the current eligible scope settings and write an setting val object
-          api.each( function ( value, key ) {
+          api.each( function ( value, setId ) {
 
                 //only the current theme options + some WP built in settings are eligible
-                if ( ! self.isSettingEligible(key) )
+                if ( ! self.isSettingEligible(setId) )
                   return;
 
-                api(key).callbacks.add( function(to, from, o) {
-                      console.log('in api cb ', key, to, from, o);
-                      console.log('DIRTY', api(key)._dirty  );
+                api( setId ).callbacks.add( function( new_val, old_val, o ) {
+                      console.log('in api cb ', setId, new_val, old_val, o);
+                      console.log('DIRTY', api(setId)._dirty  );
 
-                      if( ! api(key)._dirty )
+                      if( ! api(setId)._dirty )
                         return;
 
+                      //UPDATE THE CURRENT SKOPE DIRTIES
                       var current_skope_instance = api.czr_skope( api.czr_activeSkope() );//the active scope instance
 
-                      console.log('getSkopeSettingDirtyness', current_skope_instance.getSkopeSettingDirtyness( key ) );
+                      console.log('getSkopeSettingDirtyness', current_skope_instance.getSkopeSettingDirtyness( setId ) );
 
                       if ( _.isUndefined(current_skope_instance) ) {
                         throw new Error('Skope base class : the active scope is not defined.');
                       }
 
-                      var current_dirties = _.clone( current_skope_instance.dirtyValues.get() ),
-                          _dirtyCustomized = {},
-                          _k = self._extractOptName(key);
+                      var current_dirties = _.clone( current_skope_instance.dirtyValues() ),
+                          _dirtyCustomized = {};
 
-                      _dirtyCustomized[ _k ] = { value : to, dirty : api(key)._dirty };
+                      _dirtyCustomized[ setId ] = new_val;
                       current_skope_instance.dirtyValues.set( $.extend( current_dirties , _dirtyCustomized ) );
                 });
 
@@ -512,11 +586,7 @@
 
 
     isSettingEligible : function( setId ) {
-          return -1 != setId.indexOf(serverControlParams.themeOptions) || _.contains( serverControlParams.wpBuiltinSettings, setId );
-    },
-
-    _extractOptName : function( setId ) {
-          return setId.replace(serverControlParams.themeOptions, '').replace(/\[|\]/gi, '' );
+          return ( -1 != setId.indexOf(serverControlParams.themeOptions) ) || _.contains( serverControlParams.wpBuiltinSettings, setId );
     }
 
   });//api.Class.extend()

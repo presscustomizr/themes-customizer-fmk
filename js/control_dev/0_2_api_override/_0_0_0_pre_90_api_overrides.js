@@ -118,11 +118,12 @@
   *****************************************************************************/
   //PREPARE THE SCOPE AWARE PREVIEWER
   if ( serverControlParams.isSkopOn ) {
-    api.czr_isPreviewerSkopeAware = new api.Value();
-    api.czr_isPreviewerSkopeAware.set(false);
+    //this deferred is used to make sure the overriden api.previewer.query method has been taken into account
+    api.czr_isPreviewerSkopeAware = $.Deferred();
+
     var _old_preview = api.Setting.prototype.preview;
     api.Setting.prototype.preview = function() {
-      if ( ! api.czr_isPreviewerSkopeAware.get() )
+      if ( 'pending' == api.czr_isPreviewerSkopeAware.state() )
         return this.previewer.refresh();
       //as soon as the previewer is setup, let's behave as usual
       _old_preview.call(this);
@@ -139,99 +140,185 @@
         *
         * @return {object}
         */
-        api.previewer.query =  function() {
-          var dirtyCustomized = {};
-          api.each( function ( value, key ) {
-            if ( value._dirty ) {
-              dirtyCustomized[ key ] = value();
+        api.previewer.query =  function( skope_id ) {
+            console.log('skope id in query ?', skope_id );
+            var dirtyCustomized = {};
+            skope_id = skope_id || api.czr_activeSkope();
+
+            //on first load, build the dirtyCustomized the regular way
+            //otherwise, get it from the requested skope instance.
+            if ( ! _.has( api, 'czr_skope') || ! api.czr_skope.has( skope_id ) ) {
+                api.each( function ( value, key ) {
+                    if ( value._dirty ) {
+                      dirtyCustomized[ key ] = value();
+                    }
+                } );
+            } else {
+                console.log('THE ELSE CASE');
+                dirtyCustomized = api.czr_skope( skope_id ).dirtyValues();
             }
-          } );
+            console.log( 'DIRTY CUSTOMIZED', dirtyCustomized, api.czr_activeSkope(), skope_id );
 
-          //the previewer is now scope aware :
-          api.czr_isPreviewerSkopeAware.set(true);
 
-          return {
-            wp_customize: 'on',
-            dyn_type:     api.czr_skope( api.czr_activeSkope() ).dyn_type,//post_meta, term_meta, user_meta, trans, option
-            opt_name:     api.czr_skope( api.czr_activeSkope() ).opt_name,
-            obj_id:       api.czr_skope( api.czr_activeSkope() ).obj_id,
-            theme:        _wpCustomizeSettings.theme.stylesheet,
-            customized:   JSON.stringify( dirtyCustomized ),
-            nonce:        this.nonce.preview
-          };
+            //the previewer is now scope aware
+            api.czr_isPreviewerSkopeAware.resolve();
+
+            return {
+                wp_customize: 'on',
+                skope :       api.czr_skope( skope_id )().id,
+                dyn_type:     api.czr_skope( skope_id )().dyn_type,//post_meta, term_meta, user_meta, trans, option
+                opt_name:     api.czr_skope( skope_id )().opt_name,
+                obj_id:       api.czr_skope( skope_id )().obj_id,
+                theme:        _wpCustomizeSettings.theme.stylesheet,
+                customized:   JSON.stringify( dirtyCustomized ),
+                nonce:        this.nonce.preview
+            };
         };
 
 
 
         //TO REMOVE : FOR TESTS ONLY
         api.previewer.save = function() {
-          var self = this,
-            processing = api.state( 'processing' ),
-            submitWhenDoneProcessing,
-            submit;
+            var self = this,
+                processing = api.state( 'processing' ),
+                submitWhenDoneProcessing,
+                submit;
 
-          $( document.body ).addClass( 'saving' );
+            $( document.body ).addClass( 'saving' );
 
-          submit = function () {
-            var request, query;
-            query = $.extend( self.query(), {
-              nonce:  self.nonce.save
-            } );
+            //skope dependant submit()
+            submit = function( skope_id ) {
+                var request, query;
 
-            console.log('in submit : ', query);
-            request = wp.ajax.post( 'customize_save', query );
-            api.trigger( 'save', request );
+                skope_id = skope_id || api.czr_activeSkope();
 
-            request.always( function () {
-              $( document.body ).removeClass( 'saving' );
-            } );
-
-            request.fail( function ( response ) {
-              console.log('ALORS FAIL ?', response );
-              if ( '0' === response ) {
-                response = 'not_logged_in';
-              } else if ( '-1' === response ) {
-                // Back-compat in case any other check_ajax_referer() call is dying
-                response = 'invalid_nonce';
-              }
-
-              if ( 'invalid_nonce' === response ) {
-                self.cheatin();
-              } else if ( 'not_logged_in' === response ) {
-                self.preview.iframe.hide();
-                self.login().done( function() {
-                  self.save();
-                  self.preview.iframe.show();
+                //the query takes the skope_id has parameter
+                query = $.extend( self.query( skope_id ), {
+                    nonce:  self.nonce.save
                 } );
-              }
-              api.trigger( 'error', response );
-            } );
 
-            request.done( function( response ) {
-              console.log('ALORS DONE ?', response );
-              // Clear setting dirty states
-              api.each( function ( value ) {
-                value._dirty = false;
-              } );
+                console.log('in submit : ', skope_id, query );
 
-              api.previewer.send( 'saved', response );
+                request = wp.ajax.post( 'customize_save', query );
 
-              api.trigger( 'saved', response );
-            } );
-          };
+                api.trigger( 'save', request );
 
-          if ( 0 === processing() ) {
-            submit();
-          } else {
-            submitWhenDoneProcessing = function () {
+                // request.always( function () {
+                //     $( document.body ).removeClass( 'saving' );
+                // } );
+
+                request.fail( function ( response ) {
+                    console.log('ALORS FAIL ?', skope_id, response );
+                    if ( '0' === response ) {
+                        response = 'not_logged_in';
+                    } else if ( '-1' === response ) {
+                      // Back-compat in case any other check_ajax_referer() call is dying
+                        response = 'invalid_nonce';
+                    }
+
+                    if ( 'invalid_nonce' === response ) {
+                        self.cheatin();
+                    } else if ( 'not_logged_in' === response ) {
+                        self.preview.iframe.hide();
+                        self.login().done( function() {
+                          self.save();
+                          self.preview.iframe.show();
+                      } );
+                    }
+                    api.trigger( 'error', response );
+                } );
+
+                request.done( function( response ) {
+                    console.log('ALORS DONE ?', skope_id, response );
+
+                    //update the list of done request
+                    var _current_list = skopeRequestDoneCollection(),
+                        _new_list = $.extend( true, [], _current_list );
+
+                    if ( _.isUndefined( _.findWhere( _new_list, { id : skope_id } ) ) ) {
+                      _new_list.push( { id : skope_id, response : response } );
+                      skopeRequestDoneCollection.set( _new_list );
+                    }
+
+                    // // Clear setting dirty states
+                    // api.each( function ( value ) {
+                    //   value._dirty = false;
+                    // } );
+                    // api.previewer.send( 'saved', response );
+                    // api.trigger( 'saved', response );
+
+                } );
+              };//submit()
+
+
+
+              var skopeRequestDoneCollection = new api.Value( [] );
+              var skopeRequests = $.Deferred();
+
+              //Solves the problem of knowing when all asynchronous ajax requests are done
+              //each time an skope save ajax request is performed and done(),
+              //the skopeRequestDoneCollection array is updated with a new saved skope item : { id : skope_id, response : response }
+              //when all registered skope have been saved, the skopeRequests are resolve()
+              //=> then the skopeRequests Deferred() object fires his own done() callback.
+              skopeRequestDoneCollection.bind( function( saved_skopes ) {
+                  console.log('skopeRequestDoneCollection callback', saved_skopes );
+                  //have all skopes been saved ?
+                  var _skop_to_do = _.filter( api.czr_skopeCollection(), function( _skop ) {
+                      return _.isUndefined( _.findWhere( saved_skopes, { id : _skop.id } ) );// ! _.contains( saved_skopes, _skop.id );
+                  });
+
+                  if ( ! _.isEmpty( _skop_to_do ) )
+                    return;
+                  skopeRequests.resolve( saved_skopes );
+              });
+
+              skopeRequests.done( function( saved_skopes ) {
+                  console.log('ALL SKOPE REQUESTS ARE DONE', saved_skopes );
+                  //reset the dirty values
+                  _.each( saved_skopes, function( _skp ) {
+                      api.czr_skope( _skp.id ).dirtyValues({});
+                  });
+                  // Clear api setting dirty states
+                  api.each( function ( value ) {
+                      value._dirty = false;
+                  } );
+
+                  //always send the response of the current skope api.czr_activeSkope()
+                  var response = _.findWhere( saved_skopes, { id : api.czr_activeSkope() } ).response;
+                  if ( _.isUndefined(response) || ! response ) {
+                      throw new Error( 'SkopeRequests.done() : no valid response to send' );
+                  }
+
+                  $( document.body ).removeClass( 'saving' );
+                  api.previewer.send( 'saved', response );
+                  api.trigger( 'saved', response );
+              });
+
+
+
+              //loop on the registered skopes and submit each save ajax request
+              var submitSkopeDirties = function() {
+                  api.czr_skope.each( function( _skope ) {
+                      console.log('submit request for skope : ', _skope().id );
+                      submit( _skope().id );
+                  });
+              };
+
               if ( 0 === processing() ) {
-                api.state.unbind( 'change', submitWhenDoneProcessing );
-                submit();
+                submitSkopeDirties();//submit();
+              } else {
+                  submitWhenDoneProcessing = function () {
+                      if ( 0 === processing() ) {
+                          api.state.unbind( 'change', submitWhenDoneProcessing );
+                          submitSkopeDirties();//submit();
+                      }
+                    };
+                  api.state.bind( 'change', submitWhenDoneProcessing );
               }
-            };
-            api.state.bind( 'change', submitWhenDoneProcessing );
-          }
-        };
+
+
+
+        };//save()
   });//api.bind('ready')
 
   //FIX FOR CONTROL VISIBILITY LOST ON PREVIEW REFRESH #1

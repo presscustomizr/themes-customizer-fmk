@@ -176,38 +176,37 @@ $.extend( CZRSkopeMths, {
 
     // },
 
-
+    //populate skope dirtyness
     storeDirtyness : function() {
         console.log('in store dirtyness');
           var skope = this;
           skope.dirtyValues( skope.getDirties() );
     },
 
-
+    //get the current skope dirty values
     getDirties : function() {
           var skope = this,
               _dirtyCustomized = {};
           //populate with the current skope settings dirtyValues
-          api.each( function ( value, key ) {
+          api.each( function ( value, setId ) {
               if ( value._dirty ) {
-                var _k = key.replace(serverControlParams.themeOptions, '').replace(/[|]/gi, '' );
-                _dirtyCustomized[ _k ] = { value : value(), dirty : value._dirty };
+                //var _k = key.replace(serverControlParams.themeOptions, '').replace(/[|]/gi, '' );
+                _dirtyCustomized[ setId ] = value();
               }
           } );
           return _dirtyCustomized;
     },
 
-    //@return the dirtyness state of a given setId for a given skope
+    //@return the boolean dirtyness state of a given setId for a given skope
     getSkopeSettingDirtyness : function( setId ) {
         var skope = this;
 
-        setId = api.czr_skopeBase._extractOptName(setId);
+        //make sure the setId is ready for API
+        setId = api.CZR_Helpers.build_setId( setId );
 
         console.log('skope.dirtyValues()', skope.dirtyValues(), setId );
 
-        if ( ! _.isUndefined( skope.dirtyValues()[ setId ] ) )
-          return skope.dirtyValues()[ setId ].dirty;
-        return false;
+        return _.has( skope.dirtyValues(), setId );
     },
 
 
@@ -216,13 +215,13 @@ $.extend( CZRSkopeMths, {
     getSkopeSettingVal : function( setId ) {
         var skope = this,
             _val;
-
-        setId = api.czr_skopeBase._extractOptName(setId);
+        //make sure the setId is ready for API
+        setId = api.CZR_Helpers.build_setId( setId );
 
         console.log('getSkopeSettingVal', setId );
 
         if ( skope.getSkopeSettingDirtyness( setId ) ) {
-            return skope.dirtyValues()[ setId ].value;
+            return skope.dirtyValues()[ setId ];
         } else {
             return skope._getDBSettingVal( setId );
         }
@@ -232,22 +231,28 @@ $.extend( CZRSkopeMths, {
     //return the server send db value for a pair setId / skope
     _getDBSettingVal : function( setId ) {
           var skope = this,
+              shortSetId = api.CZR_Helpers.getOptionName(setId),
               wpSetId = api.CZR_Helpers.build_setId(setId),
               _val;
 
-          console.log( 'api.settings.settings[wpSetId]', skope().id, setId , api.settings.settings, api.settings.settings[wpSetId] );
+          console.log( 'api.settings.settings[wpSetId]', skope().id, shortSetId, setId , api.settings.settings, api.settings.settings[wpSetId] );
 
-          switch ( skope().id ) {
-              case 'global' :
-                _val = api.settings.settings[wpSetId].value;
-              break;
-              default :
-                if ( _.has( skope().db, setId ) )
-                  _val = skope().db[setId];
-                else
-                  _val = api.settings.settings[wpSetId].value;
-              break;
-          }
+          // switch ( skope().id ) {
+          //     case 'global' :
+          //       _val = api.settings.settings[wpSetId].value;
+          //     break;
+          //     default :
+          //       if ( _.has( skope().db, shortSetId ) )
+          //         _val = skope().db[shortSetId];
+          //       else
+          //         _val = api.settings.settings[wpSetId].value;
+          //     break;
+          // }
+          if ( _.has( skope().db, shortSetId ) )
+            _val = skope().db[shortSetId];
+          else
+            _val = api.settings.settings[wpSetId].value;
+
           return _val;
     }
 
