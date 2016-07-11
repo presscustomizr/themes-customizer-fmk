@@ -1,48 +1,55 @@
 
 (function (api, $, _) {
   //Extends all constructores with the events manager
-  $.extend( CZRBaseControlMths, api.Events || {} );
-  $.extend( CZRModuleMths, api.Events || {} );
-  $.extend( CZRItemMths, api.Events || {} );
-  $.extend( CZRInputMths, api.Events || {} );
-  $.extend( CZRSkopeMths, api.Events || {} );
+  $.extend( CZRBaseControlMths, api.Events );
+  $.extend( CZRModuleMths, api.Events );
+  $.extend( CZRItemMths, api.Events );
+  $.extend( CZRInputMths, api.Events );
+  $.extend( CZRSkopeBaseMths, api.Events );
+  $.extend( CZRSkopeMths, api.Events );
 
   //Add the DOM helpers (addAction, ...) to the Control Base Class + Input Base Class
-  $.extend( CZRBaseControlMths, api.CZR_Helpers || {} );
-  $.extend( CZRInputMths, api.CZR_Helpers || {} );
-  $.extend( CZRModuleMths, api.CZR_Helpers || {} );
-  $.extend( CZRSkopeMths, api.CZR_Helpers || {} );
+  $.extend( CZRBaseControlMths, api.CZR_Helpers );
+  $.extend( CZRInputMths, api.CZR_Helpers );
+  $.extend( CZRModuleMths, api.CZR_Helpers );
+  $.extend( CZRSkopeMths, api.CZR_Helpers );
 
-  //SKOPE => used as constructor when creating the collection of skopes
-  api.CZR_skope                 = api.Value.extend( CZRSkopeMths || {} );
+  //SKOPE
+  api.CZR_skopeBase             = api.Class.extend( CZRSkopeBaseMths );
+  api.CZR_skope                 = api.Value.extend( CZRSkopeMths ); //=> used as constructor when creating the collection of skopes
+  api.bind( 'ready' , function() {
+      if ( serverControlParams.isSkopOn ) {
+        api.czr_skopeBase = new api.CZR_skopeBase();
+      }
+  } );
 
   //INPUTS => used as constructor when creating the collection of inputs
-  api.CZRInput                 = api.Value.extend( CZRInputMths || {} );
+  api.CZRInput                 = api.Value.extend( CZRInputMths );
 
   //ITEMS => used as constructor when creating the collection of models
-  api.CZRItem                  = api.Value.extend( CZRItemMths || {} );
+  api.CZRItem                  = api.Value.extend( CZRItemMths );
 
   //MODULES => used as constructor when creating the collection of modules
-  api.CZRModule               = api.Value.extend( CZRModuleMths || {} );
-  api.CZRDynModule            = api.CZRModule.extend( CZRDynModuleMths || {} );
+  api.CZRModule               = api.Value.extend( CZRModuleMths );
+  api.CZRDynModule            = api.CZRModule.extend( CZRDynModuleMths );
 
   //COLUMNS => used as constructor
-  api.CZRColumn                = api.Value.extend( CZRColumnMths || {} );
+  api.CZRColumn                = api.Value.extend( CZRColumnMths );
 
 
   //CONTROLS
-  api.CZRBaseControl           = api.Control.extend( CZRBaseControlMths || {} );
-  api.CZRBaseModuleControl    = api.CZRBaseControl.extend( CZRBaseModuleControlMths || {} );
-  api.CZRMultiModuleControl        = api.CZRBaseModuleControl.extend( CZRMultiModuleControlMths || {} );
+  api.CZRBaseControl           = api.Control.extend( CZRBaseControlMths );
+  api.CZRBaseModuleControl    = api.CZRBaseControl.extend( CZRBaseModuleControlMths );
+  api.CZRMultiModuleControl        = api.CZRBaseModuleControl.extend( CZRMultiModuleControlMths );
 
-  //api.CZRBackgroundControl     = api.CZRItemControl.extend( CZRBackgroundMths || {} );
+  //api.CZRBackgroundControl     = api.CZRItemControl.extend( CZRBackgroundMths );
 
-  //api.CZRWidgetAreasControl    = api.CZRDynModule.extend( CZRWidgetAreasMths || {} );
+  //api.CZRWidgetAreasControl    = api.CZRDynModule.extend( CZRWidgetAreasMths );
 
 
-  api.CZRUploadControl         = api.Control.extend( CZRUploadMths || {} );
-  api.CZRLayoutControl         = api.Control.extend( CZRLayoutSelectMths || {} );
-  api.CZRMultiplePickerControl = api.Control.extend( CZRMultiplePickerMths || {} );
+  api.CZRUploadControl         = api.Control.extend( CZRUploadMths );
+  api.CZRLayoutControl         = api.Control.extend( CZRLayoutSelectMths );
+  api.CZRMultiplePickerControl = api.Control.extend( CZRMultiplePickerMths );
 
 
 
@@ -115,7 +122,7 @@
 
 
   if ( 'function' == typeof api.CroppedImageControl ) {
-    api.CZRCroppedImageControl   = api.CroppedImageControl.extend( CZRCroppedImageMths || {} );
+    api.CZRCroppedImageControl   = api.CroppedImageControl.extend( CZRCroppedImageMths );
 
     $.extend( api.controlConstructor, {
       czr_cropped_image : api.CZRCroppedImageControl

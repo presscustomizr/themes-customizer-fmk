@@ -7,7 +7,7 @@ var CZRSkopeMths = CZRSkopeMths || {};
 
 $.extend( CZRSkopeMths, {
   /*****************************************************************************
-  * THE SCOPE MODEL
+  * THE SKOPE MODEL
   *****************************************************************************/
   // 'id'          => 'global',
   // 'level'       => '_all_',
@@ -20,28 +20,22 @@ $.extend( CZRSkopeMths, {
           var skope = this;
           api.Value.prototype.initialize.call( skope, null, constructor_options );
 
-          //@todo remove ?
-          skope.options = constructor_options;
-
           skope.isReady = $.Deferred();
           skope.embedded = $.Deferred();
           skope.el = 'czr-scope-' + skope_id;//@todo replace with a css selector based on the scope name
-
-          //set skope model
-          skope(constructor_options);
 
           //write the options as properties, skope_id is included
           $.extend( skope, constructor_options || {} );
 
           //Make it alive with various Values
           skope.visible     = new api.Value(true);
-          skope.winner      = new api.Value( skope().is_winner ); //is this skope the one that will be applied on front end in the current context?
+          skope.winner      = new api.Value( constructor_options.is_winner ); //is this skope the one that will be applied on front end in the current context?
           skope.priority    = new api.Value(); //shall this skope always win or respect the default skopes priority
           skope.active      = new api.Value( false ); //active, inactive. Are we currently customizing this skope ?
           skope.dirtyness   = new api.Value( false ); //true or false : has this skope been customized ?
 
           //setting values are stored in :
-          skope.dbValues    = new api.Value( _.isEmpty( skope().db ) ? {} : skope().db );
+          skope.dbValues    = new api.Value( _.isEmpty( constructor_options.db ) ? {} : constructor_options.db );
           skope.dirtyValues = new api.Value({});//stores the current customized value.
 
 
@@ -55,25 +49,24 @@ $.extend( CZRSkopeMths, {
                   selector  : '.czr-scope-switch',
                   name      : 'skope_switch',
                   actions   : function() {
-                      api.czr_activeSkope( skope().id );
+                      api.czr_activeSkope( skope_id );
                       api.previewer.refresh();
                   }
                 }
           ]);//module.userEventMap
 
-
-          console.log('SKOPE : '  + skope().id + ' INSTANTIATED' );
-
           //SETUP API LISTENERS
           skope.setupSkopeAPIListeners();
 
-          skope.isReady.done( function() {
-              console.log('SKOPE : '  + skope().id + ' IS READY');
 
-              //Add this new skope to the global skope collection
-              var _current_collection = $.extend( true, [], api.czr_skopeCollection() );
-              _current_collection.push( skope() );
-              api.czr_skopeCollection( _current_collection );
+          //UPDATE global skope collection each time a skope model is populated or updated
+          skope.callbacks.add(function() { return skope.skopeReact.apply( skope, arguments ); } );
+
+          //SET SKOPE MODEL
+          skope( constructor_options );
+
+          skope.isReady.done( function() {
+              //console.log('SKOPE : '  + skope_id + ' IS READY');
           });
     },
 
@@ -82,7 +75,7 @@ $.extend( CZRSkopeMths, {
     ready : function() {
           var skope = this;
 
-          //EMBED THE SCOPE VIEW : EMBED AND STORE THE CONTAINER
+          //EMBED THE SKOPE VIEW : EMBED AND STORE THE CONTAINER
           $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
               if ( false !== $_container.length ) {
                   skope.container = $_container;
@@ -93,7 +86,7 @@ $.extend( CZRSkopeMths, {
           });
 
           skope.embedded.done( function() {
-              console.log('SKOPE : '  + skope().id + ' EMBEDDED');
+              //console.log('SKOPE : '  + skope().id + ' EMBEDDED');
               //Setup the user event listeners
               skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
               //hide when this skope is not in the current skopes list
@@ -104,6 +97,13 @@ $.extend( CZRSkopeMths, {
 
           skope.isReady.resolve();
     },
+
+
+
+
+
+
+
 
 
     //LISTEN TO SKOPE API EVENTS
@@ -126,6 +126,48 @@ $.extend( CZRSkopeMths, {
               skope.dirtyness( ! _.isEmpty(to) );
           });
     },
+
+
+
+
+
+
+
+
+
+    /*****************************************************************************
+    * SKOPE MODEL CALLBACKS
+    *****************************************************************************/
+    //cb of skope.callbacks
+    skopeReact : function( to, from ) {
+          var skope = this,
+              _current_collection = [],
+              _new_collection = [];
+
+          console.log('in skopeReact', to, from );
+
+          //populate case
+          if ( ! api.czr_skopeBase.isSkopeRegisteredInCollection( to ) ) {
+              //Add this new skope to the global skope collection
+              _current_collection = $.extend( true, [], api.czr_skopeCollection() );
+              _current_collection.push( to );
+              api.czr_skopeCollection( _current_collection );
+          }
+          //update case
+          else {
+              //Add this new skope to the global skope collection
+              _current_collection = $.extend( true, [], api.czr_skopeCollection() );
+              _new_collection = _current_collection;
+              //update the collection with the current new skope model
+              _.each( _current_collection, function( _skope, _key ) {
+                  if ( _skope.id != skope().id )
+                    return;
+                  _new_collection[_key] = to;
+              });
+              api.czr_skopeCollection( _new_collection );
+          }
+    },
+
 
 
     /*****************************************************************************
@@ -151,41 +193,6 @@ $.extend( CZRSkopeMths, {
         this.container.toggleClass('is_winner', ! _.isEmpty(to) );
     },
 
-
-
-    // activeStateModelReact : function(to){
-    //       var skope = this;
-
-    //       //when becoming inactive
-    //       //store the dirtyValues
-    //       // if ( ! to ) {
-    //       //   skope.storeDirtyness();
-    //       //   return;
-    //       // }
-
-    //       //When becoming active :
-    //         //1) fetch the option if needed
-    //         //2) update the setting values
-
-    //       //What are the setting values ?
-    //       //when switching to a new skope, we need to re-build a complete set of values from :
-    //         //1) values saved in the database (only some)
-    //         //2) values already made dirty in the customizer(only some)
-    //         //3) default values(all)
-
-    //       //=> fetch the values from the db. on done(), build the full set and update all eligible settings values
-    //       //How to build the full set ?
-    //         //If not global, local for ex. :
-    //         //1) check if skope.dbValues() is _dirty (has not been set yet), and if so, attempt to fetch the values from the db and populate it
-    //         //2) then check the dirtyness state of this skope. If it's dirty (has been customized), then incomplete_set = $.extend( dbValues, dirtyValues );
-    //         //3) then $.extend( initialglobalvalues, incomplete_set ) to get the full set of option.
-    //         //IMPORTANT : if dbValues have to be fetched, always wait for the done() ajax, because asynchronous.
-
-    //         //if the current skope is 'global'
-    //         //=> build the full set with $.extend( initialglobalvalues, dirtyValues )
-
-
-    // },
 
     //populate skope dirtyness
     storeDirtyness : function() {
@@ -228,9 +235,6 @@ $.extend( CZRSkopeMths, {
             _val;
         //make sure the setId is ready for API
         setId = api.CZR_Helpers.build_setId( setId );
-
-        console.log('getSkopeSettingVal', setId );
-
         if ( skope.getSkopeSettingDirtyness( setId ) ) {
             return skope.dirtyValues()[ setId ];
         } else {
@@ -248,6 +252,7 @@ $.extend( CZRSkopeMths, {
 
           console.log( 'api.settings.settings[wpSetId]', skope().id, shortSetId, setId , api.settings.settings, api.settings.settings[wpSetId] );
 
+          console.log('IN GET DB SETTING VAL', skope(), shortSetId );
           // switch ( skope().id ) {
           //     case 'global' :
           //       _val = api.settings.settings[wpSetId].value;
@@ -267,6 +272,44 @@ $.extend( CZRSkopeMths, {
           return _val;
     }
 
+
+
+
+
+
+    // activeStateModelReact : function(to){
+    //       var skope = this;
+
+    //       //when becoming inactive
+    //       //store the dirtyValues
+    //       // if ( ! to ) {
+    //       //   skope.storeDirtyness();
+    //       //   return;
+    //       // }
+
+    //       //When becoming active :
+    //         //1) fetch the option if needed
+    //         //2) update the setting values
+
+    //       //What are the setting values ?
+    //       //when switching to a new skope, we need to re-build a complete set of values from :
+    //         //1) values saved in the database (only some)
+    //         //2) values already made dirty in the customizer(only some)
+    //         //3) default values(all)
+
+    //       //=> fetch the values from the db. on done(), build the full set and update all eligible settings values
+    //       //How to build the full set ?
+    //         //If not global, local for ex. :
+    //         //1) check if skope.dbValues() is _dirty (has not been set yet), and if so, attempt to fetch the values from the db and populate it
+    //         //2) then check the dirtyness state of this skope. If it's dirty (has been customized), then incomplete_set = $.extend( dbValues, dirtyValues );
+    //         //3) then $.extend( initialglobalvalues, incomplete_set ) to get the full set of option.
+    //         //IMPORTANT : if dbValues have to be fetched, always wait for the done() ajax, because asynchronous.
+
+    //         //if the current skope is 'global'
+    //         //=> build the full set with $.extend( initialglobalvalues, dirtyValues )
+
+
+    // },
 
 
     /////////////////////////

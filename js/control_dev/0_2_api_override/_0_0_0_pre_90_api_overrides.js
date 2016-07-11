@@ -47,7 +47,7 @@
           api.czr_partials.set(data);
         });
 
-        this.bind( 'czr-scopes-ready', function(data) {
+        this.bind( 'czr-skopes-ready', function(data) {
           api.czr_skopeBase.updateSkopeCollection( data );
         });
   };//api.PreviewFrame.prototype.initialize
@@ -91,7 +91,6 @@
   * => disable the _dirty + add a dirtyness param
   *****************************************************************************/
   api.Setting.prototype.silent_set =function( to, dirtyness ) {
-        console.log('in silent set', to, ( _.isUndefined( dirtyness ) || ! _.isBoolean( dirtyness ) ) ? this._dirty : dirtyness );
         var from = this._value;
 
         to = this._setter.apply( this, arguments );
@@ -114,9 +113,9 @@
 
 
   /*****************************************************************************
-  * A SCOPE AWARE PREVIEWER
+  * A SKOPE AWARE PREVIEWER
   *****************************************************************************/
-  //PREPARE THE SCOPE AWARE PREVIEWER
+  //PREPARE THE SKOPE AWARE PREVIEWER
   if ( serverControlParams.isSkopOn ) {
     //this deferred is used to make sure the overriden api.previewer.query method has been taken into account
     api.czr_isPreviewerSkopeAware = $.Deferred();
@@ -141,7 +140,6 @@
         * @return {object}
         */
         api.previewer.query =  function( skope_id ) {
-            console.log('skope id in query ?', skope_id );
             var dirtyCustomized = {};
             skope_id = skope_id || api.czr_activeSkope();
 
@@ -154,11 +152,8 @@
                     }
                 } );
             } else {
-                console.log('THE ELSE CASE');
                 dirtyCustomized = api.czr_skope( skope_id ).dirtyValues();
             }
-            console.log( 'DIRTY CUSTOMIZED', dirtyCustomized, api.czr_activeSkope(), skope_id );
-
 
             //the previewer is now scope aware
             api.czr_isPreviewerSkopeAware.resolve();
@@ -252,9 +247,14 @@
 
 
 
-              var skopeRequestDoneCollection = new api.Value( [] );
-              var skopeRequests = $.Deferred();
+              var skopeRequestDoneCollection = new api.Value( [] ),
+                  skopeRequests = $.Deferred(),
+                  dirtySkopesToSubmit = _.filter( api.czr_skopeCollection(), function( _skop ) {
+                      return api.czr_skope( _skop.id ).dirtyness();
+                  }),
+                  _saved_dirties = {};//will be used as param to update the skope model db val after all ajx requests are done
 
+              console.log('DIRTY SKOPES TO SUBMIT', dirtySkopesToSubmit );
               //Solves the problem of knowing when all asynchronous ajax requests are done
               //each time an skope save ajax request is performed and done(),
               //the skopeRequestDoneCollection array is updated with a new saved skope item : { id : skope_id, response : response }
@@ -263,7 +263,7 @@
               skopeRequestDoneCollection.bind( function( saved_skopes ) {
                   console.log('skopeRequestDoneCollection callback', saved_skopes );
                   //have all skopes been saved ?
-                  var _skop_to_do = _.filter( api.czr_currentSkopesCollection(), function( _skop ) {
+                  var _skop_to_do = _.filter( dirtySkopesToSubmit, function( _skop ) {
                       return _.isUndefined( _.findWhere( saved_skopes, { id : _skop.id } ) );// ! _.contains( saved_skopes, _skop.id );
                   });
 
@@ -272,53 +272,59 @@
                   skopeRequests.resolve( saved_skopes );
               });
 
+
+
               skopeRequests.done( function( saved_skopes ) {
-                  console.log('ALL SKOPE REQUESTS ARE DONE', saved_skopes );
-                  //reset the dirty values
-                  _.each( saved_skopes, function( _skp ) {
-                      api.czr_skope( _skp.id ).dirtyValues({});
-                  });
-                  // Clear api setting dirty states
-                  api.each( function ( value ) {
-                      value._dirty = false;
-                  } );
+                    console.log('ALL SKOPE REQUESTS ARE DONE', saved_skopes );
+                    //store the saved dirties (will be used as param to update the db val property of each saved skope)
+                    //and reset them
+                    _.each( saved_skopes, function( _skp ) {
+                          _saved_dirties[ _skp.id ] = api.czr_skope( _skp.id ).dirtyValues();
+                          api.czr_skope( _skp.id ).dirtyValues({});
+                    });
+                    // Clear api setting dirty states
+                    api.each( function ( value ) {
+                          value._dirty = false;
+                    } );
 
-                  //always send the response of the current skope api.czr_activeSkope()
-                  var response = _.findWhere( saved_skopes, { id : api.czr_activeSkope() } ).response;
-                  if ( _.isUndefined(response) || ! response ) {
-                      throw new Error( 'SkopeRequests.done() : no valid response to send' );
-                  }
+                    //always send the response of the current skope api.czr_activeSkope()
+                    var response = _.findWhere( saved_skopes, { id : api.czr_activeSkope() } ).response;
+                    if ( _.isUndefined(response) || ! response ) {
+                        throw new Error( 'SkopeRequests.done() : no valid response to send' );
+                    }
 
-                  $( document.body ).removeClass( 'saving' );
-                  api.previewer.send( 'saved', response );
-                  api.trigger( 'saved', response );
+                    //WP default treatments
+                    $( document.body ).removeClass( 'saving' );
+                    api.previewer.send( 'saved', response );
+                    api.trigger( 'saved', response );
+
+              }).then( function() {
+                    api.czr_skopeBase.trigger('skopes-saved', _saved_dirties );
               });
 
 
-
               //loop on the registered skopes and submit each save ajax request
-              var submitSkopeDirties = function() {
-                  api.czr_skope.each( function( _skope ) {
-                      console.log('submit request for skope : ', _skope().id );
-                      submit( _skope().id );
+              var submitDirtySkopes = function() {
+                  _.each( dirtySkopesToSubmit, function( _skop ) {
+                      console.log('submit request for skope : ', _skop.id );
+                      console.log('has skope dirties', api.czr_skope( _skop.id ).dirtyness(), api.czr_skope( _skop.id ).dirtyValues() );
+                      submit( _skop.id );
                   });
               };
 
               if ( 0 === processing() ) {
-                submitSkopeDirties();//submit();
+                submitDirtySkopes();//submit();
               } else {
                   submitWhenDoneProcessing = function () {
                       if ( 0 === processing() ) {
                           api.state.unbind( 'change', submitWhenDoneProcessing );
-                          submitSkopeDirties();//submit();
+                          submitDirtySkopes();//submit();
                       }
                     };
                   api.state.bind( 'change', submitWhenDoneProcessing );
               }
-
-
-
         };//save()
+
   });//api.bind('ready')
 
   //FIX FOR CONTROL VISIBILITY LOST ON PREVIEW REFRESH #1
