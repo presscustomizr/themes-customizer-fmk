@@ -35,7 +35,7 @@ $.extend( CZRSkopeMths, {
           skope.dirtyness   = new api.Value( false ); //true or false : has this skope been customized ?
 
           //setting values are stored in :
-          skope.dbValues    = new api.Value( _.isEmpty( constructor_options.db ) ? {} : constructor_options.db );
+          skope.hasDBValues    = new api.Value(false);
           skope.dirtyValues = new api.Value({});//stores the current customized value.
 
 
@@ -43,7 +43,7 @@ $.extend( CZRSkopeMths, {
           /// MODULE DOM EVENT MAP
           ////////////////////////////////////////////////////
           skope.userEventMap = new api.Value( [
-                //pre add new item : open the dialog box
+                //skope switch
                 {
                   trigger   : 'click keydown',
                   selector  : '.czr-scope-switch',
@@ -51,6 +51,16 @@ $.extend( CZRSkopeMths, {
                   actions   : function() {
                       api.czr_activeSkope( skope_id );
                       api.previewer.refresh();
+                  }
+                },
+                //skope reset
+                {
+                  trigger   : 'click keydown',
+                  selector  : '.czr-scope-reset',
+                  name      : 'skope_reset',
+                  actions   : function() {
+                      api.previewer.czr_reset( api.czr_activeSkope() );
+                      //api.previewer.refresh();
                   }
                 }
           ]);//module.userEventMap
@@ -117,7 +127,7 @@ $.extend( CZRSkopeMths, {
           //2) disable the switch-to icon
           skope.active.callbacks.add(function() { return skope.activeStateReact.apply(skope, arguments ); } );
           skope.dirtyness.callbacks.add(function() { return skope.dirtynessReact.apply(skope, arguments ); } );
-          skope.dbValues.callbacks.add(function() { return skope.dbValuesReact.apply(skope, arguments ); } );
+          skope.hasDBValues.callbacks.add(function() { return skope.hasDBValuesReact.apply(skope, arguments ); } );
           skope.winner.callbacks.add(function() { return skope.winnerReact.apply(skope, arguments ); } );
 
           //LISTEN TO DIRTYNESS
@@ -146,6 +156,7 @@ $.extend( CZRSkopeMths, {
 
           console.log('in skopeReact', to, from );
 
+          //INFORM COLLECTION
           //populate case
           if ( ! api.czr_skopeBase.isSkopeRegisteredInCollection( to ) ) {
               //Add this new skope to the global skope collection
@@ -166,6 +177,11 @@ $.extend( CZRSkopeMths, {
               });
               api.czr_skopeCollection( _new_collection );
           }
+
+          //INFORM SKOPE API VALUES
+          $.when( skope.embedded.promise() ).done( function() {
+              skope.hasDBValues( to.has_db_val );
+          });
     },
 
 
@@ -185,8 +201,8 @@ $.extend( CZRSkopeMths, {
         this.container.toggleClass('dirty', to);
     },
 
-    dbValuesReact : function(to, from) {
-        this.container.toggleClass('has_db_val', ! _.isEmpty(to) );
+    hasDBValuesReact : function(to, from) {
+        this.container.toggleClass('has_db_val', to );
     },
 
     winnerReact : function(to, from) {
@@ -300,10 +316,10 @@ $.extend( CZRSkopeMths, {
     //       //=> fetch the values from the db. on done(), build the full set and update all eligible settings values
     //       //How to build the full set ?
     //         //If not global, local for ex. :
-    //         //1) check if skope.dbValues() is _dirty (has not been set yet), and if so, attempt to fetch the values from the db and populate it
-    //         //2) then check the dirtyness state of this skope. If it's dirty (has been customized), then incomplete_set = $.extend( dbValues, dirtyValues );
+    //         //1) check if skope.hasDBValues() is _dirty (has not been set yet), and if so, attempt to fetch the values from the db and populate it
+    //         //2) then check the dirtyness state of this skope. If it's dirty (has been customized), then incomplete_set = $.extend( hasDBValues, dirtyValues );
     //         //3) then $.extend( initialglobalvalues, incomplete_set ) to get the full set of option.
-    //         //IMPORTANT : if dbValues have to be fetched, always wait for the done() ajax, because asynchronous.
+    //         //IMPORTANT : if hasDBValues have to be fetched, always wait for the done() ajax, because asynchronous.
 
     //         //if the current skope is 'global'
     //         //=> build the full set with $.extend( initialglobalvalues, dirtyValues )

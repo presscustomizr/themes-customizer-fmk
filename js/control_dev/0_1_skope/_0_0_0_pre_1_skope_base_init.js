@@ -199,7 +199,7 @@ $.extend( CZRSkopeBaseMths, {
     updateSavedSkopesDbValues : function( _saved_dirties ) {
           _.each( _saved_dirties, function( _dirties, _skope_id ) {
 
-               var _current_model = $.extend( true, {}, api.czr_skope( _skope_id )() ),
+              var _current_model = $.extend( true, {}, api.czr_skope( _skope_id )() ),
                   _api_ready_dirties = {};
                //build the api ready db value for the skope.
                //=> it shall contains only the option name, not the full name
@@ -209,8 +209,8 @@ $.extend( CZRSkopeBaseMths, {
                       _api_ready_dirties[_k] = _val;
                 });
 
-               $.extend( _current_model.db, _api_ready_dirties );
-               api.czr_skope( _skope_id )( _current_model );
+              $.extend( _current_model, { db : _api_ready_dirties, has_db_val : ! _.isEmpty(_api_ready_dirties) } );
+              api.czr_skope( _skope_id )( _current_model );
           });
     },
 

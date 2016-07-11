@@ -171,8 +171,86 @@
         };
 
 
+        api.previewer.czr_reset = function( skope_id  ) {
+            var self = this,
+                processing = api.state( 'processing' ),
+                submitWhenDoneProcessing,
+                submit_reset;
 
-        //TO REMOVE : FOR TESTS ONLY
+            $( document.body ).addClass( 'czr-skope-reseting' );
+
+             //skope dependant submit()
+            submit_reset = function( skope_id ) {
+                var request, query;
+                if ( _.isUndefined( skope_id ) )
+                  return;
+
+                //the query takes the skope_id has parameter
+                query = $.extend( self.query( skope_id ), {
+                    nonce:  self.nonce.save
+                } );
+
+                console.log('in czr_reset submit : ', skope_id, query );
+
+                request = wp.ajax.post( 'czr_skope_reset', query );
+
+                //api.trigger( 'save', request );
+
+                // request.always( function () {
+                //     $( document.body ).removeClass( 'saving' );
+                // } );
+
+                request.fail( function ( response ) {
+                    console.log('ALORS FAIL ?', skope_id, response );
+                    if ( '0' === response ) {
+                        response = 'not_logged_in';
+                    } else if ( '-1' === response ) {
+                      // Back-compat in case any other check_ajax_referer() call is dying
+                        response = 'invalid_nonce';
+                    }
+
+                    if ( 'invalid_nonce' === response ) {
+                        self.cheatin();
+                    } else if ( 'not_logged_in' === response ) {
+                        self.preview.iframe.hide();
+                        self.login().done( function() {
+                          self.save();
+                          self.preview.iframe.show();
+                      } );
+                    }
+                    api.trigger( 'error', response );
+                } );
+
+                request.done( function( response ) {
+                    console.log('ALORS DONE ?', skope_id, response );
+                    // // Clear setting dirty states
+                    // api.each( function ( value ) {
+                    //   value._dirty = false;
+                    // } );
+                    // api.previewer.send( 'saved', response );
+                    // api.trigger( 'saved', response );
+
+                } );
+              };//submit_reset()
+
+              if ( 0 === processing() ) {
+                submit_reset( skope_id );
+              } else {
+                submitWhenDoneProcessing = function () {
+                  if ( 0 === processing() ) {
+                    api.state.unbind( 'change', submitWhenDoneProcessing );
+                    submit_reset( skope_id );
+                  }
+                };
+                api.state.bind( 'change', submitWhenDoneProcessing );
+              }
+        };//.czr_reset
+
+
+
+
+
+        //OVERRIDES WP
         api.previewer.save = function() {
             var self = this,
                 processing = api.state( 'processing' ),
@@ -287,16 +365,18 @@
                           value._dirty = false;
                     } );
 
-                    //always send the response of the current skope api.czr_activeSkope()
-                    var response = _.findWhere( saved_skopes, { id : api.czr_activeSkope() } ).response;
-                    if ( _.isUndefined(response) || ! response ) {
-                        throw new Error( 'SkopeRequests.done() : no valid response to send' );
-                    }
-
                     //WP default treatments
                     $( document.body ).removeClass( 'saving' );
-                    api.previewer.send( 'saved', response );
-                    api.trigger( 'saved', response );
+                    //always send the response of the current skope api.czr_activeSkope()
+                    //=> if the current active Skope had no dirties and has not been changed, then don't send anything
+                    if ( ! _.isUndefined( _.findWhere( saved_skopes, { id : api.czr_activeSkope() } ) ) ) {
+                        var response = _.findWhere( saved_skopes, { id : api.czr_activeSkope() } ).response;
+                        if ( _.isUndefined(response) || ! response ) {
+                            throw new Error( 'SkopeRequests.done() : no valid response to send' );
+                        }
+                        api.previewer.send( 'saved', response );
+                      api.trigger( 'saved', response );
+                    }
 
               }).then( function() {
                     api.czr_skopeBase.trigger('skopes-saved', _saved_dirties );
@@ -326,6 +406,8 @@
         };//save()
 
   });//api.bind('ready')
+
+
 
   //FIX FOR CONTROL VISIBILITY LOST ON PREVIEW REFRESH #1
   //This solves the problem of control visiblity settings being lost on preview refresh since WP 4.3

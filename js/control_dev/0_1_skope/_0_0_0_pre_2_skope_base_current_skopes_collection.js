@@ -79,12 +79,10 @@ $.extend( CZRSkopeBaseMths, {
           });
 
 
-          //Which skope is active ? @todo improve this, not working on preview page change
-          //on init
-          //OR
-          //if the current acive skope has been removed from the collection
-          //=> set relevant scope as active. Falls back on 'global't
-          api.czr_activeSkope( self.getActiveSkope( _new_collection ) );
+          //if the current acive skope has been removed from the current skopes collection
+          //=> set relevant scope as active. Falls back on 'global'
+          if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkope() } ) ) )
+            api.czr_activeSkope( self.getActiveSkope( _new_collection ) );
 
 
           //Which skopes are visible ?
@@ -175,8 +173,16 @@ $.extend( CZRSkopeBaseMths, {
                       //when the global db values have been changed, typically on save,
                       //the 'db' property will store the difference between api.settings.settings and the db options server generated
                       case  'db' :
-                          if ( _.isUndefined( _candidate_val) && ! _.isArray( _candidate_val ) && ! _.isObject( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : skope property "db" must be a empty array or an object');
+                          if ( _.isArray( _candidate_val ) || _.isEmpty( _candidate_val ) )
+                            _candidate_val = {};
+                          if ( _.isUndefined( _candidate_val) || ! _.isObject( _candidate_val ) ) {
+                              throw new Error('prepareSkopeForAPI : skope property "db" must be an object');
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
+                      case  'has_db_val' :
+                          if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                              throw new Error('prepareSkopeForAPI : skope property "has_db_val" must be a boolean');
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
