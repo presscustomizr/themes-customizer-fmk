@@ -144,6 +144,7 @@
   *****************************************************************************/
   /* SCOPE COLLECTION AND ACTIVE SKOPE => stores and observes the collection sent by the preview */
   api.czr_skopeCollection = new api.Value([]);//all available scope, including the current scope
+  api.czr_currentSkopesCollection = new api.Value([]);
   api.czr_activeSkope = new api.Value();//the currently active scope
 
   api.bind( 'ready' , function() {
@@ -176,12 +177,18 @@
           //REACT TO ACTIVE SCOPE UPDATE
           api.czr_activeSkope.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
 
-          //SCOPE COLLECTION LISTENER
+          //GLOBAL SCOPE COLLECTION LISTENER
+          api.czr_skopeCollection.bind( function(to, from){
+              console.log('A NEW SKOPE HAS BEEN ADDED TO THE GLOBAL SKOPE COLLECTION. SIZE : ', _.size( api.czr_skopeCollection() ) );
+          });
+
+          //CURRENT SCOPE COLLECTION LISTENER
           //The scope collection is set on 'czr-scopes-ready' triggered by the preview
           //setup the callbacks of the scope collection update
           //on init and on preview change : the collection of scopes is populated with new scopes
           //=> instanciate the relevant scope object + render them
-          api.czr_skopeCollection.callbacks.add( function() { return self.instantiateSkopes.apply(self, arguments ); } );
+          api.czr_currentSkopesCollection.callbacks.add( function() { return self.instantiateSkopes.apply(self, arguments ); } );
+
 
           //LISTEN TO API SETTING CHANGES => POPULATE THE DIRTYNESS OF THE ACTIVE SCOPE
           this.addAPISettingsListener();
@@ -199,14 +206,14 @@
 
     //fired on 'czr-scopes-ready' triggered by the preview
     //@see api_overrides
-    updateSkopeCollection : function( collection ) {
-          console.log('skope Collection?', collection );
+    updateSkopeCollection : function( sent_collection ) {
+          console.log('skope Collection sent by preview ?', sent_collection );
           var self = this;
               _api_ready_collection = [];
-          _.each( collection, function( _skope, _key ) {
+          _.each( sent_collection, function( _skope, _key ) {
               _api_ready_collection.push( self.prepareSkopeForAPI( _skope ) );
           });
-          api.czr_skopeCollection( _api_ready_collection );
+          api.czr_currentSkopesCollection( _api_ready_collection );
     },
 
 
@@ -223,34 +230,33 @@
           _.each( serverControlParams.defaultSkopeModel , function( _value, _key ) {
                 var _candidate_val = skope_candidate[_key];
                 switch( _key ) {
-                      //PROPERTIES COMMON TO ALL MODULES IN ALL CONTEXTS
-                      case 'id' :
+                      case 'skope' :
                           if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : a skope id must a string not empty');
+                              throw new Error('prepareSkopeForAPI : a skope "skope" property must a string not empty');
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'level' :
                           if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : a skope level must a string not empty for skope ' + _candidate_val.id );
+                              throw new Error('prepareSkopeForAPI : a skope level must a string not empty for skope ' + _candidate_val.skope );
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'dyn_type' :
                           if ( ! _.isString( _candidate_val ) || ! _.contains( serverControlParams.skopeDynTypes, _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : missing or invalid dyn type for skope ' + _candidate_val.id );
+                              throw new Error('prepareSkopeForAPI : missing or invalid dyn type for skope ' + _candidate_val.skope );
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'opt_name' :
                           if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : invalid "opt_name" property for skope ' + _candidate_val.id );
+                              throw new Error('prepareSkopeForAPI : invalid "opt_name" property for skope ' + _candidate_val.skope );
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'obj_id' :
                           if ( ! _.isString( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : invalid "obj_id" for skope ' + _candidate_val.id );
+                              throw new Error('prepareSkopeForAPI : invalid "obj_id" for skope ' + _candidate_val.skope );
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
@@ -282,11 +288,21 @@
                       break;
                 }//switch
           });
+
+          //Finally, generate the id
+          api_ready_skope.id = api_ready_skope.skope + '_' + api_ready_skope.level;
+          if ( ! _.isString( api_ready_skope.id ) || _.isEmpty( api_ready_skope.id ) ) {
+              throw new Error('prepareSkopeForAPI : a skope id must a string not empty');
+          }
+
           return api_ready_skope;
     },
 
 
 
+
+    //after a saved action, the 'global' option might have changed
+    //=> this method, return only the changed db values
     getChangedGlobalDBSettingValues : function( serverGlobalDBValues ) {
           var _changedDbVal = {};
 
@@ -319,7 +335,7 @@
 
 
 
-    //setup the czr_skopeCollection callbacks
+    //setup the czr_currentSkopesCollection callbacks
     //fired in initialize
     instantiateSkopes : function(to, from) {
           console.log('SCOPES SENT BY THE PREVIEW, FROM AND TO : ', from, to);
@@ -335,14 +351,14 @@
           var _to_update = [];
 
           //TO INSTANTIATE
-          _.each( _new_collection, function( _skope ) {
-              if ( ! api.czr_skope.has( _skope.id ) )
-                  _to_instantiate.push( _skope );
+          _.each( _new_collection, function( _sent_skope ) {
+              if ( ! api.czr_skope.has( _sent_skope.id  ) )
+                _to_instantiate.push( _sent_skope );
           });
 
           //TO REMOVE
           api.czr_skope.each( function( _skope ){
-              if ( _.isUndefined( _.findWhere( _new_collection, { id : _skope().id } ) ) )
+              if ( _.isUndefined( _.findWhere( _new_collection, { opt_name : _skope().id } ) ) )
                   _to_remove.push( _skope() );
           });
 
@@ -351,24 +367,23 @@
 
           _to_update = _.filter( api.czr_skopeCollection(), function( _skope ) {
               if ( api.czr_skope.has(_skope.id) ) {
-                console.log('in to update', _skope.id);
-                console.log('has changed', _skope.id, ! _.isEqual( api.czr_skope( _skope.id)(), _skope ) );
-                console.log('skope API model', api.czr_skope( _skope.id )() );
-                console.log('collection model', _skope );
-                console.log('server sent model', _.findWhere( _new_collection , { id : _skope.id } ) );
+                // console.log('in to update', _skope.id);
+                // console.log('has changed', _skope.id, ! _.isEqual( api.czr_skope( _skope.id)(), _skope ) );
+                // console.log('skope API model', api.czr_skope( _skope.id )() );
+                // console.log('collection model', _skope );
+                // console.log('server sent model', _.findWhere( _new_collection , { id : _skope.id } ) );
                 return ! _.isEqual( api.czr_skope( _skope.id)(), _skope );
               }
               return false;
           });
 
           console.log( '_to_instantiate', _to_instantiate);
-          console.log( '_to_remove', _to_remove);
           console.log( '_to_update', _to_update);
 
           //Update the skope models
           _.each( _to_update, function( _skope ) {
               var _new_model = $.extend( api.czr_skope( _skope.id )(), _skope );
-              if ( 'global' == _skope.id ) {
+              if ( 'global' == _skope.skope  ) {
                   _new_model.db = self.getChangedGlobalDBSettingValues( _skope.db );
               }
               api.czr_skope( _skope.id )( _new_model );
@@ -376,16 +391,15 @@
 
 
           //Destroy the previous scopes views and models
-          //Instantiate the scopes collection
-          _.each( _to_remove, function( _skope ) {
-              //remove the view DOM el
-              api.czr_skope( _skope.id ).container.remove();
-              //remove the model from the collection
-              api.czr_skope.remove( _skope.id );
-          });
+          // _.each( _to_remove, function( _skope ) {
+          //     //remove the view DOM el
+          //     api.czr_skope( _skope.id ).container.hide();
+          //     //remove the model from the collection
+          //     api.czr_skope.remove( _skope.id );
+          // });
 
 
-          //Instantiate the scopes collection
+          //Instantiate the new skopes
           _.each( _to_instantiate, function( _skope ) {
               var params = $.extend( true, {}, _skope );//IMPORTANT => otherwise the data object is actually a copy and share the same reference as the model and view params
               api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
@@ -397,12 +411,22 @@
               api.czr_skope( _skope.id ).ready();
           });
 
+          //Which skope is active ? @todo improve this, not working on preview page change
           //on init
           //OR
           //if the current active skope has been removed from the collection
           //=> set relevant scope as active. Falls back on 'global'
           if ( ! api.czr_skope.has( api.czr_activeSkope() ) )
             api.czr_activeSkope( self.getActiveSkopeOnInit( _new_collection ) );
+
+          //Which skopes are visible ?
+          //=> the ones sent by the preview
+          api.czr_skope.each( function( _skp_instance ){
+              if ( _.isUndefined( _.findWhere( _new_collection, { id : _skp_instance().id } ) ) )
+                _skp_instance.visible(false);
+              else
+                _skp_instance.visible(true);
+          } );
     },//listenToSkopeCollection()
 
 
@@ -565,22 +589,22 @@
     //@return the current active skope
     //If a skope different than global has saved db values, let's set it as active
     getActiveSkopeOnInit : function( collection ) {
-          var _active_candidates = [],
+          var _active_candidates = {},
               _def = _.findWhere( collection, {is_default : true } ).id;
-          _def = ! _.isUndefined(_def) ? _def : 'global';
+          _def = ! _.isUndefined(_def) ? _def : _.findWhere( collection, { skope : 'global' } ).id;
 
           _.each( collection, function( _skop ) {
-              if ( ! _.isEmpty( _skop.db ) )
-                _active_candidates.push( _skop.id );
+              //if ( ! _.isEmpty( _skop.db ) )
+                _active_candidates[_skop.skope] = _skop.id;
           });
 
           //Apply a basic skope priority. => @todo refine this treatment
-          if ( _.contains( _active_candidates, 'local' ) )
-            return 'local';
-          if ( _.contains( _active_candidates, 'group' ) )
-            return 'group';
-          if ( _.contains( _active_candidates, 'special_group' ) )
-            return 'special_group';
+          if ( _.has( _active_candidates, 'local' ) )
+            return _active_candidates.local;
+          if ( _.has( _active_candidates, 'group' ) )
+            return _active_candidates.group;
+          if ( _.has( _active_candidates, 'special_group' ) )
+            return active_candidates.special_group;
           return _def;
     },
 

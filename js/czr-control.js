@@ -26,6 +26,7 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
 
 })( wp.customize , jQuery, _);(function (api, $, _) {
   api.czr_skopeCollection = new api.Value([]);//all available scope, including the current scope
+  api.czr_currentSkopesCollection = new api.Value([]);
   api.czr_activeSkope = new api.Value();//the currently active scope
 
   api.bind( 'ready' , function() {
@@ -48,21 +49,24 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
           }
           this.initialGlobalSettingVal = this.getGlobalSettingVal();
           api.czr_activeSkope.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
-          api.czr_skopeCollection.callbacks.add( function() { return self.instantiateSkopes.apply(self, arguments ); } );
+          api.czr_skopeCollection.bind( function(to, from){
+              console.log('A NEW SKOPE HAS BEEN ADDED TO THE GLOBAL SKOPE COLLECTION. SIZE : ', _.size( api.czr_skopeCollection() ) );
+          });
+          api.czr_currentSkopesCollection.callbacks.add( function() { return self.instantiateSkopes.apply(self, arguments ); } );
           this.addAPISettingsListener();
           api.bind( 'save', function( request ) {
               console.log('SAVE EVENT', request, request.prototype );
           });
 
     },
-    updateSkopeCollection : function( collection ) {
-          console.log('skope Collection?', collection );
+    updateSkopeCollection : function( sent_collection ) {
+          console.log('skope Collection sent by preview ?', sent_collection );
           var self = this;
               _api_ready_collection = [];
-          _.each( collection, function( _skope, _key ) {
+          _.each( sent_collection, function( _skope, _key ) {
               _api_ready_collection.push( self.prepareSkopeForAPI( _skope ) );
           });
-          api.czr_skopeCollection( _api_ready_collection );
+          api.czr_currentSkopesCollection( _api_ready_collection );
     },
 
 
@@ -79,33 +83,33 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
           _.each( serverControlParams.defaultSkopeModel , function( _value, _key ) {
                 var _candidate_val = skope_candidate[_key];
                 switch( _key ) {
-                      case 'id' :
+                      case 'skope' :
                           if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : a skope id must a string not empty');
+                              throw new Error('prepareSkopeForAPI : a skope "skope" property must a string not empty');
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'level' :
                           if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : a skope level must a string not empty for skope ' + _candidate_val.id );
+                              throw new Error('prepareSkopeForAPI : a skope level must a string not empty for skope ' + _candidate_val.skope );
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'dyn_type' :
                           if ( ! _.isString( _candidate_val ) || ! _.contains( serverControlParams.skopeDynTypes, _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : missing or invalid dyn type for skope ' + _candidate_val.id );
+                              throw new Error('prepareSkopeForAPI : missing or invalid dyn type for skope ' + _candidate_val.skope );
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'opt_name' :
                           if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : invalid "opt_name" property for skope ' + _candidate_val.id );
+                              throw new Error('prepareSkopeForAPI : invalid "opt_name" property for skope ' + _candidate_val.skope );
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'obj_id' :
                           if ( ! _.isString( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : invalid "obj_id" for skope ' + _candidate_val.id );
+                              throw new Error('prepareSkopeForAPI : invalid "obj_id" for skope ' + _candidate_val.skope );
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
@@ -135,11 +139,13 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
                       break;
                 }//switch
           });
+          api_ready_skope.id = api_ready_skope.skope + '_' + api_ready_skope.level;
+          if ( ! _.isString( api_ready_skope.id ) || _.isEmpty( api_ready_skope.id ) ) {
+              throw new Error('prepareSkopeForAPI : a skope id must a string not empty');
+          }
+
           return api_ready_skope;
     },
-
-
-
     getChangedGlobalDBSettingValues : function( serverGlobalDBValues ) {
           var _changedDbVal = {};
 
@@ -167,12 +173,12 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
           var _to_instantiate = [];
           var _to_remove = [];
           var _to_update = [];
-          _.each( _new_collection, function( _skope ) {
-              if ( ! api.czr_skope.has( _skope.id ) )
-                  _to_instantiate.push( _skope );
+          _.each( _new_collection, function( _sent_skope ) {
+              if ( ! api.czr_skope.has( _sent_skope.id  ) )
+                _to_instantiate.push( _sent_skope );
           });
           api.czr_skope.each( function( _skope ){
-              if ( _.isUndefined( _.findWhere( _new_collection, { id : _skope().id } ) ) )
+              if ( _.isUndefined( _.findWhere( _new_collection, { opt_name : _skope().id } ) ) )
                   _to_remove.push( _skope() );
           });
 
@@ -181,29 +187,19 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
 
           _to_update = _.filter( api.czr_skopeCollection(), function( _skope ) {
               if ( api.czr_skope.has(_skope.id) ) {
-                console.log('in to update', _skope.id);
-                console.log('has changed', _skope.id, ! _.isEqual( api.czr_skope( _skope.id)(), _skope ) );
-                console.log('skope API model', api.czr_skope( _skope.id )() );
-                console.log('collection model', _skope );
-                console.log('server sent model', _.findWhere( _new_collection , { id : _skope.id } ) );
                 return ! _.isEqual( api.czr_skope( _skope.id)(), _skope );
               }
               return false;
           });
 
           console.log( '_to_instantiate', _to_instantiate);
-          console.log( '_to_remove', _to_remove);
           console.log( '_to_update', _to_update);
           _.each( _to_update, function( _skope ) {
               var _new_model = $.extend( api.czr_skope( _skope.id )(), _skope );
-              if ( 'global' == _skope.id ) {
+              if ( 'global' == _skope.skope  ) {
                   _new_model.db = self.getChangedGlobalDBSettingValues( _skope.db );
               }
               api.czr_skope( _skope.id )( _new_model );
-          });
-          _.each( _to_remove, function( _skope ) {
-              api.czr_skope( _skope.id ).container.remove();
-              api.czr_skope.remove( _skope.id );
           });
           _.each( _to_instantiate, function( _skope ) {
               var params = $.extend( true, {}, _skope );//IMPORTANT => otherwise the data object is actually a copy and share the same reference as the model and view params
@@ -215,6 +211,12 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
           });
           if ( ! api.czr_skope.has( api.czr_activeSkope() ) )
             api.czr_activeSkope( self.getActiveSkopeOnInit( _new_collection ) );
+          api.czr_skope.each( function( _skp_instance ){
+              if ( _.isUndefined( _.findWhere( _new_collection, { id : _skp_instance().id } ) ) )
+                _skp_instance.visible(false);
+              else
+                _skp_instance.visible(true);
+          } );
     },//listenToSkopeCollection()
     activeSkopeReact : function( to, from ) {
           var self = this;
@@ -282,20 +284,19 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
           });
     },
     getActiveSkopeOnInit : function( collection ) {
-          var _active_candidates = [],
+          var _active_candidates = {},
               _def = _.findWhere( collection, {is_default : true } ).id;
-          _def = ! _.isUndefined(_def) ? _def : 'global';
+          _def = ! _.isUndefined(_def) ? _def : _.findWhere( collection, { skope : 'global' } ).id;
 
           _.each( collection, function( _skop ) {
-              if ( ! _.isEmpty( _skop.db ) )
-                _active_candidates.push( _skop.id );
+                _active_candidates[_skop.skope] = _skop.id;
           });
-          if ( _.contains( _active_candidates, 'local' ) )
-            return 'local';
-          if ( _.contains( _active_candidates, 'group' ) )
-            return 'group';
-          if ( _.contains( _active_candidates, 'special_group' ) )
-            return 'special_group';
+          if ( _.has( _active_candidates, 'local' ) )
+            return _active_candidates.local;
+          if ( _.has( _active_candidates, 'group' ) )
+            return _active_candidates.group;
+          if ( _.has( _active_candidates, 'special_group' ) )
+            return active_candidates.special_group;
           return _def;
     },
 
@@ -322,6 +323,7 @@ $.extend( CZRSkopeMths, {
           skope.el = 'czr-scope-' + skope_id;//@todo replace with a css selector based on the scope name
           skope(constructor_options);
           $.extend( skope, constructor_options || {} );
+          skope.visible     = new api.Value(true);
           skope.winner      = new api.Value( skope().is_winner ); //is this skope the one that will be applied on front end in the current context?
           skope.priority    = new api.Value(); //shall this skope always win or respect the default skopes priority
           skope.active      = new api.Value( false ); //active, inactive. Are we currently customizing this skope ?
@@ -346,6 +348,9 @@ $.extend( CZRSkopeMths, {
 
           skope.isReady.done( function() {
               console.log('SKOPE : '  + skope().id + ' IS READY');
+              var _current_collection = $.extend( true, [], api.czr_skopeCollection() );
+              _current_collection.push( skope() );
+              api.czr_skopeCollection( _current_collection );
           });
     },
     ready : function() {
@@ -362,6 +367,9 @@ $.extend( CZRSkopeMths, {
           skope.embedded.done( function() {
               console.log('SKOPE : '  + skope().id + ' EMBEDDED');
               skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
+              skope.visible.bind( function( is_visible ){
+                  skope.container.toggle( is_visible );
+              });
           });
 
           skope.isReady.resolve();
@@ -578,7 +586,7 @@ $.extend( CZRSkopeMths, {
 
             return {
                 wp_customize: 'on',
-                skope :       api.czr_skope( skope_id )().id,
+                skope :       api.czr_skope( skope_id )().skope,
                 dyn_type:     api.czr_skope( skope_id )().dyn_type,//post_meta, term_meta, user_meta, trans, option
                 opt_name:     api.czr_skope( skope_id )().opt_name,
                 obj_id:       api.czr_skope( skope_id )().obj_id,
@@ -647,7 +655,7 @@ $.extend( CZRSkopeMths, {
               var skopeRequests = $.Deferred();
               skopeRequestDoneCollection.bind( function( saved_skopes ) {
                   console.log('skopeRequestDoneCollection callback', saved_skopes );
-                  var _skop_to_do = _.filter( api.czr_skopeCollection(), function( _skop ) {
+                  var _skop_to_do = _.filter( api.czr_currentSkopesCollection(), function( _skop ) {
                       return _.isUndefined( _.findWhere( saved_skopes, { id : _skop.id } ) );// ! _.contains( saved_skopes, _skop.id );
                   });
 
@@ -2049,7 +2057,7 @@ $.extend( CZRModuleMths, {
           }
           if ( module.isItemRegistered( id_candidate ) ) {
             key++; i++;
-            return control.generateItemId( module_type, key, i );
+            return module.generateItemId( module_type, key, i );
           }
           return id_candidate;
   },

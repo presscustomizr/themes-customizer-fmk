@@ -34,6 +34,7 @@ $.extend( CZRSkopeMths, {
           $.extend( skope, constructor_options || {} );
 
           //Make it alive with various Values
+          skope.visible     = new api.Value(true);
           skope.winner      = new api.Value( skope().is_winner ); //is this skope the one that will be applied on front end in the current context?
           skope.priority    = new api.Value(); //shall this skope always win or respect the default skopes priority
           skope.active      = new api.Value( false ); //active, inactive. Are we currently customizing this skope ?
@@ -68,6 +69,11 @@ $.extend( CZRSkopeMths, {
 
           skope.isReady.done( function() {
               console.log('SKOPE : '  + skope().id + ' IS READY');
+
+              //Add this new skope to the global skope collection
+              var _current_collection = $.extend( true, [], api.czr_skopeCollection() );
+              _current_collection.push( skope() );
+              api.czr_skopeCollection( _current_collection );
           });
     },
 
@@ -90,6 +96,10 @@ $.extend( CZRSkopeMths, {
               console.log('SKOPE : '  + skope().id + ' EMBEDDED');
               //Setup the user event listeners
               skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
+              //hide when this skope is not in the current skopes list
+              skope.visible.bind( function( is_visible ){
+                  skope.container.toggle( is_visible );
+              });
           });
 
           skope.isReady.resolve();
@@ -100,6 +110,7 @@ $.extend( CZRSkopeMths, {
     //=> fired on initialize
     setupSkopeAPIListeners : function() {
           var skope = this;
+
           //How does the view react to model changes ?
           //When active :
           //1) add a green point to the view box

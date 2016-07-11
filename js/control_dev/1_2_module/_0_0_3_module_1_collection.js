@@ -133,7 +133,7 @@ $.extend( CZRModuleMths, {
           //make sure the module is not already instantiated
           if ( module.isItemRegistered( id_candidate ) ) {
             key++; i++;
-            return control.generateItemId( module_type, key, i );
+            return module.generateItemId( module_type, key, i );
           }
           return id_candidate;
   },

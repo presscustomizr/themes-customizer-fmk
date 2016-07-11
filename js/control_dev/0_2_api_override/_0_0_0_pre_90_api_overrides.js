@@ -165,7 +165,7 @@
 
             return {
                 wp_customize: 'on',
-                skope :       api.czr_skope( skope_id )().id,
+                skope :       api.czr_skope( skope_id )().skope,
                 dyn_type:     api.czr_skope( skope_id )().dyn_type,//post_meta, term_meta, user_meta, trans, option
                 opt_name:     api.czr_skope( skope_id )().opt_name,
                 obj_id:       api.czr_skope( skope_id )().obj_id,
@@ -263,7 +263,7 @@
               skopeRequestDoneCollection.bind( function( saved_skopes ) {
                   console.log('skopeRequestDoneCollection callback', saved_skopes );
                   //have all skopes been saved ?
-                  var _skop_to_do = _.filter( api.czr_skopeCollection(), function( _skop ) {
+                  var _skop_to_do = _.filter( api.czr_currentSkopesCollection(), function( _skop ) {
                       return _.isUndefined( _.findWhere( saved_skopes, { id : _skop.id } ) );// ! _.contains( saved_skopes, _skop.id );
                   });
 
