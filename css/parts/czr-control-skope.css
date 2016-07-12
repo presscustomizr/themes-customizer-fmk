@@ -89,6 +89,7 @@
   float: right;
 }
 
+
 /* DIALOG BOX REACTIONS */
 .active .czr-scope-switch {
   color: #82b965;
@@ -104,8 +105,80 @@
 
 .czr-scope .czr-scope-reset {
   opacity: 0;
-  color: #82b965;
+  color: #6a7cb7;
 }
 .has_db_val .czr-scope-reset {
   opacity: 1;
+}
+.is_winner .czr-scope-winner {
+  color: #82b965;
+}
+
+
+/* RESET */
+/* WP TEXT EDITOR */
+#czr-reset-skope-pane {
+  border-bottom: solid 1px #ddd;
+  position: absolute;
+  min-height: 100%;
+  text-align: center;
+  padding: 2%;
+  top : -100%;
+  right: 0;
+  left: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.63);
+  color: #fff;
+  display: block;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+  visibility: hidden;
+}
+.czr-reset-content {
+    display: inline-block;
+    line-height: 20px;
+}
+.czr-resetting {
+  visibility: hidden;
+}
+.czr-reset-success, .czr-reset-fail {
+  display: none;
+}
+#czr-reset-skope-pane h2 {
+  color: #fff;
+}
+body.czr-reset-skope-pane-open #czr-reset-skope-pane {
+  top: 0;
+  visibility: inherit;
+  min-height: 100%;
+}
+
+body.czr-reset-skope-pane-open #customize-preview, body.czr-reset-skope-pane-open .wp-full-overlay-sidebar {
+  opacity: 0.5;
+}
+
+body.czr-resetting-skope #czr-reset-skope-pane .czr-resetting {
+  visibility: visible;
+}
+
+.czr-reset-skope-pane-open .wp-full-overlay.collapsed .wp-full-overlay-sidebar {
+  z-index: 30;
+}
+.czr-reset-skope-pane-open .wp-full-overlay.expanded .collapse-sidebar {
+  bottom: 0 !important;
+}
+
+
+.czr-spinner {
+  background: url(img/czr-spinner.gif) no-repeat;
+  -webkit-background-size: 32px 32px;
+  background-size: 32px 32px;
+  display: inline-block;
+  float: right;
+  vertical-align: middle;
+  opacity: 0.7;
+  filter: alpha(opacity=70);
+  width: 32px;
+  height: 32px;
+  margin: 4px 10px 0;
 }

@@ -175,13 +175,14 @@
             var self = this,
                 processing = api.state( 'processing' ),
                 submitWhenDoneProcessing,
-                submit_reset;
+                submit_reset,
+                request,
+                query;
 
-            $( document.body ).addClass( 'czr-skope-reseting' );
+            $( document.body ).addClass( 'czr-skope-resetting' );
 
              //skope dependant submit()
             submit_reset = function( skope_id ) {
-                var request, query;
                 if ( _.isUndefined( skope_id ) )
                   return;
 
@@ -195,10 +196,6 @@
                 request = wp.ajax.post( 'czr_skope_reset', query );
 
                 //api.trigger( 'save', request );
-
-                // request.always( function () {
-                //     $( document.body ).removeClass( 'saving' );
-                // } );
 
                 request.fail( function ( response ) {
                     console.log('ALORS FAIL ?', skope_id, response );
@@ -244,6 +241,8 @@
                 };
                 api.state.bind( 'change', submitWhenDoneProcessing );
               }
+
+              return request;
         };//.czr_reset
 
 
@@ -338,6 +337,8 @@
               //the skopeRequestDoneCollection array is updated with a new saved skope item : { id : skope_id, response : response }
               //when all registered skope have been saved, the skopeRequests are resolve()
               //=> then the skopeRequests Deferred() object fires his own done() callback.
+              //
+              //An alternative would be to use the $.ajax( request1, request2 ).done() syntax
               skopeRequestDoneCollection.bind( function( saved_skopes ) {
                   console.log('skopeRequestDoneCollection callback', saved_skopes );
                   //have all skopes been saved ?

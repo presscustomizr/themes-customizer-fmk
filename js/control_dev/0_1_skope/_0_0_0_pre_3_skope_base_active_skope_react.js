@@ -19,29 +19,43 @@ $.extend( CZRSkopeBaseMths, {
           else
             throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
 
-
-
           //update the settings values based on the one of the active skope
           //test with copyright
           console.log( 'ACTIVE SKOPE MODEL', api.czr_skope( api.czr_activeSkope() )() );
 
-          //store the current api save state()
-          var _save_state = api.state('saved')(),
-              current_skope_instance = api.czr_skope( api.czr_activeSkope() );//the active scope instance
+          self.silentlyUpdateSettings( 'copyright' );
 
-          console.log( "current_skope_instance.getSkopeSettingVal( 'copyright' ) )", current_skope_instance.getSkopeSettingVal( 'copyright' ) );
-
-          $.when( self.updateSettingValues( 'copyright', current_skope_instance.getSkopeSettingVal( 'copyright' ) ) ).done( function() {
-              api.state('saved')( _save_state );
-          });
     },
 
 
 
     /*****************************************************************************
-    * UPDATE SETTING VALUE
+    * UPDATE SETTING VALUES
     *****************************************************************************/
-    updateSettingValues : function( setId, val ) {
+    silentlyUpdateSettings : function( shortSetId, val, skope_id ) {
+          var self = this,
+              _save_state = api.state('saved')(),
+              _skope_instance = api.czr_skope( _.isUndefined( skope_id ) ? api.czr_activeSkope() : skope_id );//the provided skope or the active skope
+
+          console.log( "current_skope_instance.getSkopeSettingVal( shortSetId ) )", _skope_instance.getSkopeSettingVal( shortSetId ) );
+          //if a setId is provided, then let's update it
+          if ( ! _.isUndefined( shortSetId ) && api.has( api.CZR_Helpers.build_setId( shortSetId ) ) ) {
+                $.when( self.updateSettingValue( shortSetId, val || _skope_instance.getSkopeSettingVal( shortSetId ) ) ).done( function() {
+                    api.state('saved')( _save_state );
+                });
+          } else {
+                console.log('UPDATE ALL API SETTINGS');
+                //if no setId provided, let's update the entire setting collection
+                api.each(function( setting ) {
+                    console.log('setting id', setting.id );
+                });
+                api.state('saved')( _save_state );
+          }
+
+    },
+
+
+    updateSettingValue : function( setId, val ) {
           var self = this,
               current_skope_instance = api.czr_skope( api.czr_activeSkope() );
 

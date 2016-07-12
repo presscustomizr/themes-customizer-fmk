@@ -164,7 +164,7 @@ $.extend( CZRSkopeBaseMths, {
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
-                      case  'is_primary' :
+                      case  'is_forced' :
                           if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
                               throw new Error('prepareSkopeForAPI : skope property "is_primary" must be a boolean');
                           }
