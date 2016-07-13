@@ -164,7 +164,13 @@ $.extend( CZRSkopeBaseMths, {
           self.skopeWrapperEmbedded = $.Deferred();
           //store the resetting state
           api.czr_isResettingSkope = new api.Value( false );
-
+          //store the currently active setion
+          api.czr_activeSectionId = new api.Value();
+          api.section.each( function( _sec ) {
+                _sec.expanded.bind( function( expanded ) {
+                      api.czr_activeSectionId( expanded ? _sec.id : api.czr_activeSectionId() );
+                });
+          });
 
 
           //Embed the skopes wrapper if needed
@@ -176,6 +182,12 @@ $.extend( CZRSkopeBaseMths, {
 
           //REACT TO ACTIVE SKOPE UPDATE
           api.czr_activeSkope.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
+
+          //REACT TO EXPANDED SECTION
+          //=> silently update all eligible controls of this sektion with the current skope values
+          api.czr_activeSectionId.bind( function( active_section ) {
+                return self.silentlyUpdateSectionSettings( active_section );
+          } );
 
           //GLOBAL SKOPE COLLECTION LISTENER
           //api.czr_skopeCollection.callbacks.add( function() { return self.globalSkopeCollectionReact.apply(self, arguments ); } );
@@ -231,36 +243,45 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * WORDPRESS API ACTIONS ON INIT
     *****************************************************************************/
-
     //fired in initialize
-    ////UPDATE THE CURRENT SKOPE DIRTIES
+    //Listen to each api settings changes
+    //and update the current skope dirties with the user val
     updateActiveSkopeDirties : function() {
           var self = this;
-          //parse the current eligible skope settings and write an setting val object
+          //parse the current eligible skope settings and write a setting val object
           api.each( function ( value, setId ) {
-
                 //only the current theme options + some WP built in settings are eligible
                 if ( ! self.isSettingEligible(setId) )
                   return;
-
                 api( setId ).callbacks.add( function( new_val, old_val, o ) {
+                      console.log('REACTION IN ACTIVE SKOPE DIRTIES');
                       if( ! api(setId)._dirty )
                         return;
-
-                      //UPDATE THE CURRENT SKOPE DIRTIES
-                      var current_skope_instance = api.czr_skope( api.czr_activeSkope() );//the active skope instance
-                      if ( _.isUndefined(current_skope_instance) ) {
-                        throw new Error('Skope base class : the active skope is not defined.');
-                      }
-
-                      var current_dirties = $.extend( true, {}, current_skope_instance.dirtyValues() ),
-                          _dirtyCustomized = {};
-
-                      _dirtyCustomized[ setId ] = new_val;
-                      current_skope_instance.dirtyValues.set( $.extend( current_dirties , _dirtyCustomized ) );
+                      //Update the skope dirties with the new val of this setId
+                      self.updateSkopeDirties( setId, new_val );
                 });
-
           });
+    },
+
+
+    //this method updates a given skope instance dirty values
+    //and returns the dirty values object
+    //fired on api setting change and in the ajax query
+    updateSkopeDirties : function( setId, new_val, skope_id ) {
+          skope_id = skope_id || api.czr_activeSkope();
+
+          var skope_instance = api.czr_skope( skope_id );//the active skope instance
+          if ( _.isUndefined( skope_instance ) ) {
+            throw new Error('Skope base class : the required skope id is not registered.');
+          }
+
+          var current_dirties = $.extend( true, {}, skope_instance.dirtyValues() ),
+              _dirtyCustomized = {};
+
+          _dirtyCustomized[ setId ] = new_val;
+          skope_instance.dirtyValues.set( $.extend( current_dirties , _dirtyCustomized ) );
+          console.log('UPDATED DIRTIES', skope_instance.dirtyValues() );
+          return skope_instance.dirtyValues();
     }
 
 });//$.extend()

@@ -53,7 +53,6 @@ $.extend( CZRSkopeMths, {
                   name      : 'skope_switch',
                   actions   : function() {
                       api.czr_activeSkope( skope_id );
-                      api.previewer.refresh();
                   }
                 },
                 //skope reset : display warning
@@ -165,7 +164,7 @@ $.extend( CZRSkopeMths, {
 
           //INFORM COLLECTION
           //populate case
-          if ( ! api.czr_skopeBase.isSkopeRegisteredInCollection( to ) ) {
+          if ( ! api.czr_skopeBase.isSkopeRegisteredInCollection( to.id ) ) {
               //Add this new skope to the global skope collection
               _current_collection = $.extend( true, [], api.czr_skopeCollection() );
               _current_collection.push( to );
@@ -280,7 +279,7 @@ $.extend( CZRSkopeMths, {
                 console.log('done in doreset', response);
                 $.when(
                       skope.resetSkopeAPIValues(),
-                      api.czr_skopeBase.silentlyUpdateSettings( 'copyright')
+                      api.silentlyUpdateSectionSettings( api.czr_activeSectionId() )
                 ).done( function() {
                       $('.czr-reset-success', skope.resetPanel ).fadeIn('300');
                       $('body').removeClass('czr-resetting-skope');//hide the spinner
@@ -338,12 +337,17 @@ $.extend( CZRSkopeMths, {
     },
 
     dirtynessReact : function(to, from) {
-        var view = this;
         this.container.toggleClass('dirty', to);
     },
 
     hasDBValuesReact : function(to, from) {
-        this.container.toggleClass('has_db_val', to );
+        var skope = this;
+        $.when( skope.container.toggleClass('has-db-val', to ) ).done( function() {
+            if ( to )
+              $( '.czr-scope-reset', skope.container).fadeIn('slow');
+            else
+              $( '.czr-scope-reset', skope.container).fadeOut('fast');
+        });
     },
 
     winnerReact : function( is_winner ) {
@@ -387,28 +391,7 @@ $.extend( CZRSkopeMths, {
     //@return the boolean dirtyness state of a given setId for a given skope
     getSkopeSettingDirtyness : function( setId ) {
         var skope = this;
-
-        //make sure the setId is ready for API
-        setId = api.CZR_Helpers.build_setId( setId );
-
-        console.log('skope.dirtyValues()', skope.dirtyValues(), setId );
-
-        return _.has( skope.dirtyValues(), setId );
-    },
-
-
-    //if is dirty, get the dirty val
-    //if not, get the db val
-    getSkopeSettingVal : function( setId ) {
-        var skope = this,
-            _val;
-        //make sure the setId is ready for API
-        wpSetId = api.CZR_Helpers.build_setId( wpSetId );
-        if ( skope.getSkopeSettingDirtyness( wpSetId ) ) {
-            return skope.dirtyValues()[ wpSetId ];
-        } else {
-            return api.czr_skopeBase.getSkopeHierarchySettingVal( setId, skope().id );
-        }
+        return _.has( skope.dirtyValues(), api.CZR_Helpers.build_setId( setId ) );
     },
 
 

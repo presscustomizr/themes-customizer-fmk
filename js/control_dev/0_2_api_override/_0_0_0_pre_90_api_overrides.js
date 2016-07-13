@@ -140,12 +140,13 @@
         * @return {object}
         */
         api.previewer.query =  function( skope_id ) {
+            console.log('REACTION QUERY!');
             var dirtyCustomized = {};
             skope_id = skope_id || api.czr_activeSkope();
 
-            //on first load, build the dirtyCustomized the regular way
-            //otherwise, get it from the requested skope instance.
-            if ( ! _.has( api, 'czr_skope') || ! api.czr_skope.has( skope_id ) ) {
+            //on first load OR if the current skope is the customized one, build the dirtyCustomized the regular way
+            //otherwise, get the dirties from the requested skope instance.
+            if ( ! _.has( api, 'czr_skope') || ! api.czr_skope.has( skope_id ) || api.czr_activeSkope() == skope_id ) {
                 api.each( function ( value, key ) {
                     if ( value._dirty ) {
                       dirtyCustomized[ key ] = value();
@@ -154,7 +155,7 @@
             } else {
                 dirtyCustomized = api.czr_skope( skope_id ).dirtyValues();
             }
-
+            console.log('SKOPE DIRTIES', skope_id, dirtyCustomized );
             //the previewer is now scope aware
             api.czr_isPreviewerSkopeAware.resolve();
 
@@ -388,7 +389,6 @@
               var submitDirtySkopes = function() {
                   _.each( dirtySkopesToSubmit, function( _skop ) {
                       console.log('submit request for skope : ', _skop.id );
-                      console.log('has skope dirties', api.czr_skope( _skop.id ).dirtyness(), api.czr_skope( _skop.id ).dirtyValues() );
                       submit( _skop.id );
                   });
               };
@@ -458,4 +458,28 @@
           });
         };
   }
+
+
+
+
+  /*****************************************************************************
+  * SYNCHRONIZER AUGMENTED
+  *****************************************************************************/
+  api.Element.synchronizer.checkbox.update = function( to ) {
+      this.element.prop( 'checked', to );
+      this.element.iCheck('update');
+  };
+
+
+
+  api.Element.synchronizer.select = {
+    update: function( to ) {
+        console.log('IN SELECT SYNC', to );
+        if ( to !== refresh.call( self ) )
+          update.apply( this, arguments );
+    },
+    refresh: function() {
+        self.set( refresh.call( self ) );
+    }
+  };
 })( wp.customize , jQuery, _ );

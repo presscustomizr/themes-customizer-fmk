@@ -23,8 +23,11 @@ $.extend( CZRSkopeBaseMths, {
           //test with copyright
           console.log( 'ACTIVE SKOPE MODEL', api.czr_skope( api.czr_activeSkope() )() );
 
-          self.silentlyUpdateSettings( 'copyright' );
-
+          if ( ! _.isUndefined( api.czr_activeSectionId() ) ) {
+              self.silentlyUpdateSectionSettings( api.czr_activeSectionId() );
+          }
+          //always refresh after a skope switch
+          api.previewer.refresh();
     },
 
 
@@ -32,15 +35,42 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * UPDATE SETTING VALUES
     *****************************************************************************/
-    silentlyUpdateSettings : function( shortSetId, val, skope_id ) {
+    //silently update the settings of a given section to the values of the current skope
+    silentlyUpdateSectionSettings : function( section_id ) {
+          if ( ! api.section.has( section_id ) ) {
+              throw new Error( 'Error when trying to silently update the settings. The section ' + section_id + ' is not registered in the API.');
+          }
+
+          var self = this,
+              section_controls = self._getSectionControlIds( section_id );
+
+          console.log('section_controls ? ', section_controls );
+          //keep only the skope eligible setIds
+          section_controls = _.filter( section_controls, function(setId) {
+                return self.isSettingEligible(setId);
+          });
+          //silently update them
+          _.each( section_controls, function( setId ) {
+                self.silentlyUpdateSettings( setId );
+          });
+    },
+
+
+    //This method is typically called to update the current active skope settings values
+    //
+    //, therefore @param shortSetId is the only mandatory param
+    silentlyUpdateSettings : function( shortSetId, skope_id, val ) {
           var self = this,
               _save_state = api.state('saved')(),
               _skope_instance = api.czr_skope( _.isUndefined( skope_id ) ? api.czr_activeSkope() : skope_id );//the provided skope or the active skope
 
-          console.log( "current_skope_instance.getSkopeSettingVal( shortSetId ) )", _skope_instance.getSkopeSettingVal( shortSetId ) );
+          skope_id = skope_id || api.czr_activeSkope();
+          val = val || api.czr_skopeBase.getSkopeSettingVal( shortSetId, skope_id );
+
+          console.log('in silent update? skope and setId', skope_id, shortSetId );
           //if a setId is provided, then let's update it
           if ( ! _.isUndefined( shortSetId ) && api.has( api.CZR_Helpers.build_setId( shortSetId ) ) ) {
-                $.when( self.updateSettingValue( shortSetId, val || _skope_instance.getSkopeSettingVal( shortSetId ) ) ).done( function() {
+                $.when( self.updateSettingValue( shortSetId, val ) ).done( function() {
                     api.state('saved')( _save_state );
                 });
           } else {
