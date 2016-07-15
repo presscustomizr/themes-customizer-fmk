@@ -465,21 +465,37 @@
   /*****************************************************************************
   * SYNCHRONIZER AUGMENTED
   *****************************************************************************/
+  var _original_element_initialize = api.Element.prototype.initialize;
+  api.Element.prototype.initialize = function( element, options  ) {
+          //call the original constructor
+          _original_element_initialize .apply( this, [element, options ] );
+          console.log('IN OVERRIDEN INITIALIZE ELEMENT ?');
+          // if ( this.element.is('select') ) {
+          //     console.log('element, options', element, options);
+          // }
+  };
+
+
+  //CHECKBOX WITH ICHECK
   api.Element.synchronizer.checkbox.update = function( to ) {
-      this.element.prop( 'checked', to );
-      this.element.iCheck('update');
+          this.element.prop( 'checked', to );
+          this.element.iCheck('update');
+  };
+
+  api.Element.synchronizer.val.update = function(to) {
+    console.log('in api.Element.synchronizer.val.update', to, this.element );
+    //api.bind('ready', function() {
+          if ( this.element.is('select') ) {
+              if ( this.element.siblings('.select2').length ) {
+                  console.log('UPDATE SELECT 2?', this.element , this.element.siblings('.select2').length );
+                  //select2.val() documented https://select2.github.io/announcements-4.0.html
+                  this.element.val(to).trigger('change');
+                  //this.element.select2();
+              }
+          }
+          this.element.val( to );
+    //});
   };
 
 
-
-  api.Element.synchronizer.select = {
-    update: function( to ) {
-        console.log('IN SELECT SYNC', to );
-        if ( to !== refresh.call( self ) )
-          update.apply( this, arguments );
-    },
-    refresh: function() {
-        self.set( refresh.call( self ) );
-    }
-  };
 })( wp.customize , jQuery, _ );

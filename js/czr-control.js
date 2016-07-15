@@ -1039,23 +1039,28 @@ $.extend( CZRSkopeMths, {
           });
         };
   }
+  var _original_element_initialize = api.Element.prototype.initialize;
+  api.Element.prototype.initialize = function( element, options  ) {
+          _original_element_initialize .apply( this, [element, options ] );
+          console.log('IN OVERRIDEN INITIALIZE ELEMENT ?');
+  };
   api.Element.synchronizer.checkbox.update = function( to ) {
-      this.element.prop( 'checked', to );
-      this.element.iCheck('update');
+          this.element.prop( 'checked', to );
+          this.element.iCheck('update');
+  };
+
+  api.Element.synchronizer.val.update = function(to) {
+    console.log('in api.Element.synchronizer.val.update', to, this.element );
+          if ( this.element.is('select') ) {
+              if ( this.element.siblings('.select2').length ) {
+                  console.log('UPDATE SELECT 2?', this.element , this.element.siblings('.select2').length );
+                  this.element.val(to).trigger('change');
+              }
+          }
+          this.element.val( to );
   };
 
 
-
-  api.Element.synchronizer.select = {
-    update: function( to ) {
-        console.log('IN SELECT SYNC', to );
-        if ( to !== refresh.call( self ) )
-          update.apply( this, arguments );
-    },
-    refresh: function() {
-        self.set( refresh.call( self ) );
-    }
-  };
 })( wp.customize , jQuery, _ );
 (function (api, $, _) {
   api.CZR_Helpers = api.CZR_Helpers || {};
