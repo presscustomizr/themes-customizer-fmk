@@ -795,7 +795,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                       return;
 
                     //access the registration method statically
-                    api.CZRWidgetAreasControl.prototype.addWidgetSidebar( {}, _sidebar );
+                    module.addWidgetSidebar( {}, _sidebar );
                     //activate it if so
                     if ( _.has( api.sidebar_insights('actives').get(), _sidebar.id ) && api.section.has("sidebar-widgets-" +_sidebar.id ) )
                       api.section( "sidebar-widgets-" +_sidebar.id ).activate();

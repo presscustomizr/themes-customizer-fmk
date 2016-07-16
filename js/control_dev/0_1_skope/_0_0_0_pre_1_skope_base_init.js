@@ -171,6 +171,8 @@ $.extend( CZRSkopeBaseMths, {
                       api.czr_activeSectionId( expanded ? _sec.id : api.czr_activeSectionId() );
                 });
           });
+          //store the skope switching state
+          api.czr_isSilentUpdate = new api.Value( false );
 
 
           //Embed the skopes wrapper if needed

@@ -91,7 +91,8 @@
   * => disable the _dirty + add a dirtyness param
   *****************************************************************************/
   api.Setting.prototype.silent_set =function( to, dirtyness ) {
-        var from = this._value;
+        var from = this._value,
+            _save_state = api.state('saved')();
 
         to = this._setter.apply( this, arguments );
         to = this.validate( to );
@@ -106,6 +107,7 @@
 
         this.callbacks.fireWith( this, [ to, from, o ] );
 
+        api.state('saved')( _save_state );
         return this;
   };
 
@@ -125,7 +127,11 @@
       if ( 'pending' == api.czr_isPreviewerSkopeAware.state() )
         return this.previewer.refresh();
       //as soon as the previewer is setup, let's behave as usual
-      _old_preview.call(this);
+      //=> don't refresh when silently updating
+      if ( ! api.czr_isSilentUpdate() ) {
+        console.log('REFRESH NOW', api.czr_isSilentUpdate() );
+        _old_preview.call(this);
+      }
     };
   }
 
@@ -465,37 +471,37 @@
   /*****************************************************************************
   * SYNCHRONIZER AUGMENTED
   *****************************************************************************/
-  var _original_element_initialize = api.Element.prototype.initialize;
-  api.Element.prototype.initialize = function( element, options  ) {
-          //call the original constructor
-          _original_element_initialize .apply( this, [element, options ] );
-          console.log('IN OVERRIDEN INITIALIZE ELEMENT ?');
-          // if ( this.element.is('select') ) {
-          //     console.log('element, options', element, options);
-          // }
-  };
+  // var _original_element_initialize = api.Element.prototype.initialize;
+  // api.Element.prototype.initialize = function( element, options  ) {
+  //         //call the original constructor
+  //         _original_element_initialize .apply( this, [element, options ] );
+  //         console.log('IN OVERRIDEN INITIALIZE ELEMENT ?');
+  //         // if ( this.element.is('select') ) {
+  //         //     console.log('element, options', element, options);
+  //         // }
+  // };
 
 
-  //CHECKBOX WITH ICHECK
+  // //CHECKBOX WITH ICHECK
   api.Element.synchronizer.checkbox.update = function( to ) {
           this.element.prop( 'checked', to );
           this.element.iCheck('update');
   };
 
   api.Element.synchronizer.val.update = function(to) {
-    console.log('in api.Element.synchronizer.val.update', to, this.element );
-    //api.bind('ready', function() {
-          if ( this.element.is('select') ) {
-              if ( this.element.siblings('.select2').length ) {
-                  console.log('UPDATE SELECT 2?', this.element , this.element.siblings('.select2').length );
-                  //select2.val() documented https://select2.github.io/announcements-4.0.html
-                  this.element.val(to).trigger('change');
-                  //this.element.select2();
-              }
-          }
+        console.log('in api.Element.synchronizer.val.update', to, this.element );
+        //SELECT CASE
+        if ( this.element.is('select') ) {
+              //SELECT2 OR SELECTER
+              //select2.val() documented https://select2.github.io/announcements-4.0.html
+              this.element.val(to).trigger('change');
+        }
+        else {
           this.element.val( to );
-    //});
+        }
   };
+
+
 
 
 })( wp.customize , jQuery, _ );

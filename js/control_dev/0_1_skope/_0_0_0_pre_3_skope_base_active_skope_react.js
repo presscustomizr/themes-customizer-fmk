@@ -20,14 +20,18 @@ $.extend( CZRSkopeBaseMths, {
             throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
 
           //update the settings values based on the one of the active skope
-          //test with copyright
           console.log( 'ACTIVE SKOPE MODEL', api.czr_skope( api.czr_activeSkope() )() );
 
+          api.czr_isSilentUpdate(true);
+
           if ( ! _.isUndefined( api.czr_activeSectionId() ) ) {
-              self.silentlyUpdateSectionSettings( api.czr_activeSectionId() );
+              $.when( self.silentlyUpdateSectionSettings( api.czr_activeSectionId() ) ).done( function() {
+                  //always refresh on skope switch
+                  api.previewer.refresh();
+                  api.czr_isSilentUpdate(false);
+              });
           }
-          //always refresh after a skope switch
-          api.previewer.refresh();
+
     },
 
 
@@ -61,25 +65,24 @@ $.extend( CZRSkopeBaseMths, {
     //, therefore @param shortSetId is the only mandatory param
     silentlyUpdateSettings : function( shortSetId, skope_id, val ) {
           var self = this,
-              _save_state = api.state('saved')(),
+              //_save_state = api.state('saved')(),
               _skope_instance = api.czr_skope( _.isUndefined( skope_id ) ? api.czr_activeSkope() : skope_id );//the provided skope or the active skope
 
           skope_id = skope_id || api.czr_activeSkope();
           val = val || api.czr_skopeBase.getSkopeSettingVal( shortSetId, skope_id );
 
-          console.log('in silent update? skope and setId', skope_id, shortSetId );
+          console.log('silentlyUpdateSettings? skope and setId', skope_id, shortSetId );
           //if a setId is provided, then let's update it
           if ( ! _.isUndefined( shortSetId ) && api.has( api.CZR_Helpers.build_setId( shortSetId ) ) ) {
-                $.when( self.updateSettingValue( shortSetId, val ) ).done( function() {
-                    api.state('saved')( _save_state );
-                });
+                //return the result or promise
+                return self.updateSettingValue( shortSetId, val );
           } else {
                 console.log('UPDATE ALL API SETTINGS');
                 //if no setId provided, let's update the entire setting collection
                 api.each(function( setting ) {
                     console.log('setting id', setting.id );
                 });
-                api.state('saved')( _save_state );
+                //api.state('saved')( _save_state );
           }
 
     },
@@ -87,23 +90,78 @@ $.extend( CZRSkopeBaseMths, {
 
     updateSettingValue : function( setId, val ) {
           var self = this,
-              current_skope_instance = api.czr_skope( api.czr_activeSkope() );
+              current_skope_instance = api.czr_skope( api.czr_activeSkope() ),
+              wpSetId = api.CZR_Helpers.build_setId( setId ),
+              current_setting_val = api( wpSetId )();//typically the previous skope val
 
-          api( api.CZR_Helpers.build_setId(setId) ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+          console.log('_.isEqual( current_setting_val, val )', setId, val, _.isEqual( current_setting_val, val ) );
+          //stop here if the setting val is unchanged
+          if ( _.isEqual( current_setting_val, val ) )
+            return true;
 
-          //TEST UPDATE DYNAMIC STYLE CHECKBOX ON SWITCH
-          // if ( 'trans' == to.dyn_type ) {
-          //   api('hu_theme_options[dynamic-styles]').set(true);
-          //   //api('hu_theme_options[dynamic-styles]').set(23);
-          //   $('input[type=checkbox]', api.control('hu_theme_options[dynamic-styles]').container ).iCheck('update');
-          // }
 
-          //TEST UPDATE FONT SELECT ON SWITCH
-          // if ( 'trans' == to.dyn_type ) {
-          //   api('hu_theme_options[font]').set('raleway');
-          //   //api('hu_theme_options[dynamic-styles]').set(23);
-          //   $('select[data-customize-setting-link]', api.control('hu_theme_options[font]').container ).selecter('destroy').selecter();
-          // }
+          //The normal way to synchronize the setting api val and the html val is to use
+          //an overriden version of api.Element.synchronizer.val.update
+          //For some specific controls, we need to implement a different way to synchronize
+          var control_type = api.control( wpSetId ).params.type,
+              _control_data = api.settings.controls[wpSetId],
+              _constructor;
+
+          switch ( control_type ) {
+              //CROPPED IMAGE CONTROL
+              case 'czr_cropped_image' :
+                  console.log('UPDATE IMG', val );
+                  _constructor = api.controlConstructor.czr_cropped_image;
+
+                  //re-add the control when the new image has been fetched asynchronously.
+                  //if no image can be fetched, for example when in the active skope, the image is not set, then
+                  //refresh the control without attachment data
+                  wp.media.attachment( val ).fetch().done( function() {
+                        //remove the container and its control
+                        api.control( wpSetId ).container.remove();
+                        api.control.remove( wpSetId );
+                        //update the data with the new img attributes
+                        _control_data.attachment = this.attributes;
+                        console.log('ALORS DONE ? ', setId, val, _control_data.attachment );
+                        //instantiate the control with the updated _control_data
+                        api.control.add( wpSetId,  new _constructor(wpSetId, { params : _control_data, previewer : api.previewer }) );
+                  } ).fail( function() {
+
+                        //remove the container and its control
+                        api.control( wpSetId ).container.remove();
+                        api.control.remove( wpSetId );
+                        //update the data : remove the attachment property
+                        _control_data = _.omit( _control_data, 'attachment' );
+                        console.log('FAIL FETCHED', _control_data );
+                        //instantiate the control with the updated _control_data
+                        api.control.add( wpSetId,  new _constructor(wpSetId, { params : _control_data, previewer : api.previewer }) );
+                  }).always( function() {
+                      //Silently set
+                      api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+                  });
+              break;
+
+              case 'czr_module' :
+                  _constructor = api.controlConstructor.czr_module;
+                  console.log('constuct', _constructor);
+                  //remove the container and its control
+                  api.control( wpSetId ).container.remove();
+                  api.control.remove( wpSetId );
+                  //Silently set
+                  api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+                  //re-instantiate the control with the updated _control_data
+                  api.control.add( wpSetId,  new _constructor(wpSetId, { params : _control_data, previewer : api.previewer }) );
+              break;
+              default :
+                  //Silent set
+                  api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+              break;
+          }
+
+
+          //api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+
+          //MEDIA UPLOAD CONTROL
 
           // var _img_id = 'trans' == to.dyn_type ? 23 : 25;
           // //TEST UPDATE LOGO ON SWITCH

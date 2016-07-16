@@ -279,7 +279,7 @@ $.extend( CZRSkopeMths, {
                 console.log('done in doreset', response);
                 $.when(
                       skope.resetSkopeAPIValues(),
-                      api.silentlyUpdateSectionSettings( api.czr_activeSectionId() )
+                      api.czr_skopeBase.silentlyUpdateSectionSettings( api.czr_activeSectionId() )
                 ).done( function() {
                       $('.czr-reset-success', skope.resetPanel ).fadeIn('300');
                       $('body').removeClass('czr-resetting-skope');//hide the spinner
