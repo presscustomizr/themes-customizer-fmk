@@ -36,8 +36,9 @@ $.extend( CZRSocialModuleMths, {
           //overrides the default success message
           this.itemAddedMessage = serverControlParams.translatedStrings.socialLinkAdded;
 
-          //fired ready on expand
-          //or if the module section is alreay opened => typically when skope is enabled
+          //fired ready :
+          //1) on section expansion
+          //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled
           if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
              module.ready();
           }

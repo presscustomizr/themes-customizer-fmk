@@ -171,9 +171,8 @@ $.extend( CZRSkopeBaseMths, {
                       api.czr_activeSectionId( expanded ? _sec.id : api.czr_activeSectionId() );
                 });
           });
-          //store the skope switching state
-          api.czr_isSilentUpdate = new api.Value( false );
 
+          api.czr_savedDirties = new api.Value({ channel : '', saved : {} });
 
           //Embed the skopes wrapper if needed
           if ( 'pending' == self.skopeWrapperEmbedded.state() ) {
@@ -188,7 +187,8 @@ $.extend( CZRSkopeBaseMths, {
           //REACT TO EXPANDED SECTION
           //=> silently update all eligible controls of this sektion with the current skope values
           api.czr_activeSectionId.bind( function( active_section ) {
-                return self.silentlyUpdateSectionSettings( active_section );
+                var _update_candidates = self._getSilentUpdateCandidates( active_section );
+                return self.silentlyUpdateSettings( _update_candidates );
           } );
 
           //GLOBAL SKOPE COLLECTION LISTENER
@@ -206,29 +206,33 @@ $.extend( CZRSkopeBaseMths, {
           //=>POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
           this.updateActiveSkopeDirties();
 
-
           //LISTEN TO SKOPE SAVE EVENT
+          //refresh the preview when all skopes are saved, to send the db saved values and compare
+          //=> this way we make sure db values in api and actual server db val are properly synchronized.
           self.bind( 'skopes-saved', function( _saved_dirties ) {
-              self.updateSavedSkopesDbValues( _saved_dirties );
+              api.previewer.refresh();
           });
     },
 
-    //cb of 'current-skopes-saved' event
+    //cb of 'skopes-saved' event
     updateSavedSkopesDbValues : function( _saved_dirties ) {
           _.each( _saved_dirties, function( _dirties, _skope_id ) {
-
-              var _current_model = $.extend( true, {}, api.czr_skope( _skope_id )() ),
-                  _api_ready_dirties = {};
-               //build the api ready db value for the skope.
-               //=> it shall contains only the option name, not the full name
-               //=> 'background_color', not 'hu_theme_options[background_color]'
+                var _current_model = $.extend( true, {}, api.czr_skope( _skope_id )() ),
+                    _new_db_val = ! _.isObject( _current_model.db ) ? {} : $.extend( true, {}, _current_model.db ),
+                    _api_ready_dirties = {};
+                //build the api ready db value for the skope.
+                //=> it shall contains only the option name, not the full name
+                //=> 'background_color', not 'hu_theme_options[background_color]'
                 _.each( _dirties, function( _val, _wp_opt_name ) {
                       var _k = api.CZR_Helpers.getOptionName( _wp_opt_name );
                       _api_ready_dirties[_k] = _val;
                 });
 
-              $.extend( _current_model, { db : _api_ready_dirties, has_db_val : ! _.isEmpty(_api_ready_dirties) } );
-              api.czr_skope( _skope_id )( _current_model );
+                //merge current and new
+                $.extend( _new_db_val, _api_ready_dirties );
+
+                $.extend( _current_model, { db : _new_db_val, has_db_val : ! _.isEmpty(_api_ready_dirties) } );
+                api.czr_skope( _skope_id )( _current_model );
           });
     },
 
@@ -256,7 +260,8 @@ $.extend( CZRSkopeBaseMths, {
                 if ( ! self.isSettingEligible(setId) )
                   return;
                 api( setId ).callbacks.add( function( new_val, old_val, o ) {
-                      console.log('REACTION IN ACTIVE SKOPE DIRTIES');
+                      console.log('ELIGIBLE SETTING HAS CHANGED', setId, new_val, old_val, o );
+
                       if( ! api(setId)._dirty )
                         return;
                       //Update the skope dirties with the new val of this setId
@@ -282,7 +287,6 @@ $.extend( CZRSkopeBaseMths, {
 
           _dirtyCustomized[ setId ] = new_val;
           skope_instance.dirtyValues.set( $.extend( current_dirties , _dirtyCustomized ) );
-          console.log('UPDATED DIRTIES', skope_instance.dirtyValues() );
           return skope_instance.dirtyValues();
     }
 

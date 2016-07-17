@@ -138,6 +138,7 @@ $.extend( CZRSkopeMths, {
 
           //LISTEN TO DIRTYNESS
           skope.dirtyValues.callbacks.add( function(to) {
+              console.log('UPDATED DIRTIES IN SKOPE',  skope().id, to );
               //set the model dirtyness boolean state value
               skope.dirtyness( ! _.isEmpty(to) );
           });
@@ -279,7 +280,7 @@ $.extend( CZRSkopeMths, {
                 console.log('done in doreset', response);
                 $.when(
                       skope.resetSkopeAPIValues(),
-                      api.czr_skopeBase.silentlyUpdateSectionSettings( api.czr_activeSectionId() )
+                      api.czr_skopeBase.silentlyUpdateSettings( api.czr_activeSectionId() )
                 ).done( function() {
                       $('.czr-reset-success', skope.resetPanel ).fadeIn('300');
                       $('body').removeClass('czr-resetting-skope');//hide the spinner

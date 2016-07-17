@@ -81,10 +81,12 @@ $.extend( CZRSkopeBaseMths, {
     //performs a recursive inheritance to get a setId Val for a given skope
     //@return an api setting value
     getSkopeSettingVal : function( setId, skope_id ) {
-          if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) )
-            return;
-          if ( ! api.czr_skope.has( skope_id ) )
-            return;
+          if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
+              throw new Error('getSkopeSettingVal : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+          }
+          if ( ! api.czr_skope.has( skope_id ) ) {
+              throw new Error('getSkopeSettingVal : the requested skope id is not registered : ' + skope_id );
+          }
 
           var self = this,
               wpSetId = api.CZR_Helpers.build_setId(setId),

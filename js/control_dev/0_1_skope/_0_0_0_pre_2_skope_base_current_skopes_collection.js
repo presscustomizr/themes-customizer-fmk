@@ -4,13 +4,22 @@ $.extend( CZRSkopeBaseMths, {
 
     //fired on 'czr-skopes-ready' triggered by the preview
     //@see api_overrides
-    updateSkopeCollection : function( sent_collection ) {
-          console.log('skope Collection sent by preview ?', sent_collection );
+    updateSkopeCollection : function( sent_collection, sent_channel ) {
+          console.log('skope Collection sent by preview ?', sent_collection, sent_channel );
           var self = this;
               _api_ready_collection = [];
+
+          //Shall we update the db values of the skopes ?
+          if ( ! _.isEmpty(api.czr_savedDirties().channel) && sent_channel != api.czr_savedDirties().channel ) {
+              console.log('YES WE HAVE TO UPDATE THE SKOPES DB PROPERTY', api.czr_savedDirties().saved );
+              //lets check that we are synchronized
+              self.updateSavedSkopesDbValues( api.czr_savedDirties().saved );
+          }
+
           _.each( sent_collection, function( _skope, _key ) {
               _api_ready_collection.push( self.prepareSkopeForAPI( _skope ) );
           });
+
           //set the new collection of current skopes
           api.czr_currentSkopesCollection( _api_ready_collection );
     },
@@ -42,34 +51,34 @@ $.extend( CZRSkopeBaseMths, {
 
           _to_update = _.filter( _new_collection, function( _skope ) {
               if ( api.czr_skope.has(_skope.id) ) {
-                // console.log('in to update', _skope.id);
-                // console.log('has changed', _skope.id, ! _.isEqual( api.czr_skope( _skope.id)(), _skope ) );
-                // console.log('skope API model', api.czr_skope( _skope.id )() );
-                // console.log('collection model', _skope );
-                // console.log('server sent model', _.findWhere( _new_collection , { id : _skope.id } ) );
-                return ! _.isEqual( api.czr_skope( _skope.id)(), _skope );
+                  return ! _.isEqual( api.czr_skope( _skope.id)(), _skope );
               }
               return false;
           });
 
           console.log( '_to_instantiate', _to_instantiate);
-          console.log( '_to_update', _to_update);
+          console.log( 'THERE ARE SKOPES TO UPDATE : _to_update', _to_update);
 
           //Update the skope models
-          _.each( _to_update, function( _skope ) {
-              var _new_model = $.extend( api.czr_skope( _skope.id )(), _skope );
-              if ( 'global' == _skope.skope  ) {
-                  _new_model.db = self.getChangedGlobalDBSettingValues( _skope.db );
-              }
-              api.czr_skope( _skope.id )( _new_model );
-          });
+          // _.each( _to_update, function( _skope ) {
+
+          //     if ( 'global' == _skope.skope  ) {
+          //         _new_model.db = self.getChangedGlobalDBSettingValues( _skope.db );
+          //     }
+          //     var _new_model = $.extend( api.czr_skope( _skope.id )(), _skope );//
+
+          //     // if ( 'global' == _skope.skope  ) {
+          //     //     _new_model.db = self.getChangedGlobalDBSettingValues( _skope.db );
+          //     // }
+          //     api.czr_skope( _skope.id )( _new_model );
+          // });
 
 
 
           //Instantiate the new skopes
           _.each( _to_instantiate, function( _skope ) {
-              var params = $.extend( true, {}, _skope );//IMPORTANT => otherwise the data object is actually a copy and share the same reference as the model and view params
-              api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
+              //use a cloned skop to instantiate : @todo : do we still need that ?
+              api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , $.extend( true, {}, _skope ) ) );
 
               //fire this right after instantiation for the views (we need the model instances in the views)
               if ( ! api.czr_skope.has( _skope.id ) ) {
@@ -93,21 +102,6 @@ $.extend( CZRSkopeBaseMths, {
               else
                 _skp_instance.visible(true);
           } );
-
-
-          //TO REMOVE
-          // api.czr_skope.each( function( _skope ){
-          //     if ( _.isUndefined( _.findWhere( _new_collection, { opt_name : _skope().id } ) ) )
-          //         _to_remove.push( _skope() );
-          // });
-
-          //Destroy the previous scopes views and models
-          // _.each( _to_remove, function( _skope ) {
-          //     //remove the view DOM el
-          //     api.czr_skope( _skope.id ).container.hide();
-          //     //remove the model from the collection
-          //     api.czr_skope.remove( _skope.id );
-          // });
     },//listenToSkopeCollection()
 
 
