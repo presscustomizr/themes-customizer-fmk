@@ -218,19 +218,19 @@ $.extend( CZRSkopeMths, {
           skope.userResetEventMap = skope.userResetEventMap || new api.Value( [
                 //skope reset : display warning
                 {
-                  trigger   : 'click keydown',
-                  selector  : '.czr-scope-reset-cancel',
-                  name      : 'skope_reset_cancel',
-                  actions   : function() {
-                      skope.resetWarningVisible( ! skope.resetWarningVisible() );
-                  }
+                    trigger   : 'click keydown',
+                    selector  : '.czr-scope-reset-cancel',
+                    name      : 'skope_reset_cancel',
+                    actions   : function() {
+                        skope.resetWarningVisible( ! skope.resetWarningVisible() );
+                    }
                 },
                 //skope reset : do reset
                 {
-                  trigger   : 'click keydown',
-                  selector  : '.czr-scope-do-reset',
-                  name      : 'skope_do_reset',
-                  actions   : 'doResetSkopeDBValues'
+                    trigger   : 'click keydown',
+                    selector  : '.czr-scope-do-reset',
+                    name      : 'skope_do_reset',
+                    actions   : 'doResetSkopeValues'
                 }
             ]
           );
@@ -271,16 +271,18 @@ $.extend( CZRSkopeMths, {
 
 
     //fired on user click
-    doResetSkopeDBValues : function() {
-          var skope = this;
+    //Is used for both resetting customized and db values, depending on the skope customization state
+    doResetSkopeValues : function() {
+          var skope = this,
+              reset_method = skope.dirtyness() ? '_resetSkopeDirties' : '_resetSkopeAPIValues';
           $('body').addClass('czr-resetting-skope');
           $('.czr-reset-warning', skope.resetPanel ).hide();
 
           $.when( api.previewer.czr_reset( skope().id ) ).done( function( response ) {
                 console.log('done in doreset', response);
                 $.when(
-                      skope.resetSkopeAPIValues(),
-                      api.czr_skopeBase.silentlyUpdateSettings( api.czr_activeSectionId() )
+                      skope[reset_method](),
+                      api.czr_skopeBase.silentlyUpdateSettings()
                 ).done( function() {
                       $('.czr-reset-success', skope.resetPanel ).fadeIn('300');
                       $('body').removeClass('czr-resetting-skope');//hide the spinner
@@ -305,8 +307,13 @@ $.extend( CZRSkopeMths, {
           // });
     },
 
+    //fired in doResetSkopeValues
+    _resetSkopeDirties : function() {
+          this.dirtyValues({});
+    },
 
-    resetSkopeAPIValues : function() {
+    //fired in doResetSkopeValues
+    _resetSkopeAPIValues : function() {
           var _skope = this,
               _current_model = $.extend( true, {}, _skope() );
 
@@ -336,19 +343,26 @@ $.extend( CZRSkopeMths, {
           //console.log('in the view : listen for scope state change', this.name, to, from );
           $('.czr-scope-switch', skope.container).toggleClass('fa-toggle-on', to).toggleClass('fa-toggle-off', !to);
     },
-
+    //cb of skope.dirtyness.callbacks
     dirtynessReact : function(to, from) {
-        this.container.toggleClass('dirty', to);
+          var skope = this;
+          $.when( this.container.toggleClass('dirty', to) ).done( function() {
+              if ( to )
+                $( '.czr-scope-reset', skope.container).fadeIn('slow').attr('title', 'Reset the currently customized values');
+              else if ( ! skope.hasDBValues() )
+                $( '.czr-scope-reset', skope.container).fadeOut('fast');
+          });
     },
 
+    //cb of skope.hasDBValues.callbacks
     hasDBValuesReact : function(to, from) {
-        var skope = this;
-        $.when( skope.container.toggleClass('has-db-val', to ) ).done( function() {
-            if ( to )
-              $( '.czr-scope-reset', skope.container).fadeIn('slow');
-            else
-              $( '.czr-scope-reset', skope.container).fadeOut('fast');
-        });
+          var skope = this;
+          $.when( skope.container.toggleClass('has-db-val', to ) ).done( function() {
+              if ( to )
+                $( '.czr-scope-reset', skope.container).fadeIn('slow').attr('title', 'Reset the saved values');
+              else if ( ! skope.dirtyness() )
+                $( '.czr-scope-reset', skope.container).fadeOut('fast');
+          });
     },
 
     winnerReact : function( is_winner ) {

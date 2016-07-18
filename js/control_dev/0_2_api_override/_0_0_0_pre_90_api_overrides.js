@@ -130,14 +130,14 @@
 
         var _old_preview = api.Setting.prototype.preview;
         api.Setting.prototype.preview = function( to, from , o) {
-          if ( 'pending' == api.czr_isPreviewerSkopeAware.state() )
-            return this.previewer.refresh();
-          //as soon as the previewer is setup, let's behave as usual
-          //=> but don't refresh when silently updating
-          if ( ! _.has(o, 'silent') || false === o.silent ) {
-              console.log('REFRESH NOW' );
-              _old_preview.call(this);
-          }
+            if ( 'pending' == api.czr_isPreviewerSkopeAware.state() )
+              return this.previewer.refresh();
+            //as soon as the previewer is setup, let's behave as usual
+            //=> but don't refresh when silently updating
+            if ( ! _.has(o, 'silent') || false === o.silent ) {
+                console.log('REFRESH NOW' );
+                _old_preview.call(this);
+            }
         };
   }
 
@@ -151,10 +151,14 @@
         *
         * @return {object}
         */
+        var _old_previewer_query = api.previewer.query;
         api.previewer.query =  function( skope_id ) {
             console.log('REACTION QUERY!');
             var dirtyCustomized = {};
-            skope_id = skope_id || api.czr_activeSkope();
+            skope_id = skope_id || api.czr_activeSkope() || 'global';
+
+            if ( ! _.has( api, 'czr_skope') || ! api.czr_skope.has( skope_id ) )
+              return _old_previewer_query.apply( this );
 
             //on first load OR if the current skope is the customized one, build the dirtyCustomized the regular way
             //otherwise, get the dirties from the requested skope instance.

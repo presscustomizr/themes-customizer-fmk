@@ -95,26 +95,34 @@
   color: #82b965;
   cursor:inherit;
 }
-.czr-scope .czr-scope-dirty {
-  opacity: 0;
-  color: #FFBD2E;
-}
-.dirty .czr-scope-dirty {
-  opacity: 1;
-}
 
 .czr-scope .czr-scope-reset {
   /*opacity: 0;*/
   display: none;
-  color: #6a7cb7;
+
 }
-/*.has-db-val .czr-scope-reset {
-  opacity: 1;
-}*/
+.has-db-val .czr-scope-reset {
+  color: #00a0d2;
+}
+.dirty .czr-scope-reset {
+  color: #FFBD2E!important;
+}
 .is_winner .czr-scope-winner {
   color: #82b965;
 }
 
+
+/* SINGLE CONTROL RESET */
+.czr-setting-reset {
+    color: #eee;
+    padding-right: 5px;
+}
+.has-db-val .czr-setting-reset {
+  color: #00a0d2;
+}
+.dirty .czr-setting-reset {
+  color: #FFBD2E!important;
+}
 
 /* RESET */
 /* WP TEXT EDITOR */

@@ -11,9 +11,12 @@ $.extend( CZRSkopeBaseMths, {
 
           //Shall we update the db values of the skopes ?
           if ( ! _.isEmpty(api.czr_savedDirties().channel) && sent_channel != api.czr_savedDirties().channel ) {
-              console.log('YES WE HAVE TO UPDATE THE SKOPES DB PROPERTY', api.czr_savedDirties().saved );
-              //lets check that we are synchronized
-              self.updateSavedSkopesDbValues( api.czr_savedDirties().saved );
+                console.log('YES WE HAVE TO UPDATE THE SKOPES DB PROPERTY', api.czr_savedDirties().saved );
+                //lets check that we are synchronized
+                $.when( self.updateSavedSkopesDbValues( api.czr_savedDirties().saved ) ).done( function() {
+                      api.czr_savedDirties( { channel : '', saved : {} } );
+                });
+
           }
 
           _.each( sent_collection, function( _skope, _key ) {

@@ -37,10 +37,26 @@ $.extend( CZRSkopeMths, {
     renderResetWarningTmpl : function() {
           var skope = this,
               skope_model = $.extend( true, {}, skope() ),
-              _tmpl = '';
+              _tmpl = '',
+              warning_message,
+              success_message;
+
+          if ( skope.dirtyness() ) {
+              warning_message = 'Are you sure you want to reset your current customizations for skope : ' + skope().id + '?';
+              success_message = 'Your customizations have been resetted for skope ' + skope().id + '.';
+          } else {
+              warning_message = 'Are you sure you want to reset the options to defaults for skope : ' + skope().id + '?';
+              success_message = 'The options have been resetted to defaults for skope ' + skope().id + '.';
+          }
 
           try {
-            _tmpl =  wp.template('czr-reset-skope')( _.extend( skope_model, { el : skope.el } ) );
+            _tmpl =  wp.template('czr-reset-skope')(
+                _.extend( skope_model, {
+                  el : skope.el,
+                  warning_message : warning_message,
+                  success_message : success_message
+                } )
+            );
           }
           catch(e) {
             throw new Error('Error when parsing the the reset skope template : ' + e );

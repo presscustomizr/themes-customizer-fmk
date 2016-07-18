@@ -113,9 +113,7 @@ $.extend( CZRSkopeBaseMths, {
                           var wpSetId = api.CZR_Helpers.build_setId( setId ),
                               _skopeDirtyness = api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId );
 
-                          $.when( api( wpSetId ).silent_set( obj.val, _skopeDirtyness ) ).done( function() {
-                              api.previewer.refresh();
-                          });
+                          api( wpSetId ).silent_set( obj.val, _skopeDirtyness );
                     });
               };
 
@@ -126,7 +124,10 @@ $.extend( CZRSkopeBaseMths, {
                 var _has_rejected_promise = false;
                 _.each( _deferred, function( _defd ) {
                       if ( ! _has_rejected_promise && _.isObject( _defd ) && 'rejected' == _defd.state() ) {
-                            _silently_update();
+                            //@todo improve this!
+                            $.when( _silently_update() ).done( function() {
+                                api.previewer.refresh();
+                            });
                             _has_rejected_promise = true;
                       }
                 });
@@ -137,7 +138,9 @@ $.extend( CZRSkopeBaseMths, {
                       if ( _.isObject( prom ) )
                         console.log( prom.state() );
                 });
-               _silently_update();
+                $.when( _silently_update() ).done( function() {
+                    api.previewer.refresh();
+                });
           });
           //return the collection of update promises
           //return silent_update_promises;

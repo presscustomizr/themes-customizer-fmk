@@ -72,8 +72,10 @@ $.extend( CZRSkopeBaseMths, {
           return _def;
     },
 
-
+    //@return boolean
     isSettingEligible : function( setId ) {
+          if( _.isUndefined( setId ) || ! api.has(setId) )
+            return;
           return ( -1 != setId.indexOf(serverControlParams.themeOptions) ) || _.contains( serverControlParams.wpBuiltinSettings, setId );
     },
 

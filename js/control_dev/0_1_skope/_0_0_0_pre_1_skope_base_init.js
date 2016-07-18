@@ -188,7 +188,10 @@ $.extend( CZRSkopeBaseMths, {
           //=> silently update all eligible controls of this sektion with the current skope values
           api.czr_activeSectionId.bind( function( active_section ) {
                 var _update_candidates = self._getSilentUpdateCandidates( active_section );
-                return self.silentlyUpdateSettings( _update_candidates );
+                self.silentlyUpdateSettings( _update_candidates );
+
+                //add control single reset
+                self.renderControlSingleReset( active_section );
           } );
 
           //GLOBAL SKOPE COLLECTION LISTENER
@@ -288,6 +291,25 @@ $.extend( CZRSkopeBaseMths, {
           _dirtyCustomized[ setId ] = new_val;
           skope_instance.dirtyValues.set( $.extend( current_dirties , _dirtyCustomized ) );
           return skope_instance.dirtyValues();
+    },
+
+
+
+
+    renderControlSingleReset : function( section_id ) {
+          var self = this;
+          _.each( self._getSectionControlIds( section_id ), function( setId ){
+                if ( ! self.isSettingEligible( setId ) )
+                  return;
+                if( $('.czr-setting-reset', api.control( setId ).container ).length )
+                  return;
+                api.control( setId ).container
+                  .find('.customize-control-title')
+                  .prepend( $( '<span/>', {
+                    class : 'czr-setting-reset fa fa-refresh',
+                    title : 'Reset'
+                  }));
+          });
     }
 
 });//$.extend()
