@@ -156,7 +156,13 @@
             //console.log('_wpCustomizeSettings', _wpCustomizeSettings, _wpCustomizeSettings.activeSections );
             //console.log('_wpWidgetCustomizerPreviewSettings', _wpWidgetCustomizerPreviewSettings);
             //console.log(' _customizePartialRefreshExports',  _customizePartialRefreshExports);
-            api.preview.send( 'czr-skopes-ready', _.has( _wpCustomizeSettings, 'czr_scopes' ) ? _wpCustomizeSettings.czr_scopes : '');
+            api.preview.send(
+              'czr-skopes-ready',
+              {
+                  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+                  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || [],
+              }
+            );
         },
 
         addCbs : function() {

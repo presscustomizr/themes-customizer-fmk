@@ -47,6 +47,9 @@ $.extend( CZRSkopeBaseMths, {
 
           //silently update the settings of a the currently active section() to the values of the current skope
           self.silentlyUpdateSettings( silent_update_candidates );
+
+          //re-render control single reset when needed (Media control are re-rendered, that's why we need this method fired on each skope switch)
+          self.renderControlSingleReset();
     },
 
 
@@ -87,16 +90,18 @@ $.extend( CZRSkopeBaseMths, {
 
 
     //silently update a set of settings or a given setId
-    silentlyUpdateSettings : function( _silent_update_candidates ) {
+    silentlyUpdateSettings : function( _silent_update_candidates, refresh ) {
           var self = this,
               silent_update_promises = {};
 
-          if ( _.isUndefined( _silent_update_candidates ) ) {
+          refresh = refresh || true;
+
+          if ( _.isUndefined( _silent_update_candidates ) || _.isEmpty( _silent_update_candidates ) ) {
             _silent_update_candidates = self._getSilentUpdateCandidates();
           }
 
           if ( _.isString( _silent_update_candidates ) ) {
-            _silent_update_candidates = [_silent_update_candidates];
+            _silent_update_candidates = [ _silent_update_candidates ];
           }
 
           console.log('silent_update_candidates', _silent_update_candidates );
@@ -105,33 +110,36 @@ $.extend( CZRSkopeBaseMths, {
                 silent_update_promises[setId] = self.getSettingUpdatePromise( setId );
           });
 
-          //Listen to the resolve promises
+
           var _deferred = [],
               _silently_update = function() {
                    _.each( silent_update_promises, function( obj, setId ) {
                           //Silently set
                           var wpSetId = api.CZR_Helpers.build_setId( setId ),
                               _skopeDirtyness = api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId );
-
+                          console.log('in silently update', obj, setId );
                           api( wpSetId ).silent_set( obj.val, _skopeDirtyness );
                     });
               };
 
+         //Populates the promises
           _.each( silent_update_promises, function( obj, setId ) {
               _deferred.push(obj.promise);
           });
+
           $.when.apply( null, _deferred ).always( function() {
                 var _has_rejected_promise = false;
                 _.each( _deferred, function( _defd ) {
-                      if ( ! _has_rejected_promise && _.isObject( _defd ) && 'rejected' == _defd.state() ) {
-                            //@todo improve this!
-                            $.when( _silently_update() ).done( function() {
-                                api.previewer.refresh();
-                            });
+                      if ( _.isObject( _defd ) && 'rejected' == _defd.state() ) {
                             _has_rejected_promise = true;
+                            console.log('IN ALWAYS, HAS REJECTED PROMISE', _has_rejected_promise );
                       }
+                      //@todo improve this!
+                      $.when( _silently_update() ).done( function() {
+                          api.previewer.refresh();
+                      });
                 });
-                console.log('IN ALWAYS, HAS REJECTED PROMISE', _has_rejected_promise );
+
           }).then( function() {
                 console.log('THE THEN CASE');
                 _.each( _deferred, function(prom){
@@ -139,7 +147,8 @@ $.extend( CZRSkopeBaseMths, {
                         console.log( prom.state() );
                 });
                 $.when( _silently_update() ).done( function() {
-                    api.previewer.refresh();
+                    if ( refresh )
+                          api.previewer.refresh();
                 });
           });
           //return the collection of update promises
@@ -189,6 +198,8 @@ $.extend( CZRSkopeBaseMths, {
               //CROPPED IMAGE CONTROL
               case 'czr_cropped_image' :
                     _constructor = api.controlConstructor.czr_cropped_image;
+                    //@make sure that the val is not null => won't be accepted in silent set
+                    val = null === val ? "" : val;
 
                     //re-add the control when the new image has been fetched asynchronously.
                     //if no image can be fetched, for example when in the active skope, the image is not set, then

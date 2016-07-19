@@ -164,6 +164,8 @@ $.extend( CZRSkopeBaseMths, {
           self.skopeWrapperEmbedded = $.Deferred();
           //store the resetting state
           api.czr_isResettingSkope = new api.Value( false );
+          //store the db saved options name for the global skope
+          api.czr_globalDBoptions = new api.Value([]);
           //store the currently active setion
           api.czr_activeSectionId = new api.Value();
           api.section.each( function( _sec ) {
@@ -215,6 +217,10 @@ $.extend( CZRSkopeBaseMths, {
           self.bind( 'skopes-saved', function( _saved_dirties ) {
               api.previewer.refresh();
           });
+
+          //LISTEN TO GLOBAL DB OPTION CHANGES
+          //When an option is resetted on the global skope, we need to set it to default in _wpCustomizeSettings.settings
+          api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
     },
 
     //cb of 'skopes-saved' event
@@ -295,21 +301,62 @@ $.extend( CZRSkopeBaseMths, {
 
 
 
-
+    //fired on
+    //1) active section expansion
+    //2) and on skope switch
+    //render each control reset icons with a delay
+    //=> because some control like media upload are re-rendered on section expansion
     renderControlSingleReset : function( section_id ) {
-          var self = this;
+
+          var self = this,
+              setIds = [],
+              render_reset_icons = function( setIds ) {
+                    _.each( setIds, function( _id ) {
+                          if( $('.czr-setting-reset', api.control( _id ).container ).length )
+                            return;
+                          api.control( _id ).deferred.embedded.then( function() {
+                              api.control( _id ).container
+                                  .find('.customize-control-title')
+                                  .prepend( $( '<span/>', {
+                                    class : 'czr-setting-reset fa fa-refresh',
+                                    title : 'Reset'
+                                  }));
+                          });//then()
+                    });//_each
+              };
+
+          section_id = section_id || api.czr_activeSectionId();
+          if ( _.isUndefined( section_id ) )
+            return;
+
+          //build the setId array for which an icon is rendered
           _.each( self._getSectionControlIds( section_id ), function( setId ){
                 if ( ! self.isSettingEligible( setId ) )
                   return;
-                if( $('.czr-setting-reset', api.control( setId ).container ).length )
-                  return;
-                api.control( setId ).container
-                  .find('.customize-control-title')
-                  .prepend( $( '<span/>', {
-                    class : 'czr-setting-reset fa fa-refresh',
-                    title : 'Reset'
-                  }));
+                setIds.push(setId);
+          });
+
+          //debounce because some control like media upload are re-rendered on section expansion
+          render_reset_icons = _.debounce( render_reset_icons , 500 );
+          render_reset_icons(setIds);
+    },
+
+
+    //cb of api.czr_globalDBoptions.callbacks
+    //update the _wpCustomizeSettings.settings if they have been updated by a global skope single or entire reset
+    //When an option is resetted on the global skope, we need to set it to default in _wpCustomizeSettings.settings
+    globalDBoptionsReact : function( to, from ) {
+          var self = this,
+              resetted_opts = _.difference( from, to );
+
+          if ( _.isEmpty(resetted_opts) )
+            return;
+
+          //reset each resetted setting to its default val
+          _.each( resetted_opts, function( shortSetId ) {
+                var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
+                api.settings.settings[wpSetId].value = serverControlParams.defaultOptionsValues[shortSetId];
+                self.silentlyUpdateSettings( [], false );//silently update with no refresh
           });
     }
-
 });//$.extend()
