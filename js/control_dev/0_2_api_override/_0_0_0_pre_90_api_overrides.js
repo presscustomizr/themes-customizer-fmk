@@ -52,15 +52,15 @@
         //  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || []
         // }
         this.bind( 'czr-skopes-ready', function( data ) {
-          console.log('DATA', data );
-          var preview = this;
-          //initialize skopes with the server sent data
-          if ( _.has(data, 'czr_skopes') )
-              api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
-          //store the db options name saved for the global skope
-          //for the 'global' skope, we only send the option name instead of sending the heavy and performance expensive entire set of option
-          if ( _.has(data, 'skopeGlobalDBOpt') )
-              api.czr_globalDBoptions( data.skopeGlobalDBOpt );
+            console.log('czr-skopes-ready DATA', data );
+            var preview = this;
+            //initialize skopes with the server sent data
+            if ( _.has(data, 'czr_skopes') )
+                api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
+            //store the db options name saved for the global skope
+            //for the 'global' skope, we only send the option name instead of sending the heavy and performance expensive entire set of option
+            if ( _.has(data, 'skopeGlobalDBOpt') )
+                api.czr_globalDBoptions( data.skopeGlobalDBOpt );
         });
   };//api.PreviewFrame.prototype.initialize
 
@@ -147,7 +147,6 @@
             //as soon as the previewer is setup, let's behave as usual
             //=> but don't refresh when silently updating
             if ( ! _.has(o, 'silent') || false === o.silent ) {
-                console.log('REFRESH NOW' );
                 _old_preview.call(this);
             }
         };
@@ -164,30 +163,44 @@
         * @return {object}
         */
         var _old_previewer_query = api.previewer.query;
-        api.previewer.query =  function( skope_id ) {
-            console.log('REACTION QUERY!');
+        api.previewer.query =  function( skope_id, action ) {
             var dirtyCustomized = {};
-            skope_id = skope_id || api.czr_activeSkope() || 'global';
+            skope_id = skope_id || api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
 
             if ( ! _.has( api, 'czr_skope') || ! api.czr_skope.has( skope_id ) )
               return _old_previewer_query.apply( this );
 
-            //on first load OR if the current skope is the customized one, build the dirtyCustomized the regular way
-            //otherwise, get the dirties from the requested skope instance.
-            if ( ! _.has( api, 'czr_skope') || ! api.czr_skope.has( skope_id ) || api.czr_activeSkope() == skope_id ) {
-                console.log('FIRST CASE');
-                api.each( function ( value, key ) {
-                    if ( value._dirty ) {
-                      dirtyCustomized[ key ] = value();
-                    }
-                } );
+            //on first load OR if the current skope is the customized one, build the dirtyCustomized the regular way : typically a refresh after setting change
+            //otherwise, get the dirties from the requested skope instance : typically a save action on several skopes
+            if ( api.czr_activeSkope() == skope_id ) {
+                  api.each( function ( value, setId ) {
+                        // if ( api.czr_skopeBase.isSettingEligible( setId ) ) {
+                        //       var _dirty_candidate = api.czr_skopeBase.getSkopeDirtyVal( setId );
+                        //       if ( '_no_dirty_val_' != _dirty_candidate )
+                        //           dirtyCustomized[ setId ] = _dirty_candidate;
+                        // } else {
+                        //       if ( value._dirty ) {
+                        //         dirtyCustomized[ setId ] = value();
+                        //       }
+                        // }
+                        if ( value._dirty ) {
+                          dirtyCustomized[ setId ] = value();
+                        }
+                  } );
             } else {
-                console.log('ELSE?');
-                dirtyCustomized = api.czr_skope( skope_id ).dirtyValues();
+                  console.log('JOIE ???????????????????????????????????????????????????? JOIE??????????????? ');
+                  dirtyCustomized = api.czr_skope( skope_id ).dirtyValues();
             }
-            console.log('SKOPE DIRTIES', skope_id, dirtyCustomized );
+
+            //when previewing, we need to apply the skope inheritance to the customized values
+            if ( 'save' != action && 'reset' != action ) {
+              dirtyCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( dirtyCustomized, skope_id );
+            }
+
             //the previewer is now scope aware
             api.czr_isPreviewerSkopeAware.resolve();
+
+            console.log('DIRTY VALUES TO SUBMIT ? ', dirtyCustomized, api.czr_skope( skope_id ).dirtyValues() );
 
             return {
                 wp_customize: 'on',
@@ -225,7 +238,7 @@
                   return;
 
                 //the query takes the skope_id has parameter
-                query = $.extend( self.query( skope_id ), {
+                query = $.extend( self.query( skope_id, 'reset' ), {
                     nonce:  self.nonce.save
                 } );
 
@@ -306,7 +319,7 @@
                 skope_id = skope_id || api.czr_activeSkope();
 
                 //the query takes the skope_id has parameter
-                query = $.extend( self.query( skope_id ), {
+                query = $.extend( self.query( skope_id, 'save' ), {
                     nonce:  self.nonce.save
                 } );
 
@@ -358,7 +371,6 @@
                   }),
                   _saved_dirties = {};//will be used as param to update the skope model db val after all ajx requests are done
 
-              console.log('DIRTY SKOPES TO SUBMIT', dirtySkopesToSubmit );
               //loop on the registered skopes and submit each save ajax request
 
               var submitDirtySkopes = function() {
@@ -371,7 +383,6 @@
               };
 
               var reactWhenPromisesDone = function( promises ) {
-                    console.log('PROMISES?', promises );
                     $.when.apply( null, promises).done( function( responses ) {
                           //store the saved dirties (will be used as param to update the db val property of each saved skope)
                           //and reset them

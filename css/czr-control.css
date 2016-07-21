@@ -1977,13 +1977,15 @@ body.czr-editing-sektion #customize-preview {
 
 /* SINGLE CONTROL RESET */
 .czr-setting-reset {
-    color: #eee;
-    padding-right: 5px;
+  color: #eee;
+  padding-right: 5px;
+  -webkit-transition: color 0.5s;
+  transition: color 0.5s;
 }
 .has-db-val .czr-setting-reset {
   color: #00a0d2;
 }
-.dirty .czr-setting-reset {
+.is-dirty .czr-setting-reset {
   color: #FFBD2E!important;
 }
 

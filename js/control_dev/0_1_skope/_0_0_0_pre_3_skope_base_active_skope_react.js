@@ -29,27 +29,23 @@ $.extend( CZRSkopeBaseMths, {
 
           //add the previous skope dirty settings ids
           if ( ! _.isUndefined( from ) ) {
-            console.log( 'PREVIOUS SKOPE DIRTIES', api.czr_skope( from ).dirtyValues() );
             _.each( api.czr_skope( from ).dirtyValues(), function( val, _setId ) {
                   if ( ! _.contains( silent_update_candidates, _setId ) )
                       silent_update_candidates.push(_setId);
             } );
           }
           if ( ! _.isUndefined( to ) ) {
-            console.log( 'CURRENT SKOPE DIRTIES', api.czr_skope( to ).dirtyValues() );
             _.each( api.czr_skope( to ).dirtyValues(), function( val, _setId ) {
                   if ( ! _.contains( silent_update_candidates, _setId ) )
                       silent_update_candidates.push(_setId);
             } );
           }
 
-          console.log('SILENT UPDATE CANDIDATES', silent_update_candidates );
-
           //silently update the settings of a the currently active section() to the values of the current skope
           self.silentlyUpdateSettings( silent_update_candidates );
 
           //re-render control single reset when needed (Media control are re-rendered, that's why we need this method fired on each skope switch)
-          self.renderControlSingleReset();
+          self.setupControlsReset();
     },
 
 
@@ -78,7 +74,6 @@ $.extend( CZRSkopeBaseMths, {
           section_controls = _.filter( section_controls, function(setId) {
                 return self.isSettingEligible(setId);
           });
-          console.log('_getSilentUpdateCandidates :  eligible section settings to update ? ', section_controls );
 
           //Populates the silent update candidates array
           _.each( section_controls, function( setId ) {
@@ -117,7 +112,6 @@ $.extend( CZRSkopeBaseMths, {
                           //Silently set
                           var wpSetId = api.CZR_Helpers.build_setId( setId ),
                               _skopeDirtyness = api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId );
-                          console.log('in silently update', obj, setId );
                           api( wpSetId ).silent_set( obj.val, _skopeDirtyness );
                     });
               };
@@ -132,7 +126,6 @@ $.extend( CZRSkopeBaseMths, {
                 _.each( _deferred, function( _defd ) {
                       if ( _.isObject( _defd ) && 'rejected' == _defd.state() ) {
                             _has_rejected_promise = true;
-                            console.log('IN ALWAYS, HAS REJECTED PROMISE', _has_rejected_promise );
                       }
                       //@todo improve this!
                       $.when( _silently_update() ).done( function() {
@@ -141,7 +134,6 @@ $.extend( CZRSkopeBaseMths, {
                 });
 
           }).then( function() {
-                console.log('THE THEN CASE');
                 _.each( _deferred, function(prom){
                       if ( _.isObject( prom ) )
                         console.log( prom.state() );
@@ -174,8 +166,6 @@ $.extend( CZRSkopeBaseMths, {
 
           skope_id = skope_id || api.czr_activeSkope();
           val = val || api.czr_skopeBase.getSkopeSettingVal( setId, skope_id );
-
-          console.log('getSettingUpdatePromise? skope and setId', skope_id, setId, val );
 
           //if a setId is provided, then let's update it
           if ( _.isUndefined( setId ) || ! api.has( wpSetId ) ) {

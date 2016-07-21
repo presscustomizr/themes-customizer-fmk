@@ -191,9 +191,8 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_activeSectionId.bind( function( active_section ) {
                 var _update_candidates = self._getSilentUpdateCandidates( active_section );
                 self.silentlyUpdateSettings( _update_candidates );
-
-                //add control single reset
-                self.renderControlSingleReset( active_section );
+                //add control single reset + observable values
+                self.setupControlsReset();
           } );
 
           //GLOBAL SKOPE COLLECTION LISTENER
@@ -214,35 +213,30 @@ $.extend( CZRSkopeBaseMths, {
           //LISTEN TO SKOPE SAVE EVENT
           //refresh the preview when all skopes are saved, to send the db saved values and compare
           //=> this way we make sure db values in api and actual server db val are properly synchronized.
+          //_saved_dirties is an object :
+          //{
+          //  skope_id1 : { setId1 : val 1, setId2, val2, ... },
+          //  skope_id2 : { setId1 : val 1, setId2, val2, ... }
+          //  ...
+          //}
           self.bind( 'skopes-saved', function( _saved_dirties ) {
-              api.previewer.refresh();
+                api.previewer.refresh();
+                //clean the dirtyness state of each control
+                //set the db state of each control
+                _.each( _saved_dirties, function(_skp){
+                      _.each( _skp, function( _v, setId ) {
+                          if ( _.has(api.control(setId), 'czr_isDirty') )
+                            api.control(setId).czr_isDirty(false);
+                          if ( _.has(api.control(setId), 'czr_hasDBVal') )
+                            api.control(setId).czr_hasDBVal(true);
+                      });
+                });
+                console.log( 'SAVED DIRTIES', _saved_dirties );
           });
 
           //LISTEN TO GLOBAL DB OPTION CHANGES
           //When an option is resetted on the global skope, we need to set it to default in _wpCustomizeSettings.settings
           api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
-    },
-
-    //cb of 'skopes-saved' event
-    updateSavedSkopesDbValues : function( _saved_dirties ) {
-          _.each( _saved_dirties, function( _dirties, _skope_id ) {
-                var _current_model = $.extend( true, {}, api.czr_skope( _skope_id )() ),
-                    _new_db_val = ! _.isObject( _current_model.db ) ? {} : $.extend( true, {}, _current_model.db ),
-                    _api_ready_dirties = {};
-                //build the api ready db value for the skope.
-                //=> it shall contains only the option name, not the full name
-                //=> 'background_color', not 'hu_theme_options[background_color]'
-                _.each( _dirties, function( _val, _wp_opt_name ) {
-                      var _k = api.CZR_Helpers.getOptionName( _wp_opt_name );
-                      _api_ready_dirties[_k] = _val;
-                });
-
-                //merge current and new
-                $.extend( _new_db_val, _api_ready_dirties );
-
-                $.extend( _current_model, { db : _new_db_val, has_db_val : ! _.isEmpty(_api_ready_dirties) } );
-                api.czr_skope( _skope_id )( _current_model );
-          });
     },
 
 
@@ -270,11 +264,17 @@ $.extend( CZRSkopeBaseMths, {
                   return;
                 api( setId ).callbacks.add( function( new_val, old_val, o ) {
                       console.log('ELIGIBLE SETTING HAS CHANGED', setId, new_val, old_val, o );
+                      if ( api(setId)._dirty ) {
+                          //Update the skope dirties with the new val of this setId
+                          self.updateSkopeDirties( setId, new_val );
+                      }
 
-                      if( ! api(setId)._dirty )
-                        return;
-                      //Update the skope dirties with the new val of this setId
-                      self.updateSkopeDirties( setId, new_val );
+                      //set the control dirtyness
+                      if ( _.has( api.control(setId), 'czr_isDirty' ) ) {
+                          api.control(setId).czr_isDirty( api(setId)._dirty );
+                          // console.log('DIRTYNESS :', api(setId)._dirty, api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId ) );
+                          // console.log( 'CURRENT SKOPE DIRTY VALUES : ', api.czr_activeSkope(), api.czr_skope( api.czr_activeSkope() ).dirtyValues() );
+                      }
                 });
           });
     },
@@ -301,15 +301,44 @@ $.extend( CZRSkopeBaseMths, {
 
 
 
+
+    /*****************************************************************************
+    * SETUP CONTROL RESET ON SECTION EXPANSION + SKOPE SWITCH
+    *****************************************************************************/
+    //fired on section expansion + skope switch
+    setupControlsReset : function( section_id ) {
+          section_id = section_id || api.czr_activeSectionId();
+
+          var self = this,
+              _section_controls = self._getSectionControlIds( section_id  );
+
+          //filter only eligible setIds
+          _section_controls = _.filter( _section_controls, function( setId ) {
+              return self.isSettingEligible( setId );
+          });
+          self.renderControlsSingleReset( _section_controls );
+          //add observable Value(s) to the section control
+          self.setupControlsValues( _section_controls );
+    },
+
     //fired on
     //1) active section expansion
     //2) and on skope switch
     //render each control reset icons with a delay
     //=> because some control like media upload are re-rendered on section expansion
-    renderControlSingleReset : function( section_id ) {
+    //@params controls = array of skope eligible control ids
+    renderControlsSingleReset : function( controls ) {
+          var self = this;
+          //create the control ids list if not set
+          if ( _.isUndefined( controls ) || _.isEmpty( controls ) ) {
+                controls = self._getSectionControlIds( api.czr_activeSectionId() );
+                //filter only eligible setIds
+                controls = _.filter( controls, function( setId ) {
+                    return self.isSettingEligible( setId );
+                });
+          }
 
-          var self = this,
-              setIds = [],
+          var setIds = _.isArray(controls) ? controls : [controls],
               render_reset_icons = function( setIds ) {
                     _.each( setIds, function( _id ) {
                           if( $('.czr-setting-reset', api.control( _id ).container ).length )
@@ -325,30 +354,56 @@ $.extend( CZRSkopeBaseMths, {
                     });//_each
               };
 
-          section_id = section_id || api.czr_activeSectionId();
-          if ( _.isUndefined( section_id ) )
-            return;
-
-          //build the setId array for which an icon is rendered
-          _.each( self._getSectionControlIds( section_id ), function( setId ){
-                if ( ! self.isSettingEligible( setId ) )
-                  return;
-                setIds.push(setId);
-          });
-
           //debounce because some control like media upload are re-rendered on section expansion
           render_reset_icons = _.debounce( render_reset_icons , 500 );
           render_reset_icons(setIds);
     },
 
 
+    //@params controls = array of skope eligible control ids
+    setupControlsValues : function( controls ) {
+          var self = this;
+          _.each( controls, function( setId ) {
+                if ( ! api.has( setId ) )
+                  return;
+
+                var ctrl = api.control( setId ),
+                    shortSetId = api.CZR_Helpers.getOptionName( setId );
+
+                if ( ! _.has( ctrl, 'czr_hasDBVal' ) && ! _.has( ctrl, 'czr_isDirty' ) ) {
+                      ctrl.czr_hasDBVal = new api.Value(false);
+                      ctrl.czr_isDirty = new api.Value(false);
+
+                      //init observ. values + react to changes
+                      ctrl.czr_hasDBVal.bind( function( has_db_val ) {
+                            ctrl.container.toggleClass( 'has-db-val', has_db_val );
+                      });
+                      ctrl.czr_isDirty.bind( function( is_dirty ) {
+                            ctrl.container.toggleClass( 'is-dirty', is_dirty );
+                      });
+                }
+
+                //set
+                ctrl.czr_hasDBVal(
+                      api.czr_skope( api.czr_activeSkope() ).hasSkopeSettingDBValues( setId )
+                );
+                //set
+                ctrl.czr_isDirty( api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId ) );
+          });
+
+    },
+
+
+
+
     //cb of api.czr_globalDBoptions.callbacks
-    //update the _wpCustomizeSettings.settings if they have been updated by a global skope single or entire reset
+    //update the _wpCustomizeSettings.settings if they have been updated by a reset of global skope, or a control reset of global skope
     //When an option is resetted on the global skope, we need to set it to default in _wpCustomizeSettings.settings
     globalDBoptionsReact : function( to, from ) {
           var self = this,
               resetted_opts = _.difference( from, to );
 
+          console.log('in GLOBAL DB OPTION REACT', from, to, resetted_opts );
           if ( _.isEmpty(resetted_opts) )
             return;
 
