@@ -190,6 +190,17 @@ $.extend( CZRSkopeBaseMths, {
                 sec_ctrl.push( _ctrl.id );
           });
           return sec_ctrl;
+    },
+
+    //@return boolean
+    //used after a skope reset or a control reset to update the api save state if needed
+    isAPIDirty : function() {
+          var isDirty = false;
+          _.each( api.czr_currentSkopesCollection(), function( skp ){
+                if ( ! isDirty && api.czr_skope( skp.id ).dirtyness() )
+                  isDirty = true;
+          });
+          return isDirty;
     }
 
     //@return the customized value of a setId in a given skop

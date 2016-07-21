@@ -75,112 +75,6 @@ $.extend( CZRSkopeBaseMths, {
 
 
 
-
-    //cb of api.czr_currentSkopesCollection.callbacks
-    //fired in initialize
-    currentSkopesCollectionReact : function(to, from) {
-          var self = this,
-              _new_collection = $.extend( true, [], to ) || [],
-              _old_collection = $.extend( true, [], from ) || [];
-
-          //what are the skope to instantiate ?
-          //=>on init, instantiate them all
-          //=>on refresh, instantiate the new ones and remove the non relevant
-          var _to_instantiate = [];
-          var _to_remove = [];
-          var _to_update = [];
-
-          //TO INSTANTIATE
-          _.each( _new_collection, function( _sent_skope ) {
-              if ( ! api.czr_skope.has( _sent_skope.id  ) )
-                _to_instantiate.push( _sent_skope );
-          });
-
-          //Instantiate the new skopes
-          console.log('SKOPES TO INSTANTIATE?', _to_instantiate );
-          _.each( _to_instantiate, function( _skope ) {
-              _skope = $.extend( true, {}, _skope );
-              //use a cloned skop to instantiate : @todo : do we still need that ?
-              api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
-
-              //fire this right after instantiation for the views (we need the model instances in the views)
-              if ( ! api.czr_skope.has( _skope.id ) ) {
-                  throw new Error( 'Skope id : ' + _skope.id + ' has not been instantiated.');
-              }
-              api.czr_skope( _skope.id ).ready();
-          });
-
-          //if the current acive skope has been removed from the current skopes collection
-          //=> set relevant scope as active. Falls back on 'global'
-          if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkope() } ) ) )
-            api.czr_activeSkope( self.getActiveSkope( _new_collection ) );
-
-          //SET THE CONTEXTUALLY ACTIVE SKOPES VISIBILITY
-          //Which skopes are visible ?
-          //=> the ones sent by the preview
-          api.czr_skope.each( function( _skp_instance ){
-              if ( _.isUndefined( _.findWhere( _new_collection, { id : _skp_instance().id } ) ) )
-                _skp_instance.visible(false);
-              else
-                _skp_instance.visible(true);
-          } );
-
-
-          //MAKE SURE TO SYNCHRONIZE api.settings.settings with the current global skope updated db values
-          self.maybeSynchronizeGlobalSkope();
-
-          //special treatment for 'global' skope
-          //=> since we only store the db val modified in the current customization session
-          //=> let's merge the current skope db val with the new ones if any
-          // var _sent_global_skope_model = _.findWhere( _new_collection, { skope : 'global' } ),
-          //     _new_global_skope_model = $.extend( true, {}, api.czr_skope( _sent_global_skope_model.id )() ),
-          //     _current_global_skope_db_values = api.czr_skope( _sent_global_skope_model.id )().db;
-
-          // //$.extend( _current_global_skope_db_values, _sent_global_skope_model.db );
-          // console.log('GLOBAL SKOPE MODEL ?', api.czr_skope( _sent_global_skope_model.id )(), _new_global_skope_model );
-          //api.czr_skope( _sent_global_skope_model.id )( _new_global_skope_model );
-          //make sure that the api.settings.settings is always synchronized with the global skope db values
-
-          // _to_update = _.filter( _new_collection, function( _skope ) {
-          //     if ( api.czr_skope.has(_skope.id) ) {
-          //         return ! _.isEqual( api.czr_skope( _skope.id)(), _skope );
-          //     }
-          //     return false;
-          // });
-
-          //Update the skope models
-          // _.each( _to_update, function( _skope ) {
-
-          //     if ( 'global' == _skope.skope  ) {
-          //         _new_model.db = self.getChangedGlobalDBSettingValues( _skope.db );
-          //     }
-          //     var _new_model = $.extend( api.czr_skope( _skope.id )(), _skope );//
-
-          //     // if ( 'global' == _skope.skope  ) {
-          //     //     _new_model.db = self.getChangedGlobalDBSettingValues( _skope.db );
-          //     // }
-          //     api.czr_skope( _skope.id )( _new_model );
-          // });
-
-
-    },//listenToSkopeCollection()
-
-
-    maybeSynchronizeGlobalSkope : function() {
-          var self = this;
-          if ( self.isGlobalSkopeRegistered() ) {
-                var _global_skp_db_values = api.czr_skope( self.getGlobalSkopeId() )().db;
-                _.each( _global_skp_db_values, function( _val, shortSetId ){
-                      var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
-                      if ( ! _.isEqual( api.settings.settings[wpSetId].value, _val ) ) {
-                          console.log('SYNCHRONIZE GLOBAL SKOPE WITH API');
-                          api.settings.settings[wpSetId].value = _val;
-                      }
-                });
-          }
-    },
-
-
     prepareSkopeForAPI : function( skope_candidate ) {
           if ( ! _.isObject( skope_candidate ) ) {
               throw new Error('prepareSkopeForAPI : a skope must be an object to be API ready');
@@ -267,6 +161,77 @@ $.extend( CZRSkopeBaseMths, {
           return api_ready_skope;
     },
 
+
+    //cb of api.czr_currentSkopesCollection.callbacks
+    //fired in initialize
+    currentSkopesCollectionReact : function(to, from) {
+          var self = this,
+              _new_collection = $.extend( true, [], to ) || [],
+              _old_collection = $.extend( true, [], from ) || [];
+
+          //what are the skope to instantiate ?
+          //=>on init, instantiate them all
+          //=>on refresh, instantiate the new ones and remove the non relevant
+          var _to_instantiate = [];
+          var _to_remove = [];
+          var _to_update = [];
+
+          //TO INSTANTIATE
+          _.each( _new_collection, function( _sent_skope ) {
+              if ( ! api.czr_skope.has( _sent_skope.id  ) )
+                _to_instantiate.push( _sent_skope );
+          });
+
+          //Instantiate the new skopes
+          console.log('SKOPES TO INSTANTIATE?', _to_instantiate );
+          _.each( _to_instantiate, function( _skope ) {
+              _skope = $.extend( true, {}, _skope );
+              //use a cloned skop to instantiate : @todo : do we still need that ?
+              api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
+
+              //fire this right after instantiation for the views (we need the model instances in the views)
+              if ( ! api.czr_skope.has( _skope.id ) ) {
+                  throw new Error( 'Skope id : ' + _skope.id + ' has not been instantiated.');
+              }
+              api.czr_skope( _skope.id ).ready();
+          });
+
+          //if the current acive skope has been removed from the current skopes collection
+          //=> set relevant scope as active. Falls back on 'global'
+          if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkope() } ) ) )
+            api.czr_activeSkope( self.getActiveSkope( _new_collection ) );
+
+          //SET THE CONTEXTUALLY ACTIVE SKOPES VISIBILITY
+          //Which skopes are visible ?
+          //=> the ones sent by the preview
+          api.czr_skope.each( function( _skp_instance ){
+              if ( _.isUndefined( _.findWhere( _new_collection, { id : _skp_instance().id } ) ) )
+                _skp_instance.visible(false);
+              else
+                _skp_instance.visible(true);
+          } );
+
+
+          //MAKE SURE TO SYNCHRONIZE api.settings.settings with the current global skope updated db values
+          self.maybeSynchronizeGlobalSkope();
+
+    },//listenToSkopeCollection()
+
+
+    //fired in updateSkopeCollection
+    maybeSynchronizeGlobalSkope : function() {
+          var self = this;
+          if ( self.isGlobalSkopeRegistered() ) {
+                var _global_skp_db_values = api.czr_skope( self.getGlobalSkopeId() )().db;
+                _.each( _global_skp_db_values, function( _val, shortSetId ){
+                      var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
+                      if ( ! _.isEqual( api.settings.settings[wpSetId].value, _val ) ) {
+                          console.log('SYNCHRONIZE GLOBAL SKOPE WITH API');
+                          api.settings.settings[wpSetId].value = _val;
+                      }
+                });
+          }
+    },
 
     //fired in updateSkopeCollection
     updateSavedSkopesDbValues : function( _saved_dirties ) {

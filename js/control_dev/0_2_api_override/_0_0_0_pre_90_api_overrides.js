@@ -13,37 +13,37 @@
         _old_initialize.call( this, params, options );
         //observe widget settings changes
         this.bind('houston-widget-settings', function(data) {
-            //get the difference
-            var _candidates = _.filter( data.registeredSidebars, function( sb ) {
-              return ! _.findWhere( _wpCustomizeWidgetsSettings.registeredSidebars, { id: sb.id } );
-            });
+              //get the difference
+              var _candidates = _.filter( data.registeredSidebars, function( sb ) {
+                return ! _.findWhere( _wpCustomizeWidgetsSettings.registeredSidebars, { id: sb.id } );
+              });
 
-            var _inactives = _.filter( data.registeredSidebars, function( sb ) {
-              return ! _.has( data.renderedSidebars, sb.id );
-            });
+              var _inactives = _.filter( data.registeredSidebars, function( sb ) {
+                return ! _.has( data.renderedSidebars, sb.id );
+              });
 
-            _inactives = _.map( _inactives, function(obj) {
-              return obj.id;
-            });
+              _inactives = _.map( _inactives, function(obj) {
+                return obj.id;
+              });
 
-            var _registered = _.map( data.registeredSidebars, function(obj) {
-              return obj.id;
-            });
+              var _registered = _.map( data.registeredSidebars, function(obj) {
+                return obj.id;
+              });
 
-            api.sidebar_insights('actives').set( data.renderedSidebars );
-            api.sidebar_insights('inactives').set( _inactives );
-            api.sidebar_insights('registered').set( _registered );
-            api.sidebar_insights('candidates').set( _candidates );
-            api.sidebar_insights('available_locations').set( data.availableWidgetLocations );//built server side
+              api.sidebar_insights('actives').set( data.renderedSidebars );
+              api.sidebar_insights('inactives').set( _inactives );
+              api.sidebar_insights('registered').set( _registered );
+              api.sidebar_insights('candidates').set( _candidates );
+              api.sidebar_insights('available_locations').set( data.availableWidgetLocations );//built server side
         });
 
 
         this.bind( 'czr-wp-conditional-ready', function(data ) {
-          api.czr_wp_conditionals.set( data );
+              api.czr_wp_conditionals.set( data );
         });
 
         this.bind( 'czr-partial-refresh', function(data) {
-          api.czr_partials.set(data);
+              api.czr_partials.set(data);
         });
 
         //the sent data look like :
@@ -52,15 +52,15 @@
         //  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || []
         // }
         this.bind( 'czr-skopes-ready', function( data ) {
-            console.log('czr-skopes-ready DATA', data );
-            var preview = this;
-            //initialize skopes with the server sent data
-            if ( _.has(data, 'czr_skopes') )
-                api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
-            //store the db options name saved for the global skope
-            //for the 'global' skope, we only send the option name instead of sending the heavy and performance expensive entire set of option
-            if ( _.has(data, 'skopeGlobalDBOpt') )
-                api.czr_globalDBoptions( data.skopeGlobalDBOpt );
+              console.log('czr-skopes-ready DATA', data );
+              var preview = this;
+              //initialize skopes with the server sent data
+              if ( _.has(data, 'czr_skopes') )
+                  api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
+              //store the db options name saved for the global skope
+              //for the 'global' skope, we only send the option name instead of sending the heavy and performance expensive entire set of option
+              if ( _.has(data, 'skopeGlobalDBOpt') )
+                  api.czr_globalDBoptions( data.skopeGlobalDBOpt );
         });
   };//api.PreviewFrame.prototype.initialize
 
@@ -174,27 +174,17 @@
             //otherwise, get the dirties from the requested skope instance : typically a save action on several skopes
             if ( api.czr_activeSkope() == skope_id ) {
                   api.each( function ( value, setId ) {
-                        // if ( api.czr_skopeBase.isSettingEligible( setId ) ) {
-                        //       var _dirty_candidate = api.czr_skopeBase.getSkopeDirtyVal( setId );
-                        //       if ( '_no_dirty_val_' != _dirty_candidate )
-                        //           dirtyCustomized[ setId ] = _dirty_candidate;
-                        // } else {
-                        //       if ( value._dirty ) {
-                        //         dirtyCustomized[ setId ] = value();
-                        //       }
-                        // }
                         if ( value._dirty ) {
                           dirtyCustomized[ setId ] = value();
                         }
                   } );
             } else {
-                  console.log('JOIE ???????????????????????????????????????????????????? JOIE??????????????? ');
                   dirtyCustomized = api.czr_skope( skope_id ).dirtyValues();
             }
 
             //when previewing, we need to apply the skope inheritance to the customized values
             if ( 'save' != action && 'reset' != action ) {
-              dirtyCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( dirtyCustomized, skope_id );
+                dirtyCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( dirtyCustomized, skope_id );
             }
 
             //the previewer is now scope aware
@@ -222,73 +212,80 @@
         /*****************************************************************************
         * RESET
         *****************************************************************************/
-        api.previewer.czr_reset = function( skope_id  ) {
-            var self = this,
-                processing = api.state( 'processing' ),
-                submitWhenDoneProcessing,
-                submit_reset,
-                request,
-                query;
+        api.previewer.czr_reset = function( skope_id, setId ) {
+              var self = this,
+                  processing = api.state( 'processing' ),
+                  submitWhenDoneProcessing,
+                  submit_reset,
+                  request,
+                  query;
 
-            $( document.body ).addClass( 'czr-skope-resetting' );
+              $( document.body ).addClass( 'czr-skope-resetting' );
 
-             //skope dependant submit()
-            submit_reset = function( skope_id ) {
-                if ( _.isUndefined( skope_id ) )
-                  return;
+               //skope dependant submit()
+              submit_reset = function( skope_id, setId ) {
+                    if ( _.isUndefined( skope_id ) )
+                      return;
 
-                //the query takes the skope_id has parameter
-                query = $.extend( self.query( skope_id, 'reset' ), {
-                    nonce:  self.nonce.save
-                } );
+                    //the query takes the skope_id has parameter
+                    query = $.extend( self.query( skope_id, 'reset' ), {
+                        nonce:  self.nonce.save
+                    } );
 
-                console.log('in czr_reset submit : ', skope_id, query );
-
-                request = wp.ajax.post( 'czr_skope_reset', query );
-
-                request.fail( function ( response ) {
-                    console.log('ALORS FAIL ?', skope_id, response );
-                    if ( '0' === response ) {
-                        response = 'not_logged_in';
-                    } else if ( '-1' === response ) {
-                      // Back-compat in case any other check_ajax_referer() call is dying
-                        response = 'invalid_nonce';
+                    if ( ! _.isUndefined( setId ) && api.has(setId) ) {
+                        $.extend( query , { set_id : setId } );
+                        request = wp.ajax.post( 'czr_setting_reset', query );
+                    } else {
+                        request = wp.ajax.post( 'czr_skope_reset', query );
                     }
 
-                    if ( 'invalid_nonce' === response ) {
-                        self.cheatin();
-                    } else if ( 'not_logged_in' === response ) {
-                        self.preview.iframe.hide();
-                        self.login().done( function() {
-                          self.save();
-                          self.preview.iframe.show();
-                      } );
-                    }
-                    api.trigger( 'error', response );
-                } );
+                    console.log('in czr_reset submit : ', skope_id, query );
 
-                request.done( function( response ) {
-                    console.log('ALORS DONE ?', skope_id, response );
-                    // // Clear setting dirty states
-                    // api.each( function ( value ) {
-                    //   value._dirty = false;
-                    // } );
-                    // api.previewer.send( 'saved', response );
-                    // api.trigger( 'saved', response );
 
-                } );
+
+                    request.fail( function ( response ) {
+                          console.log('ALORS FAIL ?', skope_id, response );
+                          if ( '0' === response ) {
+                              response = 'not_logged_in';
+                          } else if ( '-1' === response ) {
+                            // Back-compat in case any other check_ajax_referer() call is dying
+                              response = 'invalid_nonce';
+                          }
+
+                          if ( 'invalid_nonce' === response ) {
+                              self.cheatin();
+                          } else if ( 'not_logged_in' === response ) {
+                              self.preview.iframe.hide();
+                              self.login().done( function() {
+                                self.save();
+                                self.preview.iframe.show();
+                            } );
+                          }
+                          api.trigger( 'error', response );
+                    } );
+
+                    request.done( function( response ) {
+                          console.log('ALORS DONE ?', skope_id, response );
+                          // // Clear setting dirty states
+                          // api.each( function ( value ) {
+                          //   value._dirty = false;
+                          // } );
+                          // api.previewer.send( 'saved', response );
+                          // api.trigger( 'saved', response );
+
+                    } );
               };//submit_reset()
 
               if ( 0 === processing() ) {
-                submit_reset( skope_id );
+                    submit_reset( skope_id, setId );
               } else {
-                submitWhenDoneProcessing = function () {
-                  if ( 0 === processing() ) {
-                    api.state.unbind( 'change', submitWhenDoneProcessing );
-                    submit_reset( skope_id );
-                  }
-                };
-                api.state.bind( 'change', submitWhenDoneProcessing );
+                    submitWhenDoneProcessing = function () {
+                      if ( 0 === processing() ) {
+                        api.state.unbind( 'change', submitWhenDoneProcessing );
+                        submit_reset( skope_id, setId );
+                      }
+                    };
+                    api.state.bind( 'change', submitWhenDoneProcessing );
               }
 
               return request;
