@@ -208,7 +208,7 @@ $.extend( CZRSkopeBaseMths, {
 
           //LISTEN TO EACH API SETTING CHANGES
           //=>POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
-          this.updateActiveSkopeDirties();
+          this.listenAPISettings();
 
           //LISTEN TO SKOPE SAVE EVENT
           //refresh the preview when all skopes are saved, to send the db saved values and compare
@@ -222,9 +222,13 @@ $.extend( CZRSkopeBaseMths, {
           self.bind( 'skopes-saved', function( _saved_dirties ) {
                 api.previewer.refresh();
                 //clean the dirtyness state of each control
+
                 //set the db state of each control
-                _.each( _saved_dirties, function(_skp){
-                      _.each( _skp, function( _v, setId ) {
+                //=> make sure this is set for the active skope only
+                _.each( _saved_dirties, function( _skp_dirties, _skp_id ){
+                      if ( _skp_id != api.czr_activeSkope() )
+                        return;
+                      _.each( _skp_dirties, function( _v, setId ) {
                           if ( _.has(api.control(setId), 'czr_isDirty') )
                             api.control(setId).czr_isDirty(false);
                           if ( _.has(api.control(setId), 'czr_hasDBVal') )
@@ -255,8 +259,9 @@ $.extend( CZRSkopeBaseMths, {
     *****************************************************************************/
     //fired in initialize
     //Listen to each api settings changes
-    //and update the current skope dirties with the user val
-    updateActiveSkopeDirties : function() {
+    //1) update the current skope dirties with the user val
+    //2) Refresh the controls reset state
+    listenAPISettings : function() {
           var self = this;
           //parse the current eligible skope settings and write a setting val object
           api.each( function ( value, setId ) {
@@ -269,6 +274,9 @@ $.extend( CZRSkopeBaseMths, {
                           //Update the skope dirties with the new val of this setId
                           self.updateSkopeDirties( setId, new_val );
                       }
+                      //Refresh control single reset + observable values
+                      //=> needed for some controls like image upload and module controls
+                      self.setupControlsReset( setId );
 
                       //set the control dirtyness
                       if ( _.has( api.control(setId), 'czr_isDirty' ) ) {
@@ -320,7 +328,8 @@ $.extend( CZRSkopeBaseMths, {
           //reset each resetted setting to its default val
           _.each( resetted_opts, function( shortSetId ) {
                 var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
-                api.settings.settings[wpSetId].value = serverControlParams.defaultOptionsValues[shortSetId];
+                if ( _.has( api.settings.settings, wpSetId) )
+                  api.settings.settings[wpSetId].value = serverControlParams.defaultOptionsValues[shortSetId];
                 self.silentlyUpdateSettings( [], false );//silently update with no refresh
           });
     }

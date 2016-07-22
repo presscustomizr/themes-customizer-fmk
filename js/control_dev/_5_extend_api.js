@@ -1,6 +1,6 @@
 
 (function (api, $, _) {
-  //Extends all constructores with the events manager
+  //Extends all constructors with the events manager
   $.extend( CZRBaseControlMths, api.Events );
   $.extend( CZRModuleMths, api.Events );
   $.extend( CZRItemMths, api.Events );
@@ -68,6 +68,7 @@
         //czr_background : api.CZRBackgroundControl,
         //czr_sektions   : api.CZRSektionsControl
   });
+
 
 
   //provides a meta description of each module
