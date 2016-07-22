@@ -145,9 +145,11 @@ $.extend( CZRSkopeBaseMths, {
           var parent_skope_id = self._getParentSkopeId( skope_model ),
               parent_dirties = api.czr_skope( parent_skope_id ).dirtyValues();
 
+          //use the parent dirty value if the current skope setId is not dirty and has no db val
           _.each( parent_dirties, function( _val, wpSetId ){
-              if ( _.isUndefined(dirtyCustomized[wpSetId] ) )
-                dirtyCustomized[wpSetId] = _val;
+                var shortSetId = api.CZR_Helpers.getOptionName( wpSetId );
+                if ( _.isUndefined( dirtyCustomized[wpSetId] ) && _.isUndefined( skope_model.db[shortSetId] ) )
+                    dirtyCustomized[wpSetId] = _val;
           });
           return 'global' == api.czr_skope( parent_skope_id )().skope ? dirtyCustomized : self.applyDirtyCustomizedInheritance( dirtyCustomized, parent_skope_id );
     },

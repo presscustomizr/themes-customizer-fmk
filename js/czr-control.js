@@ -59,7 +59,10 @@ $.extend( CZRSkopeBaseMths, {
                 self.setupControlsReset();
           } );
           api.czr_currentSkopesCollection.callbacks.add( function() { return self.currentSkopesCollectionReact.apply(self, arguments ); } );
-          this.listenAPISettings();
+          self.listenAPISettings();
+          api.state('saved').bind( function( saved ) {
+              $('body').toggleClass('czr-api-dirty', ! saved );
+          });
           self.bind( 'skopes-saved', function( _saved_dirties ) {
                 api.previewer.refresh();
                 _.each( _saved_dirties, function( _skp_dirties, _skp_id ){
@@ -77,8 +80,8 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
     },
     embedSkopeWrapper : function() {
-        var self = this;
-        $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher'}) );
+          var self = this;
+          $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher'}) );
     },
     listenAPISettings : function() {
           var self = this;
@@ -90,6 +93,7 @@ $.extend( CZRSkopeBaseMths, {
                       if ( api(setId)._dirty ) {
                           self.updateSkopeDirties( setId, new_val );
                       }
+                      self.setupControlsReset = _.debounce( self.setupControlsReset, 200 );
                       self.setupControlsReset( setId );
                       if ( _.has( api.control(setId), 'czr_isDirty' ) ) {
                           api.control(setId).czr_isDirty( api(setId)._dirty );
@@ -191,6 +195,18 @@ $.extend( CZRSkopeBaseMths, {
           _.each( serverControlParams.defaultSkopeModel , function( _value, _key ) {
                 var _candidate_val = skope_candidate[_key];
                 switch( _key ) {
+                      case 'title' :
+                          if ( ! _.isString( _candidate_val ) ) {
+                              throw new Error('prepareSkopeForAPI : a skope title property must a string');
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
+                      case 'long_title' :
+                          if ( ! _.isString( _candidate_val ) ) {
+                              throw new Error('prepareSkopeForAPI : a skope title property must a string');
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
                       case 'skope' :
                           if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
                               throw new Error('prepareSkopeForAPI : a skope "skope" property must a string not empty');
@@ -259,7 +275,10 @@ $.extend( CZRSkopeBaseMths, {
           if ( ! _.isString( api_ready_skope.id ) || _.isEmpty( api_ready_skope.id ) ) {
               throw new Error('prepareSkopeForAPI : a skope id must a string not empty');
           }
-
+          if ( ! _.isString( api_ready_skope.title ) || _.isEmpty( api_ready_skope.title ) ) {
+              api_ready_skope.title = id;
+              api_ready_skope.long_title = id;
+          }
           return api_ready_skope;
     },
     currentSkopesCollectionReact : function(to, from) {
@@ -327,6 +346,7 @@ $.extend( CZRSkopeBaseMths, {
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 $.extend( CZRSkopeBaseMths, {
     activeSkopeReact : function( to, from ) {
+          console.log('in active skope react');
           var self = this;
           if ( ! _.isUndefined(from) && api.czr_skope.has(from) )
             api.czr_skope(from).active(false);
@@ -337,6 +357,7 @@ $.extend( CZRSkopeBaseMths, {
             api.czr_skope(to).active(true);
           else
             throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
+          self.writeCurrentSkopeTitle( to );
           if ( _.isUndefined( api.czr_activeSectionId() ) )
             return;
           var silent_update_candidates = self._getSilentUpdateCandidates();
@@ -354,6 +375,22 @@ $.extend( CZRSkopeBaseMths, {
           }
           self.silentlyUpdateSettings( silent_update_candidates );
           self.setupControlsReset();
+    },
+
+
+
+    writeCurrentSkopeTitle : function( skope_id ) {
+          var self = this,
+              current_title = api.czr_skope( skope_id|| api.czr_activeSkope() ).long_title;
+
+          self.skopeWrapperEmbedded.then( function() {
+                if ( ! $('.czr-scope-switcher').find('.czr-current-skope-title').length )
+                  $('.czr-scope-switcher').prepend( $( '<h2/>', { class : 'czr-current-skope-title'} ) );
+                $('.czr-scope-switcher').find('.czr-current-skope-title').html(
+                    '<strong>Current Options Scope : </strong></br>' + '<span class="czr-skope-title">' + current_title + '</span>'
+                );
+          });
+
     },
     _getSilentUpdateCandidates : function( section_id ) {
           var self = this,
@@ -467,8 +504,10 @@ $.extend( CZRSkopeBaseMths, {
                     _promise = wp.media.attachment( val ).fetch();
               break;
 
+
+              case 'czr_multi_module' :
               case 'czr_module' :
-                    _constructor = api.controlConstructor.czr_module;
+                    _constructor = api.controlConstructor[control_type];
                     api.control( wpSetId ).container.remove();
                     api.control.remove( wpSetId );
                     api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
@@ -491,8 +530,10 @@ $.extend( CZRSkopeBaseMths, {
           controls = _.filter( controls, function( setId ) {
               return self.isSettingEligible( setId );
           });
+
           if ( _.isEmpty(controls) )
             return;
+
           $.when( self.renderControlsSingleReset( controls ) ).done( function() {
                 self.setupControlsValues( controls );
           });
@@ -509,16 +550,23 @@ $.extend( CZRSkopeBaseMths, {
 
           var setIds = _.isArray(controls) ? controls : [controls],
               render_reset_icons = function( setIds ) {
+                    console.log('IN RENDER RESET ICONS', setIds );
                     _.each( setIds, function( _id ) {
-                          if( $('.czr-setting-reset', api.control( _id ).container ).length )
+                          var ctrl = api.control( _id );
+
+                          if( $('.czr-setting-reset', ctrl.container ).length )
                             return;
-                          api.control( _id ).deferred.embedded.then( function() {
-                              api.control( _id ).container
-                                  .find('.customize-control-title')
-                                  .prepend( $( '<span/>', {
-                                    class : 'czr-setting-reset fa fa-refresh',
-                                    title : 'Reset'
-                                  }));
+
+                          ctrl.deferred.embedded.then( function() {
+                                $.when( ctrl.container
+                                    .find('.customize-control-title')
+                                    .prepend( $( '<span/>', {
+                                      class : 'czr-setting-reset fa fa-refresh',
+                                      title : 'Reset'
+                                    }))).done( function(){
+                                  $('.czr-setting-reset', ctrl.container).fadeIn(400);
+                                });
+
                           });//then()
                     });//_each
               };
@@ -544,6 +592,8 @@ $.extend( CZRSkopeBaseMths, {
                             ctrl.container.toggleClass( 'is-dirty', is_dirty );
                       });
                 }
+
+                console.log( 'SETUP CONTROL VALUES ?', setId, ctrl.czr_hasDBVal(), api.czr_skope( api.czr_activeSkope() ).hasSkopeSettingDBValues( setId ) );
                 ctrl.czr_hasDBVal(
                       api.czr_skope( api.czr_activeSkope() ).hasSkopeSettingDBValues( setId )
                 );
@@ -821,10 +871,10 @@ $.extend( CZRSkopeBaseMths, {
 
           var parent_skope_id = self._getParentSkopeId( skope_model ),
               parent_dirties = api.czr_skope( parent_skope_id ).dirtyValues();
-
           _.each( parent_dirties, function( _val, wpSetId ){
-              if ( _.isUndefined(dirtyCustomized[wpSetId] ) )
-                dirtyCustomized[wpSetId] = _val;
+                var shortSetId = api.CZR_Helpers.getOptionName( wpSetId );
+                if ( _.isUndefined( dirtyCustomized[wpSetId] ) && _.isUndefined( skope_model.db[shortSetId] ) )
+                    dirtyCustomized[wpSetId] = _val;
           });
           return 'global' == api.czr_skope( parent_skope_id )().skope ? dirtyCustomized : self.applyDirtyCustomizedInheritance( dirtyCustomized, parent_skope_id );
     },
@@ -1165,7 +1215,6 @@ $.extend( CZRSkopeMths, {
                       }, 300 );
                 });
           }
-
     },
     _resetSkopeDirties : function() {
           var skope = this;
@@ -1338,7 +1387,7 @@ $.extend( CZRSkopeMths, {
                   request,
                   query;
 
-              $( document.body ).addClass( 'czr-skope-resetting' );
+              $( document.body ).addClass( 'czr-resetting' );
               submit_reset = function( skope_id, setId ) {
                     if ( _.isUndefined( skope_id ) )
                       return;
@@ -1381,6 +1430,11 @@ $.extend( CZRSkopeMths, {
                           console.log('ALORS DONE ?', skope_id, response );
 
                     } );
+
+                    request.always( function () {
+                        $( document.body ).removeClass( 'czr-resetting' );
+                    } );
+
               };//submit_reset()
 
               if ( 0 === processing() ) {
@@ -3281,11 +3335,18 @@ $.extend( CZRSektionMths, {
           module.czr_columnCollection.set([]);
           module.czr_columnCollection.callbacks.add( function() { return module.columnCollectionReact.apply(module, arguments ); } );
           module.itemConstructor = api.CZRItem.extend( module.CZRSektionItem || {} );
-          api.section( module.control.section() ).expanded.bind(function(to) {
+          var _fire = function() {
                 if ( 'resolved' == module.isReady.state() )
                   return;
                 module.ready();
                 module.control.getSyncCollectionControl().syncSektionModule.set( module );
+          };
+
+          if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId()  ) {
+              _fire();
+          }
+          api.section( module.control.section() ).expanded.bind(function(to) {
+              _fire();
           });
           if ( ! _.has( module ,'modsDragInstance' ) )
             module.initModulesDragula();
@@ -6051,6 +6112,8 @@ $.extend( CZRUploadMths, {
     this.setting.bind( this.removerVisibility );
     this.removerVisibility( this.setting.get() );
   },
+
+
   success: function( attachment ) {
     this.setting.set( attachment.get('id') );
   },

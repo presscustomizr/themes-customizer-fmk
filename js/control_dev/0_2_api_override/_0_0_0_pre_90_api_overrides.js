@@ -220,7 +220,7 @@
                   request,
                   query;
 
-              $( document.body ).addClass( 'czr-skope-resetting' );
+              $( document.body ).addClass( 'czr-resetting' );
 
                //skope dependant submit()
               submit_reset = function( skope_id, setId ) {
@@ -274,6 +274,11 @@
                           // api.trigger( 'saved', response );
 
                     } );
+
+                    request.always( function () {
+                        $( document.body ).removeClass( 'czr-resetting' );
+                    } );
+
               };//submit_reset()
 
               if ( 0 === processing() ) {

@@ -85,6 +85,18 @@ $.extend( CZRSkopeBaseMths, {
           _.each( serverControlParams.defaultSkopeModel , function( _value, _key ) {
                 var _candidate_val = skope_candidate[_key];
                 switch( _key ) {
+                      case 'title' :
+                          if ( ! _.isString( _candidate_val ) ) {
+                              throw new Error('prepareSkopeForAPI : a skope title property must a string');
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
+                      case 'long_title' :
+                          if ( ! _.isString( _candidate_val ) ) {
+                              throw new Error('prepareSkopeForAPI : a skope title property must a string');
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
                       case 'skope' :
                           if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
                               throw new Error('prepareSkopeForAPI : a skope "skope" property must a string not empty');
@@ -152,12 +164,15 @@ $.extend( CZRSkopeBaseMths, {
                 }//switch
           });
 
-          //Finally, generate the id
+          //Finally, generate the id and the title
           api_ready_skope.id = api_ready_skope.skope + '_' + api_ready_skope.level;
           if ( ! _.isString( api_ready_skope.id ) || _.isEmpty( api_ready_skope.id ) ) {
               throw new Error('prepareSkopeForAPI : a skope id must a string not empty');
           }
-
+          if ( ! _.isString( api_ready_skope.title ) || _.isEmpty( api_ready_skope.title ) ) {
+              api_ready_skope.title = id;
+              api_ready_skope.long_title = id;
+          }
           return api_ready_skope;
     },
 

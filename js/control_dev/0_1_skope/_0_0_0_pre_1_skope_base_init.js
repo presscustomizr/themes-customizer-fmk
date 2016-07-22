@@ -208,7 +208,14 @@ $.extend( CZRSkopeBaseMths, {
 
           //LISTEN TO EACH API SETTING CHANGES
           //=>POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
-          this.listenAPISettings();
+          self.listenAPISettings();
+
+          //LISTEN TO THE GLOBAL API SAVED STATE
+          //=> this value is set on control and skope reset
+          //+ set by wp
+          api.state('saved').bind( function( saved ) {
+              $('body').toggleClass('czr-api-dirty', ! saved );
+          });
 
           //LISTEN TO SKOPE SAVE EVENT
           //refresh the preview when all skopes are saved, to send the db saved values and compare
@@ -247,8 +254,8 @@ $.extend( CZRSkopeBaseMths, {
     //fired in initialize
     //=> embed the wrapper for all skope boxes
     embedSkopeWrapper : function() {
-        var self = this;
-        $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher'}) );
+          var self = this;
+          $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher'}) );
     },
 
 
@@ -274,8 +281,10 @@ $.extend( CZRSkopeBaseMths, {
                           //Update the skope dirties with the new val of this setId
                           self.updateSkopeDirties( setId, new_val );
                       }
+
                       //Refresh control single reset + observable values
                       //=> needed for some controls like image upload and module controls
+                      self.setupControlsReset = _.debounce( self.setupControlsReset, 200 );
                       self.setupControlsReset( setId );
 
                       //set the control dirtyness

@@ -7,6 +7,7 @@ $.extend( CZRSkopeBaseMths, {
     // => change the to and from skope active() state
     // => silently update each setting values with the skope set of vals
     activeSkopeReact : function( to, from ) {
+          console.log('in active skope react');
           var self = this;
           //set the to and from scope state on init and switch
           if ( ! _.isUndefined(from) && api.czr_skope.has(from) )
@@ -19,6 +20,10 @@ $.extend( CZRSkopeBaseMths, {
           else
             throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
 
+          //write the current skope title
+          self.writeCurrentSkopeTitle( to );
+
+          //CURRENT EXPANDED SECTION DEPENDANT ACTIONS
           //stop here if the active section is not set yet
           //=> the silent update will be fired on section expansion anyway
           if ( _.isUndefined( api.czr_activeSectionId() ) )
@@ -49,6 +54,20 @@ $.extend( CZRSkopeBaseMths, {
     },
 
 
+
+    writeCurrentSkopeTitle : function( skope_id ) {
+          var self = this,
+              current_title = api.czr_skope( skope_id|| api.czr_activeSkope() ).long_title;
+
+          self.skopeWrapperEmbedded.then( function() {
+                if ( ! $('.czr-scope-switcher').find('.czr-current-skope-title').length )
+                  $('.czr-scope-switcher').prepend( $( '<h2/>', { class : 'czr-current-skope-title'} ) );
+                $('.czr-scope-switcher').find('.czr-current-skope-title').html(
+                    '<strong>Current Options Scope : </strong></br>' + '<span class="czr-skope-title">' + current_title + '</span>'
+                );
+          });
+
+    },
 
 
 
@@ -216,8 +235,10 @@ $.extend( CZRSkopeBaseMths, {
                     _promise = wp.media.attachment( val ).fetch();
               break;
 
+
+              case 'czr_multi_module' :
               case 'czr_module' :
-                    _constructor = api.controlConstructor.czr_module;
+                    _constructor = api.controlConstructor[control_type];
                     //remove the container and its control
                     api.control( wpSetId ).container.remove();
                     api.control.remove( wpSetId );
@@ -226,6 +247,7 @@ $.extend( CZRSkopeBaseMths, {
                     //re-instantiate the control with the updated _control_data
                     api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
               break;
+
               // default :
               //       //Silent set
               //       api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );

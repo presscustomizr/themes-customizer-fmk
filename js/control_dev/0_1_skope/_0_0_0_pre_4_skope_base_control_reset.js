@@ -21,8 +21,10 @@ $.extend( CZRSkopeBaseMths, {
           controls = _.filter( controls, function( setId ) {
               return self.isSettingEligible( setId );
           });
+
           if ( _.isEmpty(controls) )
             return;
+
           $.when( self.renderControlsSingleReset( controls ) ).done( function() {
                 //add observable Value(s) to the section control
                 self.setupControlsValues( controls );
@@ -49,16 +51,33 @@ $.extend( CZRSkopeBaseMths, {
 
           var setIds = _.isArray(controls) ? controls : [controls],
               render_reset_icons = function( setIds ) {
+                    console.log('IN RENDER RESET ICONS', setIds );
                     _.each( setIds, function( _id ) {
-                          if( $('.czr-setting-reset', api.control( _id ).container ).length )
+                          var ctrl = api.control( _id );
+
+                          // if ( ! _.has( ctrl, 'czr_hasDBVal' ) || ! _.has( ctrl, 'czr_isDirty' ) || ! _.has( ctrl, 'czr_resetVisibility' ) ) {
+                          //       console.log('IN RENDER, TOGGLE CLASSES ?', _id );
+
+                          //       self.setupControlsValues( _id );
+                          // } else {
+                          //     // //toggle classes when needed
+                          //     ctrl.container.toggleClass( 'has-db-val', ctrl.czr_hasDBVal() );
+                          //     ctrl.container.toggleClass( 'is-dirty', ctrl.czr_isDirty() );
+                          // }
+
+                          if( $('.czr-setting-reset', ctrl.container ).length )
                             return;
-                          api.control( _id ).deferred.embedded.then( function() {
-                              api.control( _id ).container
-                                  .find('.customize-control-title')
-                                  .prepend( $( '<span/>', {
-                                    class : 'czr-setting-reset fa fa-refresh',
-                                    title : 'Reset'
-                                  }));
+
+                          ctrl.deferred.embedded.then( function() {
+                                $.when( ctrl.container
+                                    .find('.customize-control-title')
+                                    .prepend( $( '<span/>', {
+                                      class : 'czr-setting-reset fa fa-refresh',
+                                      title : 'Reset'
+                                    }))).done( function(){
+                                  $('.czr-setting-reset', ctrl.container).fadeIn(400);
+                                });
+
                           });//then()
                     });//_each
               };
@@ -91,6 +110,9 @@ $.extend( CZRSkopeBaseMths, {
                             ctrl.container.toggleClass( 'is-dirty', is_dirty );
                       });
                 }
+
+                console.log( 'SETUP CONTROL VALUES ?', setId, ctrl.czr_hasDBVal(), api.czr_skope( api.czr_activeSkope() ).hasSkopeSettingDBValues( setId ) );
+
                 //set
                 ctrl.czr_hasDBVal(
                       api.czr_skope( api.czr_activeSkope() ).hasSkopeSettingDBValues( setId )

@@ -49,6 +49,8 @@ $.extend( CZRUploadMths, {
     this.setting.bind( this.removerVisibility );
     this.removerVisibility( this.setting.get() );
   },
+
+
   success: function( attachment ) {
     this.setting.set( attachment.get('id') );
   },

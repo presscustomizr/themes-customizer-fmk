@@ -1,9 +1,31 @@
+/* WP SAVE BUTTON */
+.czr-api-dirty input#save {
+    background-color: #FFBD2E;
+    border-color: #d99400;
+    color: black;
+    text-shadow: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    -webkit-transition: background-color .2s ease-in-out;
+    -moz-transition: background-color .2s ease-in-out;
+    -ms-transition: background-color .2s ease-in-out;
+    -o-transition: background-color .2s ease-in-out;
+    transition: background-color .2s ease-in-out;
+}
+.czr-api-dirty input#save:hover {
+    background-color: #fcad06;
+}
+
+
 /* HEADER AND SCOPE SWITCHER */
 .wp-customizer .wp-full-overlay-sidebar .wp-full-overlay-header {
-  height: 85px;
+  height: 185px;
 }
 .wp-customizer .wp-full-overlay-sidebar .wp-full-overlay-sidebar-content {
-  top: 85px;
+  top: 185px;
+}
+.wp-customizer .in-sub-panel .wp-full-overlay-sidebar .wp-full-overlay-header {
+  padding: 0 15px;
 }
 .customize-controls-close {
   border-bottom: 1px solid #ddd;
@@ -13,9 +35,22 @@
 
 
 .czr-scope-switcher {
-  width: 100%;
+  width: 105%;
   float: right;
   position: relative;
+  right: -2%;
+}
+h2.czr-current-skope-title {
+  font-size: 14px;
+  line-height: 21px;
+  margin: 5px 0;
+  text-align: center;
+  min-height: 55px;
+  font-weight:normal;
+}
+span.czr-skope-title {
+    font-size: 13px;
+    font-style: italic;
 }
 .czr-scope-switcher .button {
   float: left;
@@ -38,9 +73,9 @@
 }
 .czr-scope {
     float: left;
-    width: 30%;
-    margin-left: 2%;
-    background: #fafafa;
+    width: 30.5%;
+    margin-left: 1.5%;
+    background: #fff;
     border: 1px solid #cccccc;
     -webkit-border-radius: 3px;
     border-radius: 3px;
@@ -52,16 +87,26 @@
     -o-transition: opacity .3s ease-in-out;
     transition: opacity .3s ease-in-out;
 }
-.czr-scope-header, .czr-scope-content, .czr-scope-footer {
+.czr-scope-header, .czr-scope-footer {
     width: 100%;
+    min-height: 16px;
+}
+.czr-scope-content {
+    height: 30px;
+    padding: 0 1%;
+    width: 98%;
+    line-height: 30px;
+    text-align: center;
     clear: both;
+    color: #000;
+    overflow: hidden;
 }
 .czr-scope-content h4 {
     margin: 0;
-    line-height: normal;
+    display: inline-block;
     text-align: center;
-    font-size: 12px;
-    line-height: 13px;
+    font-size: 11px;
+    line-height: 15px;
 }
 .czr-scope .fa {
     font-size: 10px;
@@ -78,7 +123,7 @@
   cursor: inherit;
 }
 .czr-scope-header .czr-scope-switch {
-    font-size: 15px;
+    font-size: 22px;
     padding: 0 2px 0 0;
 }
 
@@ -137,12 +182,20 @@
 
 
 /* SINGLE CONTROL RESET */
+.customize-control span.customize-control-title {
+  padding-left: 16px;
+  position: relative;
+}
 .czr-setting-reset {
   color: #eee;
-  padding-right: 5px;
-  -webkit-transition: color 0.5s;
-  transition: color 0.5s;
+  -webkit-transition: color 0.4s;
+  transition: color 0.4s;
+  position: absolute;
+  left: 0px;
+  line-height: 21px;
+  display: none;
 }
+
 .has-db-val .czr-setting-reset {
   color: #00a0d2;
 }

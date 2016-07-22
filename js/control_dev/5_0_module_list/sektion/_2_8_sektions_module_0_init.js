@@ -65,14 +65,20 @@ $.extend( CZRSektionMths, {
           module.itemConstructor = api.CZRItem.extend( module.CZRSektionItem || {} );
 
           //FIRE
-          api.section( module.control.section() ).expanded.bind(function(to) {
+          var _fire = function() {
                 if ( 'resolved' == module.isReady.state() )
                   return;
                 //unleash hell
                 module.ready();
-
                 //provide the synchronized module-collection control with its synchronized sektions module instance
                 module.control.getSyncCollectionControl().syncSektionModule.set( module );
+          };
+
+          if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId()  ) {
+              _fire();
+          }
+          api.section( module.control.section() ).expanded.bind(function(to) {
+              _fire();
           });
 
 

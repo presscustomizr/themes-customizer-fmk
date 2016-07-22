@@ -110,8 +110,8 @@ $.extend( CZRSkopeMths, {
                       }, 300 );
                 });
           }
-
     },
+
 
     //fired in doResetSkopeValues
     _resetSkopeDirties : function() {
