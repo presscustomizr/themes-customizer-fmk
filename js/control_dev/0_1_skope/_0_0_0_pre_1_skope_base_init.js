@@ -248,6 +248,9 @@ $.extend( CZRSkopeBaseMths, {
           //LISTEN TO GLOBAL DB OPTION CHANGES
           //When an option is resetted on the global skope, we need to set it to default in _wpCustomizeSettings.settings
           api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
+
+          //DECLARE THE LIST OF CONTROL TYPES FOR WHICH THE VIEW IS REFRESHED ON CHANGE
+          self.refreshedControls = [ 'czr_cropped_image'];// [ 'czr_cropped_image', 'czr_multi_module', 'czr_module' ];
     },
 
 
@@ -283,9 +286,11 @@ $.extend( CZRSkopeBaseMths, {
                       }
 
                       //Refresh control single reset + observable values
-                      //=> needed for some controls like image upload and module controls
-                      self.setupControlsReset = _.debounce( self.setupControlsReset, 200 );
-                      self.setupControlsReset( setId );
+                      //=> needed for some controls like image upload
+                      if ( api.control.has( setId ) && _.contains( self.refreshedControls, api.control( setId ).params.type ) ) {
+                            self.setupControlsReset = _.debounce( self.setupControlsReset, 200 );
+                            self.setupControlsReset( setId );
+                      }
 
                       //set the control dirtyness
                       if ( _.has( api.control(setId), 'czr_isDirty' ) ) {

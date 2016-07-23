@@ -32,10 +32,13 @@ $.extend( CZRColumnMths , {
           //the modules are stored only with their id in a column
           column.defautModuleModelInColumn = { id : '' };
 
+          console.log('column.sektion.contentRendered.state()', column.sektion.contentRendered.state() );
+
           //defer the column rendering when the parent sektion content is rendered
           column.sektion.contentRendered.done(function() {
                 //render the column
                 column.container = column.render();
+                console.log('COLUMN CONTAINER?', column.container );
                 //say it
                 column.embedded.resolve();
           });

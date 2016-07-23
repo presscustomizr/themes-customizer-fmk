@@ -51,7 +51,10 @@
         //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
         //  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || []
         // }
+        //
         this.bind( 'czr-skopes-ready', function( data ) {
+              if ( ! serverControlParams.isSkopOn )
+                return;
               console.log('czr-skopes-ready DATA', data );
               var preview = this;
               //initialize skopes with the server sent data

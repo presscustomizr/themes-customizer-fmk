@@ -33,6 +33,7 @@ $.extend( CZRSektionMths, {
                 //   return false;
                 // if ( $(target).closest('.czr-single-item').hasClass('open') )
                 //   return ! _.contains( target.className.split(' '), 'czr-dragula-fake-container' );
+                console.log('in accepts', target, $(target).attr('id') );
                 return ! _.isUndefined(target) && 'czr-available-modules-list' != $(target).attr('id') ;
             },
             isContainer : function( el ) {
@@ -148,6 +149,7 @@ $.extend( CZRSektionMths, {
   //@param source col string
   //@param target column string
   moveModuleFromTo : function( moved_module, source_column, target_column ) {
+        console.log( 'ALORS CE BUG?', this(), this.czr_columnCollection() );
         var module = this,
             _new_dom_module_collection = module.czr_Column( target_column ).getColumnModuleCollectionFromDom( source_column );
         //update the target column collection with the new collection read from the DOM

@@ -64,23 +64,6 @@ $.extend( CZRSektionMths, {
           //EXTEND THE DEFAULT CONSTRUCTORS FOR SEKTION ITEMS
           module.itemConstructor = api.CZRItem.extend( module.CZRSektionItem || {} );
 
-          //FIRE
-          var _fire = function() {
-                if ( 'resolved' == module.isReady.state() )
-                  return;
-                //unleash hell
-                module.ready();
-                //provide the synchronized module-collection control with its synchronized sektions module instance
-                module.control.getSyncCollectionControl().syncSektionModule.set( module );
-          };
-
-          if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId()  ) {
-              _fire();
-          }
-          api.section( module.control.section() ).expanded.bind(function(to) {
-              _fire();
-          });
-
 
           //DRAGULA
           // if ( ! _.has( module ,'dragInstance' ) )
@@ -117,7 +100,7 @@ $.extend( CZRSektionMths, {
                   }
                 ]
           ));
-          api.czrModulePanelEmbedded.done( function() {
+          api.czrModulePanelEmbedded.then( function() {
                 api.czrModulePanelState.callbacks.add( function() { return module.reactToModulePanelState.apply(module, arguments ); } );
           });
 
@@ -155,7 +138,30 @@ $.extend( CZRSektionMths, {
           api.czrSekSettingsPanelEmbedded.done( function() {
                 api.czrSekSettingsPanelState.callbacks.add( function() { return module.reactToSekSettingPanelState.apply(module, arguments ); } );
           });
+
+
+          // if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId()  ) {
+          //     console.log('SECTION EXPANDED CASE. WHAT IS THE CURRENT MODULE-COLLECTION?', api('hu_theme_options[module-collection]')(), module.isReady.state() );
+          //     _fire();
+          // }
+          api.section( module.control.section() ).expanded.bind(function(to) {
+              console.log('FIRE SEKTION MODULE!', module.id );
+              module.fireSektionModule();
+          });
   },//initialize
+
+
+
+
+  fireSektionModule : function() {
+      var module = this;
+      if ( 'resolved' == module.isReady.state() )
+        return;
+      //unleash hell
+      module.ready();
+      //provide the synchronized module-collection control with its synchronized sektions module instance
+      module.control.getSyncCollectionControl().syncSektionModule.set( module );
+  },
 
 
 

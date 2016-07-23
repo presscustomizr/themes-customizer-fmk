@@ -26,8 +26,13 @@ $.extend( CZRSkopeBaseMths, {
           //CURRENT EXPANDED SECTION DEPENDANT ACTIONS
           //stop here if the active section is not set yet
           //=> the silent update will be fired on section expansion anyway
-          if ( _.isUndefined( api.czr_activeSectionId() ) )
-            return;
+          //=> refresh now if the previewer is not skope aware, this will post the dyn_type used in the preview to get the proper option if the skope is not 'global'
+          if ( _.isUndefined( api.czr_activeSectionId() ) ) {
+              if ( api.czr_isPreviewerSkopeAware.state() )
+                api.previewer.refresh();
+              return;
+          }
+
 
           //populates with the current section setting ids
           var silent_update_candidates = self._getSilentUpdateCandidates();
@@ -121,6 +126,8 @@ $.extend( CZRSkopeBaseMths, {
           console.log('silent_update_candidates', _silent_update_candidates );
           //Fire the silent updates promises
           _.each( _silent_update_candidates, function( setId ) {
+                if ( 'czr_multi_module' == api.control(setId).params.type )
+                  return;
                 silent_update_promises[setId] = self.getSettingUpdatePromise( setId );
           });
 
@@ -235,18 +242,53 @@ $.extend( CZRSkopeBaseMths, {
                     _promise = wp.media.attachment( val ).fetch();
               break;
 
-
-              case 'czr_multi_module' :
               case 'czr_module' :
+                    var _synced_control_id, _synced_control_val, _synced_control_data, _synced_control_constructor, _syncSektionModuleId;
+
+                    if ( _.has( api.control( wpSetId ).params, 'syncCollection' ) ) {
+                          _synced_control_id = api.CZR_Helpers.build_setId(  api.control( wpSetId ).params.syncCollection );
+                          _synced_control_val = api.czr_skopeBase.getSkopeSettingVal( _synced_control_id, skope_id );
+                          _synced_control_data = api.settings.controls[_synced_control_id];
+                          _synced_control_constructor = api.controlConstructor.czr_multi_module;
+                          _syncSektionModuleId =  api.control( _synced_control_id ).syncSektionModule()().id;
+
+                          //remove the container and its control
+                          api.control( _synced_control_id ).container.remove();
+                          api.control.remove(_synced_control_id );
+                          //Silently set
+                          api( _synced_control_id ).silent_set( _synced_control_val, current_skope_instance.getSkopeSettingDirtyness( _synced_control_id ) );
+                          //re-instantiate the control with the updated _control_data
+                          api.control.add( _synced_control_id,  new _synced_control_constructor( _synced_control_id, { params : _synced_control_data, previewer : api.previewer }) );
+                    }
+
                     _constructor = api.controlConstructor[control_type];
+
                     //remove the container and its control
                     api.control( wpSetId ).container.remove();
                     api.control.remove( wpSetId );
                     //Silently set
                     api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+
                     //re-instantiate the control with the updated _control_data
                     api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
+
+                    //Fire the sektion module
+                    console.log('FIRE SEKTION MODULE?', _syncSektionModuleId, api.control( wpSetId ).czr_Module( _syncSektionModuleId ).isReady.state() );
+                    api.control( wpSetId ).czr_Module( _syncSektionModuleId ).fireSektionModule();
               break;
+
+              // case 'czr_multi_module' :
+              //       _constructor = api.controlConstructor[control_type];
+              //       if ( api.control.has( wpSetId ) ) {
+              //           //remove the container and its control
+              //           api.control( wpSetId ).container.remove();
+              //           api.control.remove( wpSetId );
+              //       }
+              //       //Silently set
+              //       api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+              //       //re-instantiate the control with the updated _control_data
+              //       api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
+              // break;
 
               // default :
               //       //Silent set

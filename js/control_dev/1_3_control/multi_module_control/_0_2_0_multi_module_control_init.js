@@ -9,6 +9,7 @@ $.extend( CZRMultiModuleControlMths, {
 
           //listen to the module-collection setting changes
           //=> synchronize the columns in the sektion setting
+          console.log('IN MULTI MODULE INITIALIZE ? ', options );
           api(id).callbacks.add( function() { return control.syncColumn.apply( control, arguments ); } );
 
           //when the synchronized sektion module sends its instance, check the consistency with the module-collection setting
@@ -24,21 +25,32 @@ $.extend( CZRMultiModuleControlMths, {
   },
 
 
+  ready : function() {
+      var control = this;
+      console.log('MODULE-COLLECTION CONTROL READY', this.id );
+      api.CZRBaseModuleControl.prototype.ready.apply( control, arguments);
+  },
 
   //cb of : api(control.id).callbacks.
   syncColumn : function( to, from, data ) {
+        console.log('IN SYNC COLUMN', to, from, data );
+        if ( ! _.isUndefined(data) && data.silent )
+          return;
+        console.log('IN SYNXXX', api.control('hu_theme_options[module-collection]').syncSektionModule()(), this.syncSektionModule()() );
+
         //ORPHANS MODULE REMOVED ON INIT, VOID()
         //=> there's no column to synchronize
         if ( _.has( data, 'orphans_module_removal' ) )
           return;
 
-        var control = this;
+        var control = api.control('hu_theme_options[module-collection]');
         //MODULE ADDED
         //determine if a module has been added
         var added_mod = _.filter( to, function( _mod, _key ){
             return ! _.findWhere( from, { id : _mod.id } );
         } );
         if ( ! _.isEmpty( added_mod ) ) {
+              console.log('ADDED MODULE?', added_mod );
               _.each( added_mod, function( _mod ) {
                       control.syncSektionModule().czr_Column( _mod.column_id ).updateColumnModuleCollection( { module : _mod } );
               });

@@ -63,7 +63,6 @@ $.extend( CZRBaseModuleControlMths, {
 
           //in the general case of multi_module / sektion control, we need to extend the module constructors
           if ( ! _.isEmpty( module.sektion_id ) ) {
-
               parentConstructor = _base_constructor.extend( _mthds );
               constructor = parentConstructor.extend( control.getMultiModuleExtender( parentConstructor ) );
           } else {

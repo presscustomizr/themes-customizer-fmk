@@ -186,6 +186,9 @@ $.extend( CZRSkopeBaseMths, {
 
     //@return the array of controls in a given section_id
     _getSectionControlIds : function( section_id ) {
+          section_id = section_id || api.czr_activeSectionId();
+          if ( ! api.section.has( section_id) )
+            return;
           var sec_ctrl = [];
           api.control.each( function( _ctrl ) {
               if ( section_id == _ctrl.section() )

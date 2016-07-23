@@ -13,6 +13,7 @@ $.extend( CZRSektionMths, {
   //       sektion_id : '',
   //       modules : [],
   // };
+  // Fired in prepareSekItemForDB
   prepareColumnForDB : function( column_candidate ) {
         var module = this,
             _db_ready_col = {};
@@ -68,6 +69,7 @@ $.extend( CZRSektionMths, {
   //  sektion_id : '',//string
   //  modules : [],//collection of module id strings
   //}
+  //Fired in CZRSektionItem::initialize
   instantiateColumn : function( _column, is_added_by_user  ) {
         var module = this,
             column_model = _.clone( _column );
@@ -146,9 +148,9 @@ $.extend( CZRSektionMths, {
   //@param obj can be { collection : []}, or { module : {} }
   updateColumnCollection : function( obj ) {
         var module = this,
-            _current_collection = module.czr_columnCollection.get();
+            _current_collection = module.czr_columnCollection();
             _new_collection = $.extend( true, [] , _current_collection );
-
+        console.log('in update column collection', module.id, module.czr_columnCollection() );
         //if a collection is provided in the passed obj then simply refresh the collection
         //=> typically used when reordering the collection module with sortable or when a column is removed
         if ( _.has( obj, 'collection' ) ) {

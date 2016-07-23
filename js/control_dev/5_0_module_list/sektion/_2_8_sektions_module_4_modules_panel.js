@@ -7,7 +7,7 @@ $.extend( CZRSektionMths, {
           var module = this;
           if ( 'pending' == api.czrModulePanelEmbedded.state() ) {
               $.when( module.renderModulePanel() ).done( function(){
-                  module.modsDragInstance.containers.push( $('#czr-available-modules-list')[0]);
+                  console.log('MODULE PANEL EMBEDDED!');
                   api.czrModulePanelEmbedded.resolve();
               });
           }
@@ -28,7 +28,18 @@ $.extend( CZRSektionMths, {
 
     //cb of api.czrModulePanelState.callbacks
     reactToModulePanelState : function( expanded ) {
-         $('body').toggleClass('czr-adding-module', expanded );
+          console.log('REACT TO MODULE PANEL STATE', expanded );
+          var module = this;
+
+          $('body').toggleClass('czr-adding-module', expanded );
+
+          //DRAGULIZE
+          module.modulePanelDragulized = module.modulePanelDragulized || $.Deferred();
+          if ( expanded && 'pending' == module.modulePanelDragulized.state() ) {
+                console.log('JOIE ?');
+                module.modsDragInstance.containers.push( $('#czr-available-modules-list')[0]);
+                module.modulePanelDragulized.resolve();
+          }
     },
 
     //fired once, on first expansion

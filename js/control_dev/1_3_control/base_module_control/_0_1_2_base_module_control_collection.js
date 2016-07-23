@@ -53,6 +53,7 @@ $.extend( CZRBaseModuleControlMths, {
 
   //@param obj can be { collection : []}, or { module : {} }
   updateModulesCollection : function( obj ) {
+          console.log('updateModulesCollection', this.id, obj );
           var control = this,
               _current_collection = control.czr_moduleCollection(),
               _new_collection = $.extend( true, [], _current_collection);
@@ -172,6 +173,7 @@ $.extend( CZRBaseModuleControlMths, {
   //fired before adding a module to the collection of DB candidates
   //the module must have the control.getDefaultModuleDBModel structure :
   prepareModuleForDB : function ( module_db_candidate ) {
+    console.log( 'module_db_candidate', module_db_candidate );
         if ( ! _.isObject( module_db_candidate ) ) {
             throw new Error('MultiModule Control::prepareModuleForDB : a module must be an object. Aborting.');
         }
@@ -223,10 +225,14 @@ $.extend( CZRBaseModuleControlMths, {
                       db_ready_module[ _key ] = module_db_candidate.sektion.id;
                     break;
                     case 'dirty' :
-                      db_ready_module[ _key ] = control.czr_Module( module_db_candidate.id ).isDirty();
+                      if ( control.czr_Module.has( module_db_candidate.id ) )
+                          db_ready_module[ _key ] = control.czr_Module( module_db_candidate.id ).isDirty();
+                      else
+                          db_ready_module[ _key ] = _candidate_val;
+                      if ( ! _.isBoolean( db_ready_module[ _key ] ) ) {
+                          throw new Error('prepareModuleForDB : a module dirty state must be a boolean.');
+                      }
                     break;
-
-
               }//switch
         });
         return db_ready_module;

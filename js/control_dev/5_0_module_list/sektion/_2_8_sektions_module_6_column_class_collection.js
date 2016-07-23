@@ -16,6 +16,8 @@ $.extend( CZRColumnMths , {
                 _current_collection = column.czr_columnModuleCollection();
                 _new_collection = $.extend( true, [], _current_collection );
 
+            console.log('column.czr_columnModuleCollection()', column.czr_columnModuleCollection() );
+
             //if a collection is provided in the passed obj then simply refresh the collection
             //=> typically used when reordering the collection module with sortable or when a column is removed
             if ( _.has( obj, 'collection' ) ) {
@@ -117,6 +119,8 @@ $.extend( CZRColumnMths , {
                 $_moduleWrapper = $('.czr-module-collection-wrapper', column.container ),
                 _previous_column_collection = column.sektion.module.czr_Column( old_col_id ).czr_columnModuleCollection(),
                 _new_collection = [];
+
+            console.log('in GET COLUMN MODULE COLLECTION FROM DOM', old_col_id, $_moduleWrapper, column.container );
 
             $('.czr-single-module', $_moduleWrapper).each( function( _index ) {
                   //If the current module el was already there
