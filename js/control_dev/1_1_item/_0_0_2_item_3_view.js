@@ -7,14 +7,18 @@ $.extend( CZRItemMths , {
   mayBeRenderItemWrapper : function() {
         var item = this;
 
-        if ( 'pending' == item.embedded.state() )
-            item.container = item.renderItemWrapper();
-        if ( _.isUndefined(item.container) || ! item.container.length ) {
-            throw new Error( 'In itemWrapperViewSetup the Item view has not been rendered : ' + item.id );
-        } else {
-            //say it
-            item.embedded.resolve();
-        }
+        if ( 'pending' != item.embedded.state() )
+          return;
+
+        $.when( item.renderItemWrapper() ).done( function( $_container ) {
+              item.container = $_container;
+              if ( _.isUndefined(item.container) || ! item.container.length ) {
+                  throw new Error( 'In itemWrapperViewSetup the Item view has not been rendered : ' + item.id );
+              } else {
+                  //say it
+                  item.embedded.resolve();
+              }
+        });
   },
 
 
@@ -35,20 +39,16 @@ $.extend( CZRItemMths , {
           //always write the title
           item.writeItemViewTitle();
 
-          //react to the item state changes
-          item.czr_ItemState.callbacks.add( function( to, from ) {
-              //toggle on view state change
-              item.toggleItemExpansion.apply(item, arguments );
-          });
-
 
           //When do we render the item content ?
           //If this is a multi-item module, let's render each item content when they are expanded.
           //In the case of a single item module, we can render the item content now.
-          var _updateItemContentDeferred = function( $_content) {
+          var _updateItemContentDeferred = function( $_content, to, from ) {
                 //update the $.Deferred state
-                if ( ! _.isUndefined( $_content ) && false !== $_content.length )
+                if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
                     item.contentRendered.resolve();
+                    item.toggleItemExpansion(to, from );
+                }
                 else {
                     throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
                 }
@@ -57,18 +57,30 @@ $.extend( CZRItemMths , {
           if ( item.module.isMultiItem() ) {
                 item.czr_ItemState.callbacks.add( function( to, from ) {
                       //renderview content if needed on first expansion
-                      if ( 'resolved' == item.contentRendered.state() )
-                        return;
+                      if ( 'resolved' == item.contentRendered.state() ) {
+                          //toggle on view state change
+                          item.toggleItemExpansion(to, from );
+                          return;
+                      }
 
                       $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
-                            _updateItemContentDeferred( $_item_content );
+                            //introduce a small delay to give some times to the modules to be printed.
+                            //@todo : needed ?
+                            _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 400 );
+                            _updateItemContentDeferred( $_item_content, to, from );
                       });
                 });
           } else {
+                //react to the item state changes
+                item.czr_ItemState.callbacks.add( function( to, from ) {
+                    //toggle on view state change
+                    item.toggleItemExpansion.apply(item, arguments );
+                });
+
                 //renderview content now for a single item module
                 $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
-                      _updateItemContentDeferred( $_item_content );
-                      item.czr_ItemState.set('expanded');
+                      _updateItemContentDeferred( $_item_content, true );
+                      //item.czr_ItemState.set('expanded');
                 });
           }
 

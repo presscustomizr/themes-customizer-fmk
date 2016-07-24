@@ -5,16 +5,20 @@ $.extend( CZRSektionMths, {
 
     toggleModuleListPanel : function( obj ) {
           var module = this;
-          if ( 'pending' == api.czrModulePanelEmbedded.state() ) {
-              $.when( module.renderModulePanel() ).done( function(){
-                  console.log('MODULE PANEL EMBEDDED!');
-                  api.czrModulePanelEmbedded.resolve();
-              });
-          }
+          // if ( 'pending' == api.czrModulePanelEmbedded.state() ) {
+          //     $.when( module.renderModulePanel() ).done( function(){
+          //         console.log('MODULE PANEL EMBEDDED!');
+          //         api.czrModulePanelEmbedded.resolve();
+          //     });
+          // }
+
+
+
           //close the sek setting panel if needed
           api.czrSekSettingsPanelState.set(false);
 
           api.czrModulePanelState.set( ! api.czrModulePanelState() );
+
 
           //close all sektions but the one from which the button has been clicked
           if ( ! api.czrModulePanelState() ) {
@@ -23,22 +27,6 @@ $.extend( CZRSektionMths, {
               module.czr_Item.each( function( _sektion ){
                   _sektion.czr_ItemState.set( 'expanded' != _sektion.czr_ItemState() ? 'expanded_noscroll' : 'expanded' );
               });
-          }
-    },
-
-    //cb of api.czrModulePanelState.callbacks
-    reactToModulePanelState : function( expanded ) {
-          console.log('REACT TO MODULE PANEL STATE', expanded );
-          var module = this;
-
-          $('body').toggleClass('czr-adding-module', expanded );
-
-          //DRAGULIZE
-          module.modulePanelDragulized = module.modulePanelDragulized || $.Deferred();
-          if ( expanded && 'pending' == module.modulePanelDragulized.state() ) {
-                console.log('JOIE ?');
-                module.modsDragInstance.containers.push( $('#czr-available-modules-list')[0]);
-                module.modulePanelDragulized.resolve();
           }
     },
 

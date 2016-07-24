@@ -24,7 +24,7 @@ $.extend( CZRMultiModuleControlMths, {
                     //ADD A MODULE STATE OBSERVER
                     //czr_ModuleState stores the current expansion status of a given module
                     //can take 2 values : expanded, closed
-                    module.czr_ModuleState = new api.Value();
+                    module.czr_ModuleState = new api.Value( false );
 
                     //SETUP MODULE VIEW WHEN MODULE READY
                     module.isReady.done( function() {
@@ -177,9 +177,9 @@ $.extend( CZRMultiModuleControlMths, {
                           selector  : '.czr-mod-header',
                           name      : 'hovering_module',
                           actions   : function( obj ) {
-                              module.control.previewer.send( 'start_hovering_module', {
-                                    id : module.id
-                              });
+                                module.control.previewer.send( 'start_hovering_module', {
+                                      id : module.id
+                                });
                           }
                         },
                         {
@@ -193,9 +193,6 @@ $.extend( CZRMultiModuleControlMths, {
                           }
                         }
                 ];
-
-                //set initial state
-                module.czr_ModuleState.set('closed');
 
                 //defer actions on module view embedded
                 module.embedded.done( function() {
@@ -213,10 +210,9 @@ $.extend( CZRMultiModuleControlMths, {
 
         //fired on click
         setModuleViewVisibility : function( obj, is_added_by_user ) {
-              var module = this,
-                  current_state = module.czr_ModuleState.get();
+              var module = this;
 
-              module.czr_ModuleState.set( 'expanded' == current_state ? 'closed' : 'expanded' );
+              module.czr_ModuleState( ! module.czr_ModuleState() );
 
               //always close the module panel
               api.czrModulePanelState.set(false);
@@ -248,12 +244,19 @@ $.extend( CZRMultiModuleControlMths, {
 
         //cb of module.czr_ModuleState.callbacks
         //On first module expansion, render the module item(s) content
-        setupModuleViewStateListeners : function( to, from ) {
+        setupModuleViewStateListeners : function( expanded ) {
               var module = this;
+              //setup an api value for the current opened module.
+              api.czr_isModuleExpanded = api.czr_isModuleExpanded || new api.Value();
+
+              if ( expanded )
+                api.czr_isModuleExpanded( module );
+              else
+                api.czr_isModuleExpanded( false );
 
               //expand / collapse
-              $.when( module.toggleModuleViewExpansion( to ) ).done( function() {
-                    if ( 'expanded' == to ) {
+              $.when( module.toggleModuleViewExpansion( expanded ) ).done( function() {
+                    if ( expanded ) {
                           //render the module title
                           module.renderModuleTitle();
 
@@ -317,25 +320,24 @@ $.extend( CZRMultiModuleControlMths, {
         },
 
 
-        //callback of czr_ItemState() instance on change
-        toggleModuleViewExpansion : function( status, duration ) {
+        //fired in setupModuleViewStateListeners()
+        toggleModuleViewExpansion : function( expanded, duration ) {
               var module = this;
 
               //slide Toggle and toggle the 'open' class
               $( '.czr-mod-content' , module.container ).slideToggle( {
                   duration : duration || 200,
                   done : function() {
-                        var _is_expanded = 'closed' != status,
-                            $_overlay = module.container.closest( '.wp-full-overlay' ),
+                        var $_overlay = module.container.closest( '.wp-full-overlay' ),
                             $_backBtn = module.container.find( '.czr-module-back' ),
                             $_modTitle = module.container.find('.czr-module-title');
 
-                        module.container.toggleClass('open' , _is_expanded );
-                        $_overlay.toggleClass('czr-module-open', _is_expanded );
-                        $_modTitle.attr( 'tabindex', _is_expanded ? '-1' : '0' );
-                        $_backBtn.attr( 'tabindex', _is_expanded ? '0' : '-1' );
+                        module.container.toggleClass('open' , expanded );
+                        $_overlay.toggleClass('czr-module-open', expanded );
+                        $_modTitle.attr( 'tabindex', expanded ? '-1' : '0' );
+                        $_backBtn.attr( 'tabindex', expanded ? '0' : '-1' );
 
-                        if( _is_expanded ) {
+                        if( expanded ) {
                             $_backBtn.focus();
                         } else {
                             $_modTitle.focus();
@@ -348,14 +350,14 @@ $.extend( CZRMultiModuleControlMths, {
                         //switch icon
                         //var $_edit_icon = $(this).siblings().find('.' + module.control.css_attr.edit_view_btn );
 
-                        // $_edit_icon.toggleClass('active' , _is_expanded );
-                        // if ( _is_expanded )
+                        // $_edit_icon.toggleClass('active' , expanded );
+                        // if ( expanded )
                         //   $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.translatedStrings.close );
                         // else
                         //   $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.translatedStrings.edit );
 
                         //scroll to the currently expanded view
-                        if ( 'expanded' == status )
+                        if ( expanded )
                           module._adjustScrollExpandedBlock( module.container );
                   }//done callback
                 } );

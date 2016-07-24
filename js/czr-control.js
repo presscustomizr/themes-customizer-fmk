@@ -366,21 +366,35 @@ $.extend( CZRSkopeBaseMths, {
                 api.previewer.refresh();
               return;
           }
-          var silent_update_candidates = self._getSilentUpdateCandidates();
-          if ( ! _.isUndefined( from ) ) {
-            _.each( api.czr_skope( from ).dirtyValues(), function( val, _setId ) {
-                  if ( ! _.contains( silent_update_candidates, _setId ) )
-                      silent_update_candidates.push(_setId);
-            } );
+          if ( _.has( api, 'czrModulePanelState') )
+            api.czrModulePanelState(false);
+
+
+          var _process_silent_update = function() {
+                var silent_update_candidates = self._getSilentUpdateCandidates();
+                if ( ! _.isUndefined( from ) ) {
+                  _.each( api.czr_skope( from ).dirtyValues(), function( val, _setId ) {
+                        if ( ! _.contains( silent_update_candidates, _setId ) )
+                            silent_update_candidates.push(_setId);
+                  } );
+                }
+                if ( ! _.isUndefined( to ) ) {
+                  _.each( api.czr_skope( to ).dirtyValues(), function( val, _setId ) {
+                        if ( ! _.contains( silent_update_candidates, _setId ) )
+                            silent_update_candidates.push(_setId);
+                  } );
+                }
+                self.silentlyUpdateSettings( silent_update_candidates );
+                self.setupControlsReset();
+          };
+          if ( _.has(api, 'czr_isModuleExpanded') && false !== api.czr_isModuleExpanded() ) {
+                api.czr_isModuleExpanded().setupModuleViewStateListeners(false);
+                _process_silent_update = _.debounce( _process_silent_update, 400 );
+                _process_silent_update();
+          } else {
+                _process_silent_update();
           }
-          if ( ! _.isUndefined( to ) ) {
-            _.each( api.czr_skope( to ).dirtyValues(), function( val, _setId ) {
-                  if ( ! _.contains( silent_update_candidates, _setId ) )
-                      silent_update_candidates.push(_setId);
-            } );
-          }
-          self.silentlyUpdateSettings( silent_update_candidates );
-          self.setupControlsReset();
+
     },
 
 
@@ -477,6 +491,9 @@ $.extend( CZRSkopeBaseMths, {
           });
     },
     getSettingUpdatePromise : function( setId, skope_id, val ) {
+          if ( _.isUndefined( setId ) ) {
+              throw new Error('getSettingUpdatePromise : the provided setId is not defined');
+          }
           var self = this,
               current_skope_instance = api.czr_skope( api.czr_activeSkope() ),
               wpSetId = api.CZR_Helpers.build_setId( setId ),
@@ -484,8 +501,8 @@ $.extend( CZRSkopeBaseMths, {
 
           skope_id = skope_id || api.czr_activeSkope();
           val = val || api.czr_skopeBase.getSkopeSettingVal( setId, skope_id );
-          if ( _.isUndefined( setId ) || ! api.has( wpSetId ) ) {
-              throw new Error('getSettingUpdatePromise : the provided setId is not defined or not registered in the api.');
+          if ( ! api.has( wpSetId ) ) {
+              throw new Error('getSettingUpdatePromise : the provided setId is not registered in the api.');
           }
           if ( _.isEqual( current_setting_val, val ) )
             return { promise : true, val : val };
@@ -513,10 +530,11 @@ $.extend( CZRSkopeBaseMths, {
               break;
 
               case 'czr_module' :
-                    var _synced_control_id, _synced_control_val, _synced_control_data, _synced_control_constructor, _syncSektionModuleId;
+                    var _synced_control_id, _synced_control_val, _synced_control_data, _synced_control_constructor, _syncSektionModuleId,
+                        _synced_short_id = _.has( api.control( wpSetId ).params, 'syncCollection' ) ? api.control( wpSetId ).params.syncCollection : '';
 
-                    if ( _.has( api.control( wpSetId ).params, 'syncCollection' ) ) {
-                          _synced_control_id = api.CZR_Helpers.build_setId(  api.control( wpSetId ).params.syncCollection );
+                    if ( ! _.isEmpty( _synced_short_id ) && ! _.isUndefined( _synced_short_id ) ) {
+                          _synced_control_id = api.CZR_Helpers.build_setId( _synced_short_id );
                           _synced_control_val = api.czr_skopeBase.getSkopeSettingVal( _synced_control_id, skope_id );
                           _synced_control_data = api.settings.controls[_synced_control_id];
                           _synced_control_constructor = api.controlConstructor.czr_multi_module;
@@ -524,6 +542,7 @@ $.extend( CZRSkopeBaseMths, {
                           api.control( _synced_control_id ).container.remove();
                           api.control.remove(_synced_control_id );
                           api( _synced_control_id ).silent_set( _synced_control_val, current_skope_instance.getSkopeSettingDirtyness( _synced_control_id ) );
+                          $.extend( _synced_control_data, { czr_skope : skope_id });
                           api.control.add( _synced_control_id,  new _synced_control_constructor( _synced_control_id, { params : _synced_control_data, previewer : api.previewer }) );
                     }
 
@@ -531,9 +550,12 @@ $.extend( CZRSkopeBaseMths, {
                     api.control( wpSetId ).container.remove();
                     api.control.remove( wpSetId );
                     api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+                    $.extend( _control_data, { czr_skope : skope_id });
                     api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
-                    console.log('FIRE SEKTION MODULE?', _syncSektionModuleId, api.control( wpSetId ).czr_Module( _syncSektionModuleId ).isReady.state() );
-                    api.control( wpSetId ).czr_Module( _syncSektionModuleId ).fireSektionModule();
+                    if ( ! _.isEmpty( _synced_short_id ) && ! _.isUndefined( _synced_short_id ) ) {
+                        console.log('FIRE SEKTION MODULE?', _syncSektionModuleId, api.control( wpSetId ).czr_Module( _syncSektionModuleId ).isReady.state() );
+                        api.control( wpSetId ).czr_Module( _syncSektionModuleId ).fireSektionModule();
+                    }
               break;
           }//switch
 
@@ -2548,13 +2570,17 @@ $.extend( CZRItemMths , {
   mayBeRenderItemWrapper : function() {
         var item = this;
 
-        if ( 'pending' == item.embedded.state() )
-            item.container = item.renderItemWrapper();
-        if ( _.isUndefined(item.container) || ! item.container.length ) {
-            throw new Error( 'In itemWrapperViewSetup the Item view has not been rendered : ' + item.id );
-        } else {
-            item.embedded.resolve();
-        }
+        if ( 'pending' != item.embedded.state() )
+          return;
+
+        $.when( item.renderItemWrapper() ).done( function( $_container ) {
+              item.container = $_container;
+              if ( _.isUndefined(item.container) || ! item.container.length ) {
+                  throw new Error( 'In itemWrapperViewSetup the Item view has not been rendered : ' + item.id );
+              } else {
+                  item.embedded.resolve();
+              }
+        });
   },
   itemWrapperViewSetup : function( item_model ) {
           var item = this,
@@ -2564,12 +2590,11 @@ $.extend( CZRItemMths , {
           item.czr_ItemState = new api.Value();
           item.czr_ItemState.set('closed');
           item.writeItemViewTitle();
-          item.czr_ItemState.callbacks.add( function( to, from ) {
-              item.toggleItemExpansion.apply(item, arguments );
-          });
-          var _updateItemContentDeferred = function( $_content) {
-                if ( ! _.isUndefined( $_content ) && false !== $_content.length )
+          var _updateItemContentDeferred = function( $_content, to, from ) {
+                if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
                     item.contentRendered.resolve();
+                    item.toggleItemExpansion(to, from );
+                }
                 else {
                     throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
                 }
@@ -2577,17 +2602,22 @@ $.extend( CZRItemMths , {
 
           if ( item.module.isMultiItem() ) {
                 item.czr_ItemState.callbacks.add( function( to, from ) {
-                      if ( 'resolved' == item.contentRendered.state() )
-                        return;
+                      if ( 'resolved' == item.contentRendered.state() ) {
+                          item.toggleItemExpansion(to, from );
+                          return;
+                      }
 
                       $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
-                            _updateItemContentDeferred( $_item_content );
+                            _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 400 );
+                            _updateItemContentDeferred( $_item_content, to, from );
                       });
                 });
           } else {
+                item.czr_ItemState.callbacks.add( function( to, from ) {
+                    item.toggleItemExpansion.apply(item, arguments );
+                });
                 $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
-                      _updateItemContentDeferred( $_item_content );
-                      item.czr_ItemState.set('expanded');
+                      _updateItemContentDeferred( $_item_content, true );
                 });
           }
           api.CZR_Helpers.setupDOMListeners(
@@ -3380,14 +3410,47 @@ $.extend( CZRSektionMths, {
                     selector  : '.' + module.control.css_attr.open_pre_add_btn,
                     name      : 'close_module_panel',
                     actions   : function() {
-                        api.czrModulePanelState.set(false);
+                        api.czrModulePanelState(false);
                     },
                   }
                 ]
           ));
-          api.czrModulePanelEmbedded.then( function() {
-                api.czrModulePanelState.callbacks.add( function() { return module.reactToModulePanelState.apply(module, arguments ); } );
-          });
+
+
+
+          console.log('SEKTION MODULE INIT', module.control.params.czr_skope );
+          if ( _.has( api, 'czr_activeSkope' ) )
+            console.log('SEKTION MODULE INIT', api.czr_activeSkope() );
+
+          api.czrModulePanelBinded = api.czrModulePanelBinded || $.Deferred();
+          if ( 'pending' == api.czrModulePanelBinded.state() ) {
+
+                api.czrModulePanelState.bind( function( expanded ) {
+                      var synced_control_id = api.CZR_Helpers.build_setId(  module.control.params.syncCollection ),
+                              sek_module = api.control( synced_control_id ).syncSektionModule();
+
+                      $('body').toggleClass('czr-adding-module', expanded );
+
+                      if ( expanded ) {
+                            sek_module.renderModulePanel();
+
+
+
+                            console.log('REACT TO MODULE PANEL STATE', expanded,  module.control.params.syncCollection, sek_module() );
+                            console.log('WHEN DOES THIS ACTION OCCUR?', api.czrModulePanelBinded.state() );
+                            sek_module.modsDragInstance.containers.push( $('#czr-available-modules-list')[0]);
+                      } else {
+                            var _containers = $.extend( true, [], sek_module.modsDragInstance.containers );
+                                _containers =  _.filter( _containers, function( con) {
+                                    return 'czr-available-modules-list' != $(con).attr('id');
+                                });
+                            sek_module.modsDragInstance.containers = _containers;
+                            $('#czr-module-list-panel').remove();
+                      }
+
+                });
+                api.czrModulePanelBinded.resolve();
+          }//if pending
           api.czrSekSettingsPanelState = api.SekSettingsPanelState || new api.Value( false );
           api.czrSekSettingsPanelEmbedded = api.SekSettingsPanelEmbedded || $.Deferred();
           module.userEventMap.set( _.union(
@@ -3582,6 +3645,7 @@ $.extend( CZRSektionMths, {
 
                 return db_ready_sektItem;
           }
+
   }//Sektion
 
 });//extends api.CZRDynModule
@@ -3832,7 +3896,6 @@ $.extend( CZRSektionMths, {
                 return _.contains( handle.className.split(' '), 'czr-mod-drag-handler' );
             },
             accepts: function ( el, target, source, sibling ) {
-                console.log('in accepts', target, $(target).attr('id') );
                 return ! _.isUndefined(target) && 'czr-available-modules-list' != $(target).attr('id') ;
             },
             isContainer : function( el ) {
@@ -3909,6 +3972,8 @@ $.extend( CZRSektionMths, {
         console.log( 'ALORS CE BUG?', this(), this.czr_columnCollection() );
         var module = this,
             _new_dom_module_collection = module.czr_Column( target_column ).getColumnModuleCollectionFromDom( source_column );
+        if ( _.has( api, 'czrModulePanelState') )
+          api.czrModulePanelState(false);
         module.czr_Column( target_column ).updateColumnModuleCollection( { collection : _new_dom_module_collection } );
         module.czr_Column( source_column ).removeModuleFromColumnCollection( moved_module );
   }
@@ -3919,12 +3984,6 @@ $.extend( CZRSektionMths, {
 
     toggleModuleListPanel : function( obj ) {
           var module = this;
-          if ( 'pending' == api.czrModulePanelEmbedded.state() ) {
-              $.when( module.renderModulePanel() ).done( function(){
-                  console.log('MODULE PANEL EMBEDDED!');
-                  api.czrModulePanelEmbedded.resolve();
-              });
-          }
           api.czrSekSettingsPanelState.set(false);
 
           api.czrModulePanelState.set( ! api.czrModulePanelState() );
@@ -3934,18 +3993,6 @@ $.extend( CZRSektionMths, {
               module.czr_Item.each( function( _sektion ){
                   _sektion.czr_ItemState.set( 'expanded' != _sektion.czr_ItemState() ? 'expanded_noscroll' : 'expanded' );
               });
-          }
-    },
-    reactToModulePanelState : function( expanded ) {
-          console.log('REACT TO MODULE PANEL STATE', expanded );
-          var module = this;
-
-          $('body').toggleClass('czr-adding-module', expanded );
-          module.modulePanelDragulized = module.modulePanelDragulized || $.Deferred();
-          if ( expanded && 'pending' == module.modulePanelDragulized.state() ) {
-                console.log('JOIE ?');
-                module.modsDragInstance.containers.push( $('#czr-available-modules-list')[0]);
-                module.modulePanelDragulized.resolve();
           }
     },
     renderModulePanel : function() {
@@ -3996,6 +4043,10 @@ $.extend( CZRColumnMths , {
                         column//instance where to look for the cb methods
                 );
                 var syncCollectionControl = api.control(column.control_id).getSyncCollectionControl();
+                console.log('////////////////////////////////////////////////////');
+                console.log('column.container?', column.container);
+                console.log('syncCollectionControl.syncSektionModule()', syncCollectionControl.syncSektionModule()() );
+                console.log('////////////////////////////////////////////////////');
                 syncCollectionControl.syncSektionModule().modsDragInstance.containers.push( $('.czr-module-collection-wrapper', column.container )[0] );
 
           });
@@ -5722,11 +5773,10 @@ $.extend( CZRMultiModuleControlMths, {
         console.log('IN SYNC COLUMN', to, from, data );
         if ( ! _.isUndefined(data) && data.silent )
           return;
-        console.log('IN SYNXXX', api.control('hu_theme_options[module-collection]').syncSektionModule()(), this.syncSektionModule()() );
+        console.log('IN SYNXXX', api.control('hu_theme_options[module-collection]').syncSektionModule()(), this.syncSektionModule()(), this.id );
         if ( _.has( data, 'orphans_module_removal' ) )
           return;
-
-        var control = api.control('hu_theme_options[module-collection]');
+        var control = api.control( this.id );
         var added_mod = _.filter( to, function( _mod, _key ){
             return ! _.findWhere( from, { id : _mod.id } );
         } );
@@ -5786,7 +5836,7 @@ $.extend( CZRMultiModuleControlMths, {
                           sektionModuleTitle : 'czr-module-sektion-title-part',
                           ruModuleEl : 'czr-ru-module-sektion-content'
                     } );
-                    module.czr_ModuleState = new api.Value();
+                    module.czr_ModuleState = new api.Value( false );
                     module.isReady.done( function() {
                           module.setupModuleView();
                     });
@@ -5882,9 +5932,9 @@ $.extend( CZRMultiModuleControlMths, {
                           selector  : '.czr-mod-header',
                           name      : 'hovering_module',
                           actions   : function( obj ) {
-                              module.control.previewer.send( 'start_hovering_module', {
-                                    id : module.id
-                              });
+                                module.control.previewer.send( 'start_hovering_module', {
+                                      id : module.id
+                                });
                           }
                         },
                         {
@@ -5898,7 +5948,6 @@ $.extend( CZRMultiModuleControlMths, {
                           }
                         }
                 ];
-                module.czr_ModuleState.set('closed');
                 module.embedded.done( function() {
                       module.czr_ModuleState.callbacks.add( function() { return module.setupModuleViewStateListeners.apply(module, arguments ); } );
                       api.CZR_Helpers.setupDOMListeners(
@@ -5909,10 +5958,9 @@ $.extend( CZRMultiModuleControlMths, {
                 });
         },
         setModuleViewVisibility : function( obj, is_added_by_user ) {
-              var module = this,
-                  current_state = module.czr_ModuleState.get();
+              var module = this;
 
-              module.czr_ModuleState.set( 'expanded' == current_state ? 'closed' : 'expanded' );
+              module.czr_ModuleState( ! module.czr_ModuleState() );
               api.czrModulePanelState.set(false);
               api.czrSekSettingsPanelState.set(false);
               module.control.syncSektionModule().closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
@@ -5923,10 +5971,16 @@ $.extend( CZRMultiModuleControlMths, {
                     id : module.id
               });
         },
-        setupModuleViewStateListeners : function( to, from ) {
+        setupModuleViewStateListeners : function( expanded ) {
               var module = this;
-              $.when( module.toggleModuleViewExpansion( to ) ).done( function() {
-                    if ( 'expanded' == to ) {
+              api.czr_isModuleExpanded = api.czr_isModuleExpanded || new api.Value();
+
+              if ( expanded )
+                api.czr_isModuleExpanded( module );
+              else
+                api.czr_isModuleExpanded( false );
+              $.when( module.toggleModuleViewExpansion( expanded ) ).done( function() {
+                    if ( expanded ) {
                           module.renderModuleTitle();
                           module.populateSavedItemCollection();
                     }
@@ -5954,27 +6008,26 @@ $.extend( CZRMultiModuleControlMths, {
                     module.moduleTitleEmbedded.resolve();
               });
         },
-        toggleModuleViewExpansion : function( status, duration ) {
+        toggleModuleViewExpansion : function( expanded, duration ) {
               var module = this;
               $( '.czr-mod-content' , module.container ).slideToggle( {
                   duration : duration || 200,
                   done : function() {
-                        var _is_expanded = 'closed' != status,
-                            $_overlay = module.container.closest( '.wp-full-overlay' ),
+                        var $_overlay = module.container.closest( '.wp-full-overlay' ),
                             $_backBtn = module.container.find( '.czr-module-back' ),
                             $_modTitle = module.container.find('.czr-module-title');
 
-                        module.container.toggleClass('open' , _is_expanded );
-                        $_overlay.toggleClass('czr-module-open', _is_expanded );
-                        $_modTitle.attr( 'tabindex', _is_expanded ? '-1' : '0' );
-                        $_backBtn.attr( 'tabindex', _is_expanded ? '0' : '-1' );
+                        module.container.toggleClass('open' , expanded );
+                        $_overlay.toggleClass('czr-module-open', expanded );
+                        $_modTitle.attr( 'tabindex', expanded ? '-1' : '0' );
+                        $_backBtn.attr( 'tabindex', expanded ? '0' : '-1' );
 
-                        if( _is_expanded ) {
+                        if( expanded ) {
                             $_backBtn.focus();
                         } else {
                             $_modTitle.focus();
                         }
-                        if ( 'expanded' == status )
+                        if ( expanded )
                           module._adjustScrollExpandedBlock( module.container );
                   }//done callback
                 } );

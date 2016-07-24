@@ -72,6 +72,10 @@ $.extend( CZRColumnMths , {
 
                 //dragulize
                 var syncCollectionControl = api.control(column.control_id).getSyncCollectionControl();
+                console.log('////////////////////////////////////////////////////');
+                console.log('column.container?', column.container);
+                console.log('syncCollectionControl.syncSektionModule()', syncCollectionControl.syncSektionModule()() );
+                console.log('////////////////////////////////////////////////////');
                 syncCollectionControl.syncSektionModule().modsDragInstance.containers.push( $('.czr-module-collection-wrapper', column.container )[0] );
 
           });

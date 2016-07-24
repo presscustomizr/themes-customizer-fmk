@@ -33,7 +33,7 @@ $.extend( CZRSektionMths, {
                 //   return false;
                 // if ( $(target).closest('.czr-single-item').hasClass('open') )
                 //   return ! _.contains( target.className.split(' '), 'czr-dragula-fake-container' );
-                console.log('in accepts', target, $(target).attr('id') );
+                //console.log('in accepts', target, $(target).attr('id') );
                 return ! _.isUndefined(target) && 'czr-available-modules-list' != $(target).attr('id') ;
             },
             isContainer : function( el ) {
@@ -142,6 +142,10 @@ $.extend( CZRSektionMths, {
         //get the updated collection from the DOM and update the column module collection
             _new_dom_module_collection = module.czr_Column( col_id  ).getColumnModuleCollectionFromDom( col_id  );
 
+        //close the module panel id needed
+        // if ( _.has( api, 'czrModulePanelState') )
+        //   api.czrModulePanelState(false);
+
         module.czr_Column( col_id ).updateColumnModuleCollection( { collection : _new_dom_module_collection } );
   },
 
@@ -152,6 +156,11 @@ $.extend( CZRSektionMths, {
         console.log( 'ALORS CE BUG?', this(), this.czr_columnCollection() );
         var module = this,
             _new_dom_module_collection = module.czr_Column( target_column ).getColumnModuleCollectionFromDom( source_column );
+
+        //close the module panel id needed
+        if ( _.has( api, 'czrModulePanelState') )
+          api.czrModulePanelState(false);
+
         //update the target column collection with the new collection read from the DOM
         module.czr_Column( target_column ).updateColumnModuleCollection( { collection : _new_dom_module_collection } );
         //remove module from old column module collection

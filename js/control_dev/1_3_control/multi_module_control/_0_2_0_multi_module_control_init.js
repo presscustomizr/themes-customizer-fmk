@@ -36,14 +36,16 @@ $.extend( CZRMultiModuleControlMths, {
         console.log('IN SYNC COLUMN', to, from, data );
         if ( ! _.isUndefined(data) && data.silent )
           return;
-        console.log('IN SYNXXX', api.control('hu_theme_options[module-collection]').syncSektionModule()(), this.syncSektionModule()() );
+        console.log('IN SYNXXX', api.control('hu_theme_options[module-collection]').syncSektionModule()(), this.syncSektionModule()(), this.id );
 
         //ORPHANS MODULE REMOVED ON INIT, VOID()
         //=> there's no column to synchronize
         if ( _.has( data, 'orphans_module_removal' ) )
           return;
 
-        var control = api.control('hu_theme_options[module-collection]');
+        //always get the control instance from the api
+        //=> because the control on which this callback is binded can be re instantiated, typically on skope switch
+        var control = api.control( this.id );
         //MODULE ADDED
         //determine if a module has been added
         var added_mod = _.filter( to, function( _mod, _key ){

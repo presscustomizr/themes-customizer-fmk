@@ -33,29 +33,45 @@ $.extend( CZRSkopeBaseMths, {
               return;
           }
 
+          //close the module panel id needed
+          if ( _.has( api, 'czrModulePanelState') )
+            api.czrModulePanelState(false);
 
-          //populates with the current section setting ids
-          var silent_update_candidates = self._getSilentUpdateCandidates();
 
-          //add the previous skope dirty settings ids
-          if ( ! _.isUndefined( from ) ) {
-            _.each( api.czr_skope( from ).dirtyValues(), function( val, _setId ) {
-                  if ( ! _.contains( silent_update_candidates, _setId ) )
-                      silent_update_candidates.push(_setId);
-            } );
+          var _process_silent_update = function() {
+                //populates with the current section setting ids
+                var silent_update_candidates = self._getSilentUpdateCandidates();
+
+                //add the previous skope dirty settings ids
+                if ( ! _.isUndefined( from ) ) {
+                  _.each( api.czr_skope( from ).dirtyValues(), function( val, _setId ) {
+                        if ( ! _.contains( silent_update_candidates, _setId ) )
+                            silent_update_candidates.push(_setId);
+                  } );
+                }
+                if ( ! _.isUndefined( to ) ) {
+                  _.each( api.czr_skope( to ).dirtyValues(), function( val, _setId ) {
+                        if ( ! _.contains( silent_update_candidates, _setId ) )
+                            silent_update_candidates.push(_setId);
+                  } );
+                }
+
+                //silently update the settings of a the currently active section() to the values of the current skope
+                self.silentlyUpdateSettings( silent_update_candidates );
+
+                //re-render control single reset when needed (Media control are re-rendered, that's why we need this method fired on each skope switch)
+                self.setupControlsReset();
+          };
+
+          //Collapse the current expanded module if any
+          if ( _.has(api, 'czr_isModuleExpanded') && false !== api.czr_isModuleExpanded() ) {
+                api.czr_isModuleExpanded().setupModuleViewStateListeners(false);
+                _process_silent_update = _.debounce( _process_silent_update, 400 );
+                _process_silent_update();
+          } else {
+                _process_silent_update();
           }
-          if ( ! _.isUndefined( to ) ) {
-            _.each( api.czr_skope( to ).dirtyValues(), function( val, _setId ) {
-                  if ( ! _.contains( silent_update_candidates, _setId ) )
-                      silent_update_candidates.push(_setId);
-            } );
-          }
 
-          //silently update the settings of a the currently active section() to the values of the current skope
-          self.silentlyUpdateSettings( silent_update_candidates );
-
-          //re-render control single reset when needed (Media control are re-rendered, that's why we need this method fired on each skope switch)
-          self.setupControlsReset();
     },
 
 
@@ -185,6 +201,9 @@ $.extend( CZRSkopeBaseMths, {
     //@param val : the new val
     //@return a promise() $ object when an ajax fetch is processed, typically when updating an image.
     getSettingUpdatePromise : function( setId, skope_id, val ) {
+          if ( _.isUndefined( setId ) ) {
+              throw new Error('getSettingUpdatePromise : the provided setId is not defined');
+          }
           var self = this,
               current_skope_instance = api.czr_skope( api.czr_activeSkope() ),
               wpSetId = api.CZR_Helpers.build_setId( setId ),
@@ -194,8 +213,8 @@ $.extend( CZRSkopeBaseMths, {
           val = val || api.czr_skopeBase.getSkopeSettingVal( setId, skope_id );
 
           //if a setId is provided, then let's update it
-          if ( _.isUndefined( setId ) || ! api.has( wpSetId ) ) {
-              throw new Error('getSettingUpdatePromise : the provided setId is not defined or not registered in the api.');
+          if ( ! api.has( wpSetId ) ) {
+              throw new Error('getSettingUpdatePromise : the provided setId is not registered in the api.');
           }
 
           //stop here if the setting val was unchanged
@@ -243,10 +262,11 @@ $.extend( CZRSkopeBaseMths, {
               break;
 
               case 'czr_module' :
-                    var _synced_control_id, _synced_control_val, _synced_control_data, _synced_control_constructor, _syncSektionModuleId;
+                    var _synced_control_id, _synced_control_val, _synced_control_data, _synced_control_constructor, _syncSektionModuleId,
+                        _synced_short_id = _.has( api.control( wpSetId ).params, 'syncCollection' ) ? api.control( wpSetId ).params.syncCollection : '';
 
-                    if ( _.has( api.control( wpSetId ).params, 'syncCollection' ) ) {
-                          _synced_control_id = api.CZR_Helpers.build_setId(  api.control( wpSetId ).params.syncCollection );
+                    if ( ! _.isEmpty( _synced_short_id ) && ! _.isUndefined( _synced_short_id ) ) {
+                          _synced_control_id = api.CZR_Helpers.build_setId( _synced_short_id );
                           _synced_control_val = api.czr_skopeBase.getSkopeSettingVal( _synced_control_id, skope_id );
                           _synced_control_data = api.settings.controls[_synced_control_id];
                           _synced_control_constructor = api.controlConstructor.czr_multi_module;
@@ -257,6 +277,10 @@ $.extend( CZRSkopeBaseMths, {
                           api.control.remove(_synced_control_id );
                           //Silently set
                           api( _synced_control_id ).silent_set( _synced_control_val, current_skope_instance.getSkopeSettingDirtyness( _synced_control_id ) );
+
+                          //add the current skope to the control
+                          $.extend( _synced_control_data, { czr_skope : skope_id });
+
                           //re-instantiate the control with the updated _control_data
                           api.control.add( _synced_control_id,  new _synced_control_constructor( _synced_control_id, { params : _synced_control_data, previewer : api.previewer }) );
                     }
@@ -269,12 +293,17 @@ $.extend( CZRSkopeBaseMths, {
                     //Silently set
                     api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
 
+                    //add the current skope to the control
+                    $.extend( _control_data, { czr_skope : skope_id });
+
                     //re-instantiate the control with the updated _control_data
                     api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
 
-                    //Fire the sektion module
-                    console.log('FIRE SEKTION MODULE?', _syncSektionModuleId, api.control( wpSetId ).czr_Module( _syncSektionModuleId ).isReady.state() );
-                    api.control( wpSetId ).czr_Module( _syncSektionModuleId ).fireSektionModule();
+                    //Fire the sektion module if there's a synced sektion
+                    if ( ! _.isEmpty( _synced_short_id ) && ! _.isUndefined( _synced_short_id ) ) {
+                        console.log('FIRE SEKTION MODULE?', _syncSektionModuleId, api.control( wpSetId ).czr_Module( _syncSektionModuleId ).isReady.state() );
+                        api.control( wpSetId ).czr_Module( _syncSektionModuleId ).fireSektionModule();
+                    }
               break;
 
               // case 'czr_multi_module' :

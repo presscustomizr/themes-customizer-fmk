@@ -95,14 +95,67 @@ $.extend( CZRSektionMths, {
                     name      : 'close_module_panel',
                     actions   : function() {
                         //close the module panel id needed
-                        api.czrModulePanelState.set(false);
+                        api.czrModulePanelState(false);
                     },
                   }
                 ]
           ));
-          api.czrModulePanelEmbedded.then( function() {
-                api.czrModulePanelState.callbacks.add( function() { return module.reactToModulePanelState.apply(module, arguments ); } );
-          });
+
+
+
+          console.log('SEKTION MODULE INIT', module.control.params.czr_skope );
+          if ( _.has( api, 'czr_activeSkope' ) )
+            console.log('SEKTION MODULE INIT', api.czr_activeSkope() );
+
+          //api.czrModulePanelEmbedded.done( function() {
+
+          api.czrModulePanelBinded = api.czrModulePanelBinded || $.Deferred();
+          if ( 'pending' == api.czrModulePanelBinded.state() ) {
+
+                api.czrModulePanelState.bind( function( expanded ) {
+                      var synced_control_id = api.CZR_Helpers.build_setId(  module.control.params.syncCollection ),
+                              sek_module = api.control( synced_control_id ).syncSektionModule();
+
+                      $('body').toggleClass('czr-adding-module', expanded );
+
+                      if ( expanded ) {
+                            sek_module.renderModulePanel();
+
+
+
+                            console.log('REACT TO MODULE PANEL STATE', expanded,  module.control.params.syncCollection, sek_module() );
+                            console.log('WHEN DOES THIS ACTION OCCUR?', api.czrModulePanelBinded.state() );
+
+                            //console.log('IS EQUAL?', _.isEqual( module, api.control( synced_control_id ).syncSektionModule() ) );
+
+
+                            // if ( _.isEqual( module, api.control( synced_control_id ).syncSektionModule() ) )
+                            //   return;
+
+                            //DRAGULIZE
+                            sek_module.modsDragInstance.containers.push( $('#czr-available-modules-list')[0]);
+
+                            // sek_module.modulePanelDragulized = sek_module.modulePanelDragulized || $.Deferred();
+                            // if ( expanded && 'pending' == sek_module.modulePanelDragulized.state() ) {
+                            //       console.log('JOIE ?');
+                            //       sek_module.modsDragInstance.containers.push( $('#czr-available-modules-list')[0]);
+                            //       sek_module.modulePanelDragulized.resolve();
+                            // }
+                      } else {
+                            //remove from draginstance
+                            var _containers = $.extend( true, [], sek_module.modsDragInstance.containers );
+                                _containers =  _.filter( _containers, function( con) {
+                                    return 'czr-available-modules-list' != $(con).attr('id');
+                                });
+                            sek_module.modsDragInstance.containers = _containers;
+                            $('#czr-module-list-panel').remove();
+                      }
+
+                });
+                api.czrModulePanelBinded.resolve();
+          //});
+          }//if pending
+
 
 
 
