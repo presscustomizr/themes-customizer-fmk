@@ -256,9 +256,11 @@ $.extend( CZRSkopeBaseMths, {
 
     //fired in initialize
     //=> embed the wrapper for all skope boxes
+    //=> add a specific class to the body czr-skop-on
     embedSkopeWrapper : function() {
           var self = this;
           $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher'}) );
+          $('body').addClass('czr-skop-on');
     },
 
 

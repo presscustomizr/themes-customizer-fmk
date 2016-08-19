@@ -18,10 +18,10 @@
 
 
 /* HEADER AND SCOPE SWITCHER */
-.wp-customizer .wp-full-overlay-sidebar .wp-full-overlay-header {
+.czr-skop-on .wp-full-overlay-sidebar .wp-full-overlay-header {
   height: 185px;
 }
-.wp-customizer .wp-full-overlay-sidebar .wp-full-overlay-sidebar-content {
+.czr-skop-on .wp-full-overlay-sidebar .wp-full-overlay-sidebar-content {
   top: 185px;
 }
 .wp-customizer .in-sub-panel .wp-full-overlay-sidebar .wp-full-overlay-header {
