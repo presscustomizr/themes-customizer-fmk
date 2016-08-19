@@ -123,7 +123,7 @@ $.extend( CZRModuleMths, {
   },
 
 
-  //fired
+  //fired when module.isReady.done
   _makeItemsSortable : function(obj) {
           if ( wp.media.isTouchDevice || ! $.fn.sortable )
             return;
@@ -131,12 +131,15 @@ $.extend( CZRModuleMths, {
           $( '.' + module.control.css_attr.items_wrapper, module.container ).sortable( {
                 handle: '.' + module.control.css_attr.item_sort_handle,
                 start: function() {
-                    //close the module panel id needed
-                    api.czrModulePanelState.set(false);
+                    //close the module panel if needed
+                    if ( _.has(api, 'czrModulePanelState' ) )
+                      api.czrModulePanelState.set(false);
                     //close the sektion settings panel if needed
-                    api.czrSekSettingsPanelState.set(false);
+                    if ( _.has(api, 'czrSekSettingsPanelState' ) )
+                      api.czrSekSettingsPanelState.set(false);
                 },
                 update: function( event, ui ) {
+                  console.log('UPDATE : JOie');
                     module.itemCollection.set( module._getSortedDOMItemCollection() );
                 }
               }

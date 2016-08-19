@@ -2577,7 +2577,7 @@ $.extend( CZRItemMths , {
         $.when( item.renderItemWrapper() ).done( function( $_container ) {
               item.container = $_container;
               if ( _.isUndefined(item.container) || ! item.container.length ) {
-                  throw new Error( 'In itemWrapperViewSetup the Item view has not been rendered : ' + item.id );
+                  throw new Error( 'In mayBeRenderItemWrapper the Item view has not been rendered : ' + item.id );
               } else {
                   item.embedded.resolve();
               }
@@ -2848,17 +2848,23 @@ $.extend( CZRModuleMths, {
           module.set( _new_model );
   },
   moduleReact : function( to, from, o ) {
+          console.log('in module react', to, from, o);
           var module = this,
               control = module.control,
               is_item_update = ( _.size(from.items) == _.size(to.items) ) && ! _.isEmpty( _.difference(to.items, from.items) ),
               is_column_update = to.column_id != from.column_id,
               is_item_collection_sorted = ( _.size(from.items) == _.size(to.items) ) && ! is_item_update && ! is_column_update;
           if ( is_item_collection_sorted ) {
+              console.log('PIPI?');
                 if ( _.has(module, 'czr_preItem') ) {
                   module.czr_preItem('view_status').set('closed');
                 }
                 module.closeAllItems();
                 module.closeAllAlerts();
+          }
+          if ( 'postMessage' == api(module.control.id).transport && is_item_collection_sorted && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+              console.log('REFRESH PREVIEW WHEN ITEM COLLECTION HAS BEEN SORTED', module.id, control.id );
+              module.control.previewer.refresh();
           }
           control.updateModulesCollection( {
                 module : $.extend( true, {}, to ),
@@ -3172,10 +3178,13 @@ $.extend( CZRModuleMths, {
           $( '.' + module.control.css_attr.items_wrapper, module.container ).sortable( {
                 handle: '.' + module.control.css_attr.item_sort_handle,
                 start: function() {
-                    api.czrModulePanelState.set(false);
-                    api.czrSekSettingsPanelState.set(false);
+                    if ( _.has(api, 'czrModulePanelState' ) )
+                      api.czrModulePanelState.set(false);
+                    if ( _.has(api, 'czrSekSettingsPanelState' ) )
+                      api.czrSekSettingsPanelState.set(false);
                 },
                 update: function( event, ui ) {
+                  console.log('UPDATE : JOie');
                     module.itemCollection.set( module._getSortedDOMItemCollection() );
                 }
               }
@@ -4616,6 +4625,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           itemWrapperViewSetup : function() {
                   var item = this,
                       module = item.module;
+
                   api.CZRItem.prototype.itemWrapperViewSetup.call(item);
                   item.czr_itemLocationAlert.set('closed');
                   item.czr_itemLocationAlert.callbacks.add( function( to, from ) {
@@ -4625,8 +4635,11 @@ $.extend( CZRWidgetAreaModuleMths, {
                   item.czr_ItemState.callbacks.add( function( to, from ) {
                         if ( -1 == to.indexOf('expanded') )//can take the expanded_noscroll value !
                           return;
-                        item.czr_Input('locations')._setupLocationSelect( true );//true for refresh
-                        item.czr_Input('locations').mayBeDisplayModelAlert();
+                        item.contentRendered.then( function() {
+                              item.czr_Input('locations')._setupLocationSelect( true );//true for refresh
+                              item.czr_Input('locations').mayBeDisplayModelAlert();
+                        });
+
                   });
           },
           itemReact : function(to, from) {
@@ -5676,6 +5689,7 @@ $.extend( CZRBaseModuleControlMths, {
         }
         api(this.id).set( control.filterModuleCollectionBeforeAjax(to), data );
         if ( 'postMessage' == api(control.id).transport && ! api.CZR_Helpers.has_part_refresh( control.id ) ) {
+            console.log('WE DONT KNOW IF THE COLLECTION IS SORTED HERE ! FIX!', to, from, data );
             if ( is_collection_sorted )
                 control.previewer.refresh();
         }
@@ -5701,7 +5715,7 @@ $.extend( CZRBaseModuleControlMths, {
           }
   },
   prepareModuleForDB : function ( module_db_candidate ) {
-    console.log( 'module_db_candidate', module_db_candidate );
+        console.log( 'module_db_candidate', module_db_candidate );
         if ( ! _.isObject( module_db_candidate ) ) {
             throw new Error('MultiModule Control::prepareModuleForDB : a module must be an object. Aborting.');
         }

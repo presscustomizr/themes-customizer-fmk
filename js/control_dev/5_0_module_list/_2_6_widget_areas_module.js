@@ -298,6 +298,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           itemWrapperViewSetup : function() {
                   var item = this,
                       module = item.module;
+
                   api.CZRItem.prototype.itemWrapperViewSetup.call(item);
 
                   /// ALERT FOR NOT AVAILABLE LOCATION
@@ -317,11 +318,15 @@ $.extend( CZRWidgetAreaModuleMths, {
                   item.czr_ItemState.callbacks.add( function( to, from ) {
                         if ( -1 == to.indexOf('expanded') )//can take the expanded_noscroll value !
                           return;
+                        //don't try to invoke the input instances before the content is actually rendered
+                        //=> there might be cases when the content rendering is debounced...
+                        item.contentRendered.then( function() {
+                              //refresh the location list
+                              item.czr_Input('locations')._setupLocationSelect( true );//true for refresh
+                              //refresh the location alert message
+                              item.czr_Input('locations').mayBeDisplayModelAlert();
+                        });
 
-                        //refresh the location list
-                        item.czr_Input('locations')._setupLocationSelect( true );//true for refresh
-                        //refresh the location alert message
-                        item.czr_Input('locations').mayBeDisplayModelAlert();
                   });
           },
 

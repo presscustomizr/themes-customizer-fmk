@@ -125,12 +125,12 @@ $.extend( CZRBaseModuleControlMths, {
         //Inform the the setting
         api(this.id).set( control.filterModuleCollectionBeforeAjax(to), data );
 
-
         //refreshes the preview frame  :
         //1) only needed if transport is postMessage, because is triggered by wp otherwise
         //2) only needed when : add, remove, sort item(s)
         //module update case
         if ( 'postMessage' == api(control.id).transport && ! api.CZR_Helpers.has_part_refresh( control.id ) ) {
+            console.log('WE DONT KNOW IF THE COLLECTION IS SORTED HERE ! FIX!', to, from, data );
             if ( is_collection_sorted )
                 control.previewer.refresh();
         }
@@ -173,7 +173,7 @@ $.extend( CZRBaseModuleControlMths, {
   //fired before adding a module to the collection of DB candidates
   //the module must have the control.getDefaultModuleDBModel structure :
   prepareModuleForDB : function ( module_db_candidate ) {
-    console.log( 'module_db_candidate', module_db_candidate );
+        console.log( 'module_db_candidate', module_db_candidate );
         if ( ! _.isObject( module_db_candidate ) ) {
             throw new Error('MultiModule Control::prepareModuleForDB : a module must be an object. Aborting.');
         }

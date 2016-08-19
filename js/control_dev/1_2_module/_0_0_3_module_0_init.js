@@ -168,6 +168,7 @@ $.extend( CZRModuleMths, {
 
   //cb of module.callbacks
   moduleReact : function( to, from, o ) {
+          console.log('in module react', to, from, o);
           //cb of : module.callbacks
           var module = this,
               control = module.control,
@@ -177,6 +178,7 @@ $.extend( CZRModuleMths, {
 
           //Sorted collection case
           if ( is_item_collection_sorted ) {
+              console.log('PIPI?');
                 if ( _.has(module, 'czr_preItem') ) {
                   module.czr_preItem('view_status').set('closed');
                 }
@@ -184,14 +186,14 @@ $.extend( CZRModuleMths, {
                 module.closeAllAlerts();
           }
 
-          // //refreshes the preview frame  :
-          // //1) only needed if transport is postMessage, because is triggered by wp otherwise
-          // //2) only needed when : add, remove, sort item(s).
-          // var is_item_update = ( _.size(from) == _.size(to) ) && ! _.isEmpty( _.difference(from, to) );
-
-          // if ( 'postMessage' == api(module.control.id).transport && ! is_item_update && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
-          //   module.control.previewer.refresh();
-          // }
+          //refreshes the preview frame  :
+          //1) only needed if transport is postMessage, because is triggered by wp otherwise
+          //2) only needed when : add, remove, sort item(s).
+          //var is_item_update = ( _.size(from) == _.size(to) ) && ! _.isEmpty( _.difference(from, to) );
+          if ( 'postMessage' == api(module.control.id).transport && is_item_collection_sorted && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+              console.log('REFRESH PREVIEW WHEN ITEM COLLECTION HAS BEEN SORTED', module.id, control.id );
+              module.control.previewer.refresh();
+          }
 
           //update the collection + pass data
           control.updateModulesCollection( {

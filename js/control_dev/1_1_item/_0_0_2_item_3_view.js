@@ -13,7 +13,7 @@ $.extend( CZRItemMths , {
         $.when( item.renderItemWrapper() ).done( function( $_container ) {
               item.container = $_container;
               if ( _.isUndefined(item.container) || ! item.container.length ) {
-                  throw new Error( 'In itemWrapperViewSetup the Item view has not been rendered : ' + item.id );
+                  throw new Error( 'In mayBeRenderItemWrapper the Item view has not been rendered : ' + item.id );
               } else {
                   //say it
                   item.embedded.resolve();
@@ -22,6 +22,7 @@ $.extend( CZRItemMths , {
   },
 
 
+  //fired when item is ready and embedded
   //define the item view DOM event map
   //bind actions when the item is embedded
   itemWrapperViewSetup : function( item_model ) {

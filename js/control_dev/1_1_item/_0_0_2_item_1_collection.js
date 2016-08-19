@@ -7,6 +7,7 @@
   // is_added_by_user : is_added_by_user || false
 var CZRItemMths = CZRItemMths || {};
 $.extend( CZRItemMths , {
+  //Fired on item.contentRendered.done()
   //creates the inputs based on the rendered items
   setupInputCollectionFromDOM : function() {
         var item = this,
