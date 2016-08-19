@@ -29,10 +29,15 @@ $.extend( CZRModuleMths, {
           return $( $_module_items_wrapper, $_moduleContentEl );
   },
 
-  //called before rendering a view
+  //called before rendering a view. Fired in module::renderItemWrapper()
   //can be overriden to set a specific view template depending on the model properties
   //@return string
-  getTemplateEl : function( type, model ) {
+  //@type can be
+  //Read Update Delete (rud...)
+  //Read Update (ru)
+  //...
+  //@item_model is an object describing the current item model
+  getTemplateEl : function( type, item_model ) {
           var module = this, _el;
           switch(type) {
                 case 'rudItemPart' :

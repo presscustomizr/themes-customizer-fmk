@@ -112,12 +112,14 @@ $.extend( CZRItemMths , {
         module.itemsWrapper.append( $_view_el );
 
         //if module is multi item, then render the item crud header part
+        //Note : for the widget module, the getTemplateEl method is overriden
         if ( module.isMultiItem() ) {
+              var _template_selector = module.getTemplateEl( 'rudItemPart', item_model );
               //do we have view template script?
-              if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'rudItemPart', item_model ) ).length ) {
+              if ( 0 === $( '#tmpl-' + _template_selector ).length ) {
                   throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateEl( 'rudItemPart', item_model ) );
               }
-              $_view_el.append( $( wp.template( module.rudItemPart )( item_model ) ) );
+              $_view_el.append( $( wp.template( _template_selector )( item_model ) ) );
         }
 
 

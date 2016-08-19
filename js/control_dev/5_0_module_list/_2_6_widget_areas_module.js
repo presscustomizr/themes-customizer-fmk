@@ -139,6 +139,15 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
 
+
+
+
+
+
+
+
+
+
   CZRWZonesInputMths : {
           ready : function() {
                   var input = this;
@@ -488,6 +497,12 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
 
+
+
+
+
+
+
   //DEPRECATED : THE CONTROLS TO SYNCHRONIZE HAVE BEEN REMOVED
 
   //fired on model_added_by_user and from the timer method
@@ -524,6 +539,14 @@ $.extend( CZRWidgetAreaModuleMths, {
   //       $_select.selecter("destroy").selecter();
   //   });//map
   // },
+
+
+
+
+
+
+
+
 
 
 
@@ -684,6 +707,12 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
 
+
+
+
+
+
+
   /////////////////////////////////////////
   /// SET EXPANSION CALLBACKS FOR WIDGET PANEL AND WIDGET ZONE CREATION SECTION
   ////////////////////////////////////////
@@ -737,6 +766,9 @@ $.extend( CZRWidgetAreaModuleMths, {
 
           content.slideToggle();
   },
+
+
+
 
 
 
@@ -847,23 +879,31 @@ $.extend( CZRWidgetAreaModuleMths, {
             });
   },
 
-    //called before rendering a view
-  //overrides the default method to set a specific default view template if the model is a default setting
+
+
+  //overrides parent
+  //called before rendering a view. Fired in module::renderItemWrapper()
+  //can be overriden to set a specific view template depending on the model properties
   //@return string
-  getTemplateEl : function( type, model ) {
-    console.log();
+  //@type can be
+  //Read Update Delete (rud...)
+  //Read Update (ru)
+  //...
+  //@item_model is an object describing the current item model
+  getTemplateEl : function( type, item_model ) {
           var module = this, _el;
           //force view-content type to ru-item-part if the model is a built-in (primary, secondary, footer-1, ...)
+          //=> user can't delete a built-in model.
           if ( 'rudItemPart' == type ) {
-            type = ( _.has(model, 'is_builtin') && model.is_builtin ) ? 'ruItemPart' : type;
+              type = ( _.has(item_model, 'is_builtin') && item_model.is_builtin ) ? 'ruItemPart' : type;
           } else if ( 'itemInputList' == type ) {
-            type = ( _.has(model, 'is_builtin') && model.is_builtin ) ? 'itemInputListReduced' : type;
+              type = ( _.has(item_model, 'is_builtin') && item_model.is_builtin ) ? 'itemInputListReduced' : type;
           }
 
           switch(type) {
                 case 'rudItemPart' :
-                _el = module.rudItemPart;
-                  break;
+                  _el = module.rudItemPart;
+                    break;
                 case 'ruItemPart' :
                   _el = module.ruItemPart;
                   break;

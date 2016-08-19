@@ -2635,10 +2635,11 @@ $.extend( CZRItemMths , {
         $_view_el = $('<li>', { class : module.control.css_attr.single_item, 'data-id' : item_model.id,  id : item_model.id } );
         module.itemsWrapper.append( $_view_el );
         if ( module.isMultiItem() ) {
-              if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'rudItemPart', item_model ) ).length ) {
+              var _template_selector = module.getTemplateEl( 'rudItemPart', item_model );
+              if ( 0 === $( '#tmpl-' + _template_selector ).length ) {
                   throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateEl( 'rudItemPart', item_model ) );
               }
-              $_view_el.append( $( wp.template( module.rudItemPart )( item_model ) ) );
+              $_view_el.append( $( wp.template( _template_selector )( item_model ) ) );
         }
         $_view_el.append( $( '<div/>', { class: module.control.css_attr.item_content } ) );
 
@@ -3097,7 +3098,7 @@ $.extend( CZRModuleMths, {
 
           return $( $_module_items_wrapper, $_moduleContentEl );
   },
-  getTemplateEl : function( type, model ) {
+  getTemplateEl : function( type, item_model ) {
           var module = this, _el;
           switch(type) {
                 case 'rudItemPart' :
@@ -4489,6 +4490,15 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
 
+
+
+
+
+
+
+
+
+
   CZRWZonesInputMths : {
           ready : function() {
                   var input = this;
@@ -4918,19 +4928,18 @@ $.extend( CZRWidgetAreaModuleMths, {
               title : 'Widget Zone ' +  ( _.size(_current_collection)*1 + 1 )
             });
   },
-  getTemplateEl : function( type, model ) {
-    console.log();
+  getTemplateEl : function( type, item_model ) {
           var module = this, _el;
           if ( 'rudItemPart' == type ) {
-            type = ( _.has(model, 'is_builtin') && model.is_builtin ) ? 'ruItemPart' : type;
+              type = ( _.has(item_model, 'is_builtin') && item_model.is_builtin ) ? 'ruItemPart' : type;
           } else if ( 'itemInputList' == type ) {
-            type = ( _.has(model, 'is_builtin') && model.is_builtin ) ? 'itemInputListReduced' : type;
+              type = ( _.has(item_model, 'is_builtin') && item_model.is_builtin ) ? 'itemInputListReduced' : type;
           }
 
           switch(type) {
                 case 'rudItemPart' :
-                _el = module.rudItemPart;
-                  break;
+                  _el = module.rudItemPart;
+                    break;
                 case 'ruItemPart' :
                   _el = module.ruItemPart;
                   break;
