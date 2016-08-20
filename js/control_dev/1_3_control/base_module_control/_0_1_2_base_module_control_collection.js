@@ -53,7 +53,6 @@ $.extend( CZRBaseModuleControlMths, {
 
   //@param obj can be { collection : []}, or { module : {} }
   updateModulesCollection : function( obj ) {
-          console.log('updateModulesCollection', this.id, obj );
           var control = this,
               _current_collection = control.czr_moduleCollection(),
               _new_collection = $.extend( true, [], _current_collection);

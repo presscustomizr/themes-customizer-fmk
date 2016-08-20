@@ -159,6 +159,8 @@ $.extend( CZRWidgetAreaModuleMths, {
                   api.CZRInput.prototype.ready.call( input);
           },
 
+
+
           //////////////////////////////////////////////////
           ///SETUP SELECTS
           //////////////////////////////////////////////////
@@ -239,7 +241,6 @@ $.extend( CZRWidgetAreaModuleMths, {
                     templateSelection: setAvailability
                   });
           },
-
 
           //fired on view event map : 'locations:changed'
           //@param obj { dom_el: $() , model : {} )

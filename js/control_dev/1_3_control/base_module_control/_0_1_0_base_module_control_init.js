@@ -67,6 +67,9 @@ $.extend( CZRBaseModuleControlMths, {
                       //adds it to the collection
                       //=> it will be fired ready usually when the control section is expanded
                       control.instantiateModule( _mod, {} );
+
+                      //adds the module name to the control container element
+                      control.container.attr('data-module', _mod.id );
                 });
                 //the module collection is ready
                 control.moduleCollectionReady.resolve();

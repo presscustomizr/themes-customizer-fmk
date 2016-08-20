@@ -1637,19 +1637,35 @@ $.extend( CZRSkopeMths, {
         };
   }
   api.Element.synchronizer.checkbox.update = function( to ) {
-          this.element.prop( 'checked', to );
-          this.element.iCheck('update');
+        this.element.prop( 'checked', to );
+        this.element.iCheck('update');
   };
 
   api.Element.synchronizer.val.update = function(to) {
         if ( this.element.is('select') ) {
               this.element.val(to).trigger('change');
+        } else if ( this.element.hasClass('wp-color-picker') ) {
+              this.element.val(to).trigger('change');
         }
         else {
-          this.element.val( to );
+              this.element.val( to );
         }
   };
 
+
+  api.Element.synchronizer.val.refresh = function() {
+        var syncApiInstance = this;
+        if ( this.element.is('select') && _.isNull( this.element.val() ) ) {
+              if ( _.isArray( syncApiInstance() ) )
+                return [];
+              else if ( _.isObject( syncApiInstance() ) )
+                return {};
+              else
+                return '';
+        } else {
+              return  this.element.val();
+        }
+  };
 
 
 
@@ -1816,49 +1832,36 @@ $.extend( CZRInputMths , {
                       trigger   : $.trim( ['change', trigger_map[input.type] || '' ].join(' ') ),//was 'propertychange change click keyup input',//colorpickerchange is a custom colorpicker event @see method setupColorPicker => otherwise we don't
                       selector  : 'input[data-type], select[data-type], textarea[data-type]',
                       name      : 'set_input_value',
-                      actions   : 'updateInput'
+                      actions   : function( obj ) {
+                          if ( ! _.has( input.item, 'syncElements') || ! _.has( input.item.syncElements, input.id ) ) {
+                              throw new Error('WARNING : THE INPUT ' + input.id + ' HAS NOT SYNCED ELEMENT.');
+                          }
+                      }//was 'updateInput'
                     }
             ];
-            input.setupSynchronizer();
-
-            input.ready();
     },
-
-
-    setupSynchronizer: function() {
-            var input       = this,
-                $_input_el  = input.container.find('[data-type]'),
-                is_input    = input.container.find('[data-type]').is('input'),
-                input_type  = is_input ? input.container.find('[data-type]').attr('type') : false,
-                is_select   = input.container.find('[data-type]').is('select'),
-                is_textarea = input.container.find('[data-type]').is('textarea');
-            if ( is_textarea )
-              return;
-
-            input.syncElement = new api.Element( input.container.find('[data-type]') );
-            input.syncElement.set( input() );
-            input.syncElement.sync( input );
-            input.callbacks.add( function(to) {
-                  input.syncElement.set( to );
-                  if ( is_input && 'checkbox' == input_type ) {
-                    $_input_el.iCheck('update');
-                  }
-
-                  if ( is_input && 'color' == input.type ) {
-                    $_input_el.wpColorPicker('color', to );
-                  }
-                  if ( is_select ) {
-                    $_input_el.trigger('change');
-                  }
-            });
-
-    },
-
-
     ready : function() {
             var input = this;
             input.setupDOMListeners( input.input_event_map , { dom_el : input.container }, input );
             input.callbacks.add( function() { return input.inputReact.apply(input, arguments ); } );
+            input.setupSynchronizer();
+    },
+    setupSynchronizer: function() {
+          var input       = this,
+              item        = input.item,
+              $_input_el  = input.container.find('[data-type]'),
+              is_input    = input.container.find('[data-type]').is('input'),
+              input_type  = is_input ? input.container.find('[data-type]').attr('type') : false,
+              is_select   = input.container.find('[data-type]').is('select'),
+              is_textarea = input.container.find('[data-type]').is('textarea');
+          if ( is_textarea )
+            return;
+          var syncElement = new api.Element( $_input_el );
+          item.syncElements = item.syncElements || {};
+          item.syncElements[input.id] = syncElement;
+          syncElement.sync( input );
+          syncElement.set( input() );
+
     },
     inputReact : function( to, from) {
             var input = this,
@@ -1867,18 +1870,14 @@ $.extend( CZRInputMths , {
             _new_model =  ( ! _.isObject(_new_model) || _.isEmpty(_new_model) ) ? {} : _new_model;
             _new_model[input.id] = to;
             input.item.set(_new_model);
-            input.trigger( input.id + ':changed', to );
+            input.item.trigger( input.id + ':changed', to );
     },
-
-
     updateInput : function( obj ) {
             var input             = this,
                 $_changed_input   = $(obj.dom_event.currentTarget, obj.dom_el ),
                 _new_val          = $( $_changed_input, obj.dom_el ).val();
-            if ( _new_val == input.get() )
+            if ( _new_val == input() )
               return;
-
-            input.set(_new_val);
     }
 });//$.extend
 var CZRInputMths = CZRInputMths || {};
@@ -2001,7 +2000,7 @@ $.extend( CZRInputMths , {
         $_view_el.html( view_template( _template_params) );
 
         input.contentRendered.resolve();
-        input.trigger( input.id + ':content_rendered' );
+        input.container.trigger( input.id + ':content_rendered' );
 
         return true;
   },
@@ -2025,10 +2024,9 @@ $.extend( CZRInputMths , {
         var input  = this;
 
         input.container.find('input').wpColorPicker( {
-          change : function( e, o ) {
-            $(this).val($(this).wpColorPicker('color'));
-            $(this).trigger('colorpickerchange');
-          }
+            change : function( e, o ) {
+                  $(this).val( $(this).wpColorPicker('color') ).trigger('colorpickerchange').trigger('change');
+            }
         });
     }
 });//$.extendvar CZRInputMths = CZRInputMths || {};
@@ -2512,6 +2510,7 @@ $.extend( CZRItemMths , {
                     item : item,
                     module : module
               } ) );
+              item.czr_Input(_id).ready();
               dom_item_model[_id] = _value;
 
         });//each
@@ -2848,14 +2847,12 @@ $.extend( CZRModuleMths, {
           module.set( _new_model );
   },
   moduleReact : function( to, from, o ) {
-          console.log('in module react', to, from, o);
           var module = this,
               control = module.control,
               is_item_update = ( _.size(from.items) == _.size(to.items) ) && ! _.isEmpty( _.difference(to.items, from.items) ),
               is_column_update = to.column_id != from.column_id,
               is_item_collection_sorted = ( _.size(from.items) == _.size(to.items) ) && ! is_item_update && ! is_column_update;
           if ( is_item_collection_sorted ) {
-              console.log('PIPI?');
                 if ( _.has(module, 'czr_preItem') ) {
                   module.czr_preItem('view_status').set('closed');
                 }
@@ -3184,7 +3181,6 @@ $.extend( CZRModuleMths, {
                       api.czrSekSettingsPanelState.set(false);
                 },
                 update: function( event, ui ) {
-                  console.log('UPDATE : JOie');
                     module.itemCollection.set( module._getSortedDOMItemCollection() );
                 }
               }
@@ -4274,14 +4270,15 @@ $.extend( CZRSocialModuleMths, {
 
 
 
+
+
+
+
+
+
+
+
   CZRSocialsInputMths : {
-          ready : function() {
-                  var input = this;
-                  input.bind('social-icon:changed', function(){
-                      input.updateItemModel();
-                  });
-                  api.CZRInput.prototype.ready.call( input);
-          },
 
 
           setupSelect : function() {
@@ -4289,7 +4286,7 @@ $.extend( CZRSocialModuleMths, {
                     item = input.item,
                     module     = input.module,
                     socialList = module.social_icons,
-                    _model = item.get();
+                    _model = item();
                 if ( _.isEmpty(_model.id) ) {
                   socialList = _.union( [serverControlParams.translatedStrings.selectSocialIcon], socialList );
                 }
@@ -4350,43 +4347,34 @@ $.extend( CZRSocialModuleMths, {
                                 else
                                   $(this).val( o.color.toString() );
 
-                                $(this).trigger('colorpickerchange');
+                                $(this).trigger('colorpickerchange').trigger('change');
                           }
                 });
                 $( 'input[data-type="social-color"]', input.container ).closest('div').on('click keydown', function() {
                       module._adjustScrollExpandedBlock( input.container );
                 });
-        },
-        updateItemModel : function( _new_val ) {
-                var input = this,
-                    item = this.item,
-                    is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput;
-                if ( ! _.has( item.get(), 'social-icon') || _.isEmpty( item.get()['social-icon'] ) )
-                  return;
-
-                var _new_model  = _.clone( item.get() ),
-                    _new_title  = api.CZR_Helpers.capitalize( _new_model['social-icon'].replace('fa-', '') ),
-                    _new_color  = serverControlParams.social_el_params.defaultSocialColor,
-                    inputCollection = is_preItemInput ? input.module.czr_preItemInput : item.czr_Input;
-                _new_title = [ serverControlParams.translatedStrings.followUs, _new_title].join(' ');
-
-                if ( is_preItemInput ) {
-                  _new_model = $.extend( _new_model, { title : _new_title, 'social-color' : _new_color } );
-                  item.set( _new_model );
-                } else {
-                  item.czr_Input('title').set( _new_title );
-                  item.czr_Input('social-link').set( '' );
-                  item.czr_Input('social-color').set( _new_color );
-                }
-
-        },
+        }
 
   },//CZRSocialsInputMths
 
 
 
 
+
+
+
+
+
   CZRSocialsItem : {
+          ready : function() {
+                var item = this;
+                api.CZRItem.prototype.ready.call( item );
+                item.bind('social-icon:changed', function(){
+                      item.updateItemModel();
+                });
+          },
+
+
           _buildTitle : function( title, icon, color ) {
                   var item = this,
                       module     = item.module;
@@ -4401,13 +4389,27 @@ $.extend( CZRSocialModuleMths, {
           writeItemViewTitle : function( model ) {
                   var item = this,
                       module     = item.module,
-                      _model = model || item.get(),
+                      _model = model || item(),
                       _title = api.CZR_Helpers.capitalize( _model['social-icon'].replace('fa-', '') );
 
                   $( '.' + module.control.css_attr.item_title , item.container ).html(
                     item._buildTitle( _title, _model['social-icon'], _model['social-color'] )
                   );
-          }
+          },
+          updateItemModel : function() {
+                  var item = this;
+                  if ( ! _.has( item(), 'social-icon') || _.isEmpty( item()['social-icon'] ) )
+                    return;
+
+                  var _new_model  = _.clone( item() ),
+                      _new_title  = api.CZR_Helpers.capitalize( _new_model['social-icon'].replace('fa-', '') ),
+                      _new_color  = serverControlParams.social_el_params.defaultSocialColor;
+                  _new_title = [ serverControlParams.translatedStrings.followUs, _new_title].join(' ');
+
+                  item.czr_Input('title').set( _new_title );
+                  item.czr_Input('social-link').set( '' );
+                  item.czr_Input('social-color').set( _new_color );
+          },
 
   },//CZRSocialsItem
 
@@ -5071,7 +5073,7 @@ $.extend( CZRFeaturedPageModuleMths, {
           },
           setupImageUploader:  function(){
                   var input = this;
-                  input.bind( 'fp-image:content_rendered', function(){
+                  input.container.bind( 'fp-image:content_rendered', function(){
                     input.addResetDefaultButton();
                   });
                   input.container.on('click keydown', '.default-fpimage-button', function(){
@@ -5371,6 +5373,7 @@ $.extend( CZRBaseModuleControlMths, {
           } else {
                 _.each( control.getSavedModules() , function( _mod, _key ) {
                       control.instantiateModule( _mod, {} );
+                      control.container.attr('data-module', _mod.id );
                 });
                 control.moduleCollectionReady.resolve();
           }
@@ -5644,7 +5647,6 @@ $.extend( CZRBaseModuleControlMths, {
           });
   },
   updateModulesCollection : function( obj ) {
-          console.log('updateModulesCollection', this.id, obj );
           var control = this,
               _current_collection = control.czr_moduleCollection(),
               _new_collection = $.extend( true, [], _current_collection);
@@ -6408,7 +6410,6 @@ $.extend( CZRBackgroundMths , {
   $.extend( CZRBaseControlMths, api.Events );
   $.extend( CZRModuleMths, api.Events );
   $.extend( CZRItemMths, api.Events );
-  $.extend( CZRInputMths, api.Events );
   $.extend( CZRSkopeBaseMths, api.Events );
   $.extend( CZRSkopeMths, api.Events );
   $.extend( CZRBaseControlMths, api.CZR_Helpers );

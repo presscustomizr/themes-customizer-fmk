@@ -168,7 +168,6 @@ $.extend( CZRModuleMths, {
 
   //cb of module.callbacks
   moduleReact : function( to, from, o ) {
-          console.log('in module react', to, from, o);
           //cb of : module.callbacks
           var module = this,
               control = module.control,
@@ -178,7 +177,6 @@ $.extend( CZRModuleMths, {
 
           //Sorted collection case
           if ( is_item_collection_sorted ) {
-              console.log('PIPI?');
                 if ( _.has(module, 'czr_preItem') ) {
                   module.czr_preItem('view_status').set('closed');
                 }

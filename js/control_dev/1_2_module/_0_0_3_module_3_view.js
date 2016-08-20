@@ -139,7 +139,6 @@ $.extend( CZRModuleMths, {
                       api.czrSekSettingsPanelState.set(false);
                 },
                 update: function( event, ui ) {
-                  console.log('UPDATE : JOie');
                     module.itemCollection.set( module._getSortedDOMItemCollection() );
                 }
               }
