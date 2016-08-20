@@ -102,7 +102,7 @@ $.extend( CZRFeaturedPageModuleMths, {
           setupImageUploader:  function(){
                   var input = this;
                   //temporary
-                  input.bind( 'fp-image:content_rendered', function(){
+                  input.container.bind( 'fp-image:content_rendered', function(){
                     input.addResetDefaultButton();
                   });
 

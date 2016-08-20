@@ -4,7 +4,7 @@
   $.extend( CZRBaseControlMths, api.Events );
   $.extend( CZRModuleMths, api.Events );
   $.extend( CZRItemMths, api.Events );
-  $.extend( CZRInputMths, api.Events );
+  //$.extend( CZRInputMths, api.Events ); => in conflict with synchronizer. Input non DOM Events must be handled by the parent item
   $.extend( CZRSkopeBaseMths, api.Events );
   $.extend( CZRSkopeMths, api.Events );
 

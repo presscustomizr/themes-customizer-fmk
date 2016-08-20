@@ -167,7 +167,7 @@ $.extend( CZRInputMths , {
         $_view_el.html( view_template( _template_params) );
 
         input.contentRendered.resolve();
-        input.trigger( input.id + ':content_rendered' );
+        input.container.trigger( input.id + ':content_rendered' );
 
         return true;
   },

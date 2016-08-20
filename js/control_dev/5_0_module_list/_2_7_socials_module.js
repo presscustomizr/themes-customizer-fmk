@@ -51,15 +51,20 @@ $.extend( CZRSocialModuleMths, {
 
 
 
+
+
+
+
+
+
+
+
   CZRSocialsInputMths : {
-          ready : function() {
-                  var input = this;
-                  //update the item model on social-icon change
-                  input.bind('social-icon:changed', function(){
-                      input.updateItemModel();
-                  });
-                  api.CZRInput.prototype.ready.call( input);
-          },
+          // ready : function() {
+          //         var input = this;
+
+          //         api.CZRInput.prototype.ready.call( input );
+          // },
 
 
           setupSelect : function() {
@@ -67,7 +72,7 @@ $.extend( CZRSocialModuleMths, {
                     item = input.item,
                     module     = input.module,
                     socialList = module.social_icons,
-                    _model = item.get();
+                    _model = item();
 
                 //check if we are in the pre Item case => if so, the id is empty
                 //=> add the select text
@@ -139,7 +144,7 @@ $.extend( CZRSocialModuleMths, {
                                 else
                                   $(this).val( o.color.toString() );
 
-                                $(this).trigger('colorpickerchange');
+                                $(this).trigger('colorpickerchange').trigger('change');
                           }
                 });
 
@@ -148,46 +153,32 @@ $.extend( CZRSocialModuleMths, {
                 $( 'input[data-type="social-color"]', input.container ).closest('div').on('click keydown', function() {
                       module._adjustScrollExpandedBlock( input.container );
                 });
-        },
-
-
-        //ACTIONS ON ICON CHANGE
-        //Fired on 'social-icon:changed'
-        //Don't fire in pre item case
-        updateItemModel : function( _new_val ) {
-                var input = this,
-                    item = this.item,
-                    is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput;
-
-                //check if we are in the pre Item case => if so, the social-icon might be empty
-                if ( ! _.has( item.get(), 'social-icon') || _.isEmpty( item.get()['social-icon'] ) )
-                  return;
-
-                var _new_model  = _.clone( item.get() ),
-                    _new_title  = api.CZR_Helpers.capitalize( _new_model['social-icon'].replace('fa-', '') ),
-                    _new_color  = serverControlParams.social_el_params.defaultSocialColor,
-                    inputCollection = is_preItemInput ? input.module.czr_preItemInput : item.czr_Input;
-
-                //add text follow us... to the title
-                _new_title = [ serverControlParams.translatedStrings.followUs, _new_title].join(' ');
-
-                if ( is_preItemInput ) {
-                  _new_model = $.extend( _new_model, { title : _new_title, 'social-color' : _new_color } );
-                  item.set( _new_model );
-                } else {
-                  item.czr_Input('title').set( _new_title );
-                  item.czr_Input('social-link').set( '' );
-                  item.czr_Input('social-color').set( _new_color );
-                }
-
-        },
+        }
 
   },//CZRSocialsInputMths
 
 
 
 
+
+
+
+
+
   CZRSocialsItem : {
+          //Fired if the item has been instantiated
+          //The item.callbacks are declared.
+          ready : function() {
+                var item = this;
+                api.CZRItem.prototype.ready.call( item );
+
+                //update the item model on social-icon change
+                item.bind('social-icon:changed', function(){
+                      item.updateItemModel();
+                });
+          },
+
+
           _buildTitle : function( title, icon, color ) {
                   var item = this,
                       module     = item.module;
@@ -205,13 +196,45 @@ $.extend( CZRSocialModuleMths, {
           writeItemViewTitle : function( model ) {
                   var item = this,
                       module     = item.module,
-                      _model = model || item.get(),
+                      _model = model || item(),
                       _title = api.CZR_Helpers.capitalize( _model['social-icon'].replace('fa-', '') );
 
                   $( '.' + module.control.css_attr.item_title , item.container ).html(
                     item._buildTitle( _title, _model['social-icon'], _model['social-color'] )
                   );
-          }
+          },
+
+
+          //ACTIONS ON ICON CHANGE
+          //Fired on 'social-icon:changed'
+          //Don't fire in pre item case
+          updateItemModel : function() {
+                  var item = this;
+
+                  //check if we are in the pre Item case => if so, the social-icon might be empty
+                  if ( ! _.has( item(), 'social-icon') || _.isEmpty( item()['social-icon'] ) )
+                    return;
+
+                  var _new_model  = _.clone( item() ),
+                      _new_title  = api.CZR_Helpers.capitalize( _new_model['social-icon'].replace('fa-', '') ),
+                      _new_color  = serverControlParams.social_el_params.defaultSocialColor;
+
+                  //add text follow us... to the title
+                  _new_title = [ serverControlParams.translatedStrings.followUs, _new_title].join(' ');
+
+                  // if ( is_preItemInput ) {
+                  //     _new_model = $.extend( _new_model, { title : _new_title, 'social-color' : _new_color } );
+                  //     item.set( _new_model );
+                  // } else {
+                  //     item.czr_Input('title').set( _new_title );
+                  //     item.czr_Input('social-link').set( '' );
+                  //     item.czr_Input('social-color').set( _new_color );
+                  // }
+
+                  item.czr_Input('title').set( _new_title );
+                  item.czr_Input('social-link').set( '' );
+                  item.czr_Input('social-color').set( _new_color );
+          },
 
   },//CZRSocialsItem
 

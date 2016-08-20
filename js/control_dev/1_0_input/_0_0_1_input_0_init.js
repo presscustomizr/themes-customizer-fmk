@@ -63,62 +63,77 @@ $.extend( CZRInputMths , {
                       trigger   : $.trim( ['change', trigger_map[input.type] || '' ].join(' ') ),//was 'propertychange change click keyup input',//colorpickerchange is a custom colorpicker event @see method setupColorPicker => otherwise we don't
                       selector  : 'input[data-type], select[data-type], textarea[data-type]',
                       name      : 'set_input_value',
-                      actions   : 'updateInput'
+                      actions   : function( obj ) {
+                          if ( ! _.has( input.item, 'syncElements') || ! _.has( input.item.syncElements, input.id ) ) {
+                              throw new Error('WARNING : THE INPUT ' + input.id + ' HAS NOT SYNCED ELEMENT.');
+                          }
+                      }//was 'updateInput'
                     }
             ];
-
-            //synchronizer setup
-            input.setupSynchronizer();
-
-            input.ready();
     },
 
 
-    setupSynchronizer: function() {
-            var input       = this,
-                $_input_el  = input.container.find('[data-type]'),
-                is_input    = input.container.find('[data-type]').is('input'),
-                input_type  = is_input ? input.container.find('[data-type]').attr('type') : false,
-                is_select   = input.container.find('[data-type]').is('select'),
-                is_textarea = input.container.find('[data-type]').is('textarea');
-
-            //@hack => todo
-            //for text area inputs, the synchronizer is buggy
-            if ( is_textarea )
-              return;
-
-            input.syncElement = new api.Element( input.container.find('[data-type]') );
-            input.syncElement.set( input() );
-            input.syncElement.sync( input );
-            input.callbacks.add( function(to) {
-                  //set the synchronized module vat
-                  input.syncElement.set( to );
-
-                  //refresh specific input types
-                  if ( is_input && 'checkbox' == input_type ) {
-                    $_input_el.iCheck('update');
-                  }
-
-                  if ( is_input && 'color' == input.type ) {
-                    $_input_el.wpColorPicker('color', to );
-                  }
-                  if ( is_select ) {
-                    $_input_el.trigger('change');
-                  }
-            });
-
-    },
-
-
+    //this method is not fired automatically
+    //It has to be invoked once the input has been instanciated.
     ready : function() {
             var input = this;
             input.setupDOMListeners( input.input_event_map , { dom_el : input.container }, input );
             //Setup individual input listener
             input.callbacks.add( function() { return input.inputReact.apply(input, arguments ); } );
+            //synchronizer setup
+            //the input instance must be initialized. => initialize method has been done.
+            input.setupSynchronizer();
     },
+
+
+    //fired when input is intanciated and ready.
+    //=> we must have an input instance to synchronize,
+    //invoking this method in the initialize() method is too early, instance not ready
+    setupSynchronizer: function() {
+          var input       = this,
+              item        = input.item,
+              $_input_el  = input.container.find('[data-type]'),
+              is_input    = input.container.find('[data-type]').is('input'),
+              input_type  = is_input ? input.container.find('[data-type]').attr('type') : false,
+              is_select   = input.container.find('[data-type]').is('select'),
+              is_textarea = input.container.find('[data-type]').is('textarea');
+
+          //@hack => todo
+          //for text area inputs, the synchronizer is buggy
+          if ( is_textarea )
+            return;
+
+          //adds the input syncElement to the collection
+          var syncElement = new api.Element( $_input_el );
+          item.syncElements = item.syncElements || {};
+          item.syncElements[input.id] = syncElement;
+          syncElement.sync( input );
+          syncElement.set( input() );
+
+          //input.callbacks.add( function(to) {
+                //set the synchronized module vat
+                //input.syncElement.set( to );
+
+                // //refresh specific input types
+                // if ( is_input && 'checkbox' == input_type ) {
+                //   $_input_el.iCheck('update');
+                // }
+
+                // if ( is_input && 'color' == input.type ) {
+                //   $_input_el.wpColorPicker('color', to );
+                // }
+                // if ( is_select ) {
+                //   $_input_el.trigger('change');
+                // }
+          //});
+
+    },
+
+
 
     //react to a single input change
     //update the collection of input
+    //cb of input.callbacks.add
     inputReact : function( to, from) {
             var input = this,
                 _current_item = input.item.get(),
@@ -128,28 +143,43 @@ $.extend( CZRInputMths , {
             //set the new val to the changed property
             _new_model[input.id] = to;
 
-            //inform the item
+            //inform the parent item
             input.item.set(_new_model);
-            //inform that an api changed
-            input.trigger( input.id + ':changed', to );
+            //inform the parent item that an input has changed
+            //=> useful to handle dependant reactions between different inputs
+            input.item.trigger( input.id + ':changed', to );
     },
 
 
+
+
+
+
+
+
+    //DEPRECATED
+    //NOW HANDLED WITH THE SYNCHRONIZER
+    //fired on user dom action
     updateInput : function( obj ) {
+
             //get the changed property and val
             //=> all html input have data-type attribute corresponding to the ones stored in the model
             var input             = this,
                 $_changed_input   = $(obj.dom_event.currentTarget, obj.dom_el ),
                 _new_val          = $( $_changed_input, obj.dom_el ).val();
 
+            // console.log('in updateInput', _new_val, input() );
+            // console.log('input.syncElement', input.syncElement, input.syncElement() );
+
+
             //Do nothing if the value hasn't really changed
             //For synced elements this might be called after the inputReact
             //so going re-setting the same val => fixes issue with iCheck
             //not updated passing from true => false => true
-            if ( _new_val == input.get() )
+            if ( _new_val == input() )
               return;
 
-            input.set(_new_val);
+            //input.set( _new_val );
             /* Handled in the inputReact, in the future we might want
              * to inform that the change was "dome" driven
              */

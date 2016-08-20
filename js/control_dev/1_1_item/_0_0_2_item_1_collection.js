@@ -46,6 +46,8 @@ $.extend( CZRItemMths , {
               if ( ! _.has( item_model, _id ) ) {
                     throw new Error('The item property : ' + _id + ' has been found in the DOM but not in the item model : '+ item.id + '. The input can not be instantiated.');
               }
+
+              //INSTANTIATE THE INPUT
               item.czr_Input.add( _id, new item.inputConstructor( _id, {
                     id : _id,
                     type : $(this).attr('data-input-type'),
@@ -54,6 +56,10 @@ $.extend( CZRItemMths , {
                     item : item,
                     module : module
               } ) );
+
+              //FIRE THE INPUT
+              //fire ready once the input Value() instance is initialized
+              item.czr_Input(_id).ready();
 
               //populate the collection
               dom_item_model[_id] = _value;
