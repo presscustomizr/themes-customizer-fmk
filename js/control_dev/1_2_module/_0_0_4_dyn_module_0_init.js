@@ -26,9 +26,11 @@ $.extend( CZRDynModuleMths, {
           module.czr_preItem = new api.Values();
            //create observable pre-item values
           module.czr_preItem.create('item');
-          module.czr_preItem.create('item_content');
+
           module.czr_preItem.create('view_status');
           module.czr_preItem('view_status').set('closed');
+
+          module.preItemEmbedded = $.Deferred();//module.czr_preItem.create('item_content');
 
           //PRE MODEL INPUTS
           module.czr_preItemInput = new api.Values();
@@ -43,22 +45,25 @@ $.extend( CZRDynModuleMths, {
           module.userEventMap = new api.Value( [
                 //pre add new item : open the dialog box
                 {
-                  trigger   : 'click keydown',
-                  selector  : [ '.' + module.control.css_attr.open_pre_add_btn, '.' + module.control.css_attr.cancel_pre_add_btn ].join(','),
-                  name      : 'pre_add_item',
-                  actions   : ['renderPreItemView','setPreItemViewVisibility'],
+                    trigger   : 'click keydown',
+                    selector  : [ '.' + module.control.css_attr.open_pre_add_btn, '.' + module.control.css_attr.cancel_pre_add_btn ].join(','),
+                    name      : 'pre_add_item',
+                    actions   : ['renderPreItemView','setPreItemViewVisibility'],
                 },
                 //add new item
                 {
-                  trigger   : 'click keydown',
-                  selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
-                  name      : 'add_item',
-                  actions   : ['closeAllItems', 'addItem'],
+                    trigger   : 'click keydown',
+                    selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
+                    name      : 'add_item',
+                    actions   : ['closeAllItems', 'addItem'],
                 }
           ]);//module.userEventMap
   },
 
 
+
+  //When the control is embedded on the page, this method is fired in api.CZRBaseModuleControl:ready()
+  //=> right after the module is instantiated.
   ready : function() {
           var module = this;
           console.log('MODULE READY IN DYN MODULE CLASS : ', module.id );
@@ -70,13 +75,10 @@ $.extend( CZRDynModuleMths, {
           module.czr_preItem('item').set( module.getDefaultModel() );
 
           //Add view rendered listeners
-          module.czr_preItem('item_content').callbacks.add(function( to, from ) {
-                //first rendering + further renderings
-                if ( _.isUndefined(from) || _.isEmpty(from) ) {
-                    //provide a constructor for the inputs
-                    module.preItemInputConstructor = module.inputConstructor;//api.CZRInput;
-                    module.setupPreItemInputCollection();
-                }
+          module.preItemEmbedded.done( function() {
+                //provides a constructor for the inputs
+                module.preItemInputConstructor = module.inputConstructor;//api.CZRInput;
+                module.setupPreItemInputCollection();
           });
 
           //add state listeners
@@ -84,25 +86,28 @@ $.extend( CZRDynModuleMths, {
                 module._togglePreItemViewExpansion( to );
           });
 
-          api.CZRModule.prototype.ready.call( module );
+          api.CZRModule.prototype.ready.call( module );//fires the parent
   },//ready()
 
 
+
   setupPreItemInputCollection : function() {
+    console.log('in setup pre_item');
           var module = this;
           //creates the inputs based on the rendered items
-          $('.' + module.control.css_attr.pre_add_wrapper, module.container).find( '.' + module.control.css_attr.sub_set_wrapper)
-          .each( function(_index) {
-                var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index;
-                module.czr_preItemInput.add( _id, new module.preItemInputConstructor( _id, {
-                    id : _id,
-                    type : $(this).attr('data-input-type'),
-                    container : $(this),
-                    item : module.czr_preItem('item'),
-                    module : module,
-                    is_preItemInput : true
-                } ) );
-          });//each
+          $('.' + module.control.css_attr.pre_add_wrapper, module.container)
+                .find( '.' + module.control.css_attr.sub_set_wrapper)
+                .each( function( _index ) {
+                      var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index;
+                      module.czr_preItemInput.add( _id, new module.preItemInputConstructor( _id, {
+                            id : _id,
+                            type : $(this).attr('data-input-type'),
+                            container : $(this),
+                            item : module.czr_preItem('item'),
+                            module : module,
+                            is_preItemInput : true
+                      } ) );
+                });//each
   },
 
 

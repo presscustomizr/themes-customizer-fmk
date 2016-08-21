@@ -14,7 +14,7 @@ $.extend( CZRDynModuleMths, {
   renderPreItemView : function( obj ) {
           var module = this;
           //is this view already rendered ?
-          if ( ! _.isEmpty( module.czr_preItem('item_content')() ) )
+          if ( 'pending' != module.preItemEmbedded.state() ) //! _.isEmpty( module.czr_preItem('item_content')() ) )
             return;
 
           //do we have view template script?
@@ -31,11 +31,9 @@ $.extend( CZRDynModuleMths, {
           var $_pre_add_el = $('.' + module.control.css_attr.pre_add_item_content, module.container );
           $_pre_add_el.prepend( pre_add_template() );
 
-          //store it
-          module.czr_preItem('item_content').set( pre_add_template() );
-
-          //say it to the module
-          module.trigger( 'pre_add_view_rendered' , {item : {}, dom_el : $_pre_add_el});
+          //say it
+          module.preItemEmbedded.resolve();
+          //module.czr_preItem('item_content').set( pre_add_template() );
   },
 
   //@return $ el of the pre Item view
@@ -49,7 +47,7 @@ $.extend( CZRDynModuleMths, {
   destroyPreItemView : function() {
           var module = this;
           $('.' +  module.control.css_attr.pre_add_item_content, module.container ).find('.' +  module.control.css_attr.sub_set_wrapper).remove();
-          module.czr_preItem('item_content').set('');
+          //module.czr_preItem('item_content').set('');
   },
 
 
