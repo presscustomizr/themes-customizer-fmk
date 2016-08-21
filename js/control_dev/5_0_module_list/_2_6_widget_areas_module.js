@@ -104,10 +104,8 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
 
-
-
-  //@todo : add the module.czr_preItem('item_content').callbacks.add(function( to, from ) {}
-  //=> to replace pre_add_view_rendered action
+  //When the control is embedded on the page, this method is fired in api.CZRBaseModuleControl:ready()
+  //=> right after the module is instantiated.
   ready : function() {
           var module = this;
           api.CZRDynModule.prototype.ready.call( module );

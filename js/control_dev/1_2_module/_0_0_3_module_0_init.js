@@ -129,6 +129,9 @@ $.extend( CZRModuleMths, {
   //////////////////////////////////
   ///READY
   //////////////////////////////////
+  //When the control is embedded on the page, this method is fired in api.CZRBaseModuleControl:ready()
+  //=> right after the module is instantiated.
+  //If the module is a dynamic one (CRUD like), then this method is invoked by the child class
   ready : function() {
           var module = this;
           module.isReady.resolve();
