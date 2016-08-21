@@ -46,7 +46,7 @@
                             //always get the latest model from the collection
                             if ( _.has(_obj, 'model') && _.has( _obj.model, 'id') ) {
                               if ( _.has(instance, 'get') )
-                                _obj.model = instance.get();
+                                _obj.model = instance();
                               else
                                 _obj.model = instance.getModel( _obj.model.id );
                             }

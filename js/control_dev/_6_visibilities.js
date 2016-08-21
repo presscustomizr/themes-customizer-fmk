@@ -95,7 +95,7 @@
 
                 _id = api.CZR_Helpers.build_setId(_id);
                 //if _cb returns true => show
-                return _cb( api.instance(_id).get() );
+                return _cb( api.instance(_id)() );
               },
 
           /*
@@ -143,7 +143,7 @@
 
 
 
-                  _visibility( _params.setting.get() );
+                  _visibility( _params.setting() );
                   _params.setting.bind( _visibility );
                 });
           },
@@ -155,12 +155,13 @@
           * @return void()
           */
           _handleFaviconNote : function() {
-                var self = this;
+                var self = this,
+                    _fav_setId = api.CZR_Helpers.build_setId( serverControlParams.faviconOptionName );
                 //do nothing if (||)
                 //1) WP version < 4.3 where site icon has been introduced
                 //2) User had not defined a favicon
                 //3) User has already set WP site icon
-                if ( ! api.has('site_icon') || ! api.control('site_icon') || ( api.has(api.CZR_Helpers.build_setId(serverControlParams.faviconOptionName)) && 0 === + api( api.CZR_Helpers.build_setId(serverControlParams.faviconOptionName) ).get() ) || + api('site_icon').get() > 0 )
+                if ( ! api.has('site_icon') || ! api.control('site_icon') || ( api.has( _fav_setId ) && 0 === + api( _fav_setId )() ) || + api('site_icon')() > 0 )
                   return;
 
                 var _oldDes     = api.control('site_icon').params.description;
@@ -175,8 +176,8 @@
                     //reset the description to default
                     api.control('site_icon').container.find('.description').text(_oldDes);
                     //reset the previous favicon setting
-                    if ( api.has( api.CZR_Helpers.build_setId(serverControlParams.faviconOptionName) ) )
-                      api( api.CZR_Helpers.build_setId(serverControlParams.faviconOptionName) ).set("");
+                    if ( api.has( _fav_setId ) )
+                      api( _fav_setId ).set("");
                   }
                   else {
                     self._printFaviconNote(_newDes );

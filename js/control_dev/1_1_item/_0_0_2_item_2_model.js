@@ -36,7 +36,7 @@ var CZRItemMths = CZRItemMths || {};
                 _new_collection = _.clone( module.itemCollection() );
 
             //hook here
-            module.trigger('pre_item_dom_remove', item.get() );
+            module.trigger('pre_item_dom_remove', item() );
 
             //destroy the Item DOM el
             item._destroyView();
@@ -46,7 +46,7 @@ var CZRItemMths = CZRItemMths || {};
             _new_collection = _.without( _new_collection, _.findWhere( _new_collection, {id: item.id }) );
             module.itemCollection.set( _new_collection );
             //hook here
-            module.trigger('pre_item_api_remove', item.get() );
+            module.trigger('pre_item_api_remove', item() );
             //remove the item from the collection
             module.czr_Item.remove(item.id);
     },
@@ -54,7 +54,7 @@ var CZRItemMths = CZRItemMths || {};
     //@return the item {...} from the collection
     //takes a item unique id as param
     getModel : function(id) {
-            return this.get();
+            return this();
     }
 
   });//$.extend

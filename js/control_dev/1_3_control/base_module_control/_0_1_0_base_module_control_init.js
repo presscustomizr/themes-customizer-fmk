@@ -172,7 +172,7 @@ $.extend( CZRBaseModuleControlMths, {
           //For a module embedded in a regular control, we need to hard code the single module collection
           // => in this case, the corresponding setting will store the collection of item(s)
           if ( control.isMultiModuleControl() ) {
-              savedModules = $.extend( true, [], api(control.id).get() );//deep clone
+              savedModules = $.extend( true, [], api(control.id)() );//deep clone
           } else {
               //for now this is a collection with one module
               savedModules.push(
@@ -180,7 +180,7 @@ $.extend( CZRBaseModuleControlMths, {
                       id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
                       module_type : control.params.module_type,
                       section : control.section(),
-                      items   : $.extend( true, [] , api(control.id).get() )//deep clone//must be a collection [] of items
+                      items   : $.extend( true, [] , api(control.id)() )//deep clone//must be a collection [] of items
                     }
               );
           }

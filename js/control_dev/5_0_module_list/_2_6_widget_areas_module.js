@@ -177,7 +177,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           //helper
           _setupContextSelect : function() {
                   var input      = this,
-                      input_contexts = input.get(),
+                      input_contexts = input(),
                       item = input.item,
                       module     = input.module;
 
@@ -201,10 +201,10 @@ $.extend( CZRWidgetAreaModuleMths, {
           //the refresh param is a bool
           _setupLocationSelect : function(refresh ) {
                   var input      = this,
-                      input_locations = input.get(),
+                      input_locations = input(),
                       item = input.item,
                       module     = input.module,
-                      available_locs = api.sidebar_insights('available_locations').get();
+                      available_locs = api.sidebar_insights('available_locations')();
 
                   //generates the locations options
                   //append them if not set yet
@@ -250,17 +250,17 @@ $.extend( CZRWidgetAreaModuleMths, {
                       module     = input.module;
 
                   //check if we are in the pre Item case => if so, the locations might be empty
-                  if ( ! _.has( item.get(), 'locations') || _.isEmpty( item.get().locations ) )
+                  if ( ! _.has( item(), 'locations') || _.isEmpty( item().locations ) )
                     return;
 
                   var _selected_locations = $('select[data-type="locations"]', input.container ).val(),
-                      available_locs = api.sidebar_insights('available_locations').get(),
+                      available_locs = api.sidebar_insights('available_locations')(),
                       _unavailable = _.filter( _selected_locations, function( loc ) {
                         return ! _.contains(available_locs, loc);
                       });
 
                   //check if we are in the pre Item case => if so, the id is empty
-                  if ( ! _.has( item.get(), 'id' ) || _.isEmpty( item.get().id ) ) {
+                  if ( ! _.has( item(), 'id' ) || _.isEmpty( item().id ) ) {
                         module.czr_preItem('location_alert_view_state').set( ! _.isEmpty( _unavailable ) ? 'expanded' : 'closed' );
                   } else {
                         item.czr_itemLocationAlert.set( ! _.isEmpty( _unavailable ) ? 'expanded' : 'closed' );
@@ -311,7 +311,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                   });
 
                   //update item title
-                  item.writeSubtitleInfos(item.get());
+                  item.writeSubtitleInfos(item());
 
                   //this is fired just after the itemWrapperViewSetupApiListeners
                   //=> add a callback to refresh the availability status of the locations in the select location picker
@@ -348,7 +348,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           writeSubtitleInfos : function(model) {
                   var item = this,
                       module = item.module,
-                      _model = _.clone( model || item.get() ),
+                      _model = _.clone( model || item() ),
                       _locations = [],
                       _contexts = [],
                       _html = '';
@@ -473,7 +473,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                       module = item.module,
                       moduleContexts = _.keys(module.contexts);
 
-                  model = model || this.get();
+                  model = model || this();
 
                   if ( ! _.has(model, 'contexts') )
                     return;
@@ -488,7 +488,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           //@param contexts = array of contexts
           _getMatchingContexts : function( defaults ) {
                   var module = this,
-                      _current = api.czr_wp_conditionals.get() || {},
+                      _current = api.czr_wp_conditionals() || {},
                       _matched = _.filter(module.context_match_map, function( hu, wp ) { return true === _current[wp]; });
 
                   return _.isEmpty( _matched ) ? defaults : _matched;
@@ -586,7 +586,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           api.Widgets.registeredSidebars.add( _new_sidebar );
 
           //test if added:
-          //api.Widgets.registeredSidebars.get('czr_sidebars_8');
+          //api.Widgets.registeredSidebars('czr_sidebars_8');
 
 
           //ADD the sidebar section
@@ -733,7 +733,7 @@ $.extend( CZRWidgetAreaModuleMths, {
             _panel_content = api.panel('widgets').container.find( '.control-panel-content' ),
             _set_margins = function() {
                   _section_content.css( 'margin-top', '' );
-                  _panel_content.css('margin-top', api.section(module.serverParams.dynWidgetSection).fixTopMargin('value').get() );
+                  _panel_content.css('margin-top', api.section(module.serverParams.dynWidgetSection).fixTopMargin('value')() );
             };
 
           // Fix the top margin after reflow.
@@ -835,7 +835,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                     //access the registration method statically
                     module.addWidgetSidebar( {}, _sidebar );
                     //activate it if so
-                    if ( _.has( api.sidebar_insights('actives').get(), _sidebar.id ) && api.section.has("sidebar-widgets-" +_sidebar.id ) )
+                    if ( _.has( api.sidebar_insights('actives')(), _sidebar.id ) && api.section.has("sidebar-widgets-" +_sidebar.id ) )
                       api.section( "sidebar-widgets-" +_sidebar.id ).activate();
                   });
           });

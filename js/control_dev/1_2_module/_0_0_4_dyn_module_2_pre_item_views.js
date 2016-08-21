@@ -14,7 +14,7 @@ $.extend( CZRDynModuleMths, {
   renderPreItemView : function( obj ) {
           var module = this;
           //is this view already rendered ?
-          if ( ! _.isEmpty( module.czr_preItem('item_content').get() ) )
+          if ( ! _.isEmpty( module.czr_preItem('item_content')() ) )
             return;
 
           //do we have view template script?
@@ -59,7 +59,7 @@ $.extend( CZRDynModuleMths, {
           var module = this;
 
           module.closeAllItems();
-          module.czr_preItem('view_status').set( 'expanded' == module.czr_preItem('view_status').get() ? 'closed' : 'expanded' );
+          module.czr_preItem('view_status').set( 'expanded' == module.czr_preItem('view_status')() ? 'closed' : 'expanded' );
   },
 
 

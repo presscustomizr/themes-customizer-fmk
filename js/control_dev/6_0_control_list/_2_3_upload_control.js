@@ -47,7 +47,7 @@ $.extend( CZRUploadMths, {
 
     this.removerVisibility = $.proxy( this.removerVisibility, this );
     this.setting.bind( this.removerVisibility );
-    this.removerVisibility( this.setting.get() );
+    this.removerVisibility( this.setting() );
   },
 
 

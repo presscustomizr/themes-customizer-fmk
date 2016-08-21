@@ -91,7 +91,7 @@ $.extend( CZRColumnMths , {
           column.isReady.resolve();
 
           //push it to the module collection
-          column.sektion.module.updateColumnCollection( {column : column.get() });
+          column.sektion.module.updateColumnCollection( {column : column() });
     },
 
     //fired on column embedded

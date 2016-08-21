@@ -189,7 +189,7 @@ $.extend( CZRSektionMths, {
 
   removeColumnFromCollection : function( column ) {
         var module = this,
-            _current_collection = module.czr_columnCollection.get(),
+            _current_collection = module.czr_columnCollection(),
             _new_collection = $.extend( true, [], _current_collection);
 
         _new_collection = _.filter( _new_collection, function( _col ) {
@@ -219,7 +219,7 @@ $.extend( CZRSektionMths, {
               _.each( to, function( _col, _key ) {
                     if ( _.isEqual( _col, from[_key] ) )
                       return;
-                    _current_sek_model = _col.sektion.get();
+                    _current_sek_model = _col.sektion();
                     _new_sek_model = $.extend(true, {}, _current_sek_model);
 
                     //find the column and update it
@@ -243,7 +243,7 @@ $.extend( CZRSektionMths, {
               });
 
               _new_column = _new_column[0];
-              _current_sek_model = _new_column.sektion.get();
+              _current_sek_model = _new_column.sektion();
               //only add the column if the column does not exist in the sektion columns.
               if ( _.isUndefined( _.findWhere( _current_sek_model.columns, {id : _new_column.id } ) ) ) {
                     _new_sek_model = $.extend(true, {}, _current_sek_model);
@@ -261,7 +261,7 @@ $.extend( CZRSektionMths, {
               });
               _to_remove = _to_remove[0];
 
-              _current_sek_model = _to_remove.sektion.get();
+              _current_sek_model = _to_remove.sektion();
               _new_sek_model = $.extend(true, {}, _current_sek_model);//_.clone() is not enough there, we need a deep cloning.
 
               //remove the column from the sekItem model
@@ -302,7 +302,7 @@ $.extend( CZRSektionMths, {
         var id_candidate = 'col_' + key;
 
         //do we have a column collection value ?
-        if ( ! _.has(module, 'czr_columnCollection') || ! _.isArray( module.czr_columnCollection.get() ) ) {
+        if ( ! _.has(module, 'czr_columnCollection') || ! _.isArray( module.czr_columnCollection() ) ) {
               throw new Error('The column collection does not exist or is not properly set in module : ' + module.id );
         }
         //make sure the column is not already instantiated
@@ -324,8 +324,8 @@ $.extend( CZRSektionMths, {
         //get the initial key
         //=> if we already have a collection, extract all keys, select the max and increment it.
         //else, key is 0
-        if ( ! _.isEmpty( module.czr_columnCollection.get() ) ) {
-            _max_col_key = _.max( module.czr_columnCollection.get(), function( _col ) {
+        if ( ! _.isEmpty( module.czr_columnCollection() ) ) {
+            _max_col_key = _.max( module.czr_columnCollection(), function( _col ) {
                 return parseInt( _col.id.replace(/[^\/\d]/g,''), 10 );
             });
             _next_key = parseInt( _max_col_key.id.replace(/[^\/\d]/g,''), 10 ) + 1;
@@ -346,7 +346,7 @@ $.extend( CZRSektionMths, {
   getModuleColumn : function( module_id ) {
         var module = this,
             _mod_columns = [];
-        _.each( module.czr_columnCollection.get(), function( _col, _key ) {
+        _.each( module.czr_columnCollection(), function( _col, _key ) {
               if ( _.findWhere( _col.modules, { id : module_id } ) )
                 _mod_columns.push( _col.id );
         });

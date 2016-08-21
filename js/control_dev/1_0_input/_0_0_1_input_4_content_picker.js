@@ -111,7 +111,7 @@ $.extend( CZRInputMths , {
 
   setupSelectedContents : function() {
         var input = this,
-           _model = input.get();
+           _model = input();
 
         return _model;
   },

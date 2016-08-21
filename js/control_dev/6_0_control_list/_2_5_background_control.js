@@ -24,13 +24,13 @@ $.extend( CZRBackgroundMths , {
   //
   //to add :
   //handles the retrocompat with previous setting (only color, not array)
-  //var current_setval = _.isString( api(control.id).get() ) ? { 'background-color': api(control.id).get() } : api(control.id).get();
+  //var current_setval = _.isString( api(control.id)() ) ? { 'background-color': api(control.id)() } : api(control.id)();
   ready : function() {
           var control = this;
           api.CZRItemControl.prototype.ready.call( control );
 
           api.bind('ready', function() {
-                var _img_on_init = control.czr_Item('background-image').get();
+                var _img_on_init = control.czr_Item('background-image')();
 
                 control.setBgDependantsVisibilities( ! _.isUndefined(_img_on_init) && ! _.isEmpty(_img_on_init) );
 
@@ -99,7 +99,7 @@ $.extend( CZRBackgroundMths , {
                     value : _value,
                     html  : _label
                   };
-                if ( _value == input.get() )
+                if ( _value == input() )
                   $.extend( _attributes, { selected : "selected" } );
 
                 $( 'select[data-type="'+ input.id +'"]', input.container ).append( $('<option>', _attributes) );
@@ -115,7 +115,7 @@ $.extend( CZRBackgroundMths , {
                   //=> an array of objects
                   var item = this,
                       control = this.control,
-                      model = _.clone( item.get() );
+                      model = _.clone( item() );
 
                   //do we have view content template script?
                   if ( 0 === $( '#tmpl-' + control.getTemplateEl( 'itemInputList', model ) ).length )

@@ -2,7 +2,7 @@ var CZRInputMths = CZRInputMths || {};
 $.extend( CZRInputMths , {
     setupImageUploader : function() {
           var input        = this,
-              _model       = input.get();
+              _model       = input();
 
           //an instance field where we'll store the current attachment
           input.attachment   = {};

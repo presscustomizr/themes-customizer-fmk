@@ -71,7 +71,7 @@ $.extend( CZRItemMths , {
         //2) observe its changes
         item.isReady.done( function() {
               //push it to the collection
-              item.module.updateItemsCollection( { item : item.get() } );
+              item.module.updateItemsCollection( { item : item() } );
               //listen to each single item change
               item.callbacks.add( function() { return item.itemReact.apply(item, arguments ); } );
 

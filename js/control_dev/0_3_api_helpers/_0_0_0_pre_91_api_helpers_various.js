@@ -49,7 +49,7 @@
         has_part_refresh : function( setId ) {
                 if ( ! _.has( api, 'czr_partials')  )
                   return;
-                return  _.contains( _.map( api.czr_partials.get(), function( partial, key ) {
+                return  _.contains( _.map( api.czr_partials(), function( partial, key ) {
                   return _.contains( partial.settings, setId );
                 }), true );
         },

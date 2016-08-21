@@ -15,7 +15,7 @@ $.extend( CZRDynModuleMths, {
   //           $_changed_input   = $(obj.dom_event.currentTarget, obj.dom_el ),
   //           _changed_prop     = $_changed_input.attr('data-type'),
   //           _new_val          = $( $_changed_input, obj.dom_el ).val(),
-  //           _new_item        = _.clone(control.czr_preItem('item').get());//initialize it to the current value
+  //           _new_item        = _.clone(control.czr_preItem('item')());//initialize it to the current value
 
   //       //make sure the title has not been emptied. If so, replace it with the default title.
   //       if ( 'title' == _changed_prop && _.isEmpty(_new_val) ) {

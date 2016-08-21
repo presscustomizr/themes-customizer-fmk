@@ -29,7 +29,7 @@ $.extend( CZRItemMths , {
           var item = this,
               module = this.module;
 
-          item_model = item.get() || item.initial_item_model;//could not be set yet
+          item_model = item() || item.initial_item_model;//could not be set yet
 
           //czr_ItemState stores the current expansion status of a given view => one value by created by item.id
           //czr_ItemState can take 3 values : expanded, expanded_noscroll (=> used on view creation), closed
@@ -102,7 +102,7 @@ $.extend( CZRItemMths , {
         var item = this,
             module = item.module;
 
-        item_model = item_model || item.get();
+        item_model = item_model || item();
 
         //render the item wrapper
         $_view_el = $('<li>', { class : module.control.css_attr.single_item, 'data-id' : item_model.id,  id : item_model.id } );
@@ -139,7 +139,7 @@ $.extend( CZRItemMths , {
           var item = this,
               module = this.module;
 
-          item_model = item_model || item.get();
+          item_model = item_model || item();
 
           //do we have view content template script?
           if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) ).length ) {
@@ -166,7 +166,7 @@ $.extend( CZRItemMths , {
   writeItemViewTitle : function( item_model ) {
         var item = this,
             module = item.module,
-            _model = item_model || item.get(),
+            _model = item_model || item(),
             _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
 
         _title = api.CZR_Helpers.truncate(_title, 20);

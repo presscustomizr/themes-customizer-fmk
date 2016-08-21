@@ -51,7 +51,7 @@ $.extend( CZRFeaturedPageModuleMths, {
 
           var module     = this,
               item       = module.czr_preItem('item'),
-              item_model = item.get();
+              item_model = item();
 
           if ( _.isEmpty(item_model) || ! _.isObject(item_model) ) {
               throw new Error('addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
@@ -123,10 +123,10 @@ $.extend( CZRFeaturedPageModuleMths, {
                       is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput;
 
                   //check if we are in the pre Item case => if so, the fp-post might be empty
-                  if ( ! _.has( item.get(), 'fp-post') || _.isEmpty( item.get()['fp-post'] ) )
+                  if ( ! _.has( item(), 'fp-post') || _.isEmpty( item()['fp-post'] ) )
                     return;
 
-                  var _new_model      = _.clone( item.get() ),
+                  var _new_model      = _.clone( item() ),
                       _fp_post        = _new_model['fp-post'][0],
                       _new_title      = _fp_post.title,
                       inputCollection = is_preItemInput ? input.module.czr_preItemInput : item.czr_Input;
@@ -154,7 +154,7 @@ $.extend( CZRFeaturedPageModuleMths, {
 
                   if ( is_preItemInput )
                     return;
-                  var _new_model  = _.clone( item.get() ),
+                  var _new_model  = _.clone( item() ),
                       _new_title  = "undefined" !== typeof _new_model['fp-title'] ? _new_model['fp-title'] : '';
 
                   $.extend( _new_model, { title : _new_title} );
@@ -164,7 +164,7 @@ $.extend( CZRFeaturedPageModuleMths, {
 
           setThumbnailAjax : function() {
                   var item     = this.item,
-                      _fp_post = item.czr_Input('fp-post').get(),
+                      _fp_post = item.czr_Input('fp-post')(),
                       _post_id;
 
                   if ( typeof _fp_post  == "undefined" )
@@ -264,7 +264,7 @@ $.extend( CZRFeaturedPageModuleMths, {
           writeItemViewTitle : function( model ) {
                   var item = this,
                             module  = item.module,
-                            _model = model || item.get(),
+                            _model = model || item(),
                             _title = _model.title ? _model.title : serverControlParams.translatedStrings.featuredPageTitle;
 
                   _title = api.CZR_Helpers.truncate(_title, 25);

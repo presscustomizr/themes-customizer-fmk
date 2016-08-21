@@ -58,7 +58,7 @@ $.extend( CZRSektionMths, {
                       ]
                 ));
 
-                var _sektion_model = sekItem.get(),
+                var _sektion_model = sekItem(),
                     module = options.module;
 
                 if ( ! _.has(_sektion_model, 'sektion-layout') ) {
@@ -75,8 +75,8 @@ $.extend( CZRSektionMths, {
                       //}
                       //=> we need to extend it with the sektion instance
                       //=> make sure the columns are instantiated as well
-                      if ( ! _.isEmpty( sekItem.get().columns ) ) {
-                            _.each( sekItem.get().columns , function( _column ) {
+                      if ( ! _.isEmpty( sekItem().columns ) ) {
+                            _.each( sekItem().columns , function( _column ) {
                                   //instantiate the column and push it to the global column collection
                                   var column_candidate = $.extend( true, {}, _column );//create a deep clone
                                   module.instantiateColumn( $.extend( column_candidate, { sektion : sekItem } ) );

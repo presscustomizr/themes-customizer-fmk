@@ -491,6 +491,9 @@
 
 
 
+
+
+
   /*****************************************************************************
   * SYNCHRONIZER AUGMENTED
   *****************************************************************************/
@@ -503,7 +506,6 @@
   //         //     console.log('element, options', element, options);
   //         // }
   // };
-
 
   // //CHECKBOX WITH ICHECK
   api.Element.synchronizer.checkbox.update = function( to ) {

@@ -59,7 +59,7 @@ $.extend( CZRColumnMths , {
     //the job of this method is to update the column instance value with a new collection of modules
     columnModuleCollectionReact : function( to, from ) {
             var column = this,
-                _current_column_model = column.get(),
+                _current_column_model = column(),
                 _new_column_model = _.clone( _current_column_model ),
                 _new_module_collection = [];
 

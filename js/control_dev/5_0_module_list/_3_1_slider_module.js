@@ -56,7 +56,7 @@ $.extend( CZRSlideModuleMths, {
                     item = this.item,
                     is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput;
 
-                var _new_model  = _.clone( item.get() ),
+                var _new_model  = _.clone( item() ),
                     _new_title  = _new_model['slide-title'];
 
                 $.extend( _new_model, { title : _new_title} );
@@ -69,7 +69,7 @@ $.extend( CZRSlideModuleMths, {
           writeItemViewTitle : function( model ) {
                 var item = this,
                           module  = item.module,
-                          _model = model || item.get(),
+                          _model = model || item(),
                           _title = _model.title ? _model.title : serverControlParams.translatedStrings.slideTitle;
 
                 _title = api.CZR_Helpers.truncate(_title, 25);

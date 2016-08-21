@@ -2,7 +2,7 @@ var CZRInputMths = CZRInputMths || {};
 $.extend( CZRInputMths , {
     setupTextEditor : function() {
           var input        = this,
-              _model       = input.get();
+              _model       = input();
 
           //do we have an html template and a input container?
           if ( ! input.container ) {
@@ -12,7 +12,7 @@ $.extend( CZRInputMths , {
           if ( ! input.czrRenderInputTextEditorTemplate() )
             return;
 
-          input.editor       = tinyMCE.get( 'czr-customize-content_editor' );
+          input.editor       = tinyMCE( 'czr-customize-content_editor' );
           input.textarea     = $( '#czr-customize-content_editor' );
           input.editorPane   = $( '#czr-customize-content_editor-pane' );
           input.dragbar      = $( '#czr-customize-content_editor-dragbar' );
@@ -69,7 +69,7 @@ $.extend( CZRInputMths , {
 
           input.editorExpanded.bind( function (expanded) {
 
-                console.log('in input.editorExpanded', expanded, input.get() );
+                console.log('in input.editorExpanded', expanded, input() );
                 /*
                 * Ensure only the latest input is bound
                 */
@@ -85,7 +85,7 @@ $.extend( CZRInputMths , {
                 input.czrSetToggleButtonText( expanded );
 
                 if ( expanded ) {
-                    editor.setContent( wp.editor.autop( input.get() ) );
+                    editor.setContent( wp.editor.autop( input() ) );
                     editor.on( 'input change keyup', input.czrOnVisualEditorChange );
                     textarea.on( 'input', input.czrOnTextEditorChange );
                     input.czrResizeEditor( window.innerHeight - editorPane.height() );
@@ -121,7 +121,7 @@ $.extend( CZRInputMths , {
   },
   czrUpdateTextPreview: function() {
           var input   = this,
-              input_model = input.get(),
+              input_model = input(),
               value;
 
           //TODO: better stripping
@@ -150,9 +150,9 @@ $.extend( CZRInputMths , {
           if ( ! view_template  || ! input.container )
             return;
 
-          console.log('Model injected in text editor tmpl : ', input.get() );
+          console.log('Model injected in text editor tmpl : ', input() );
 
-          $_view_el.after( view_template( input.get() ) );
+          $_view_el.after( view_template( input() ) );
 
           return true;
   },
@@ -189,7 +189,7 @@ $.extend( CZRInputMths , {
               editorPane   = input.editorPane,
               editorFrame  = input.editorFrame;
 
-          if ( ! input.editorExpanded.get() ) {
+          if ( ! input.editorExpanded() ) {
             return;
           }
 
@@ -232,7 +232,7 @@ $.extend( CZRInputMths , {
               resizeDelay = 50,
               editorPane   = input.editorPane;
 
-          if ( ! input.editorExpanded.get() ) {
+          if ( ! input.editorExpanded() ) {
             return;
           }
 

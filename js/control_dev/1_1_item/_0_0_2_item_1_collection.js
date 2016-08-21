@@ -26,7 +26,7 @@ $.extend( CZRItemMths , {
 
         //prepare and sets the item value on api ready
         //=> triggers the module rendering + DOM LISTENERS
-        var item_model = $.extend( true, {}, item.get() );
+        var item_model = $.extend( true, {}, item() );
 
         if ( ! _.isObject( item_model ) )
           item_model = item.defaultItemModel;
