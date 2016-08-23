@@ -7,7 +7,7 @@ $.extend( CZRSektionMths, {
           var module = this;
           // if ( 'pending' == api.czrModulePanelEmbedded.state() ) {
           //     $.when( module.renderModulePanel() ).done( function(){
-          //         console.log('MODULE PANEL EMBEDDED!');
+          //         api.consoleLog('MODULE PANEL EMBEDDED!');
           //         api.czrModulePanelEmbedded.resolve();
           //     });
           // }

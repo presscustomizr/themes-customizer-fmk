@@ -12,7 +12,7 @@ $.extend( CZRMultiModuleControlMths, {
                     //run the parent initialize
                     parentConstructor.prototype.initialize.call( module, id, constructorOptions );
 
-                    console.log('MODULE INSTANTIATED : ', module.id );
+                    api.consoleLog('MODULE INSTANTIATED : ', module.id );
 
                     //extend the module with new template Selectors
                     $.extend( module, {
@@ -40,7 +40,7 @@ $.extend( CZRMultiModuleControlMths, {
 
                     //React to a module column change. Typically fired when moving a module from one column to another.
                     module.modColumn.bind( function( to, from ) {
-                          console.log('MODULE ' + module.id + ' HAS BEEN MOVED TO COLUMN', to, module() );
+                          api.consoleLog('MODULE ' + module.id + ' HAS BEEN MOVED TO COLUMN', to, module() );
                           var _current_model = module(),
                               _new_model = $.extend( true, {}, _current_model );
 
@@ -74,7 +74,7 @@ $.extend( CZRMultiModuleControlMths, {
               //when ready done => the module items are embedded (without their content)
               ready : function( is_added_by_user ) {
                       var module = this;
-                       console.log('MODULE READY IN EXTENDED MODULE CLASS : ', module.id );
+                       api.consoleLog('MODULE READY IN EXTENDED MODULE CLASS : ', module.id );
                       $.when( module.renderModuleWrapper( is_added_by_user ) ).done( function( $_module_container ) {
                             if ( _.isUndefined($_module_container) || false === $_module_container.length ) {
                                 throw new Error( 'Module container has not been embedded for module :' + module.id );

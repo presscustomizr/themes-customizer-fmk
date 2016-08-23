@@ -18,7 +18,7 @@ $.extend( CZRBaseModuleControlMths, {
           _.each( control.getSavedModules() , function( _mod, _key ) {
                   //a module previously embedded in a deleted sektion must not be registered
                   if ( ! sektion_module_instance.czr_Item.has( _mod.sektion_id ) ) {
-                      console.log('Warning Module ' + _mod.id + ' is orphan : it has no sektion to be embedded to. It Must be removed.');
+                      api.consoleLog('Warning Module ' + _mod.id + ' is orphan : it has no sektion to be embedded to. It Must be removed.');
                       _orphan_mods.push(_mod);
                       return;
                   }
@@ -129,7 +129,7 @@ $.extend( CZRBaseModuleControlMths, {
         //2) only needed when : add, remove, sort item(s)
         //module update case
         // if ( 'postMessage' == api(control.id).transport && ! api.CZR_Helpers.has_part_refresh( control.id ) ) {
-        //     console.log('WE DONT KNOW IF THE COLLECTION IS SORTED HERE ! FIX!', to, from, data );
+        //     api.consoleLog('WE DONT KNOW IF THE COLLECTION IS SORTED HERE ! FIX!', to, from, data );
         //     if ( is_collection_sorted )
         //         control.previewer.refresh();
         // }

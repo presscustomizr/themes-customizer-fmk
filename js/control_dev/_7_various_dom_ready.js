@@ -8,15 +8,15 @@
 
     //WHAT IS HAPPENING IN THE MESSENGER
     // $(window.parent).on( 'message', function(e, o) {
-    //   console.log('SENT STUFFS', JSON.parse( e.originalEvent.data), e );
+    //   api.consoleLog('SENT STUFFS', JSON.parse( e.originalEvent.data), e );
     // });
     // $( window ).on( 'message', function(e, o) {
-    //   console.log('INCOMING MESSAGE', JSON.parse( e.originalEvent.data), e );
+    //   api.consoleLog('INCOMING MESSAGE', JSON.parse( e.originalEvent.data), e );
     // });
     // $(window.document).bind("ajaxSend", function(e, o){
-    //    console.log('AJAX SEND', e, arguments );
+    //    api.consoleLog('AJAX SEND', e, arguments );
     // }).bind("ajaxComplete", function(e, o){
-    //    console.log('AJAX COMPLETE', e, o);
+    //    api.consoleLog('AJAX COMPLETE', e, o);
     // });
 
 

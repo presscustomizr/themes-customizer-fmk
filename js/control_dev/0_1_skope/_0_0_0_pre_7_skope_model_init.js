@@ -97,7 +97,7 @@ $.extend( CZRSkopeMths, {
           skope( constructor_options );
 
           skope.isReady.done( function() {
-              //console.log('SKOPE : '  + skope_id + ' IS READY');
+              //api.consoleLog('SKOPE : '  + skope_id + ' IS READY');
           });
     },
 
@@ -117,7 +117,7 @@ $.extend( CZRSkopeMths, {
           });
 
           skope.embedded.done( function() {
-              //console.log('SKOPE : '  + skope().id + ' EMBEDDED');
+              //api.consoleLog('SKOPE : '  + skope().id + ' EMBEDDED');
               //Setup the user event listeners
               skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
               //hide when this skope is not in the current skopes list
@@ -184,7 +184,7 @@ $.extend( CZRSkopeMths, {
     activeStateReact : function(to, from){
           var skope = this;
           skope.container.toggleClass('active', to);
-          //console.log('in the view : listen for scope state change', this.name, to, from );
+          //api.consoleLog('in the view : listen for scope state change', this.name, to, from );
           $('.czr-scope-switch', skope.container).toggleClass('fa-toggle-on', to).toggleClass('fa-toggle-off', !to);
     },
 

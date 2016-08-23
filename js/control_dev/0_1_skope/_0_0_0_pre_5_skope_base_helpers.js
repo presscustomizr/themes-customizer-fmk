@@ -228,7 +228,7 @@ $.extend( CZRSkopeBaseMths, {
     //           isDirty = skope_id != api.czr_activeSkope() ? api.czr_skope( skope_id ).getSkopeSettingDirtyness( wpSetId ) : api( wpSetId ).dirty,
     //           dirtyVal = skope_id != api.czr_activeSkope() ? api.czr_skope( skope_id ).dirtyValues()[ wpSetId ] : api( wpSetId )();
 
-    //       console.log('in GET SKOPE DIRTY VAL', skope_id, wpSetId, isDirty, dirtyVal );
+    //       api.consoleLog('in GET SKOPE DIRTY VAL', skope_id, wpSetId, isDirty, dirtyVal );
     //       //if we are already in the final 'global' skope
     //       if ( 'global' == skope_model.skope && ! isDirty )
     //         return '_no_dirty_val_';

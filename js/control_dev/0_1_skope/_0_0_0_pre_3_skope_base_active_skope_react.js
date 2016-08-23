@@ -7,7 +7,7 @@ $.extend( CZRSkopeBaseMths, {
     // => change the to and from skope active() state
     // => silently update each setting values with the skope set of vals
     activeSkopeReact : function( to, from ) {
-          console.log('in active skope react');
+          api.consoleLog('in active skope react');
           var self = this;
           //set the to and from scope state on init and switch
           if ( ! _.isUndefined(from) && api.czr_skope.has(from) )
@@ -101,7 +101,7 @@ $.extend( CZRSkopeBaseMths, {
           section_id = section_id || api.czr_activeSectionId();
 
           if ( _.isUndefined( section_id ) ) {
-            console.log( '_getSilentUpdateCandidates : No active section provided');
+            api.consoleLog( '_getSilentUpdateCandidates : No active section provided');
             return;
           }
           if ( ! api.section.has( section_id ) ) {
@@ -139,7 +139,7 @@ $.extend( CZRSkopeBaseMths, {
             _silent_update_candidates = [ _silent_update_candidates ];
           }
 
-          console.log('silent_update_candidates', _silent_update_candidates );
+          api.consoleLog('silent_update_candidates', _silent_update_candidates );
           //Fire the silent updates promises
           _.each( _silent_update_candidates, function( setId ) {
                 if ( 'czr_multi_module' == api.control(setId).params.type )
@@ -178,7 +178,7 @@ $.extend( CZRSkopeBaseMths, {
           }).then( function() {
                 _.each( _deferred, function(prom){
                       if ( _.isObject( prom ) )
-                        console.log( prom.state() );
+                        api.consoleLog( prom.state() );
                 });
                 $.when( _silently_update() ).done( function() {
                     if ( refresh )
@@ -301,7 +301,7 @@ $.extend( CZRSkopeBaseMths, {
 
                     //Fire the sektion module if there's a synced sektion
                     if ( ! _.isEmpty( _synced_short_id ) && ! _.isUndefined( _synced_short_id ) ) {
-                        console.log('FIRE SEKTION MODULE?', _syncSektionModuleId, api.control( wpSetId ).czr_Module( _syncSektionModuleId ).isReady.state() );
+                        api.consoleLog('FIRE SEKTION MODULE?', _syncSektionModuleId, api.control( wpSetId ).czr_Module( _syncSektionModuleId ).isReady.state() );
                         api.control( wpSetId ).czr_Module( _syncSektionModuleId ).fireSektionModule();
                     }
               break;

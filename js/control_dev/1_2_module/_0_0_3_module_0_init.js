@@ -111,7 +111,7 @@ $.extend( CZRModuleMths, {
                     if ( module.isMultiItem() )
                       module._makeItemsSortable();
 
-                    console.log('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
+                    api.consoleLog('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
               });
 
               //populate and instantiate the items now when a module is embedded in a regular control
@@ -133,7 +133,7 @@ $.extend( CZRModuleMths, {
   ready : function() {
         var module = this;
         module.isReady.resolve();
-        console.log('MODULE READY IN BASE MODULE CLASS : ', module.id );
+        api.consoleLog('MODULE READY IN BASE MODULE CLASS : ', module.id );
   },
 
 

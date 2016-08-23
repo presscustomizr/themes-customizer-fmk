@@ -150,7 +150,7 @@ $.extend( CZRSektionMths, {
         var module = this,
             _current_collection = module.czr_columnCollection();
             _new_collection = $.extend( true, [] , _current_collection );
-        console.log('in update column collection', module.id, module.czr_columnCollection() );
+        api.consoleLog('in update column collection', module.id, module.czr_columnCollection() );
         //if a collection is provided in the passed obj then simply refresh the collection
         //=> typically used when reordering the collection module with sortable or when a column is removed
         if ( _.has( obj, 'collection' ) ) {

@@ -69,7 +69,7 @@ $.extend( CZRInputMths , {
 
           input.editorExpanded.bind( function (expanded) {
 
-                console.log('in input.editorExpanded', expanded, input() );
+                api.consoleLog('in input.editorExpanded', expanded, input() );
                 /*
                 * Ensure only the latest input is bound
                 */
@@ -150,7 +150,7 @@ $.extend( CZRInputMths , {
           if ( ! view_template  || ! input.container )
             return;
 
-          console.log('Model injected in text editor tmpl : ', input() );
+          api.consoleLog('Model injected in text editor tmpl : ', input() );
 
           $_view_el.after( view_template( input() ) );
 

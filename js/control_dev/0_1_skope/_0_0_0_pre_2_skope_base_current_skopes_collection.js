@@ -5,7 +5,7 @@ $.extend( CZRSkopeBaseMths, {
     //fired on 'czr-skopes-ready' triggered by the preview
     //@see api_overrides
     updateSkopeCollection : function( sent_collection, sent_channel ) {
-          console.log('UPDATE SKOPE COLLECTION', sent_collection, sent_channel );
+          api.consoleLog('UPDATE SKOPE COLLECTION', sent_collection, sent_channel );
           var self = this;
               _api_ready_collection = [];
 
@@ -55,9 +55,9 @@ $.extend( CZRSkopeBaseMths, {
                 });
 
                 if ( ! _.isEmpty( not_sync) ) {
-                    console.log('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', not_sync);
+                    api.consoleLog('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', not_sync);
                 } else {
-                    console.log('ALL RIGHT : SETTING VALUES ARE SYNCHRONIZED BETWEEN THE SERVER AND THE API');
+                    api.consoleLog('ALL RIGHT : SETTING VALUES ARE SYNCHRONIZED BETWEEN THE SERVER AND THE API');
                 }
 
                 //then update the skope db values, including the global skope
@@ -198,7 +198,7 @@ $.extend( CZRSkopeBaseMths, {
           });
 
           //Instantiate the new skopes
-          console.log('SKOPES TO INSTANTIATE?', _to_instantiate );
+          api.consoleLog('SKOPES TO INSTANTIATE?', _to_instantiate );
           _.each( _to_instantiate, function( _skope ) {
               _skope = $.extend( true, {}, _skope );
               //use a cloned skop to instantiate : @todo : do we still need that ?
@@ -241,7 +241,7 @@ $.extend( CZRSkopeBaseMths, {
                 _.each( _global_skp_db_values, function( _val, shortSetId ){
                       var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
                       if ( ! _.isEqual( api.settings.settings[wpSetId].value, _val ) ) {
-                          console.log('SYNCHRONIZE GLOBAL SKOPE WITH API');
+                          api.consoleLog('SYNCHRONIZE GLOBAL SKOPE WITH API');
                           api.settings.settings[wpSetId].value = _val;
                       }
                 });
@@ -262,7 +262,7 @@ $.extend( CZRSkopeBaseMths, {
                       _api_ready_dirties[_k] = _val;
                 });
 
-                console.log('IN UPDATE SAVED SKOPES DB VALUES', _skope_id, _saved_dirties, _new_db_val, _api_ready_dirties);
+                api.consoleLog('IN UPDATE SAVED SKOPES DB VALUES', _skope_id, _saved_dirties, _new_db_val, _api_ready_dirties);
                 //merge current and new
                 $.extend( _new_db_val, _api_ready_dirties );
 

@@ -103,9 +103,9 @@ $.extend( CZRSektionMths, {
 
 
 
-          console.log('SEKTION MODULE INIT', module.control.params.czr_skope );
+          api.consoleLog('SEKTION MODULE INIT', module.control.params.czr_skope );
           if ( _.has( api, 'czr_activeSkope' ) )
-            console.log('SEKTION MODULE INIT', api.czr_activeSkope() );
+            api.consoleLog('SEKTION MODULE INIT', api.czr_activeSkope() );
 
           //api.czrModulePanelEmbedded.done( function() {
 
@@ -123,10 +123,10 @@ $.extend( CZRSektionMths, {
 
 
 
-                            console.log('REACT TO MODULE PANEL STATE', expanded,  module.control.params.syncCollection, sek_module() );
-                            console.log('WHEN DOES THIS ACTION OCCUR?', api.czrModulePanelBinded.state() );
+                            api.consoleLog('REACT TO MODULE PANEL STATE', expanded,  module.control.params.syncCollection, sek_module() );
+                            api.consoleLog('WHEN DOES THIS ACTION OCCUR?', api.czrModulePanelBinded.state() );
 
-                            //console.log('IS EQUAL?', _.isEqual( module, api.control( synced_control_id ).syncSektionModule() ) );
+                            //api.consoleLog('IS EQUAL?', _.isEqual( module, api.control( synced_control_id ).syncSektionModule() ) );
 
 
                             // if ( _.isEqual( module, api.control( synced_control_id ).syncSektionModule() ) )
@@ -137,7 +137,7 @@ $.extend( CZRSektionMths, {
 
                             // sek_module.modulePanelDragulized = sek_module.modulePanelDragulized || $.Deferred();
                             // if ( expanded && 'pending' == sek_module.modulePanelDragulized.state() ) {
-                            //       console.log('JOIE ?');
+                            //       api.consoleLog('JOIE ?');
                             //       sek_module.modsDragInstance.containers.push( $('#czr-available-modules-list')[0]);
                             //       sek_module.modulePanelDragulized.resolve();
                             // }
@@ -194,11 +194,11 @@ $.extend( CZRSektionMths, {
 
 
           // if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId()  ) {
-          //     console.log('SECTION EXPANDED CASE. WHAT IS THE CURRENT MODULE-COLLECTION?', api('hu_theme_options[module-collection]')(), module.isReady.state() );
+          //     api.consoleLog('SECTION EXPANDED CASE. WHAT IS THE CURRENT MODULE-COLLECTION?', api('hu_theme_options[module-collection]')(), module.isReady.state() );
           //     _fire();
           // }
           api.section( module.control.section() ).expanded.bind(function(to) {
-              console.log('FIRE SEKTION MODULE!', module.id );
+              api.consoleLog('FIRE SEKTION MODULE!', module.id );
               module.fireSektionModule();
           });
   },//initialize

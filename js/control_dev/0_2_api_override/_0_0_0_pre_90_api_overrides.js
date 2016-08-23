@@ -62,7 +62,7 @@
         this.bind( 'czr-skopes-ready', function( data ) {
               if ( ! serverControlParams.isSkopOn )
                 return;
-              console.log('czr-skopes-ready DATA', data );
+              api.consoleLog('czr-skopes-ready DATA', data );
               var preview = this;
               //initialize skopes with the server sent data
               if ( _.has(data, 'czr_skopes') )
@@ -200,7 +200,7 @@
             //the previewer is now scope aware
             api.czr_isPreviewerSkopeAware.resolve();
 
-            console.log('DIRTY VALUES TO SUBMIT ? ', dirtyCustomized, api.czr_skope( skope_id ).dirtyValues() );
+            api.consoleLog('DIRTY VALUES TO SUBMIT ? ', dirtyCustomized, api.czr_skope( skope_id ).dirtyValues() );
 
             return {
                 wp_customize: 'on',
@@ -249,12 +249,12 @@
                         request = wp.ajax.post( 'czr_skope_reset', query );
                     }
 
-                    console.log('in czr_reset submit : ', skope_id, query );
+                    api.consoleLog('in czr_reset submit : ', skope_id, query );
 
 
 
                     request.fail( function ( response ) {
-                          console.log('ALORS FAIL ?', skope_id, response );
+                          api.consoleLog('ALORS FAIL ?', skope_id, response );
                           if ( '0' === response ) {
                               response = 'not_logged_in';
                           } else if ( '-1' === response ) {
@@ -275,7 +275,7 @@
                     } );
 
                     request.done( function( response ) {
-                          console.log('ALORS DONE ?', skope_id, response );
+                          api.consoleLog('ALORS DONE ?', skope_id, response );
                           // // Clear setting dirty states
                           // api.each( function ( value ) {
                           //   value._dirty = false;
@@ -335,7 +335,7 @@
                     nonce:  self.nonce.save
                 } );
 
-                console.log('in submit : ', skope_id, query, api.previewer.channel() );
+                api.consoleLog('in submit : ', skope_id, query, api.previewer.channel() );
 
                 request = wp.ajax.post( 'customize_save', query );
 
@@ -346,7 +346,7 @@
                 // } );
 
                 request.fail( function ( response ) {
-                    console.log('ALORS FAIL ?', skope_id, response );
+                    api.consoleLog('ALORS FAIL ?', skope_id, response );
                     if ( '0' === response ) {
                         response = 'not_logged_in';
                     } else if ( '-1' === response ) {
@@ -367,7 +367,7 @@
                 } );
 
                 request.done( function( response ) {
-                    console.log('ALORS DONE ?', skope_id, response );
+                    api.consoleLog('ALORS DONE ?', skope_id, response );
                 } );
 
                 //return the promise
@@ -388,7 +388,7 @@
               var submitDirtySkopes = function() {
                     var promises = [];
                     _.each( dirtySkopesToSubmit, function( _skop ) {
-                          console.log('submit request for skope : ', _skop.id );
+                          api.consoleLog('submit request for skope : ', _skop.id );
                           promises.push( submit( _skop.id ) );
                     });
                     return promises;
@@ -508,9 +508,9 @@
   // api.Element.prototype.initialize = function( element, options  ) {
   //         //call the original constructor
   //         _original_element_initialize .apply( this, [element, options ] );
-  //         console.log('IN OVERRIDEN INITIALIZE ELEMENT ?');
+  //         api.consoleLog('IN OVERRIDEN INITIALIZE ELEMENT ?');
   //         // if ( this.element.is('select') ) {
-  //         //     console.log('element, options', element, options);
+  //         //     api.consoleLog('element, options', element, options);
   //         // }
   // };
 

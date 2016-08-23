@@ -1,6 +1,6 @@
 var api = api || wp.customize, $ = $ || jQuery;
 (function (api, $, _) {
-      //Dev mode aware and IE compatible console.log()
+      //Dev mode aware and IE compatible api.consoleLog()
       api.consoleLog = function() {
             //fix for IE, because console is only defined when in F12 debugging mode in IE
             if ( _.isUndefined( console ) || ! serverControlParams.isDevMode )

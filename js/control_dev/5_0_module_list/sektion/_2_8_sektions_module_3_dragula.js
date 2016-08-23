@@ -15,7 +15,7 @@ $.extend( CZRSektionMths, {
         //instantiate dragula without container => they will be pushed on module instantiation
         module.modsDragInstance = dragula({
             // copySortSource : function() {
-            //   console.log('copy sort source', arguments);
+            //   api.consoleLog('copy sort source', arguments);
             // },
             copy: function (el, source) {
               return $(el).hasClass( 'czr-module-candidate' );
@@ -24,7 +24,7 @@ $.extend( CZRSektionMths, {
                 return _.contains( handle.className.split(' '), 'czr-mod-drag-handler' );
             },
             // invalidTarget : function(el, handle) {
-            //     console.log('invalidTarget', el, handle );
+            //     api.consoleLog('invalidTarget', el, handle );
             //     return false;
             // },
             accepts: function ( el, target, source, sibling ) {
@@ -33,11 +33,11 @@ $.extend( CZRSektionMths, {
                 //   return false;
                 // if ( $(target).closest('.czr-single-item').hasClass('open') )
                 //   return ! _.contains( target.className.split(' '), 'czr-dragula-fake-container' );
-                //console.log('in accepts', target, $(target).attr('id') );
+                //api.consoleLog('in accepts', target, $(target).attr('id') );
                 return ! _.isUndefined(target) && 'czr-available-modules-list' != $(target).attr('id') ;
             },
             isContainer : function( el ) {
-              //console.log('isContainer?', el);
+              //api.consoleLog('isContainer?', el);
               return false;
             }
         });//dragula
@@ -76,7 +76,7 @@ $.extend( CZRSektionMths, {
 
         //expand a closed sektion on over
         // module.modsDragInstance.on('over', function( el, container, source ) {
-        //   console.log('OVERING', container );
+        //   api.consoleLog('OVERING', container );
         //       if ( $(container).hasClass('czr-dragula-fake-container') ) {
         //           //get the sekItem id
         //           _target_sekId = $(container).closest('[data-id]').attr('data-id');
@@ -153,7 +153,7 @@ $.extend( CZRSektionMths, {
   //@param source col string
   //@param target column string
   moveModuleFromTo : function( moved_module, source_column, target_column ) {
-        console.log( 'ALORS CE BUG?', this(), this.czr_columnCollection() );
+        api.consoleLog( 'ALORS CE BUG?', this(), this.czr_columnCollection() );
         var module = this,
             _new_dom_module_collection = module.czr_Column( target_column ).getColumnModuleCollectionFromDom( source_column );
 

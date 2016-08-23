@@ -32,13 +32,13 @@ $.extend( CZRColumnMths , {
           //the modules are stored only with their id in a column
           column.defautModuleModelInColumn = { id : '' };
 
-          console.log('column.sektion.contentRendered.state()', column.sektion.contentRendered.state() );
+          api.consoleLog('column.sektion.contentRendered.state()', column.sektion.contentRendered.state() );
 
           //defer the column rendering when the parent sektion content is rendered
           column.sektion.contentRendered.done(function() {
                 //render the column
                 column.container = column.render();
-                console.log('COLUMN CONTAINER?', column.container );
+                api.consoleLog('COLUMN CONTAINER?', column.container );
                 //say it
                 column.embedded.resolve();
           });
@@ -72,10 +72,10 @@ $.extend( CZRColumnMths , {
 
                 //dragulize
                 var syncCollectionControl = api.control(column.control_id).getSyncCollectionControl();
-                console.log('////////////////////////////////////////////////////');
-                console.log('column.container?', column.container);
-                console.log('syncCollectionControl.syncSektionModule()', syncCollectionControl.syncSektionModule()() );
-                console.log('////////////////////////////////////////////////////');
+                api.consoleLog('////////////////////////////////////////////////////');
+                api.consoleLog('column.container?', column.container);
+                api.consoleLog('syncCollectionControl.syncSektionModule()', syncCollectionControl.syncSektionModule()() );
+                api.consoleLog('////////////////////////////////////////////////////');
                 syncCollectionControl.syncSektionModule().modsDragInstance.containers.push( $('.czr-module-collection-wrapper', column.container )[0] );
 
           });
@@ -129,7 +129,7 @@ $.extend( CZRColumnMths , {
                 },//done callback
                 function() {},//fail callback
                 function() {
-                  console.log( 'NOT SYNCHRONIZED YET');
+                  api.consoleLog( 'NOT SYNCHRONIZED YET');
                 }
           );//.then()
     },

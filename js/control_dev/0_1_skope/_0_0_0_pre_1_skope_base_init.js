@@ -242,7 +242,7 @@ $.extend( CZRSkopeBaseMths, {
                             api.control(setId).czr_hasDBVal(true);
                       });
                 });
-                console.log( 'SAVED DIRTIES', _saved_dirties );
+                api.consoleLog( 'SAVED DIRTIES', _saved_dirties );
           });
 
           //LISTEN TO GLOBAL DB OPTION CHANGES
@@ -281,7 +281,7 @@ $.extend( CZRSkopeBaseMths, {
                 if ( ! self.isSettingEligible(setId) )
                   return;
                 api( setId ).callbacks.add( function( new_val, old_val, o ) {
-                      console.log('ELIGIBLE SETTING HAS CHANGED', setId, new_val, old_val, o );
+                      api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, new_val, old_val, o );
                       if ( api(setId)._dirty ) {
                           //Update the skope dirties with the new val of this setId
                           self.updateSkopeDirties( setId, new_val );
@@ -297,8 +297,8 @@ $.extend( CZRSkopeBaseMths, {
                       //set the control dirtyness
                       if ( _.has( api.control(setId), 'czr_isDirty' ) ) {
                           api.control(setId).czr_isDirty( api(setId)._dirty );
-                          // console.log('DIRTYNESS :', api(setId)._dirty, api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId ) );
-                          // console.log( 'CURRENT SKOPE DIRTY VALUES : ', api.czr_activeSkope(), api.czr_skope( api.czr_activeSkope() ).dirtyValues() );
+                          // api.consoleLog('DIRTYNESS :', api(setId)._dirty, api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId ) );
+                          // api.consoleLog( 'CURRENT SKOPE DIRTY VALUES : ', api.czr_activeSkope(), api.czr_skope( api.czr_activeSkope() ).dirtyValues() );
                       }
                 });
           });
@@ -337,7 +337,7 @@ $.extend( CZRSkopeBaseMths, {
           var self = this,
               resetted_opts = _.difference( from, to );
 
-          console.log('in GLOBAL DB OPTION REACT', from, to, resetted_opts );
+          api.consoleLog('in GLOBAL DB OPTION REACT', from, to, resetted_opts );
           if ( _.isEmpty(resetted_opts) )
             return;
 

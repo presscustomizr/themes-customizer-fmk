@@ -13,7 +13,7 @@ $.extend( CZRSkopeBaseMths, {
           var self = this,
               section_id = api.czr_activeSectionId();
 
-          console.log('SETUP CONTROLS RESET ?', controls );
+          api.consoleLog('SETUP CONTROLS RESET ?', controls );
           controls = _.isUndefined( controls ) ? self._getSectionControlIds( section_id  ) : controls;
           controls = _.isString( controls ) ? [controls] : controls;
 
@@ -51,12 +51,12 @@ $.extend( CZRSkopeBaseMths, {
 
           var setIds = _.isArray(controls) ? controls : [controls],
               render_reset_icons = function( setIds ) {
-                    console.log('IN RENDER RESET ICONS', setIds );
+                    api.consoleLog('IN RENDER RESET ICONS', setIds );
                     _.each( setIds, function( _id ) {
                           var ctrl = api.control( _id );
 
                           // if ( ! _.has( ctrl, 'czr_hasDBVal' ) || ! _.has( ctrl, 'czr_isDirty' ) || ! _.has( ctrl, 'czr_resetVisibility' ) ) {
-                          //       console.log('IN RENDER, TOGGLE CLASSES ?', _id );
+                          //       api.consoleLog('IN RENDER, TOGGLE CLASSES ?', _id );
 
                           //       self.setupControlsValues( _id );
                           // } else {
@@ -111,7 +111,7 @@ $.extend( CZRSkopeBaseMths, {
                       });
                 }
 
-                console.log( 'SETUP CONTROL VALUES ?', setId, ctrl.czr_hasDBVal(), api.czr_skope( api.czr_activeSkope() ).hasSkopeSettingDBValues( setId ) );
+                api.consoleLog( 'SETUP CONTROL VALUES ?', setId, ctrl.czr_hasDBVal(), api.czr_skope( api.czr_activeSkope() ).hasSkopeSettingDBValues( setId ) );
 
                 //set
                 ctrl.czr_hasDBVal(
@@ -238,7 +238,7 @@ $.extend( CZRSkopeBaseMths, {
               };
 
           ctrl.container.addClass('czr-resetting-control');
-          console.log('DO RESET SETTING', setId );
+          api.consoleLog('DO RESET SETTING', setId );
 
           if ( ctrl.czr_isDirty() ) {
                 _do_reset( setId );
@@ -287,14 +287,14 @@ $.extend( CZRSkopeBaseMths, {
                 reset_control_db_state( setId );
           }
 
-          console.log('SKOPE DB VAL AFTER RESET?', new_skope_db );
+          api.consoleLog('SKOPE DB VAL AFTER RESET?', new_skope_db );
 
           //update the skope db property and say it
           new_skope_model.db = _.omit( new_skope_db, shortSetId );
           new_skope_model.has_db_val = ! _.isEmpty( new_skope_model.db );
           api.czr_skope( skope_model.id ).hasDBValues( new_skope_model.has_db_val );
 
-          console.log('new_skope_model ?', new_skope_model );
+          api.consoleLog('new_skope_model ?', new_skope_model );
 
           api.czr_skope( skope_model.id )( new_skope_model );
     }

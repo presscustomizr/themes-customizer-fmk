@@ -21,7 +21,7 @@ $.extend( CZRBaseModuleControlMths, {
           control.moduleCollectionReady = $.Deferred();
           //and listen to changes when it's ready
           control.moduleCollectionReady.done( function( obj ) {
-                console.log('MODULE COLLECTION READY IN CONTROL : ', control.id , obj );
+                api.consoleLog('MODULE COLLECTION READY IN CONTROL : ', control.id , obj );
                 //LISTEN TO MODULE COLLECTION
                 control.czr_moduleCollection.callbacks.add( function() { return control.moduleCollectionReact.apply( control, arguments ); } );
 
@@ -37,7 +37,7 @@ $.extend( CZRBaseModuleControlMths, {
 
           //FOR TEST PURPOSES
           // api(this.id).bind( function( to, from) {
-          //     console.log( 'SETTING ', control.id, ' HAS CHANGED : ', to, from );
+          //     api.consoleLog( 'SETTING ', control.id, ' HAS CHANGED : ', to, from );
           // });
 
   },
