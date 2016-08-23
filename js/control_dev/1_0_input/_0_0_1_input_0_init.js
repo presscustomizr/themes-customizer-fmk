@@ -124,8 +124,11 @@ $.extend( CZRInputMths , {
 
             //inform the parent item
             input.item.set(_new_model);
-            //inform the parent item that an input has changed
-            //=> useful to handle dependant reactions between different inputs
-            input.item.trigger( input.id + ':changed', to );
+
+            if ( ! _.has( input, 'is_preItemInput' ) ) {
+              //inform the parent item that an input has changed
+              //=> useful to handle dependant reactions between different inputs
+              input.item.trigger( input.id + ':changed', to );
+            }
     }
 });//$.extend

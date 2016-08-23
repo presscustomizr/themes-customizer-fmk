@@ -180,8 +180,8 @@ $.extend( CZRModuleMths, {
 
           //Sorted collection case
           if ( is_item_collection_sorted ) {
-                if ( _.has(module, 'czr_preItem') ) {
-                  module.czr_preItem('view_status').set('closed');
+                if ( _.has(module, 'preItem') ) {
+                  module.preItemExpanded.set(false);
                 }
                 module.closeAllItems();
                 module.closeAllAlerts();

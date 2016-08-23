@@ -19,22 +19,8 @@ $.extend( CZRDynModuleMths, {
 
           //EXTENDS THE DEFAULT MONO MODEL CONSTRUCTOR WITH NEW METHODS
           //=> like remove item
+          //=> like remove item
           //module.itemConstructor = api.CZRItem.extend( module.CZRItemDynamicMths || {} );
-
-          //PRE MODEL
-          //czr_preItem stores the expansion state and the value of the preItem
-          module.czr_preItem = new api.Values();
-           //create observable pre-item values
-          module.czr_preItem.create('item');
-
-          module.czr_preItem.create('view_status');
-          module.czr_preItem('view_status').set('closed');
-
-          module.preItemEmbedded = $.Deferred();//module.czr_preItem.create('item_content');
-
-          //PRE MODEL INPUTS
-          module.czr_preItemInput = new api.Values();
-
 
           //default success message when item added
           module.itemAddedMessage = serverControlParams.translatedStrings.successMessage;
@@ -70,19 +56,20 @@ $.extend( CZRDynModuleMths, {
           //Setup the module event listeners
           module.setupDOMListeners( module.userEventMap() , { dom_el : module.container } );
 
-          //PRE ADD MODEL SETUP
-          module.czr_preItem('item').set( module.getDefaultModel() );
-          module.czr_preItem('item').set( module.getDefaultModel() );
+          //PRE MODEL VALUE
+          module.preItem = new api.Value( module.getDefaultModel() );
 
+          //PRE MODEL EMBED PROMISE
+          module.preItemEmbedded = $.Deferred();//was module.czr_preItem.create('item_content');
           //Add view rendered listeners
           module.preItemEmbedded.done( function() {
-                //provides a constructor for the inputs
-                module.preItemInputConstructor = module.inputConstructor;//api.CZRInput;
                 module.setupPreItemInputCollection();
           });
 
+          //PRE MODEL VIEW STATE
+          module.preItemExpanded = new api.Value(false);
           //add state listeners
-          module.czr_preItem('view_status').callbacks.add( function( to, from ) {
+          module.preItemExpanded.callbacks.add( function( to, from ) {
                 module._togglePreItemViewExpansion( to );
           });
 
@@ -90,32 +77,47 @@ $.extend( CZRDynModuleMths, {
   },//ready()
 
 
-
+  //PRE MODEL INPUTS
+  //fired when preItem is embedded.done()
   setupPreItemInputCollection : function() {
-    console.log('in setup pre_item');
           var module = this;
+
+          //Pre item input collection
+          module.preItem.czr_Input = new api.Values();
+
           //creates the inputs based on the rendered items
           $('.' + module.control.css_attr.pre_add_wrapper, module.container)
                 .find( '.' + module.control.css_attr.sub_set_wrapper)
                 .each( function( _index ) {
                       var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index;
-                      module.czr_preItemInput.add( _id, new module.preItemInputConstructor( _id, {
+                      //instantiate the input
+                      module.preItem.czr_Input.add( _id, new module.inputConstructor( _id, {//api.CZRInput;
                             id : _id,
                             type : $(this).attr('data-input-type'),
                             container : $(this),
-                            item : module.czr_preItem('item'),
+                            item : module.preItem,
                             module : module,
                             is_preItemInput : true
                       } ) );
+
+                      //fire ready once the input Value() instance is initialized
+                      module.preItem.czr_Input(_id).ready();
                 });//each
   },
 
 
+
+  //Fired on user Dom action.
   //the item is manually added.
-  //We should have a pre Item
   addItem : function(obj) {
           var module = this,
-              item = module.czr_preItem('item')();
+              item = module.preItem(),
+              collapsePreItem = function() {
+                    module.preItemExpanded.set(false);
+                    module._resetPreItemInputs();
+                    module.toggleSuccessMessage('off');
+                    //module.destroyPreItemView();
+              };
 
           if ( _.isEmpty(item) || ! _.isObject(item) ) {
             throw new Error('addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
@@ -124,12 +126,8 @@ $.extend( CZRDynModuleMths, {
           //instantiates and fires ready
           module.instantiateItem( item, true ).ready(); //true == Added by user
 
-          module.toggleSuccessMessage('on');
-          setTimeout( function() {
-                module.czr_preItem('view_status').set( 'closed');
-                module.czr_preItem('item').set( module.getDefaultModel() );
-                module.toggleSuccessMessage('off').destroyPreItemView();
-          } , 2000 );
+          collapsePreItem = _.debounce( collapsePreItem, 2000 );
+          collapsePreItem();
 
           module.trigger('item_added', item );
           //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
@@ -140,6 +138,18 @@ $.extend( CZRDynModuleMths, {
           if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
             module.control.previewer.refresh();
           }
+  },
+
+  _resetPreItemInputs : function() {
+          var module = this;
+          module.preItem.set( module.getDefaultModel() );
+          module.preItem.czr_Input.each( function( input_instance ) {
+                var _input_id = input_instance.id;
+                //do we have a default value ?
+                if ( ! _.has( module.getDefaultModel(), _input_id ) )
+                  return;
+                input_instance.set( module.getDefaultModel()._input_id );
+          });
   }
 
 });//$.extend

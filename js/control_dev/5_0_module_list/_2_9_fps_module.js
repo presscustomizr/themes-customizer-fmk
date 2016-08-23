@@ -50,7 +50,7 @@ $.extend( CZRFeaturedPageModuleMths, {
   addItem : function(obj) {
 
           var module     = this,
-              item       = module.czr_preItem('item'),
+              item       = module.preItem,
               item_model = item();
 
           if ( _.isEmpty(item_model) || ! _.isObject(item_model) ) {
@@ -129,7 +129,7 @@ $.extend( CZRFeaturedPageModuleMths, {
                   var _new_model      = _.clone( item() ),
                       _fp_post        = _new_model['fp-post'][0],
                       _new_title      = _fp_post.title,
-                      inputCollection = is_preItemInput ? input.module.czr_preItemInput : item.czr_Input;
+                      inputCollection = is_preItemInput ? input.module.preItemInput : item.czr_Input;
 
                   if ( is_preItemInput ) {
                         $.extend( _new_model, { title : _new_title, 'fp-title' : _new_title } );

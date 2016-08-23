@@ -226,8 +226,8 @@ $.extend( CZRMultiModuleControlMths, {
               //   item.czr_ItemState.set( 'expanded_noscroll' );
               // } else {
               //   module.closeAllItems( item.id );
-              //   if ( _.has(module, 'czr_preItem') ) {
-              //     module.czr_preItem('view_status').set( 'closed');
+              //   if ( _.has(module, 'preItem') ) {
+              //     module.preItemExpanded.set( false );
               //   }
               //   }
               //   item.czr_ItemState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
@@ -382,8 +382,8 @@ $.extend( CZRMultiModuleControlMths, {
                 //module.closeAllItems();
 
                 //close the main sektion pre_item view
-                if ( _.has(module, 'czr_preItem') ) {
-                    control.syncSektionModule().czr_preItem('view_status').set( 'closed');
+                if ( _.has(module, 'preItem') ) {
+                    control.syncSektionModule().preItemExpanded.set( false );
                 }
 
                 //then close any other open remove alert in the column containuer

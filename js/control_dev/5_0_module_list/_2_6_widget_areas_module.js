@@ -57,11 +57,10 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
           //AVAILABLE LOCATIONS FOR THE PRE MODEL
-          //1) add an observable value to module.czr_preItem to handle the alert visibility
-          module.czr_preItem.create('location_alert_view_state');
-          module.czr_preItem('location_alert_view_state').set('closed');
+          //1) add an observable value to module.preItem to handle the alert visibility
+          module.preItem_location_alert_view_state = new api.Value( 'closed');
           //2) add state listeners
-          module.czr_preItem('location_alert_view_state').callbacks.add( function( to, from ) {
+          module.preItem_location_alert_view_state.callbacks.add( function( to, from ) {
                     module._toggleLocationAlertExpansion( module.container, to );
           });
 
@@ -111,13 +110,13 @@ $.extend( CZRWidgetAreaModuleMths, {
           api.CZRDynModule.prototype.ready.call( module );
 
           //add state listener on pre Item view
-          module.czr_preItem('view_status').callbacks.add( function( to, from ) {
-                if ( 'expanded' != to )
+          module.preItemExpanded.callbacks.add( function( to, from ) {
+                if ( ! to )
                   return;
                 //refresh the location list
-                module.czr_preItemInput('locations')._setupLocationSelect( true );//true for refresh
+                module.preItem.czr_Input('locations')._setupLocationSelect( true );//true for refresh
                 //refresh the location alert message
-                module.czr_preItemInput('locations').mayBeDisplayModelAlert();
+                module.preItem.czr_Input('locations').mayBeDisplayModelAlert();
           });
   },
 
@@ -259,7 +258,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
                   //check if we are in the pre Item case => if so, the id is empty
                   if ( ! _.has( item(), 'id' ) || _.isEmpty( item().id ) ) {
-                        module.czr_preItem('location_alert_view_state').set( ! _.isEmpty( _unavailable ) ? 'expanded' : 'closed' );
+                        module.preItem_location_alert_view_state.set( ! _.isEmpty( _unavailable ) ? 'expanded' : 'closed' );
                   } else {
                         item.czr_itemLocationAlert.set( ! _.isEmpty( _unavailable ) ? 'expanded' : 'closed' );
                   }
@@ -741,7 +740,9 @@ $.extend( CZRWidgetAreaModuleMths, {
 
           //Close all views on widget panel expansion/clos
           module.closeAllItems();
-          module.czr_preItem('view_status').set('closed');
+          //Close preItem dialog box if exists
+          if ( _.has( module, 'preItemExpanded' ) )
+            module.preItemExpanded.set(false);
   },//widgetPanelReact()
 
 

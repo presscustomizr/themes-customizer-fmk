@@ -47,9 +47,48 @@ $.extend( CZRSocialModuleMths, {
                   return;
                 module.ready();
           });
+
+          module.isReady.then( function() {
+                //specific update for the item preModel on social-icon change
+                module.preItem.bind( function( to, from ) {
+                      if ( ! _.has(to, 'social-icon') )
+                        return;
+                      if ( _.isEqual( to['social-icon'], from['social-icon'] ) )
+                        return;
+                      module.updateItemModel( module.preItem, true );
+                });
+          });
   },//initialize
 
 
+  //ACTIONS ON ICON CHANGE
+  //Fired on 'social-icon:changed'
+  //Don't fire in pre item case
+  //@item_instance an be the preItem or an already created item
+  updateItemModel : function( item_instance, is_preItem ) {
+          var item = item_instance;
+          is_preItem = is_preItem || false;
+
+          //check if we are in the pre Item case => if so, the social-icon might be empty
+          if ( ! _.has( item(), 'social-icon') || _.isEmpty( item()['social-icon'] ) )
+            return;
+
+          var _new_model  = $.extend( true, {}, item() ),//always safer to deep clone ( alternative to _.clone() ) => we don't know how nested this object might be in the future.
+              _new_title  = api.CZR_Helpers.capitalize( _new_model['social-icon'].replace('fa-', '') ),
+              _new_color  = serverControlParams.social_el_params.defaultSocialColor;
+
+          //add text follow us... to the title
+          _new_title = [ serverControlParams.translatedStrings.followUs, _new_title].join(' ');
+
+          if ( is_preItem ) {
+              _new_model = $.extend( _new_model, { title : _new_title, 'social-color' : _new_color } );
+              item.set( _new_model );
+          } else {
+              item.czr_Input('title').set( _new_title );
+              item.czr_Input('social-link').set( '' );
+              item.czr_Input('social-color').set( _new_color );
+          }
+  },
 
 
 
@@ -60,13 +99,6 @@ $.extend( CZRSocialModuleMths, {
 
 
   CZRSocialsInputMths : {
-          // ready : function() {
-          //         var input = this;
-
-          //         api.CZRInput.prototype.ready.call( input );
-          // },
-
-
           setupSelect : function() {
                 var input      = this,
                     item = input.item,
@@ -174,7 +206,7 @@ $.extend( CZRSocialModuleMths, {
 
                 //update the item model on social-icon change
                 item.bind('social-icon:changed', function(){
-                      item.updateItemModel();
+                      item.module.updateItemModel( item );
                 });
           },
 
@@ -202,40 +234,7 @@ $.extend( CZRSocialModuleMths, {
                   $( '.' + module.control.css_attr.item_title , item.container ).html(
                     item._buildTitle( _title, _model['social-icon'], _model['social-color'] )
                   );
-          },
-
-
-          //ACTIONS ON ICON CHANGE
-          //Fired on 'social-icon:changed'
-          //Don't fire in pre item case
-          updateItemModel : function() {
-                  var item = this;
-
-                  //check if we are in the pre Item case => if so, the social-icon might be empty
-                  if ( ! _.has( item(), 'social-icon') || _.isEmpty( item()['social-icon'] ) )
-                    return;
-
-                  var _new_model  = _.clone( item() ),
-                      _new_title  = api.CZR_Helpers.capitalize( _new_model['social-icon'].replace('fa-', '') ),
-                      _new_color  = serverControlParams.social_el_params.defaultSocialColor;
-
-                  //add text follow us... to the title
-                  _new_title = [ serverControlParams.translatedStrings.followUs, _new_title].join(' ');
-
-                  // if ( is_preItemInput ) {
-                  //     _new_model = $.extend( _new_model, { title : _new_title, 'social-color' : _new_color } );
-                  //     item.set( _new_model );
-                  // } else {
-                  //     item.czr_Input('title').set( _new_title );
-                  //     item.czr_Input('social-link').set( '' );
-                  //     item.czr_Input('social-color').set( _new_color );
-                  // }
-
-                  item.czr_Input('title').set( _new_title );
-                  item.czr_Input('social-link').set( '' );
-                  item.czr_Input('social-color').set( _new_color );
-          },
-
+          }
   },//CZRSocialsItem
 
 });

@@ -14,7 +14,7 @@ $.extend( CZRDynModuleMths, {
   renderPreItemView : function( obj ) {
           var module = this;
           //is this view already rendered ?
-          if ( 'pending' != module.preItemEmbedded.state() ) //! _.isEmpty( module.czr_preItem('item_content')() ) )
+          if ( 'pending' != module.preItemEmbedded.state() ) //was ! _.isEmpty( module.czr_preItem('item_content')() ) )
             return;
 
           //do we have view template script?
@@ -33,7 +33,6 @@ $.extend( CZRDynModuleMths, {
 
           //say it
           module.preItemEmbedded.resolve();
-          //module.czr_preItem('item_content').set( pre_add_template() );
   },
 
   //@return $ el of the pre Item view
@@ -42,8 +41,10 @@ $.extend( CZRDynModuleMths, {
           return $('.' +  module.control.css_attr.pre_add_item_content, module.container );
   },
 
+
   //@return void
   //destroy preItem content dom module + set the associated api value
+  //@todo DO WE NEED THAT ?
   destroyPreItemView : function() {
           var module = this;
           $('.' +  module.control.css_attr.pre_add_item_content, module.container ).find('.' +  module.control.css_attr.sub_set_wrapper).remove();
@@ -57,37 +58,37 @@ $.extend( CZRDynModuleMths, {
           var module = this;
 
           module.closeAllItems();
-          module.czr_preItem('view_status').set( 'expanded' == module.czr_preItem('view_status')() ? 'closed' : 'expanded' );
+          module.preItemExpanded.set( ! module.preItemExpanded() );
   },
 
 
-  //callback of czr_preItem('view') instance on change
-  _togglePreItemViewExpansion : function( status) {
+  //callback of module.preItemExpanded
+  //@_is_expanded = boolean.
+  _togglePreItemViewExpansion : function( _is_expanded ) {
           var module = this,
             $_pre_add_el = $( '.' +  module.control.css_attr.pre_add_item_content, module.container );
 
           //toggle it
           $_pre_add_el.slideToggle( {
-            duration : 200,
-            done : function() {
-                  var _is_expanded = 'closed' != status,
-                      $_btn = $( '.' +  module.control.css_attr.open_pre_add_btn, module.container );
+                duration : 200,
+                done : function() {
+                      var $_btn = $( '.' +  module.control.css_attr.open_pre_add_btn, module.container );
 
-                  $(this).toggleClass('open' , _is_expanded );
-                  //switch icons
-                  if ( _is_expanded )
-                    $_btn.find('.fa').removeClass('fa-plus-square').addClass('fa-minus-square');
-                  else
-                    $_btn.find('.fa').removeClass('fa-minus-square').addClass('fa-plus-square');
+                      $(this).toggleClass('open' , _is_expanded );
+                      //switch icons
+                      if ( _is_expanded )
+                        $_btn.find('.fa').removeClass('fa-plus-square').addClass('fa-minus-square');
+                      else
+                        $_btn.find('.fa').removeClass('fa-minus-square').addClass('fa-plus-square');
 
-                  //set the active class to the btn
-                  $_btn.toggleClass( 'active', _is_expanded );
+                      //set the active class to the btn
+                      $_btn.toggleClass( 'active', _is_expanded );
 
-                  //set the adding_new class to the module container wrapper
-                  $( module.container ).toggleClass(  module.control.css_attr.adding_new, _is_expanded );
-                  //make sure it's fully visible
-                  module._adjustScrollExpandedBlock( $(this), 120 );
-            }//done
+                      //set the adding_new class to the module container wrapper
+                      $( module.container ).toggleClass(  module.control.css_attr.adding_new, _is_expanded );
+                      //make sure it's fully visible
+                      module._adjustScrollExpandedBlock( $(this), 120 );
+              }//done
           } );
   },
 

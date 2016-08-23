@@ -187,8 +187,8 @@ $.extend( CZRItemMths , {
                 item.czr_ItemState.set( 'expanded_noscroll' );
           } else {
                 module.closeAllItems( item.id );
-                if ( _.has(module, 'czr_preItem') ) {
-                  module.czr_preItem('view_status').set( 'closed');
+                if ( _.has(module, 'preItem') ) {
+                  module.preItemExpanded.set(false);
                 }
                 item.czr_ItemState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
           }
@@ -244,8 +244,8 @@ $.extend( CZRItemMths , {
           //first close all open items views
           module.closeAllItems();
 
-          if ( _.has(module, 'czr_preItem') ) {
-              module.czr_preItem('view_status').set( 'closed');
+          if ( _.has(module, 'preItem') ) {
+              module.preItemExpanded.set(false);
           }
 
           //then close any other open remove alert in the module containuer
