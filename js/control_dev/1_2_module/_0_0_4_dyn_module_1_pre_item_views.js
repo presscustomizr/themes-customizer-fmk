@@ -93,7 +93,7 @@ $.extend( CZRDynModuleMths, {
   },
 
 
-  toggleSuccessMessage : function(status) {
+  toggleSuccessMessage : function( status ) {
           var module = this,
               _message = module.itemAddedMessage,
               $_pre_add_wrapper = $('.' + module.control.css_attr.pre_add_wrapper, module.container );

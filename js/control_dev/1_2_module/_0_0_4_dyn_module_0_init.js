@@ -122,22 +122,29 @@ $.extend( CZRDynModuleMths, {
           if ( _.isEmpty(item) || ! _.isObject(item) ) {
             throw new Error('addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
           }
+          //display a sucess message if item is successfully instantiated
+          collapsePreItem = _.debounce( collapsePreItem, 2000 );
 
           //instantiates and fires ready
           module.instantiateItem( item, true ).ready(); //true == Added by user
 
-          collapsePreItem = _.debounce( collapsePreItem, 2000 );
-          collapsePreItem();
+          module.czr_Item( item.id ).isReady.then( function() {
+                module.toggleSuccessMessage('on');
+                collapsePreItem();
 
-          module.trigger('item_added', item );
-          //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
+                module.trigger('item_added', item );
+                //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
 
-          //refresh the preview frame (only needed if transport is postMessage )
-          //must be a dom event not triggered
-          //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
-          if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
-            module.control.previewer.refresh();
-          }
+                //refresh the preview frame (only needed if transport is postMessage )
+                //must be a dom event not triggered
+                //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
+                if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+                  module.control.previewer.refresh();
+                }
+          });
+
+
+
   },
 
   _resetPreItemInputs : function() {

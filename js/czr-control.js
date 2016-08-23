@@ -3253,15 +3253,21 @@ $.extend( CZRDynModuleMths, {
           if ( _.isEmpty(item) || ! _.isObject(item) ) {
             throw new Error('addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
           }
+          collapsePreItem = _.debounce( collapsePreItem, 2000 );
           module.instantiateItem( item, true ).ready(); //true == Added by user
 
-          collapsePreItem = _.debounce( collapsePreItem, 2000 );
-          collapsePreItem();
+          module.czr_Item( item.id ).isReady.then( function() {
+                module.toggleSuccessMessage('on');
+                collapsePreItem();
 
-          module.trigger('item_added', item );
-          if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
-            module.control.previewer.refresh();
-          }
+                module.trigger('item_added', item );
+                if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+                  module.control.previewer.refresh();
+                }
+          });
+
+
+
   },
 
   _resetPreItemInputs : function() {
@@ -3329,7 +3335,7 @@ $.extend( CZRDynModuleMths, {
   },
 
 
-  toggleSuccessMessage : function(status) {
+  toggleSuccessMessage : function( status ) {
           var module = this,
               _message = module.itemAddedMessage,
               $_pre_add_wrapper = $('.' + module.control.css_attr.pre_add_wrapper, module.container );
