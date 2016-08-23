@@ -182,7 +182,7 @@ span.czr-skope-title {
 
 
 /* SINGLE CONTROL RESET */
-.customize-control span.customize-control-title {
+.czr-skop-on .customize-control span.customize-control-title {
   padding-left: 16px;
   position: relative;
 }
