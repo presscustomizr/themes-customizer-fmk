@@ -11,6 +11,8 @@
   //=> using api.previewer.deferred.active.done() works on the first load but not after. The instance is not the same ?
   api.PreviewFrame.prototype.initialize = function( params, options ) {
         _old_initialize.call( this, params, options );
+
+
         //observe widget settings changes
         this.bind('houston-widget-settings', function(data) {
               //get the difference
@@ -30,11 +32,16 @@
                 return obj.id;
               });
 
-              api.sidebar_insights('actives').set( data.renderedSidebars );
-              api.sidebar_insights('inactives').set( _inactives );
-              api.sidebar_insights('registered').set( _registered );
-              api.sidebar_insights('candidates').set( _candidates );
-              api.sidebar_insights('available_locations').set( data.availableWidgetLocations );//built server side
+              //stores and update the widget settings
+              api.czr_widgetZoneSettings.set( {
+                    actives :  data.renderedSidebars,
+                    inactives :  _inactives,
+                    registered :  _registered,
+                    candidates :  _candidates,
+                    available_locations :  data.availableWidgetLocations//built server side
+              } );
+
+
         });
 
 

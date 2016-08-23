@@ -74,6 +74,7 @@
         }
 
   });//$.extend
+
   //react to a ctx change
   //api.czr_wp_conditionals.callbacks.add( function( e, o) {
     //console.log('the wp conditionals have been updated', e, o );

@@ -51,9 +51,24 @@ $.extend( CZRWidgetAreaModuleMths, {
           //overrides the default success message
           this.itemAddedMessage = serverControlParams.translatedStrings.widgetZoneAdded;
 
-
           //observe and react to sidebar insights from the preview frame
           this.listenToSidebarInsights();
+
+          //React on 'houston-widget-settings'
+          //actives :  data.renderedSidebars,
+          // inactives :  _inactives,
+          // registered :  _registered,
+          // candidates :  _candidates,
+          // available_locations :  data.availableWidgetLocations//built server side
+          api.czr_widgetZoneSettings.bind( function( updated_data_sent_from_preview , from ) {
+                  module.isReady.then( function() {
+                        _.each( updated_data_sent_from_preview, function( _data, _key ) {
+                              api.sidebar_insights( _key ).set( _data );
+                        });
+                  });
+          });
+
+
 
 
           //AVAILABLE LOCATIONS FOR THE PRE MODEL
@@ -667,6 +682,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
   //fired on "after_modelRemoved"
   removeWidgetSidebar : function( model ) {
+          var module = this;
           if ( ! _.isObject(model) || _.isEmpty(model) ) {
             throw new Error('No valid data were provided to remove a Widget Zone.');
           }
@@ -703,7 +719,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           }
 
           //say it
-          this.module.trigger('widget_zone_removed', { model : model, section_id : "sidebar-widgets-" + model.id , setting_id : 'sidebars_widgets['+model.id+']' });
+          module.trigger('widget_zone_removed', { model : model, section_id : "sidebar-widgets-" + model.id , setting_id : 'sidebars_widgets['+model.id+']' });
   },
 
 

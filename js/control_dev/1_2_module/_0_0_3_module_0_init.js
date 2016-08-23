@@ -15,114 +15,112 @@ var CZRModuleMths = CZRModuleMths || {};
 $.extend( CZRModuleMths, {
 
   initialize: function( id, constructorOptions ) {
-          if ( _.isUndefined(constructorOptions.control) || _.isEmpty(constructorOptions.control) ) {
-              throw new Error('No control assigned to module ' + id );
-          }
-          var module = this;
-          api.Value.prototype.initialize.call( this, null, constructorOptions );
+        if ( _.isUndefined(constructorOptions.control) || _.isEmpty(constructorOptions.control) ) {
+            throw new Error('No control assigned to module ' + id );
+        }
+        var module = this;
+        api.Value.prototype.initialize.call( this, null, constructorOptions );
 
-          //store the state of ready.
-          //=> we don't want the ready method to be fired several times
-          module.isReady = $.Deferred();
+        //store the state of ready.
+        //=> we don't want the ready method to be fired several times
+        module.isReady = $.Deferred();
 
-          //write the options as properties
-          $.extend( module, constructorOptions || {} );
+        //write the options as properties
+        $.extend( module, constructorOptions || {} );
 
-          //extend the module with new template Selectors
-          $.extend( module, {
-                crudModulePart : 'czr-crud-module-part',
-                rudItemPart : 'czr-rud-item-part',//read, update, delete
-                ruItemPart : 'czr-ru-item-part',//read, update
-                itemInputList : '',//is specific for each crud module
-                AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
+        //extend the module with new template Selectors
+        $.extend( module, {
+              crudModulePart : 'czr-crud-module-part',
+              rudItemPart : 'czr-rud-item-part',//read, update, delete
+              ruItemPart : 'czr-ru-item-part',//read, update
+              itemInputList : '',//is specific for each crud module
+              AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
 
-          } );
+        } );
 
-          //embed : define a container, store the embed state, fire the render method
-          module.embedded = $.Deferred();
-          //if a module is embedded in a control, its container == the control container.
-          //if the module is part of a sektion, its container will be set and resolve() later ( @see multi_module part )
-          if ( ! module.isInSektion() ) {
-                module.container = $( module.control.selector );
-                module.embedded.resolve();
-          }
+        //embed : define a container, store the embed state, fire the render method
+        module.embedded = $.Deferred();
+        //if a module is embedded in a control, its container == the control container.
+        //if the module is part of a sektion, its container will be set and resolve() later ( @see multi_module part )
+        if ( ! module.isInSektion() ) {
+              module.container = $( module.control.selector );
+              module.embedded.resolve();
+        }
 
-          //render the item(s) wrapper
-          module.embedded.done( function() {
-                $.when( module.renderModuleParts() ).done(function( $_module_items_wrapper ){
-                      if ( false === $_module_items_wrapper.length ) {
-                          throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
-                      }
-                      module.itemsWrapper = $_module_items_wrapper;
-                });
-          });
-
-
-          //ITEMS
-          module.itemCollection = new api.Value();
-          //initialize the collection with the constructor options
-          module.itemCollection.set([]);
-
-          //declares a default Item API model
-          module.defaultAPIitemModel = {
-                id : '',
-                initial_item_model : {},
-                defaultItemModel : {},
-                control : {},//control instance
-                module : {},//module instance
-                is_added_by_user : false
-          };
-
-          //declares a default item model
-          module.defaultItemModel = { id : '', title : '' };
-
-          //define a default Constructors
-          module.itemConstructor = api.CZRItem;
-          //czr_model stores the each model value => one value by created by model.id
-          module.czr_Item = new api.Values();
+        //render the item(s) wrapper
+        module.embedded.done( function() {
+              $.when( module.renderModuleParts() ).done(function( $_module_items_wrapper ){
+                    if ( false === $_module_items_wrapper.length ) {
+                        throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
+                    }
+                    module.itemsWrapper = $_module_items_wrapper;
+              });
+        });
 
 
-          //INPUTS
-          module.inputConstructor = api.CZRInput;
+        //ITEMS
+        module.itemCollection = new api.Value();
+        //initialize the collection with the constructor options
+        module.itemCollection.set([]);
 
-          //module.ready(); => fired by children
-          module.isReady.done( function() {
-                //store the module dirtyness, => no items set
-                module.isDirty = new api.Value( constructorOptions.dirty || false );
+        //declares a default Item API model
+        module.defaultAPIitemModel = {
+              id : '',
+              initial_item_model : {},
+              defaultItemModel : {},
+              control : {},//control instance
+              module : {},//module instance
+              is_added_by_user : false
+        };
 
-                //initialize the module api.Value()
-                //constructorOptions has the same structure as the one described in prepareModuleforAPI
-                module.set( module.initializeModuleModel( constructorOptions ) );
+        //declares a default item model
+        module.defaultItemModel = { id : '', title : '' };
 
-                //listen to each single module change
-                module.callbacks.add( function() { return module.moduleReact.apply(module, arguments ); } );
+        //define a default Constructors
+        module.itemConstructor = api.CZRItem;
+        //czr_model stores the each model value => one value by created by model.id
+        module.czr_Item = new api.Values();
 
-                //if the module is not registered yet (for example when the module is added by user),
-                //=> push it to the collection of the module-collection control
-                //=> updates the wp api setting
-                if (  ! module.control.isModuleRegistered( module.id ) ) {
-                    module.control.updateModulesCollection( { module : constructorOptions } );
-                }
+        //INPUTS
+        module.inputConstructor = api.CZRInput;
 
-                module.bind('items-collection-populated', function( collection ) {
-                      //listen to item Collection changes
-                      module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply(module, arguments ); } );
+        //module.ready(); => fired by children
+        module.isReady.done( function() {
+              //store the module dirtyness, => no items set
+              module.isDirty = new api.Value( constructorOptions.dirty || false );
 
-                      //it can be overriden by a module in its initialize method
-                      if ( module.isMultiItem() )
-                        module._makeItemsSortable();
+              //initialize the module api.Value()
+              //constructorOptions has the same structure as the one described in prepareModuleforAPI
+              module.set( module.initializeModuleModel( constructorOptions ) );
 
-                      console.log('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
-                });
+              //listen to each single module change
+              module.callbacks.add( function() { return module.moduleReact.apply(module, arguments ); } );
 
-                //populate and instantiate the items now when a module is embedded in a regular control
-                //if in a sektion, the populateSavedItemCollection() will be fired on module edit
-                if ( ! module.isInSektion() )
-                  module.populateSavedItemCollection();
+              //if the module is not registered yet (for example when the module is added by user),
+              //=> push it to the collection of the module-collection control
+              //=> updates the wp api setting
+              if (  ! module.control.isModuleRegistered( module.id ) ) {
+                  module.control.updateModulesCollection( { module : constructorOptions } );
+              }
 
-          });
+              module.bind('items-collection-populated', function( collection ) {
+                    //listen to item Collection changes
+                    module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply(module, arguments ); } );
 
+                    //it can be overriden by a module in its initialize method
+                    if ( module.isMultiItem() )
+                      module._makeItemsSortable();
+
+                    console.log('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
+              });
+
+              //populate and instantiate the items now when a module is embedded in a regular control
+              //if in a sektion, the populateSavedItemCollection() will be fired on module edit
+              if ( ! module.isInSektion() )
+                module.populateSavedItemCollection();
+        });
   },
+
 
 
 
@@ -133,113 +131,118 @@ $.extend( CZRModuleMths, {
   //=> right after the module is instantiated.
   //If the module is a dynamic one (CRUD like), then this method is invoked by the child class
   ready : function() {
-          var module = this;
-          module.isReady.resolve();
-          console.log('MODULE READY IN BASE MODULE CLASS : ', module.id );
+        var module = this;
+        module.isReady.resolve();
+        console.log('MODULE READY IN BASE MODULE CLASS : ', module.id );
   },
+
 
 
   //fired when module is initialized, on module.isReady.done()
   //designed to be extended or overriden to add specific items or properties
   initializeModuleModel : function( constructorOptions ) {
-          var module = this;
-          if ( ! module.isMultiItem() && ! module.isCrud() ) {
-                //this is a static module. We only have one item
-                //init module item if needed.
-                if ( _.isEmpty( constructorOptions.items ) ) {
-                      var def = _.clone( module.defaultItemModel );
-                      constructorOptions.items = [ $.extend( def, { id : module.id } ) ];
-                }
-          }
-          return constructorOptions;
+        var module = this;
+        if ( ! module.isMultiItem() && ! module.isCrud() ) {
+              //this is a static module. We only have one item
+              //init module item if needed.
+              if ( _.isEmpty( constructorOptions.items ) ) {
+                    var def = _.clone( module.defaultItemModel );
+                    constructorOptions.items = [ $.extend( def, { id : module.id } ) ];
+              }
+        }
+        return constructorOptions;
   },
 
 
 
   //cb of : module.itemCollection.callbacks
-  itemCollectionReact : function( to, from ) {
-          var module = this,
-              _current_model = module(),
-              _new_model = $.extend( true, {}, _current_model );
-          _new_model.items = to;
-          //update the dirtyness state
-          module.isDirty.set(true);
-          //set the the new items model
-          module.set( _new_model );
+  //@o can pass object params like {item_collection_sorted: true}
+  itemCollectionReact : function( to, from, o ) {
+        var module = this,
+            _current_model = module(),
+            _new_model = $.extend( true, {}, _current_model );
+        _new_model.items = to;
+        //update the dirtyness state
+        module.isDirty.set(true);
+        //set the the new items model
+        module.set( _new_model, o || {} );
   },
 
 
   //cb of module.callbacks
+  //@o can pass object params like {item_collection_sorted: true}
   moduleReact : function( to, from, o ) {
-          //cb of : module.callbacks
-          var module = this,
-              control = module.control,
-              is_item_update = ( _.size(from.items) == _.size(to.items) ) && ! _.isEmpty( _.difference(to.items, from.items) ),
-              is_column_update = to.column_id != from.column_id,
-              is_item_collection_sorted = ( _.size(from.items) == _.size(to.items) ) && ! is_item_update && ! is_column_update;
+        //cb of : module.callbacks
+        var module            = this,
+            control           = module.control,
+            is_item_update    = ( _.size(from.items) == _.size(to.items) ) && ! _.isEmpty( _.difference(to.items, from.items) ),
+            is_column_update  = to.column_id != from.column_id,
+            is_item_collection_sorted = _.has( o, 'item_collection_sorted' ) && o.item_collection_sorted,
+            refreshPreview    = function() {
+                module.control.previewer.refresh();
+            };
 
-          //Sorted collection case
-          if ( is_item_collection_sorted ) {
-                if ( _.has(module, 'preItem') ) {
-                  module.preItemExpanded.set(false);
-                }
-                module.closeAllItems();
-                module.closeAllAlerts();
-          }
+        //Sorted collection case
+        if ( is_item_collection_sorted ) {
+              if ( _.has(module, 'preItem') ) {
+                module.preItemExpanded.set(false);
+              }
+              module.closeAllItems();
+              module.closeAllAlerts();
+        }
 
-          //refreshes the preview frame  :
-          //1) only needed if transport is postMessage, because is triggered by wp otherwise
-          //2) only needed when : add, remove, sort item(s).
-          //var is_item_update = ( _.size(from) == _.size(to) ) && ! _.isEmpty( _.difference(from, to) );
-          if ( 'postMessage' == api(module.control.id).transport && is_item_collection_sorted && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
-              console.log('REFRESH PREVIEW WHEN ITEM COLLECTION HAS BEEN SORTED', module.id, control.id );
-              module.control.previewer.refresh();
-          }
+        //refreshes the preview frame  :
+        //1) only needed if transport is postMessage, because is triggered by wp otherwise
+        //2) only needed when : add, remove, sort item(s).
+        //var is_item_update = ( _.size(from) == _.size(to) ) && ! _.isEmpty( _.difference(from, to) );
+        if ( 'postMessage' == api(module.control.id).transport && is_item_collection_sorted && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+              refreshPreview = _.debounce( refreshPreview, 500 );//500ms are enough
+              refreshPreview();
+        }
+        //update the collection + pass data
+        control.updateModulesCollection( {
+              module : $.extend( true, {}, to ),
+              data : o//useful to pass contextual info when a change happens
+        } );
 
-          //update the collection + pass data
-          control.updateModulesCollection( {
-                module : $.extend( true, {}, to ),
-                data : o//useful to pass contextual info when a change happens
-          } );
+        // //Always update the view title
+        // module.writeViewTitle(to);
 
-          // //Always update the view title
-          // module.writeViewTitle(to);
-
-          // //@todo : do we need that ?
-          // //send module to the preview. On update only, not on creation.
-          // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
-          //   module._sendModule(to, from);
-          // }
+        // //@todo : do we need that ?
+        // //send module to the preview. On update only, not on creation.
+        // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
+        //   module._sendModule(to, from);
+        // }
   },
 
   //@todo : create a smart helper to get either the wp api section or the czr api sektion, depending on the module context
   getModuleSection : function() {
-          return this.section;
+        return this.section;
   },
 
   //@return bool
   isInSektion : function() {
-          var module = this;
-          return _.has( module, 'sektion_id' );
+        var module = this;
+        return _.has( module, 'sektion_id' );
   },
 
   //is this module multi item ?
   //@return bool
   isMultiItem : function() {
-          var module = this;
-          if ( ! _.has( api.czrModuleMap, module.module_type ) )
-            return;
+        var module = this;
+        if ( ! _.has( api.czrModuleMap, module.module_type ) )
+          return;
 
-          return api.czrModuleMap[module.module_type].crud || api.czrModuleMap[module.module_type].multi_item || false;
+        return api.czrModuleMap[module.module_type].crud || api.czrModuleMap[module.module_type].multi_item || false;
   },
 
   //is this module crud ?
   //@return bool
   isCrud : function() {
-          var module = this;
-          if ( ! _.has( api.czrModuleMap, module.module_type ) )
-            return;
+        var module = this;
+        if ( ! _.has( api.czrModuleMap, module.module_type ) )
+          return;
 
-          return api.czrModuleMap[module.module_type].crud || false;
+        return api.czrModuleMap[module.module_type].crud || false;
   }
 });//$.extend//CZRBaseControlMths

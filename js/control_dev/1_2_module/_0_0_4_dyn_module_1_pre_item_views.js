@@ -42,16 +42,6 @@ $.extend( CZRDynModuleMths, {
   },
 
 
-  //@return void
-  //destroy preItem content dom module + set the associated api value
-  //@todo DO WE NEED THAT ?
-  destroyPreItemView : function() {
-          var module = this;
-          $('.' +  module.control.css_attr.pre_add_item_content, module.container ).find('.' +  module.control.css_attr.sub_set_wrapper).remove();
-          //module.czr_preItem('item_content').set('');
-  },
-
-
   //toggles the visibility of the Remove View Block
   //@param : obj = { event : {}, item : {}, view : ${} }
   setPreItemViewVisibility : function(obj) {
