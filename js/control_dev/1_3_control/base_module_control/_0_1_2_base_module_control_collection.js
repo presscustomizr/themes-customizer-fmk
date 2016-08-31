@@ -162,7 +162,21 @@ $.extend( CZRBaseModuleControlMths, {
                 if ( ! _.isArray(collection) || _.isEmpty(collection) || ! _.has( collection[0], 'items' ) ) {
                   throw new Error('The setting value could not be populated in control : ' + control.id );
                 }
-                return collection[0].items;
+                var module_id = collection[0].id;
+
+                if ( ! control.czr_Module.has( module_id ) ) {
+                   throw new Error('The single module control (' + control.id + ') has no module registered with the id ' + module_id  );
+                }
+                var module_instance = control.czr_Module( module_id );
+                console.log('module_instance.isMultiItem()', module_instance.isMultiItem() );
+                if ( _.isEmpty( module_instance().items ) ) {
+                  throw new Error('The module ' + module_id + ' has not items. Control : ' + control.id );
+                }
+                if ( module_instance.isMultiItem() )
+                  return module_instance().items;
+                else {
+                  return module_instance().items[0];
+                }
           }
   },
 

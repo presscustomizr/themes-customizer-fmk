@@ -118,6 +118,12 @@
             crud : false,
             multi_item : false,
             name : 'WP Text Editor'
+        },
+        czr_background : {
+            mthds : CZRBodyBgModuleMths,
+            crud : false,
+            multi_item : false,
+            name : 'Slider'
         }
   });
 
