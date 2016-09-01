@@ -52,11 +52,17 @@ $.extend( CZRBaseModuleControlMths, {
 
 
   //@param obj can be { collection : []}, or { module : {} }
+  //Can be called :
+  //1) for multimodule control, in register modules on init, when the main sektion module has synchronised with the module-collection control
+  //2) for all modules, in module.isReady.done() if the module is not registered in the collection yet.
+  //3) for all modules on moduleReact ( module.callbacks )
+  //
+  //=> sets the setting value via the module collection !
   updateModulesCollection : function( obj ) {
           var control = this,
               _current_collection = control.czr_moduleCollection(),
               _new_collection = $.extend( true, [], _current_collection);
-
+          console.log('IN UPDATE MODULE COLLECTION', obj );
           //if a collection is provided in the passed obj then simply refresh the collection
           //=> typically used when reordering the collection module with sortable or when a module is removed
           if ( _.has( obj, 'collection' ) ) {
@@ -122,6 +128,7 @@ $.extend( CZRBaseModuleControlMths, {
         }
 
         //Inform the the setting
+        console.log('in module collection react', to, from, data );
         api(this.id).set( control.filterModuleCollectionBeforeAjax(to), data );
 
         //refreshes the preview frame  :
@@ -168,14 +175,13 @@ $.extend( CZRBaseModuleControlMths, {
                    throw new Error('The single module control (' + control.id + ') has no module registered with the id ' + module_id  );
                 }
                 var module_instance = control.czr_Module( module_id );
-
-                if ( _.isEmpty( module_instance().items ) ) {
-                  throw new Error('The module ' + module_id + ' has not items. Control : ' + control.id );
+                if ( ! _.isArray( module_instance().items ) ) {
+                  throw new Error('The module ' + module_id + ' should be an array in control : ' + control.id );
                 }
                 if ( module_instance.isMultiItem() )
                   return module_instance().items;
                 else {
-                  return module_instance().items[0];
+                  return module_instance().items[0] || [];
                 }
           }
   },

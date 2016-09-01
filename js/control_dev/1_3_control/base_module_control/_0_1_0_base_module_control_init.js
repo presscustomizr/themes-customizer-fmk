@@ -21,7 +21,15 @@ $.extend( CZRBaseModuleControlMths, {
           control.moduleCollectionReady = $.Deferred();
           //and listen to changes when it's ready
           control.moduleCollectionReady.done( function( obj ) {
-                api.consoleLog('MODULE COLLECTION READY IN CONTROL : ', control.id , obj );
+                if ( ! control.isMultiModuleControl( options.params ) ) {
+                  api.consoleLog('MODULE COLLECTION READY IN CONTROL : ', control.id , obj.id, control.isModuleRegistered( obj.id ) );
+                }
+                //if the module is not registered yet for a single module control
+                //=> push it to the collection now, before listening to the module collection changes
+                // if (  ! control.isModuleRegistered( module.id ) ) {
+                //     control.updateModulesCollection( { module : constructorOptions } );
+                // }
+
                 //LISTEN TO MODULE COLLECTION
                 control.czr_moduleCollection.callbacks.add( function() { return control.moduleCollectionReact.apply( control, arguments ); } );
 
@@ -61,9 +69,13 @@ $.extend( CZRBaseModuleControlMths, {
                       control.moduleCollectionReady.resolve();
                 });
           } else {
-                //inits the collection with the saved modules
+                var single_module = {};
+                //inits the collection with the saved module => there's only one module to instantiate in this case.
                 //populates the collection with the saved module
                 _.each( control.getSavedModules() , function( _mod, _key ) {
+                      //stores it
+                      single_module = _mod;
+                      console.log('BEFORE INSTANTIATION', _mod );
                       //adds it to the collection
                       //=> it will be fired ready usually when the control section is expanded
                       control.instantiateModule( _mod, {} );
@@ -72,7 +84,7 @@ $.extend( CZRBaseModuleControlMths, {
                       control.container.attr('data-module', _mod.id );
                 });
                 //the module collection is ready
-                control.moduleCollectionReady.resolve();
+                control.moduleCollectionReady.resolve( single_module );
           }
 
 
@@ -174,13 +186,19 @@ $.extend( CZRBaseModuleControlMths, {
           if ( control.isMultiModuleControl() ) {
               savedModules = $.extend( true, [], api(control.id)() );//deep clone
           } else {
+              //What is the current server saved value for this setting?
+              //in a normal case, it should be an array of saved properties
+              //But it might not be if coming from a previous option system.
+              //=> let's normalize it.
+              var _saved_items = _.isArray( api(control.id)() ) ? _saved_items : [];
+
               //for now this is a collection with one module
               savedModules.push(
                     {
                       id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
                       module_type : control.params.module_type,
                       section : control.section(),
-                      items   : $.extend( true, [] , api(control.id)() )//deep clone//must be a collection [] of items
+                      items   : $.extend( true, [] , _saved_items )//deep clone//must be a collection [] of items
                     }
               );
           }

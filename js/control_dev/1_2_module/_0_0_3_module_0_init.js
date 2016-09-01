@@ -200,6 +200,7 @@ $.extend( CZRModuleMths, {
               refreshPreview = _.debounce( refreshPreview, 500 );//500ms are enough
               refreshPreview();
         }
+        console.log('IN MODULE REACT');
         //update the collection + pass data
         control.updateModulesCollection( {
               module : $.extend( true, {}, to ),

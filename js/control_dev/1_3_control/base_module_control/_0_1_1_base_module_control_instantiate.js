@@ -114,13 +114,19 @@ $.extend( CZRBaseModuleControlMths, {
                         api_ready_module[_key] = _candidate_val;
                     break;
                     case 'crud' :
-                        if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                        //get the value from the czrModuleMap
+                        if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                          _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
+                        } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
                             throw new Error('prepareModuleForAPI : the module param "crud" must be a boolean');
                         }
                         api_ready_module[_key] = _candidate_val || false;
                     break;
                     case 'multi_item' :
-                        if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                        //get the value from the czrModuleMap
+                        if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                          _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                        } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
                             throw new Error('prepareModuleForAPI : the module param "multi_item" must be a boolean');
                         }
                         api_ready_module[_key] = _candidate_val || false;
