@@ -168,7 +168,7 @@ $.extend( CZRBaseModuleControlMths, {
                    throw new Error('The single module control (' + control.id + ') has no module registered with the id ' + module_id  );
                 }
                 var module_instance = control.czr_Module( module_id );
-                console.log('module_instance.isMultiItem()', module_instance.isMultiItem() );
+
                 if ( _.isEmpty( module_instance().items ) ) {
                   throw new Error('The module ' + module_id + ' has not items. Control : ' + control.id );
                 }

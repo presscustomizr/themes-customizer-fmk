@@ -53,6 +53,7 @@ $.extend( CZRModuleMths, {
                     if ( false === $_module_items_wrapper.length ) {
                         throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
                     }
+                    //stores the items wrapper ( </ul> el ) as a jQuery var
                     module.itemsWrapper = $_module_items_wrapper;
               });
         });

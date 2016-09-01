@@ -23,7 +23,18 @@ $.extend( CZRModuleMths, {
                 //append the module wrapper to the column
                 $_moduleContentEl.append( $( wp.template( module.crudModulePart )( {} ) ) );
           }
-          var $_module_items_wrapper = $( '<ul/>', { class : [ module.control.css_attr.items_wrapper, module.module_type ].join(' ') } );
+          var $_module_items_wrapper = $(
+            '<ul/>',
+            {
+              class : [
+                module.control.css_attr.items_wrapper,
+                module.module_type,
+                module.isMultiItem() ? 'multi-item-mod' : 'mono-item-mod',
+                module.isCrud() ? 'crud-mod' : 'not-crud-mod'
+              ].join(' ')
+            }
+          );
+
           $_moduleContentEl.append($_module_items_wrapper);
 
           return $( $_module_items_wrapper, $_moduleContentEl );

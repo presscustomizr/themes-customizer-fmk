@@ -25,6 +25,10 @@ $.extend( CZRInputMths , {
             //write the options as properties, name is included
             $.extend( input, options || {} );
 
+            //DEFERRED STATES
+            //store the state of ready.
+            input.isReady = $.Deferred();
+
             //initialize to the provided value if any
             if ( ! _.isUndefined(options.input_value) )
               input.set(options.input_value);
@@ -82,7 +86,10 @@ $.extend( CZRInputMths , {
             input.callbacks.add( function() { return input.inputReact.apply(input, arguments ); } );
             //synchronizer setup
             //the input instance must be initialized. => initialize method has been done.
-            input.setupSynchronizer();
+            $.when( input.setupSynchronizer() ).done( function() {
+                  input.isReady.resolve( input );
+            } );
+
     },
 
 

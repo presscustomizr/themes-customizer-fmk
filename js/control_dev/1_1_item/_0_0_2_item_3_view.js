@@ -110,6 +110,7 @@ $.extend( CZRItemMths , {
         //append the item view to the first module view wrapper
         //!!note : => there could be additional sub view wrapper inside !!
         //$( '.' + module.control.css_attr.items_wrapper , module.container).first().append( $_view_el );
+        // module.itemsWrapper has been stored as a $ var in module initialize() when the tmpl has been embedded
         module.itemsWrapper.append( $_view_el );
 
         //if module is multi item, then render the item crud header part

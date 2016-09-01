@@ -173,9 +173,8 @@ $.extend( CZRInputMths , {
   },
 
   getUploaderLabels : function() {
-        var _ts = serverControlParams.translatedStrings;
-
-        return {
+        var _ts = serverControlParams.translatedStrings,
+            _map = {
             'select'      : _ts.select_image,
             'change'      : _ts.change_image,
             'remove'      : _ts.remove_image,
@@ -184,5 +183,15 @@ $.extend( CZRInputMths , {
             'frame_title' : _ts.frame_title_image,
             'frame_button': _ts.frame_button_image
         };
+
+        //are we fine ?
+        _.each( _map, function( ts_string, key ) {
+          if ( _.isUndefined( ts_string ) ) {
+            var input = this;
+            throw new Error( 'A translated string is missing ( ' + key + ' ) for the image uploader input in module : ' + input.module.id );
+          }
+        } );
+
+        return _map;
   }
 });//$.extend
