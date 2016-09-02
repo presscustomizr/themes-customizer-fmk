@@ -75,7 +75,7 @@ $.extend( CZRBaseModuleControlMths, {
                 _.each( control.getSavedModules() , function( _mod, _key ) {
                       //stores it
                       single_module = _mod;
-                      console.log('BEFORE INSTANTIATION', _mod );
+
                       //adds it to the collection
                       //=> it will be fired ready usually when the control section is expanded
                       control.instantiateModule( _mod, {} );
@@ -190,7 +190,7 @@ $.extend( CZRBaseModuleControlMths, {
               //in a normal case, it should be an array of saved properties
               //But it might not be if coming from a previous option system.
               //=> let's normalize it.
-              var _saved_items = _.isArray( api(control.id)() ) ? _saved_items : [];
+             var _saved_items = _.isArray( api(control.id)() ) ? api(control.id)() : [];
 
               //for now this is a collection with one module
               savedModules.push(

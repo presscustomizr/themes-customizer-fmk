@@ -62,7 +62,7 @@ $.extend( CZRBaseModuleControlMths, {
           var control = this,
               _current_collection = control.czr_moduleCollection(),
               _new_collection = $.extend( true, [], _current_collection);
-          console.log('IN UPDATE MODULE COLLECTION', obj );
+
           //if a collection is provided in the passed obj then simply refresh the collection
           //=> typically used when reordering the collection module with sortable or when a module is removed
           if ( _.has( obj, 'collection' ) ) {
@@ -93,12 +93,17 @@ $.extend( CZRBaseModuleControlMths, {
                 _new_collection.push(module_api_ready);
           }
 
+          //WHAT ARE THE PARAMS WE WANT TO PASS TO THE NEXT ACTIONS
+          var _params = {};
+          //if a data property has been passed,
           //amend the data property with the changed module
           if ( _.has( obj, 'data') ) {
-              $.extend( obj.data, { module : module_api_ready } );
+              _params = $.extend( true, {}, obj.data );
+              $.extend( _params, { module : module_api_ready } );
           }
+
           //Inform the collection
-          control.czr_moduleCollection.set( _new_collection, obj.data || {} );
+          control.czr_moduleCollection.set( _new_collection, _params );
   },
 
 
@@ -106,6 +111,7 @@ $.extend( CZRBaseModuleControlMths, {
   //cb of control.czr_moduleCollection.callbacks
   moduleCollectionReact : function( to, from, data ) {
         var control = this,
+            is_module_added = _.size(to) > _.size(from),
             is_module_removed = _.size(from) > _.size(to),
             is_module_update = _.size(from) == _.size(to);
             is_collection_sorted = false;
@@ -128,8 +134,13 @@ $.extend( CZRBaseModuleControlMths, {
         }
 
         //Inform the the setting
-        console.log('in module collection react', to, from, data );
-        api(this.id).set( control.filterModuleCollectionBeforeAjax(to), data );
+        //If we are in a single module control (not a sektion, multimodule)
+        //AND that the module is being added to the collection for the first time,
+        //We don't want to say it to the setting, because it might alter the setting dirtyness for nothing on init.
+        if ( ! control.isMultiModuleControl() && is_module_added )
+          return;
+        else
+          api(this.id).set( control.filterModuleCollectionBeforeAjax(to), data );
 
         //refreshes the preview frame  :
         //1) only needed if transport is postMessage, because is triggered by wp otherwise

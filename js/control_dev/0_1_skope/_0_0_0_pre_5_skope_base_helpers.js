@@ -194,6 +194,7 @@ $.extend( CZRSkopeBaseMths, {
               if ( section_id == _ctrl.section() )
                 sec_ctrl.push( _ctrl.id );
           });
+              console.log('JOIE');
           return sec_ctrl;
     },
 
@@ -235,8 +236,9 @@ $.extend( CZRSkopeBaseMths, {
 
     //       //let's check if the current api val is dirty
     //       return isDirty ? dirtyVal : self.getSkopeDirtyVal( setId, self._getParentSkopeId( skope_model ) );
-
+    //
     // },
+
 
 
 });//$.extend

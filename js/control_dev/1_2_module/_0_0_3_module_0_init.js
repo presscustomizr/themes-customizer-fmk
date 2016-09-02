@@ -101,7 +101,7 @@ $.extend( CZRModuleMths, {
               //=> push it to the collection of the module-collection control
               //=> updates the wp api setting
               if (  ! module.control.isModuleRegistered( module.id ) ) {
-                  module.control.updateModulesCollection( { module : constructorOptions } );
+                  module.control.updateModulesCollection( { module : constructorOptions, is_registered : false } );
               }
 
               module.bind('items-collection-populated', function( collection ) {
@@ -200,7 +200,7 @@ $.extend( CZRModuleMths, {
               refreshPreview = _.debounce( refreshPreview, 500 );//500ms are enough
               refreshPreview();
         }
-        console.log('IN MODULE REACT');
+
         //update the collection + pass data
         control.updateModulesCollection( {
               module : $.extend( true, {}, to ),
