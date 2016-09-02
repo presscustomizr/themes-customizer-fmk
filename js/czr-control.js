@@ -18,7 +18,7 @@ var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).i
       api.consoleLog = function() {
             if ( _.isUndefined( console ) || ! serverControlParams.isDevMode )
               return;
-            console.log.apply( console, arguments );
+            console.log.apply( console, arguments );//salut
       };
       api.czr_wp_conditionals = new api.Value();
       api.czr_widgetZoneSettings = new api.Value();//will store all widget zones data sent by preview as an observable object

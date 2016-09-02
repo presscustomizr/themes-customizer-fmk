@@ -5,7 +5,7 @@ var api = api || wp.customize, $ = $ || jQuery;
             //fix for IE, because console is only defined when in F12 debugging mode in IE
             if ( _.isUndefined( console ) || ! serverControlParams.isDevMode )
               return;
-            console.log.apply( console, arguments );
+            console.log.apply( console, arguments );//salut
       };
 
       /*****************************************************************************
