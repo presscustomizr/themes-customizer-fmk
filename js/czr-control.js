@@ -958,7 +958,6 @@ $.extend( CZRSkopeBaseMths, {
               if ( section_id == _ctrl.section() )
                 sec_ctrl.push( _ctrl.id );
           });
-              console.log('JOIE');
           return sec_ctrl;
     },
     isAPIDirty : function() {
