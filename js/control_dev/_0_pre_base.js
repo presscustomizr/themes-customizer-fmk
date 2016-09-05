@@ -1,12 +1,20 @@
+var czr_debug = {
+  log: function(o) {debug.queue.push(['log', arguments, debug.stack.slice(0)]); if (window.console && typeof window.console.log == 'function') {window.console.log(o);}},
+  error: function(o) {debug.queue.push(['error', arguments, debug.stack.slice(0)]); if (window.console && typeof window.console.error == 'function') {window.console.error(o);}},
+  queue: [],
+  stack: []
+};
+
 var api = api || wp.customize, $ = $ || jQuery;
 (function (api, $, _) {
       //Dev mode aware and IE compatible api.consoleLog()
       api.consoleLog = function() {
             //fix for IE, because console is only defined when in F12 debugging mode in IE
-            if ( _.isUndefined( console ) || ! serverControlParams.isDevMode )
+            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) || ! serverControlParams.isDevMode )
               return;
             console.log.apply( console, arguments );
       };
+
 
       /*****************************************************************************
       * CAPTURE PREVIEW INFORMATIONS ON REFRESH + REACT TO THEM
