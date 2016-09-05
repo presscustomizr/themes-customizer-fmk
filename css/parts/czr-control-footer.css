@@ -68,6 +68,10 @@
       height: 85px;
       background: inherit;
   }
+
+  .wp-customizer #customize-controls .wp-full-overlay-sidebar-content {
+    bottom: 85px;
+  }
 }
 
 
