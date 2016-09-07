@@ -37,12 +37,13 @@ $.extend( CZRModuleMths, {
 
 
   instantiateItem : function( item, is_added_by_user ) {
-          if ( ! _.has( item,'id') ) {
-            throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
-          }
           var module = this;
           //Prepare the item, make sure its id is set and unique
           item_candidate = module.prepareItemForAPI( item );
+          //Item id checks !
+          if ( ! _.has( item,'id') ) {
+            throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
+          }
           if ( module.czr_Item.has( item_candidate.id ) ) {
               throw new Error('CZRModule::instantiateItem() : the following item id ' + item_candidate.id + ' already exists in module.czr_Item() for module ' + this.id  );
           }
