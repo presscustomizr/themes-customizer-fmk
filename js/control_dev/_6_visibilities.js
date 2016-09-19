@@ -112,7 +112,6 @@
                 }
                 //a function wrapper
                 var _set_visibility = function() {
-                  console.log('in set visibilities', wpSetId );
                     api( wpSetId , function (setting) {
                           var _params = {
                             setting   : setting,
@@ -130,7 +129,6 @@
                 //=> fixes the problem of controls with specific rendering workflows like the header_image for ex.
                 if ( 'function' == typeof( api.control( wpSetId ).section ) ) {
                     api.section( api.control( wpSetId ).section() ).expanded.bind( function(to) {
-                          _set_visibility = _.debounce( _set_visibility, 1000 );
                           _set_visibility();
                     });
                 } else {
@@ -141,38 +139,36 @@
 
 
           _set_single_dependant_control_visibility : function( depSetId , _params ) {
-                var self = this;
-                api.control( api.CZR_Helpers.build_setId(depSetId) , function (control) {
-                  var _visibility = function (to) {
-                    var _action   = self._get_visibility_action( _params.setId , depSetId ),
-                        _callback = self._get_visibility_cb( _params.setId , _action ),
-                        _bool     = false;
+                var self = this,
+                    wpSetId = api.CZR_Helpers.build_setId(depSetId);
+                api.control( wpSetId , function (control) {
+                    var _visibility = function (to) {
+                        var _action   = self._get_visibility_action( _params.setId , depSetId ),
+                            _callback = self._get_visibility_cb( _params.setId , _action ),
+                            _bool     = false;
 
-                    if ( 'show' == _action && _callback(to, depSetId, _params.setId ) )
-                      _bool = true;
-                    if ( 'hide' == _action && _callback(to, depSetId, _params.setId ) )
-                      _bool = false;
-                    if ( 'both' == _action )
-                      _bool = _callback(to, depSetId, _params.setId );
+                        if ( 'show' == _action && _callback(to, depSetId, _params.setId ) )
+                          _bool = true;
+                        if ( 'hide' == _action && _callback(to, depSetId, _params.setId ) )
+                          _bool = false;
+                        if ( 'both' == _action )
+                          _bool = _callback(to, depSetId, _params.setId );
 
-                    //check if there are any cross dependencies to look at
-                    //_check_cross_dependant return true if there are no cross dependencies.
-                    //if cross dependency :
-                    //1) return true if we must show, false if not.
-                    _bool = self._check_cross_dependant( _params.setId, depSetId ) && _bool;
-                    if ( 'header_image' == depSetId ) {
-                      console.log('CONTAINER LENGTH ?', control.container.length );
-                      api.control('header_image').deferred.embedded.then( function(){
-                          console.log('EMBEDDED');
-                      });
-                    }
-                    control.container.toggle( _bool );
-                  };//_visibility()
+                        //check if there are any cross dependencies to look at
+                        //_check_cross_dependant return true if there are no cross dependencies.
+                        //if cross dependency :
+                        //1) return true if we must show, false if not.
+                        _bool = self._check_cross_dependant( _params.setId, depSetId ) && _bool;
+                        control.container.toggle( _bool );
+                    };//_visibility()
 
+                    //set visibility when control is embedded
+                    api.control( wpSetId ).deferred.embedded.then( function(){
+                        _visibility( _params.setting() );
+                    });
 
-
-                  _visibility( _params.setting() );
-                  _params.setting.bind( _visibility );
+                    //reacts on setting _dirty change
+                    _params.setting.bind( _visibility );
                 });
           },
 
