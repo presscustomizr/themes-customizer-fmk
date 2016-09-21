@@ -55,3 +55,15 @@
      left: auto;
    }
  }
+
+ @media screen and (min-width: 980px) {
+  .wp-customizer .expanded #customize-footer-actions {
+      width: 380px;
+  }
+}
+
+@media screen and (min-width: 1401px) {
+  .wp-customizer .expanded #customize-footer-actions {
+      width: 440px;
+  }
+}

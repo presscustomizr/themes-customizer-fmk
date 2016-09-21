@@ -119,21 +119,24 @@
                             controls  : self._get_dependants(setId),
                           };
                           _.each( _params.controls , function( depSetId ) {
-                            self._set_single_dependant_control_visibility( depSetId , _params);
+                              wpDepSetId = api.CZR_Helpers.build_setId(depSetId );
+                              if ( ! api.control.has(wpDepSetId) )
+                                return;
+                              //When section() is supported ( > wp 4.2 ? )
+                              //wait for the section to be expanded before actually binding the visibiities.
+                              //=> Performance improvement + fixes the problem of controls with specific rendering workflows like the header_image for ex.
+                              if ( 'function' == typeof( api.control( wpDepSetId ).section ) ) {
+                                  api.section( api.control( wpDepSetId ).section() ).expanded.bind( function(to) {
+                                        self._set_single_dependant_control_visibility( depSetId , _params);
+                                  });
+                              } else {
+                                  self._set_single_dependant_control_visibility( depSetId , _params);
+                              }
+
                           } );
                     });
                 };
-
-                //When section() is supported ( > wp 4.2 ? )
-                //wait for the section to be expanded before actually binding the visibiities.
-                //=> fixes the problem of controls with specific rendering workflows like the header_image for ex.
-                if ( 'function' == typeof( api.control( wpSetId ).section ) ) {
-                    api.section( api.control( wpSetId ).section() ).expanded.bind( function(to) {
-                          _set_visibility();
-                    });
-                } else {
-                    _set_visibility();
-                }
+                _set_visibility();
           },
 
 
