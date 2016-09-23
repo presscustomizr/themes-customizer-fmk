@@ -17,6 +17,12 @@
   //SKOPE
   api.CZR_skopeBase             = api.Class.extend( CZRSkopeBaseMths );
   api.CZR_skope                 = api.Value.extend( CZRSkopeMths ); //=> used as constructor when creating the collection of skopes
+  //Special case for the header image
+  //Capture objects before they are overriden by WP.
+  //=> needed when regenerating the header_image control.
+  if ( _.has(api, 'HeaderTool') ) {
+    api.czr_HeaderTool = $.extend(  true, {}, api.HeaderTool );
+  }
   api.bind( 'ready' , function() {
       if ( serverControlParams.isSkopOn ) {
         api.czr_skopeBase = new api.CZR_skopeBase();
