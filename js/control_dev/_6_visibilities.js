@@ -142,9 +142,10 @@
 
 
           _set_single_dependant_control_visibility : function( depSetId , _params ) {
-                var self = this,
-                    wpSetId = api.CZR_Helpers.build_setId(depSetId);
-                api.control( wpSetId , function (control) {
+                var self = this;
+
+                depSetId = api.CZR_Helpers.build_setId(depSetId);
+                api.control( depSetId , function (control) {
                     var _visibility = function (to) {
                         var _action   = self._get_visibility_action( _params.setId , depSetId ),
                             _callback = self._get_visibility_cb( _params.setId , _action ),
@@ -166,7 +167,7 @@
                     };//_visibility()
 
                     //set visibility when control is embedded
-                    api.control( wpSetId ).deferred.embedded.then( function(){
+                    api.control( depSetId ).deferred.embedded.then( function(){
                         _visibility( _params.setting() );
                     });
 
