@@ -197,6 +197,28 @@ $.extend( CZRSkopeBaseMths, {
           return sec_ctrl;
     },
 
+
+    //1) get the control of a given section
+    //2) for each control get the associated setting(s)
+    //=> important, a control might have several associated settings. Typical example : header_image.
+    //@return [] of setting ids for a given czr section
+    _getSectionSettingIds : function( section_id ) {
+          section_id = section_id || api.czr_activeSectionId();
+          if ( ! api.section.has( section_id) )
+            return;
+          var self = this,
+              _sec_settings = [],
+              _sec_controls = self._getSectionControlIds( section_id );
+
+          _.each( _sec_controls, function( ctrlId ) {
+              _.each( api.control(ctrlId).settings, function( _instance, _k ) {
+                  _sec_settings.push( _instance.id );
+              });
+          });
+          return _sec_settings;
+    },
+
+
     //@return boolean
     //used after a skope reset or a control reset to update the api save state if needed
     isAPIDirty : function() {
