@@ -53,6 +53,10 @@ $.extend( CZRSkopeBaseMths, {
               render_reset_icons = function( setIds ) {
                     api.consoleLog('IN RENDER RESET ICONS', setIds );
                     _.each( setIds, function( _id ) {
+                          //stop here if the control is not registered in the api.
+                          //can happen in scenarios when a control gets removed and added back.
+                          if ( ! api.control.has( _id ) )
+                            return;
                           var ctrl = api.control( _id );
 
                           // if ( ! _.has( ctrl, 'czr_hasDBVal' ) || ! _.has( ctrl, 'czr_isDirty' ) || ! _.has( ctrl, 'czr_resetVisibility' ) ) {
@@ -215,7 +219,7 @@ $.extend( CZRSkopeBaseMths, {
           return $( '.czr-ctrl-reset-warning', ctrl.container );
     },
 
-
+    //fired on user click
     doResetSetting : function( setId ) {
           var self = this,
               ctrl = api.control(setId),
