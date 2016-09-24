@@ -89,7 +89,7 @@
       if ( ! _.has(control,'id') )
         return;
       //exclude widget controls and menu controls for checkboxes
-      if ('widget' != control.id.substring(0, 6) && 'nav_menu' != control.id.substring(0, 8) ) {
+      if ('widget_' != control.id.substring(0, 7) && 'nav_menu' != control.id.substring(0, 8) ) {
         api.czrSetupCheckbox(control.id);
       }
       api.czrSetupSelect(control.id);

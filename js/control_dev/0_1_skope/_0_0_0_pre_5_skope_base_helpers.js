@@ -5,17 +5,19 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * HELPERS
     *****************************************************************************/
-    getGlobalSettingVal : function() {
-          var self = this, _vals = {};
-          //parse the current eligible scope settings and write an setting val object
-          api.each( function ( value, key ) {
-              //only the current theme options are eligible
-              if ( ! self.isSettingEligible(key) )
-                return;
-              _vals[key] = value();
-          });
-          return _vals;
-    },
+    //DEPRECATED
+    // getGlobalSettingVal : function() {
+    //       var self = this, _vals = {};
+    //       //parse the current eligible scope settings and write an setting val object
+    //       api.each( function ( value, key ) {
+    //           //only the current theme options are eligible
+    //           console.log('PROUT?');
+    //           if ( ! self.isSettingEligible(key) )
+    //             return;
+    //           _vals[key] = value();
+    //       });
+    //       return _vals;
+    // },
 
 
     //@return bool
@@ -89,12 +91,36 @@ $.extend( CZRSkopeBaseMths, {
     },
 
     //@return boolean
+    //! important : the setId param must be the full name. For example : hu_theme_option[color-1]
     isSettingEligible : function( setId ) {
-          if( _.isUndefined( setId ) || ! api.has(setId) )
+          var self = this,
+              shortSetId = api.CZR_Helpers.getOptionName( setId );
+
+          if( _.isUndefined( setId ) || ! api.has( setId ) ) {
+            api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE UNDEFINED OR NOT REGISTERED IN THE API.' );
             return;
-          return ( -1 != setId.indexOf(serverControlParams.themeOptions) ) || _.contains( serverControlParams.wpBuiltinSettings, setId );
+          }
+          //exclude widget controls and menu settings and sidebars
+          if ( self.isExcludedWPBuiltinSetting( setId ) )
+            return;
+          if ( _.contains( serverControlParams.skopeExcludedSettings, shortSetId ) ) {
+            api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE PART OF THE EXCLUDED LIST.' );
+            return;
+          } else if ( -1 == setId.indexOf( serverControlParams.themeOptions ) && ! _.contains( serverControlParams.wpBuiltinSettings, setId ) ) {
+            api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE NOT PART OF THE THEME OPTIONS OR WP AUTHORIZED BUILT IN OPTIONS' );
+          } else
+           return true;
     },
 
+
+    //@return boolean
+    isExcludedWPBuiltinSetting : function( setId ) {
+          if ( _.isUndefined(setId) )
+            return true;
+          if ( 'active_theme' == setId )
+            return true;
+          return 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8) || 'sidebars_' == setId.substring(0, 9);
+    },
 
     //performs a recursive inheritance to get a setId Val for a given skope
     //@return an api setting value

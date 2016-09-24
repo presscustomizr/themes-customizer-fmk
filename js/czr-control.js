@@ -101,6 +101,8 @@ $.extend( CZRSkopeBaseMths, {
     listenAPISettings : function() {
           var self = this;
           api.each( function ( value, setId ) {
+                if ( self.isExcludedWPBuiltinSetting( setId ) )
+                  return;
                 if ( ! self.isSettingEligible(setId) )
                   return;
                 api( setId ).callbacks.add( function( new_val, old_val, o ) {
@@ -449,7 +451,7 @@ $.extend( CZRSkopeBaseMths, {
           }
           var section_settings = self._getSectionSettingIds( section_id );
           section_settings = _.filter( section_settings, function(setId) {
-              return self.isSettingEligible(setId);
+              return self.isSettingEligible( setId );
           });
           _.each( section_settings, function( setId ) {
                 silent_update_candidates.push( setId );
@@ -873,15 +875,6 @@ $.extend( CZRSkopeBaseMths, {
 });//$.extend()
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 $.extend( CZRSkopeBaseMths, {
-    getGlobalSettingVal : function() {
-          var self = this, _vals = {};
-          api.each( function ( value, key ) {
-              if ( ! self.isSettingEligible(key) )
-                return;
-              _vals[key] = value();
-          });
-          return _vals;
-    },
     isSkopeRegisteredInCollection : function( skope_id, collection ) {
           var self = this;
           collection = collection || api.czr_skopeCollection();
@@ -936,9 +929,29 @@ $.extend( CZRSkopeBaseMths, {
           return _def;
     },
     isSettingEligible : function( setId ) {
-          if( _.isUndefined( setId ) || ! api.has(setId) )
+          var self = this,
+              shortSetId = api.CZR_Helpers.getOptionName( setId );
+
+          if( _.isUndefined( setId ) || ! api.has( setId ) ) {
+            api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE UNDEFINED OR NOT REGISTERED IN THE API.' );
             return;
-          return ( -1 != setId.indexOf(serverControlParams.themeOptions) ) || _.contains( serverControlParams.wpBuiltinSettings, setId );
+          }
+          if ( self.isExcludedWPBuiltinSetting( setId ) )
+            return;
+          if ( _.contains( serverControlParams.skopeExcludedSettings, shortSetId ) ) {
+            api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE PART OF THE EXCLUDED LIST.' );
+            return;
+          } else if ( -1 == setId.indexOf( serverControlParams.themeOptions ) && ! _.contains( serverControlParams.wpBuiltinSettings, setId ) ) {
+            api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE NOT PART OF THE THEME OPTIONS OR WP AUTHORIZED BUILT IN OPTIONS' );
+          } else
+           return true;
+    },
+    isExcludedWPBuiltinSetting : function( setId ) {
+          if ( _.isUndefined(setId) )
+            return true;
+          if ( 'active_theme' == setId )
+            return true;
+          return 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8) || 'sidebars_' == setId.substring(0, 9);
     },
     getSkopeSettingVal : function( setId, skope_id ) {
           if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
@@ -6852,7 +6865,7 @@ $.extend( CZRLayoutSelectMths , {
     api.control.each(function(control){
       if ( ! _.has(control,'id') )
         return;
-      if ('widget' != control.id.substring(0, 6) && 'nav_menu' != control.id.substring(0, 8) ) {
+      if ('widget_' != control.id.substring(0, 7) && 'nav_menu' != control.id.substring(0, 8) ) {
         api.czrSetupCheckbox(control.id);
       }
       api.czrSetupSelect(control.id);

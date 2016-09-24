@@ -277,6 +277,9 @@ $.extend( CZRSkopeBaseMths, {
           var self = this;
           //parse the current eligible skope settings and write a setting val object
           api.each( function ( value, setId ) {
+                //exclude widget controls, menu settings and sidebars
+                if ( self.isExcludedWPBuiltinSetting( setId ) )
+                  return;
                 //only the current theme options + some WP built in settings are eligible
                 if ( ! self.isSettingEligible(setId) )
                   return;
