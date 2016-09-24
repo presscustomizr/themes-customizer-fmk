@@ -6763,7 +6763,10 @@ $.extend( CZRLayoutSelectMths , {
                         if ( 'both' == _action )
                           _bool = _callback(to, depSetId, _params.setId );
                         _bool = self._check_cross_dependant( _params.setId, depSetId ) && _bool;
-                        control.container.toggle( _bool );
+                        if ( _.has(control, 'active') )
+                          control.container.toggle( _bool && control.active() );
+                        else
+                          control.container.toggle( _bool );
                     };//_visibility()
                     api.control( depSetId ).deferred.embedded.then( function(){
                         _visibility( _params.setting() );

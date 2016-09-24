@@ -163,7 +163,10 @@
                         //if cross dependency :
                         //1) return true if we must show, false if not.
                         _bool = self._check_cross_dependant( _params.setId, depSetId ) && _bool;
-                        control.container.toggle( _bool );
+                        if ( _.has(control, 'active') )
+                          control.container.toggle( _bool && control.active() );
+                        else
+                          control.container.toggle( _bool );
                     };//_visibility()
 
                     //set visibility when control is embedded
