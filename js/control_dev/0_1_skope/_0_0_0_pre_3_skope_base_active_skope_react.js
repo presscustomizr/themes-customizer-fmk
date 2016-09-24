@@ -28,8 +28,10 @@ $.extend( CZRSkopeBaseMths, {
           //=> the silent update will be fired on section expansion anyway
           //=> refresh now if the previewer is not skope aware, this will post the dyn_type used in the preview to get the proper option if the skope is not 'global'
           if ( _.isUndefined( api.czr_activeSectionId() ) ) {
-              if ( api.czr_isPreviewerSkopeAware.state() )
+              if ( api.czr_isPreviewerSkopeAware.state() ) {
+                api.consoleLog('ACTIVE SKOPE SWITCH : ' + from + ' => ' + to );
                 api.previewer.refresh();
+              }
               return;
           }
 
@@ -358,13 +360,11 @@ $.extend( CZRSkopeBaseMths, {
                   //if no image can be fetched, for example when in the active skope, the image is not set, then
                   //refresh the control without attachment data
                   wp.media.attachment( attachment_id ).fetch().done( function() {
-                        console.log('FETCHED PROMIZE!!!');
                         //remove the container and its control
                         api.control( 'header_image' ).container.remove();
                         api.control.remove( 'header_image' );
                         //update the data with the new img attributes
                         _header_control_data.attachment = this.attributes;
-                        console.log('ATTACHMENT ID', attachment_id, _header_control_data );
                         //reset the HeaderTool objects, captured early
                         api.HeaderTool.UploadsList = api.czr_HeaderTool.UploadsList;
                         api.HeaderTool.DefaultsList = api.czr_HeaderTool.DefaultsList;
@@ -394,10 +394,6 @@ $.extend( CZRSkopeBaseMths, {
                   _promise = wp.media.attachment( attachment_id ).fetch();
               }//else
           }//header_image case
-
-          console.log('!!!!!!!!!!!!!!!!!!! setId !!!!!!!!!!!!!!!!!!!!! ', setId );
-
-
 
           return  { promise : _promise || true, val : val };
     }

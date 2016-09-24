@@ -200,8 +200,7 @@ $.extend( CZRSkopeBaseMths, {
           //Instantiate the new skopes
           api.consoleLog('SKOPES TO INSTANTIATE?', _to_instantiate );
           _.each( _to_instantiate, function( _skope ) {
-              _skope = $.extend( true, {}, _skope );
-              //use a cloned skop to instantiate : @todo : do we still need that ?
+              _skope = $.extend( true, {}, _skope );//use a cloned skop to instantiate : @todo : do we still need that ?
               api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
 
               //fire this right after instantiation for the views (we need the model instances in the views)

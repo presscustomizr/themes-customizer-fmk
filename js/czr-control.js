@@ -140,6 +140,8 @@ $.extend( CZRSkopeBaseMths, {
           api.consoleLog('in GLOBAL DB OPTION REACT', from, to, resetted_opts );
           if ( _.isEmpty(resetted_opts) )
             return;
+
+          api.consoleLog( 'HAS RESET OPTIONS', resetted_opts );
           _.each( resetted_opts, function( shortSetId ) {
                 var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
                 if ( _.has( api.settings.settings, wpSetId) )
@@ -311,7 +313,7 @@ $.extend( CZRSkopeBaseMths, {
           });
           api.consoleLog('SKOPES TO INSTANTIATE?', _to_instantiate );
           _.each( _to_instantiate, function( _skope ) {
-              _skope = $.extend( true, {}, _skope );
+              _skope = $.extend( true, {}, _skope );//use a cloned skop to instantiate : @todo : do we still need that ?
               api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
               if ( ! api.czr_skope.has( _skope.id ) ) {
                   throw new Error( 'Skope id : ' + _skope.id + ' has not been instantiated.');
@@ -376,8 +378,10 @@ $.extend( CZRSkopeBaseMths, {
             throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
           self.writeCurrentSkopeTitle( to );
           if ( _.isUndefined( api.czr_activeSectionId() ) ) {
-              if ( api.czr_isPreviewerSkopeAware.state() )
+              if ( api.czr_isPreviewerSkopeAware.state() ) {
+                api.consoleLog('ACTIVE SKOPE SWITCH : ' + from + ' => ' + to );
                 api.previewer.refresh();
+              }
               return;
           }
           if ( _.has( api, 'czrModulePanelState') )
@@ -589,11 +593,9 @@ $.extend( CZRSkopeBaseMths, {
               } else {
                   attachment_id = header_image_data.attachment_id;
                   wp.media.attachment( attachment_id ).fetch().done( function() {
-                        console.log('FETCHED PROMIZE!!!');
                         api.control( 'header_image' ).container.remove();
                         api.control.remove( 'header_image' );
                         _header_control_data.attachment = this.attributes;
-                        console.log('ATTACHMENT ID', attachment_id, _header_control_data );
                         api.HeaderTool.UploadsList = api.czr_HeaderTool.UploadsList;
                         api.HeaderTool.DefaultsList = api.czr_HeaderTool.DefaultsList;
                         api.HeaderTool.CombinedList = api.czr_HeaderTool.CombinedList;
@@ -615,10 +617,6 @@ $.extend( CZRSkopeBaseMths, {
                   _promise = wp.media.attachment( attachment_id ).fetch();
               }//else
           }//header_image case
-
-          console.log('!!!!!!!!!!!!!!!!!!! setId !!!!!!!!!!!!!!!!!!!!! ', setId );
-
-
 
           return  { promise : _promise || true, val : val };
     }
@@ -1496,7 +1494,7 @@ $.extend( CZRSkopeMths, {
             api.czr_isPreviewerSkopeAware.resolve();
 
             api.consoleLog('DIRTY VALUES TO SUBMIT ? ', dirtyCustomized, api.czr_skope( skope_id ).dirtyValues() );
-
+            api.consoleLog('api.czr_skope( skope_id )().skope', api.czr_skope( skope_id )().skope );
             return {
                 wp_customize: 'on',
                 skope :       api.czr_skope( skope_id )().skope,

@@ -341,6 +341,7 @@ $.extend( CZRSkopeBaseMths, {
           if ( _.isEmpty(resetted_opts) )
             return;
 
+          api.consoleLog( 'HAS RESET OPTIONS', resetted_opts );
           //reset each resetted setting to its default val
           _.each( resetted_opts, function( shortSetId ) {
                 var wpSetId = api.CZR_Helpers.build_setId( shortSetId );

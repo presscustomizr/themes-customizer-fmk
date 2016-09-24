@@ -201,7 +201,7 @@
             api.czr_isPreviewerSkopeAware.resolve();
 
             api.consoleLog('DIRTY VALUES TO SUBMIT ? ', dirtyCustomized, api.czr_skope( skope_id ).dirtyValues() );
-
+            api.consoleLog('api.czr_skope( skope_id )().skope', api.czr_skope( skope_id )().skope );
             return {
                 wp_customize: 'on',
                 skope :       api.czr_skope( skope_id )().skope,
