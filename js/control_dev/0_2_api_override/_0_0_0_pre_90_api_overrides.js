@@ -177,6 +177,7 @@
             var dirtyCustomized = {};
             skope_id = skope_id || api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
 
+            //falls back to WP core treatment if skope is not on or if the requested skope is not registered
             if ( ! _.has( api, 'czr_skope') || ! api.czr_skope.has( skope_id ) )
               return _old_previewer_query.apply( this );
 
@@ -320,15 +321,47 @@
             var self = this,
                 processing = api.state( 'processing' ),
                 submitWhenDoneProcessing,
-                submit;
+                submit,
+                //modifiedWhileSaving = {},
+                invalidSettings = [],
+                invalidControls;
 
             $( document.body ).addClass( 'saving' );
+
+
+            //WE WON'T USE THIS BECAUSE WE DON'T KNOW IN WHICH SKOPE THE SETTING MIGHT HAVE BEEN MODIFIED DURING SAVING
+            // function captureSettingModifiedDuringSave( setting ) {
+            //   modifiedWhileSaving[ setting.id ] = true;
+            // }
+            // api.bind( 'change', captureSettingModifiedDuringSave );
 
             //skope dependant submit()
             submit = function( skope_id ) {
                 var request, query;
-
                 skope_id = skope_id || api.czr_activeSkope();
+
+              /*
+               * Block saving if there are any settings that are marked as
+               * invalid from the client (not from the server). Focus on
+               * the control.
+               */
+                if ( _.has( api, 'Notification') ) {
+                    api.each( function( setting ) {
+                      setting.notifications.each( function( notification ) {
+                        if ( 'error' === notification.type && ( ! notification.data || ! notification.data.from_server ) ) {
+                          invalidSettings.push( setting.id );
+                        }
+                      } );
+                    } );
+                    invalidControls = api.findControlsForSettings( invalidSettings );
+                    if ( ! _.isEmpty( invalidControls ) ) {
+                      _.values( invalidControls )[0][0].focus();
+                      body.removeClass( 'saving' );
+                      //api.unbind( 'change', captureSettingModifiedDuringSave );
+                      return;
+                    }
+                }
+
 
                 //the query takes the skope_id has parameter
                 query = $.extend( self.query( skope_id, 'save' ), {
@@ -384,8 +417,19 @@
                   _saved_dirties = {};//will be used as param to update the skope model db val after all ajx requests are done
 
               //loop on the registered skopes and submit each save ajax request
-
               var submitDirtySkopes = function() {
+                    //ARE THERE DIRTIES IN THE WP API ?
+                    var _wpDirtyCustomized = {};
+                    api.each( function ( value, setId ) {
+                          if ( value._dirty ) {
+                            _wpDirtyCustomized[ setId ] = value();
+                          }
+                    } );
+                    if ( ! _.isEmpty(_wpDirtyCustomized) && _.isEmpty(dirtySkopesToSubmit) ) {
+                      throw new Error(
+                        'There are currently not dirties to save in skope while there should be ' + _.size(_wpDirtyCustomized) + ' : ' + _.keys(_wpDirtyCustomized).join(' | ')
+                      );
+                    }
                     var promises = [];
                     _.each( dirtySkopesToSubmit, function( _skop ) {
                           api.consoleLog('submit request for skope : ', _skop.id );
@@ -395,7 +439,7 @@
               };
 
               var reactWhenPromisesDone = function( promises ) {
-                    $.when.apply( null, promises).done( function( responses ) {
+                    $.when.apply( null, promises).done( function( response ) {
                           //store the saved dirties (will be used as param to update the db val property of each saved skope)
                           //and reset them
                           _.each( dirtySkopesToSubmit, function( _skp ) {
@@ -407,10 +451,33 @@
                                 value._dirty = false;
                           } );
 
-                          //WP default treatments
+                          /////////////////WP default treatments
                           $( document.body ).removeClass( 'saving' );
-                          api.previewer.send( 'saved', responses );
-                          api.trigger( 'saved', responses );
+                          $( '#save' ).prop( 'disabled', false );
+
+                          //api.unbind( 'change', captureSettingModifiedDuringSave );
+                          // Clear setting dirty states, if setting wasn't modified while saving.
+                          // api.each( function( setting ) {
+                          //   if ( ! modifiedWhileSaving[ setting.id ] ) {
+                          //     setting._dirty = false;
+                          //   }
+                          // } );
+
+                          api.previewer.send( 'saved', response );
+                          if ( response.setting_validities ) {
+                              api._handleSettingValidities( {
+                                  settingValidities: response.setting_validities,
+                                  focusInvalidControl: true
+                              } );
+                          }
+
+
+                          api.trigger( 'saved', response );
+
+                          // Restore the global dirty state if any settings were modified during save.
+                          // if ( ! _.isEmpty( modifiedWhileSaving ) ) {
+                          //   api.state( 'saved' ).set( false );
+                          // }
                     }).then( function() {
                           api.czr_savedDirties( { channel : api.previewer.channel() , saved : _saved_dirties });
                           api.czr_skopeBase.trigger('skopes-saved', _saved_dirties );
