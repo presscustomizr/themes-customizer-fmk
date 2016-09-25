@@ -281,12 +281,13 @@ $.extend( CZRSkopeBaseMths, {
                 if ( self.isExcludedWPBuiltinSetting( setId ) )
                   return;
                 //only the current theme options + some WP built in settings are eligible
-                if ( ! self.isSettingEligible(setId) )
+                //some settings like show_on_front are not eligibile to skope, but they can be reseted
+                if ( ! self.isSettingSkopeEligible(setId) && ! self.isSettingResetEligible(setId) )
                   return;
                 api( setId ).callbacks.add( function( new_val, old_val, o ) {
                       api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, new_val, old_val, o );
+                      //For skope eligible settings : Update the skope dirties with the new val of this setId
                       if ( api(setId)._dirty ) {
-                          //Update the skope dirties with the new val of this setId
                           self.updateSkopeDirties( setId, new_val );
                       }
 
@@ -311,10 +312,21 @@ $.extend( CZRSkopeBaseMths, {
     //this method updates a given skope instance dirty values
     //and returns the dirty values object
     //fired on api setting change and in the ajax query
+
     updateSkopeDirties : function( setId, new_val, skope_id ) {
           skope_id = skope_id || api.czr_activeSkope();
 
-          var skope_instance = api.czr_skope( skope_id );//the active skope instance
+          var self = this,
+              skope_instance,
+              shortSetId = api.CZR_Helpers.getOptionName( setId );
+
+          //for the settings that are excluded from skope, the skope is always the global one
+          if ( _.contains( serverControlParams.skopeExcludedSettings, shortSetId ) ) {
+            skope_instance = api.czr_skope( self.getGlobalSkopeId() );//the global skope instance
+          }
+          else
+            skope_instance = api.czr_skope( skope_id );
+
           if ( _.isUndefined( skope_instance ) ) {
             throw new Error('Skope base class : the required skope id is not registered.');
           }

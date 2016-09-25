@@ -19,7 +19,7 @@ $.extend( CZRSkopeBaseMths, {
 
           //filter only eligible setIds
           controls = _.filter( controls, function( setId ) {
-              return self.isSettingEligible( setId );
+              return self.isSettingResetEligible( setId );
           });
 
           if ( _.isEmpty(controls) )
@@ -45,7 +45,7 @@ $.extend( CZRSkopeBaseMths, {
                 controls = self._getSectionControlIds( api.czr_activeSectionId() );
                 //filter only eligible setIds
                 controls = _.filter( controls, function( setId ) {
-                    return self.isSettingEligible( setId );
+                    return self.isSettingSkopeEligible( setId );
                 });
           }
 
@@ -301,5 +301,35 @@ $.extend( CZRSkopeBaseMths, {
           api.consoleLog('new_skope_model ?', new_skope_model );
 
           api.czr_skope( skope_model.id )( new_skope_model );
-    }
+    },
+
+
+
+    /*****************************************************************************
+    * SETUP CONTROL INHERITANCE INFOS
+    *****************************************************************************/
+    setupControlsInheritance : function( controls ) {
+          var self = this,
+              section_id = api.czr_activeSectionId();
+
+          api.consoleLog('SETUP CONTROLS RESET ?', controls );
+          controls = _.isUndefined( controls ) ? self._getSectionControlIds( section_id  ) : controls;
+          controls = _.isString( controls ) ? [controls] : controls;
+
+          //filter only eligible setIds
+          controls = _.filter( controls, function( setId ) {
+              return self.isSettingSkopeEligible( setId );
+          });
+
+          if ( _.isEmpty(controls) )
+            return;
+
+          $.when( self.renderControlsSingleReset( controls ) ).done( function() {
+                //add observable Value(s) to the section control
+                self.setupControlsValues( controls );
+          });
+
+    },
+
+
 });//$.extend()

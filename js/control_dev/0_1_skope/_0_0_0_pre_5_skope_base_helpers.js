@@ -11,8 +11,7 @@ $.extend( CZRSkopeBaseMths, {
     //       //parse the current eligible scope settings and write an setting val object
     //       api.each( function ( value, key ) {
     //           //only the current theme options are eligible
-    //           console.log('PROUT?');
-    //           if ( ! self.isSettingEligible(key) )
+    //           if ( ! self.isSettingSkopeEligible(key) )
     //             return;
     //           _vals[key] = value();
     //       });
@@ -36,7 +35,8 @@ $.extend( CZRSkopeBaseMths, {
 
     //@return bool
     isGlobalSkopeRegistered : function() {
-          return _.findWhere( api.czr_currentSkopesCollection(), { skope : 'global'} );
+          var _model = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'global'} );
+          return _.isObject( _model ) && _.has( _model, 'id' );
     },
 
     //@return string
@@ -92,7 +92,7 @@ $.extend( CZRSkopeBaseMths, {
 
     //@return boolean
     //! important : the setId param must be the full name. For example : hu_theme_option[color-1]
-    isSettingEligible : function( setId ) {
+    isSettingSkopeEligible : function( setId ) {
           var self = this,
               shortSetId = api.CZR_Helpers.getOptionName( setId );
 
@@ -107,10 +107,31 @@ $.extend( CZRSkopeBaseMths, {
             api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE PART OF THE EXCLUDED LIST.' );
             return;
           } else if ( -1 == setId.indexOf( serverControlParams.themeOptions ) && ! _.contains( serverControlParams.wpBuiltinSettings, setId ) ) {
-            api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE NOT PART OF THE THEME OPTIONS OR WP AUTHORIZED BUILT IN OPTIONS' );
+            api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE NOT PART OF THE THEME OPTIONS AND NOT WP AUTHORIZED BUILT IN OPTIONS' );
           } else
            return true;
     },
+
+
+    //@return boolean
+    //! important : the setId param must be the full name. For example : hu_theme_option[color-1]
+    isSettingResetEligible : function( setId ) {
+          var self = this,
+              shortSetId = api.CZR_Helpers.getOptionName( setId );
+
+          if( _.isUndefined( setId ) || ! api.has( setId ) ) {
+            api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO RESET BECAUSE UNDEFINED OR NOT REGISTERED IN THE API.' );
+            return;
+          }
+          //exclude widget controls and menu settings and sidebars
+          if ( self.isExcludedWPBuiltinSetting( setId ) )
+            return;
+          if ( -1 == setId.indexOf( serverControlParams.themeOptions ) && ! _.contains( serverControlParams.wpBuiltinSettings, setId ) ) {
+            api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO RESET BECAUSE NOT PART OF THE THEME OPTIONS AND NOT WP AUTHORIZED BUILT IN OPTIONS' );
+          } else
+           return true;
+    },
+
 
 
     //@return boolean

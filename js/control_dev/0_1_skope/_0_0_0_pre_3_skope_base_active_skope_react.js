@@ -120,7 +120,7 @@ $.extend( CZRSkopeBaseMths, {
 
           //keep only the skope eligible setIds
           section_settings = _.filter( section_settings, function(setId) {
-              return self.isSettingEligible( setId );
+              return self.isSettingSkopeEligible( setId );
           });
 
           //Populates the silent update candidates array
