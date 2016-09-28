@@ -173,9 +173,30 @@
         * @return {object}
         */
         var _old_previewer_query = api.previewer.query;
+
         api.previewer.query =  function( skope_id, action ) {
-            var dirtyCustomized = {};
+            var dirtyCustomized = {},
+                _wpDirtyCustomized = {};
+
+            ////////////////////////////////////////////
+            ///EXPERIMENTAL
+            //build the dirties from the wp settings excluded from skope
+            api.each( function ( value, setId ) {
+                  if ( value._dirty ) {
+                    _wpDirtyCustomized[ setId ] = value();
+                  }
+            } );
+
+            if ( ! _.isEmpty(_wpDirtyCustomized) )
+              return _old_previewer_query.apply( this );
+
+            ////////////////////////////////////////////
+            ///EXPERIMENTAL
+
+
             skope_id = skope_id || api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
+
+            console.log('!!!!!!!!!!!!OVERRIDEN QUERY SKOPE AND ACTION!!!!!!!!!!!',skope_id, action);
 
             //falls back to WP core treatment if skope is not on or if the requested skope is not registered
             if ( ! _.has( api, 'czr_skope') || ! api.czr_skope.has( skope_id ) )
@@ -317,6 +338,7 @@
         * SAVE
         *****************************************************************************/
         //OVERRIDES WP
+        var _old_previewer_save = api.previewer.save;
         api.previewer.save = function() {
             var self = this,
                 processing = api.state( 'processing' ),
@@ -337,6 +359,7 @@
 
             //skope dependant submit()
             submit = function( skope_id ) {
+                console.log('SKOPE ID IN OVERRIDEN SUBMIT', skope_id );
                 var request, query;
                 skope_id = skope_id || api.czr_activeSkope();
 
@@ -426,13 +449,16 @@
                           }
                     } );
                     if ( ! _.isEmpty(_wpDirtyCustomized) && _.isEmpty(dirtySkopesToSubmit) ) {
-                      throw new Error(
-                        'There are currently not dirties to save in skope while there should be ' + _.size(_wpDirtyCustomized) + ' : ' + _.keys(_wpDirtyCustomized).join(' | ')
-                      );
+                      // throw new Error(
+                      //   'There are currently no dirties to save in skope while there should be ' + _.size(_wpDirtyCustomized) + ' : ' + _.keys(_wpDirtyCustomized).join(' | ')
+                      // );
+                      console.log(  'There are currently no dirties to save in skope while there should be ' + _.size(_wpDirtyCustomized) + ' : ' + _.keys(_wpDirtyCustomized).join(' | ') );
+                      _old_previewer_save.call(self);
                     }
                     var promises = [];
                     _.each( dirtySkopesToSubmit, function( _skop ) {
                           api.consoleLog('submit request for skope : ', _skop.id );
+                          //each promise is a submit ajax query
                           promises.push( submit( _skop.id ) );
                     });
                     return promises;
