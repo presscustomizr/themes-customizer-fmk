@@ -30,6 +30,10 @@
                 //exclude the WP built-in settings like blogdescription, show_on_front, etc
                 if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
                   return setId;
+                //exclude the WP built-in settings like sidebars_widgets*, nav_menu_*, widget_*
+                if ( 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8) || 'sidebars_' == setId.substring(0, 9) )
+                  return setId;
+
                 return -1 == setId.indexOf( serverControlParams.themeOptions ) ? [ serverControlParams.themeOptions +'[' , setId  , ']' ].join('') : setId;
         },
 
