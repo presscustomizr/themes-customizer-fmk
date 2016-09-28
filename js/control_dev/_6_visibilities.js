@@ -101,6 +101,8 @@
           /*
           * @return void
           * show or hide setting according to the dependency + callback pair
+          * @params setId = the short setting id, whitout the theme option prefix OR the WP built-in setting
+          * @params o = { controls [], callback fn, onSectionExpand bool }
           */
           _prepare_visibilities : function( setId, o ) {
                 var self = this,
@@ -117,6 +119,7 @@
                             setting   : setting,
                             setId : setId,
                             controls  : self._get_dependants(setId),
+                            onSectionExpand : ! _.isUndefined( o.onSectionExpand ) ? o.onSectionExpand : true
                           };
                           _.each( _params.controls , function( depSetId ) {
                               wpDepSetId = api.CZR_Helpers.build_setId(depSetId );
@@ -125,7 +128,7 @@
                               //When section() is supported ( > wp 4.2 ? )
                               //wait for the section to be expanded before actually binding the visibiities.
                               //=> Performance improvement + fixes the problem of controls with specific rendering workflows like the header_image for ex.
-                              if ( 'function' == typeof( api.control( wpDepSetId ).section ) ) {
+                              if ( 'function' == typeof( api.control( wpDepSetId ).section ) && _params.onSectionExpand ) {
                                   api.section( api.control( wpDepSetId ).section() ).expanded.bind( function(to) {
                                         self._set_single_dependant_control_visibility( depSetId , _params);
                                   });
@@ -145,38 +148,42 @@
                 var self = this;
 
                 depSetId = api.CZR_Helpers.build_setId(depSetId);
-                api.control( depSetId , function (control) {
-                    var _visibility = function (to) {
-                        var _action   = self._get_visibility_action( _params.setId , depSetId ),
-                            _callback = self._get_visibility_cb( _params.setId , _action ),
-                            _bool     = false;
+                var control = api.control( depSetId );
+                // api.control( depSetId , function (control) {
 
-                        if ( 'show' == _action && _callback(to, depSetId, _params.setId ) )
-                          _bool = true;
-                        if ( 'hide' == _action && _callback(to, depSetId, _params.setId ) )
-                          _bool = false;
-                        if ( 'both' == _action )
-                          _bool = _callback(to, depSetId, _params.setId );
+                // });
 
-                        //check if there are any cross dependencies to look at
-                        //_check_cross_dependant return true if there are no cross dependencies.
-                        //if cross dependency :
-                        //1) return true if we must show, false if not.
-                        _bool = self._check_cross_dependant( _params.setId, depSetId ) && _bool;
-                        if ( _.has(control, 'active') )
-                          control.container.toggle( _bool && control.active() );
-                        else
-                          control.container.toggle( _bool );
-                    };//_visibility()
+                var _visibility = function (to) {
+                  var _action   = self._get_visibility_action( _params.setId , depSetId ),
+                      _callback = self._get_visibility_cb( _params.setId , _action ),
+                      _bool     = false;
 
-                    //set visibility when control is embedded
-                    api.control( depSetId ).deferred.embedded.then( function(){
-                        _visibility( _params.setting() );
-                    });
+                  if ( 'show' == _action && _callback(to, depSetId, _params.setId ) )
+                    _bool = true;
+                  if ( 'hide' == _action && _callback(to, depSetId, _params.setId ) )
+                    _bool = false;
+                  if ( 'both' == _action )
+                    _bool = _callback(to, depSetId, _params.setId );
 
-                    //reacts on setting _dirty change
-                    _params.setting.bind( _visibility );
-                });
+                  //check if there are any cross dependencies to look at
+                  //_check_cross_dependant return true if there are no cross dependencies.
+                  //if cross dependency :
+                  //1) return true if we must show, false if not.
+                  _bool = self._check_cross_dependant( _params.setId, depSetId ) && _bool;
+
+                  if ( _.has(control, 'active') )
+                    control.container.toggle( _bool && control.active() );
+                  else
+                    control.container.toggle( _bool );
+              };//_visibility()
+
+              //set visibility when control is embedded
+              api.control( depSetId ).deferred.embedded.then( function(){
+                  _visibility( _params.setting() );
+              });
+
+              //reacts on setting _dirty change
+              _params.setting.bind( _visibility );
           },
 
           /**
