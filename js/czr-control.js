@@ -1532,9 +1532,23 @@ $.extend( CZRSkopeMths, {
         if ( ! serverControlParams.isSkopOn )
           return;
         var _old_previewer_query = api.previewer.query;
+
         api.previewer.query =  function( skope_id, action ) {
-            var dirtyCustomized = {};
+            var dirtyCustomized = {},
+                _wpDirtyCustomized = {};
+            api.each( function ( value, setId ) {
+                  if ( value._dirty ) {
+                    _wpDirtyCustomized[ setId ] = value();
+                  }
+            } );
+
+            if ( ! _.isEmpty(_wpDirtyCustomized) )
+              return _old_previewer_query.apply( this );
+
+
             skope_id = skope_id || api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
+
+            console.log('!!!!!!!!!!!!OVERRIDEN QUERY SKOPE AND ACTION!!!!!!!!!!!',skope_id, action);
             if ( ! _.has( api, 'czr_skope') || ! api.czr_skope.has( skope_id ) )
               return _old_previewer_query.apply( this );
             if ( api.czr_activeSkope() == skope_id ) {
@@ -1636,6 +1650,7 @@ $.extend( CZRSkopeMths, {
 
               return request;
         };//.czr_reset
+        var _old_previewer_save = api.previewer.save;
         api.previewer.save = function() {
             var self = this,
                 processing = api.state( 'processing' ),
@@ -1646,6 +1661,7 @@ $.extend( CZRSkopeMths, {
 
             $( document.body ).addClass( 'saving' );
             submit = function( skope_id ) {
+                console.log('SKOPE ID IN OVERRIDEN SUBMIT', skope_id );
                 var request, query;
                 skope_id = skope_id || api.czr_activeSkope();
                 if ( _.has( api, 'Notification') ) {
@@ -1714,9 +1730,8 @@ $.extend( CZRSkopeMths, {
                           }
                     } );
                     if ( ! _.isEmpty(_wpDirtyCustomized) && _.isEmpty(dirtySkopesToSubmit) ) {
-                      throw new Error(
-                        'There are currently not dirties to save in skope while there should be ' + _.size(_wpDirtyCustomized) + ' : ' + _.keys(_wpDirtyCustomized).join(' | ')
-                      );
+                      console.log(  'There are currently no dirties to save in skope while there should be ' + _.size(_wpDirtyCustomized) + ' : ' + _.keys(_wpDirtyCustomized).join(' | ') );
+                      _old_previewer_save.call(self);
                     }
                     var promises = [];
                     _.each( dirtySkopesToSubmit, function( _skop ) {
@@ -1857,6 +1872,9 @@ $.extend( CZRSkopeMths, {
         build_setId : function ( setId ) {
                 if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
                   return setId;
+                if ( 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8) || 'sidebars_' == setId.substring(0, 9) )
+                  return setId;
+
                 return -1 == setId.indexOf( serverControlParams.themeOptions ) ? [ serverControlParams.themeOptions +'[' , setId  , ']' ].join('') : setId;
         },
         getOptionName : function(name) {
@@ -6819,12 +6837,13 @@ $.extend( CZRLayoutSelectMths , {
                             setting   : setting,
                             setId : setId,
                             controls  : self._get_dependants(setId),
+                            onSectionExpand : ! _.isUndefined( o.onSectionExpand ) ? o.onSectionExpand : true
                           };
                           _.each( _params.controls , function( depSetId ) {
                               wpDepSetId = api.CZR_Helpers.build_setId(depSetId );
                               if ( ! api.control.has(wpDepSetId) )
                                 return;
-                              if ( 'function' == typeof( api.control( wpDepSetId ).section ) ) {
+                              if ( 'function' == typeof( api.control( wpDepSetId ).section ) && _params.onSectionExpand ) {
                                   api.section( api.control( wpDepSetId ).section() ).expanded.bind( function(to) {
                                         self._set_single_dependant_control_visibility( depSetId , _params);
                                   });
@@ -6844,29 +6863,30 @@ $.extend( CZRLayoutSelectMths , {
                 var self = this;
 
                 depSetId = api.CZR_Helpers.build_setId(depSetId);
-                api.control( depSetId , function (control) {
-                    var _visibility = function (to) {
-                        var _action   = self._get_visibility_action( _params.setId , depSetId ),
-                            _callback = self._get_visibility_cb( _params.setId , _action ),
-                            _bool     = false;
+                var control = api.control( depSetId );
 
-                        if ( 'show' == _action && _callback(to, depSetId, _params.setId ) )
-                          _bool = true;
-                        if ( 'hide' == _action && _callback(to, depSetId, _params.setId ) )
-                          _bool = false;
-                        if ( 'both' == _action )
-                          _bool = _callback(to, depSetId, _params.setId );
-                        _bool = self._check_cross_dependant( _params.setId, depSetId ) && _bool;
-                        if ( _.has(control, 'active') )
-                          control.container.toggle( _bool && control.active() );
-                        else
-                          control.container.toggle( _bool );
-                    };//_visibility()
-                    api.control( depSetId ).deferred.embedded.then( function(){
-                        _visibility( _params.setting() );
-                    });
-                    _params.setting.bind( _visibility );
-                });
+                var _visibility = function (to) {
+                  var _action   = self._get_visibility_action( _params.setId , depSetId ),
+                      _callback = self._get_visibility_cb( _params.setId , _action ),
+                      _bool     = false;
+
+                  if ( 'show' == _action && _callback(to, depSetId, _params.setId ) )
+                    _bool = true;
+                  if ( 'hide' == _action && _callback(to, depSetId, _params.setId ) )
+                    _bool = false;
+                  if ( 'both' == _action )
+                    _bool = _callback(to, depSetId, _params.setId );
+                  _bool = self._check_cross_dependant( _params.setId, depSetId ) && _bool;
+
+                  if ( _.has(control, 'active') )
+                    control.container.toggle( _bool && control.active() );
+                  else
+                    control.container.toggle( _bool );
+              };//_visibility()
+              api.control( depSetId ).deferred.embedded.then( function(){
+                  _visibility( _params.setting() );
+              });
+              _params.setting.bind( _visibility );
           },
           _handleFaviconNote : function() {
                 var self = this,
@@ -6957,6 +6977,23 @@ $.extend( CZRLayoutSelectMths , {
         $('<span/>', {class:'fa fa-magic'} )
       );
     }
+    api.bind('pane-contents-reflowed', function() {
+        var _sb = ['primary', 'secondary'],
+            _is_checked = function( to ) {
+                return 0 !== to && '0' !== to && false !== to && 'off' !== to;
+            };
+        _.each( _sb, function( _id ){
+            var huSetId = api.CZR_Helpers.build_setId( _id + '-example-wgt' ),
+                huIsCheckedSetId = api.CZR_Helpers.build_setId( 'show-sb-example-wgt' ),
+                wpSbId = 'sidebars_widgets[' + _id + ']';
+            if ( ! api.has( wpSbId ) || ! api.control.has( huSetId ) )
+              return;
+            var _bool =  _.isEmpty( api( wpSbId )() ) && _is_checked( api(huIsCheckedSetId)() );
+            api.control(huSetId).active( _bool);
+            api.control(huSetId).container.toggle( _bool );
+        });
+
+    });
   });//end of $( function($) ) dom ready
 
 })( wp, jQuery);
