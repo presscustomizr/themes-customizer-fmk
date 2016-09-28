@@ -103,6 +103,25 @@
         $('<span/>', {class:'fa fa-magic'} )
       );
     }
+
+    /* MAKES SURE THAT THE CONTROL EMBEDDED IN THE WIDGET SECTION ARE PROPERLY DISPLAYED */
+    api.bind('pane-contents-reflowed', function() {
+        var _sb = ['primary', 'secondary'],
+            _is_checked = function( to ) {
+                return 0 !== to && '0' !== to && false !== to && 'off' !== to;
+            };
+        _.each( _sb, function( _id ){
+            var huSetId = api.CZR_Helpers.build_setId( _id + '-example-wgt' ),
+                huIsCheckedSetId = api.CZR_Helpers.build_setId( 'show-sb-example-wgt' ),
+                wpSbId = 'sidebars_widgets[' + _id + ']';
+            if ( ! api.has( wpSbId ) || ! api.control.has( huSetId ) )
+              return;
+            var _bool =  _.isEmpty( api( wpSbId )() ) && _is_checked( api(huIsCheckedSetId)() );
+            api.control(huSetId).active( _bool);
+            api.control(huSetId).container.toggle( _bool );
+        });
+
+    });
   });//end of $( function($) ) dom ready
 
 })( wp, jQuery);
