@@ -275,6 +275,37 @@ $.extend( CZRSkopeBaseMths, {
                   isDirty = true;
           });
           return isDirty;
+    },
+
+
+    //@return {} of dirties
+    getSkopeDirties : function( skope_id ) {
+          if ( ! api.czr_skope.has( skope_id) )
+            return {};
+          return api.czr_skope( skope_id ).dirtyValues();
+    },
+
+    getSkopeExcludedDirties : function() {
+          //ARE THERE DIRTIES IN THE WP API ?
+          var self = this,
+              _wpDirties = {};
+          api.each( function ( value, setId ) {
+                if ( value._dirty ) {
+                  _wpDirties[ setId ] = value();
+                }
+          } );
+
+          //ARE THERE DIRTIES IN THE GLOBAL SKOPE
+          var _globalSkopeId = self.getGlobalSkopeId(),
+              _globalSkpDirties = self.getSkopeDirties( _globalSkopeId );
+
+          console.log('############# ', _globalSkpDirties, _wpDirties );
+          //RETURN THE _wpDirties not present in the global skope dirties
+          return _.omit( _wpDirties, function( _value, setId ) {
+              //var shortOptName = api.CZR_Helpers.getOptionName( setId );
+              console.log('IS ELIGIBLE', setId, self.isSettingSkopeEligible( setId ) );
+              return self.isSettingSkopeEligible( setId ) && _.has( _globalSkpDirties, setId );
+          } );
     }
 
     //@return the customized value of a setId in a given skop
