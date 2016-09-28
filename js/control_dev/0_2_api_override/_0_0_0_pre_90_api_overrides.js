@@ -174,9 +174,12 @@
         */
         var _old_previewer_query = api.previewer.query;
 
-        api.previewer.query =  function( skope_id, action ) {
-            var dirtyCustomized = {},
+        api.previewer.query =  function( skope_id, action, the_dirties ) {
+            var dirtyCustomized = the_dirties || {},
                 _wpDirtyCustomized = {};
+
+
+            console.log('!!!!!!!!!!!!OVERRIDEN QUERY SKOPE AND ACTION!!!!!!!!!!!',skope_id, action, the_dirties);
 
             ////////////////////////////////////////////
             ///EXPERIMENTAL
@@ -187,6 +190,8 @@
                   }
             } );
 
+
+
             if ( ! _.isEmpty(_wpDirtyCustomized) )
               return _old_previewer_query.apply( this );
 
@@ -196,22 +201,25 @@
 
             skope_id = skope_id || api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
 
-            console.log('!!!!!!!!!!!!OVERRIDEN QUERY SKOPE AND ACTION!!!!!!!!!!!',skope_id, action);
 
+            //IS SKOP ON OR IS THIS SKOPE REGISTERED ?
             //falls back to WP core treatment if skope is not on or if the requested skope is not registered
             if ( ! _.has( api, 'czr_skope') || ! api.czr_skope.has( skope_id ) )
               return _old_previewer_query.apply( this );
 
+
+
+            /// BUILD THE DIRTIES ///
             //on first load OR if the current skope is the customized one, build the dirtyCustomized the regular way : typically a refresh after setting change
             //otherwise, get the dirties from the requested skope instance : typically a save action on several skopes
-            if ( api.czr_activeSkope() == skope_id ) {
+            if ( 'save' != action && 'reset' != action && api.czr_activeSkope() == skope_id ) {
                   api.each( function ( value, setId ) {
                         if ( value._dirty ) {
                           dirtyCustomized[ setId ] = value();
                         }
                   } );
             } else {
-                  dirtyCustomized = api.czr_skope( skope_id ).dirtyValues();
+                  dirtyCustomized = api.czr_skopeBase.getSkopeDirties(skope_id);//api.czr_skope( skope_id ).dirtyValues();
             }
 
             //when previewing, we need to apply the skope inheritance to the customized values
@@ -222,7 +230,7 @@
             //the previewer is now scope aware
             api.czr_isPreviewerSkopeAware.resolve();
 
-            api.consoleLog('DIRTY VALUES TO SUBMIT ? ', dirtyCustomized, api.czr_skope( skope_id ).dirtyValues() );
+            api.consoleLog('DIRTY VALUES TO SUBMIT ? ', dirtyCustomized, api.czr_skopeBase.getSkopeDirties(skope_id) );
             api.consoleLog('api.czr_skope( skope_id )().skope', api.czr_skope( skope_id )().skope );
             return {
                 wp_customize: 'on',
@@ -358,7 +366,7 @@
             // api.bind( 'change', captureSettingModifiedDuringSave );
 
             //skope dependant submit()
-            submit = function( skope_id ) {
+            submit = function( skope_id, the_dirties ) {
                 console.log('SKOPE ID IN OVERRIDEN SUBMIT', skope_id );
                 var request, query;
                 skope_id = skope_id || api.czr_activeSkope();
@@ -385,9 +393,8 @@
                     }
                 }
 
-
                 //the query takes the skope_id has parameter
-                query = $.extend( self.query( skope_id, 'save' ), {
+                query = $.extend( self.query( skope_id, 'save', dirtyCustomized ), {
                     nonce:  self.nonce.save
                 } );
 
@@ -441,36 +448,49 @@
 
               //loop on the registered skopes and submit each save ajax request
               var submitDirtySkopes = function() {
-                    //ARE THERE DIRTIES IN THE WP API ?
-                    var _wpDirtyCustomized = {};
-                    api.each( function ( value, setId ) {
-                          if ( value._dirty ) {
-                            _wpDirtyCustomized[ setId ] = value();
-                          }
-                    } );
-                    if ( ! _.isEmpty(_wpDirtyCustomized) && _.isEmpty(dirtySkopesToSubmit) ) {
+                    //ARE THERE SKOPE EXCLUDED DIRTIES ?
+                    var _skopeExcludedDirties = api.czr_skopeBase.getSkopeExcludedDirties();
+
+                    console.log('>>>>>>>>>>>>>>>>>>>_skopeExcludedDirties', _skopeExcludedDirties );
+
+                    if ( ! _.isEmpty( _skopeExcludedDirties ) ) {
                       // throw new Error(
                       //   'There are currently no dirties to save in skope while there should be ' + _.size(_wpDirtyCustomized) + ' : ' + _.keys(_wpDirtyCustomized).join(' | ')
                       // );
-                      console.log(  'There are currently no dirties to save in skope while there should be ' + _.size(_wpDirtyCustomized) + ' : ' + _.keys(_wpDirtyCustomized).join(' | ') );
+                      //console.log(  'There are currently no dirties to save in skope while there should be ' + _.size(_wpDirtyCustomized) + ' : ' + _.keys(_wpDirtyCustomized).join(' | ') );
                       _old_previewer_save.call(self);
                     }
                     var promises = [];
+
+
+                    //////////////////////////////////SUBMIT////////////////////////////
                     _.each( dirtySkopesToSubmit, function( _skop ) {
                           api.consoleLog('submit request for skope : ', _skop.id );
+                          var the_dirties = api.czr_skopeBase.getSkopeDirties(_skop.id);
                           //each promise is a submit ajax query
-                          promises.push( submit( _skop.id ) );
+                          promises.push( submit( _skop.id, the_dirties ) );
                     });
+
+
                     return promises;
               };
 
+
+
+
               var reactWhenPromisesDone = function( promises ) {
+                    if ( _.isEmpty( promises ) ) {
+                      console.log('THE SAVE PROMISES ARE EMPTY. PROBABLY BECAUSE THERE WAS ONLY EXCLUDED SKOPE SETTINGS TO SAVE', dirtySkopesToSubmit, api.czr_skopeBase.getSkopeExcludedDirties() );
+                      return;
+                    }
+
                     $.when.apply( null, promises).done( function( response ) {
+                          console.log('>>>>>>>>>>>>>>>>', promises);
                           //store the saved dirties (will be used as param to update the db val property of each saved skope)
                           //and reset them
                           _.each( dirtySkopesToSubmit, function( _skp ) {
-                                _saved_dirties[ _skp.id ] = api.czr_skope( _skp.id ).dirtyValues();
-                                api.czr_skope( _skp.id ).dirtyValues({});
+                                _saved_dirties[ _skp.id ] = api.czr_skopeBase.getSkopeDirties(_skp.id);
+                                api.czr_skopeBase.getSkopeDirties({});
                           });
                           // Clear api setting dirty states
                           api.each( function ( value ) {
@@ -648,6 +668,112 @@
         }
   };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //api.Previewer = {};
+  api.bind('ready', function() {
+          /**
+         * Refresh the preview.
+         */
+        api.previewer._new_refresh = function() {
+          console.log('IN NEW REFRESH');
+          var self = this;
+
+          // Display loading indicator
+          this.send( 'loading-initiated' );
+
+          this.abort();
+
+          this.loading = new api.PreviewFrame({
+            url:        this.url(),
+            previewUrl: this.previewUrl(),
+            query:      this.query( 'THE SKOPE', 'THE ACTION IS REFRESH' ) || {},
+            container:  this.container,
+            signature:  this.signature
+          });
+
+          this.loading.done( function() {
+            // 'this' is the loading frame
+            this.bind( 'synced', function() {
+              if ( self.preview )
+                self.preview.destroy();
+              self.preview = this;
+              delete self.loading;
+
+              self.targetWindow( this.targetWindow() );
+              self.channel( this.channel() );
+
+              self.deferred.active.resolve();
+              self.send( 'active' );
+            });
+
+            this.send( 'sync', {
+              scroll:   self.scroll,
+              settings: api.get()
+            });
+          });
+
+          this.loading.fail( function( reason, location ) {
+            self.send( 'loading-failed' );
+            if ( 'redirect' === reason && location ) {
+              self.previewUrl( location );
+            }
+
+            if ( 'logged out' === reason ) {
+              if ( self.preview ) {
+                self.preview.destroy();
+                delete self.preview;
+              }
+
+              self.login().done( self.refresh );
+            }
+
+            if ( 'cheatin' === reason ) {
+              self.cheatin();
+            }
+          });
+        };
+
+
+
+        api.previewer.refresh = (function( self ) {
+          console.log('in OVERRIDE REFRESH', self );
+          var refresh  = self._new_refresh,
+            callback = function() {
+              timeout = null;
+              refresh.call( self );
+            },
+            timeout;
+
+          return function() {
+            if ( typeof timeout !== 'number' ) {
+              if ( self.loading ) {
+                self.abort();
+              } else {
+                return callback();
+              }
+            }
+
+            clearTimeout( timeout );
+            timeout = setTimeout( callback, self.refreshBuffer );
+          };
+        })( api.previewer );
+      });
 
 
 })( wp.customize , jQuery, _ );
