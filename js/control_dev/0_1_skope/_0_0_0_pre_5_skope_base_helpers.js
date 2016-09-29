@@ -106,8 +106,9 @@ $.extend( CZRSkopeBaseMths, {
           if ( _.contains( serverControlParams.skopeExcludedSettings, shortSetId ) ) {
             api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE PART OF THE EXCLUDED LIST.' );
             return;
-          } else if ( -1 == setId.indexOf( serverControlParams.themeOptions ) && ! _.contains( serverControlParams.wpBuiltinSettings, setId ) ) {
-            api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE NOT PART OF THE THEME OPTIONS AND NOT WP AUTHORIZED BUILT IN OPTIONS' );
+          } else if ( -1 != setId.indexOf( serverControlParams.themeOptions ) ) {
+            return true;
+            //api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE NOT PART OF THE THEME OPTIONS AND NOT WP AUTHORIZED BUILT IN OPTIONS' );
           } else
            return true;
     },
@@ -140,8 +141,20 @@ $.extend( CZRSkopeBaseMths, {
             return true;
           if ( 'active_theme' == setId )
             return true;
-          return 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8) || 'sidebars_' == setId.substring(0, 9);
+          //allow the list of server defined settings
+          if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
+            return false;
+          //allow sidebars_widget* type
+          if ( 'sidebars_' == setId.substring(0, 9) )
+            return false;
+          //exclude widget_* and nav_menu*
+          return 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8);
+          //return 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8) || 'sidebars_' == setId.substring(0, 9);
     },
+
+
+    //@return boolean
+    //isAllowedWPBuiltinSetting :
 
     //performs a recursive inheritance to get a setId Val for a given skope
     //@return an api setting value
@@ -299,7 +312,7 @@ $.extend( CZRSkopeBaseMths, {
           var _globalSkopeId = self.getGlobalSkopeId(),
               _globalSkpDirties = self.getSkopeDirties( _globalSkopeId );
 
-          console.log('############# ', _globalSkpDirties, _wpDirties );
+          console.log('getSkopeExcludedDirties ############# ', _globalSkpDirties, _wpDirties );
           //RETURN THE _wpDirties not present in the global skope dirties
           return _.omit( _wpDirties, function( _value, setId ) {
               //var shortOptName = api.CZR_Helpers.getOptionName( setId );
