@@ -43,6 +43,9 @@
         */
         getOptionName : function(name) {
               var self = this;
+              //targets only the options of the theme
+              if ( -1 == name.indexOf(serverControlParams.themeOptions) )
+                return name;
               return name.replace(/\[|\]/g, '').replace(serverControlParams.themeOptions, '');
         },
 
