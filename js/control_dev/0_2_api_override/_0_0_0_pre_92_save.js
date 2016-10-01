@@ -29,11 +29,20 @@
             // api.bind( 'change', captureSettingModifiedDuringSave );
 
             //skope dependant submit()
-            submit = function( skope_id, the_dirties ) {
-                console.log('SKOPE ID IN OVERRIDEN SUBMIT', skope_id );
+            //the dyn_type can also be set to 'wp_default_type' when saving a skope excluded setting
+            submit = function( skope_id, the_dirties, dyn_type ) {
+                console.log('SAVE SUBMIT ARGUMENTS', arguments );
+                if ( _.isUndefined( skope_id ) ) {
+                  throw new Error( 'OVERRIDEN SAVE::submit : MISSING skope_id');
+                }
+                if ( _.isUndefined( the_dirties ) ) {
+                  throw new Error( 'OVERRIDEN SAVE::submit : MISSING the_dirties');
+                }
+                if ( _.isEmpty( the_dirties ) ) {
+                  throw new Error( 'OVERRIDEN SAVE::submit : empty the_dirties');
+                }
                 var request, query;
                 skope_id = skope_id || api.czr_activeSkope();
-
               /*
                * Block saving if there are any settings that are marked as
                * invalid from the client (not from the server). Focus on
@@ -57,7 +66,7 @@
                 }
 
                 //the query takes the skope_id has parameter
-                query = $.extend( self.query( skope_id, 'save', dirtyCustomized ), {
+                query = $.extend( self.query( skope_id, 'save', the_dirties, dyn_type ), {
                     nonce:  self.nonce.save
                 } );
 
@@ -113,20 +122,17 @@
               var submitDirtySkopes = function() {
                     //ARE THERE SKOPE EXCLUDED DIRTIES ?
                     var _skopeExcludedDirties = api.czr_skopeBase.getSkopeExcludedDirties();
-
-                    console.log('>>>>>>>>>>>>>>>>>>>_skopeExcludedDirties', _skopeExcludedDirties );
-
-                    if ( ! _.isEmpty( _skopeExcludedDirties ) ) {
-                      // throw new Error(
-                      //   'There are currently no dirties to save in skope while there should be ' + _.size(_wpDirtyCustomized) + ' : ' + _.keys(_wpDirtyCustomized).join(' | ')
-                      // );
-                      //console.log(  'There are currently no dirties to save in skope while there should be ' + _.size(_wpDirtyCustomized) + ' : ' + _.keys(_wpDirtyCustomized).join(' | ') );
-                      _old_previewer_save.call(self);
-                    }
                     var promises = [];
 
+                    //////////////////////////////////SUBMIT EXCLUDED SETTINGS ////////////////////////////
+                    if ( ! _.isEmpty( _skopeExcludedDirties ) ) {
+                        console.log('>>>>>>>>>>>>>>>>>>>_skopeExcludedDirties', _skopeExcludedDirties );
+                        var globalSkopeId = api.czr_skopeBase.getGlobalSkopeId();
+                        //each promise is a submit ajax query
+                        promises.push( submit( globalSkopeId, _skopeExcludedDirties, 'wp_default_type' ) );
+                    }
 
-                    //////////////////////////////////SUBMIT////////////////////////////
+                    //////////////////////////////////SUBMIT ELIGIBLE SETTINGS ////////////////////////////
                     _.each( dirtySkopesToSubmit, function( _skop ) {
                           api.consoleLog('submit request for skope : ', _skop.id );
                           var the_dirties = api.czr_skopeBase.getSkopeDirties(_skop.id);
