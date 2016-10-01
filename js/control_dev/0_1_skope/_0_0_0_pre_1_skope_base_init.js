@@ -277,13 +277,14 @@ $.extend( CZRSkopeBaseMths, {
           var self = this;
           //parse the current eligible skope settings and write a setting val object
           api.each( function ( value, setId ) {
+                console.log('setID EXCLUDED ?', setId, self.isExcludedWPBuiltinSetting( setId ) );
                 //exclude widget controls, menu settings and sidebars
                 if ( self.isExcludedWPBuiltinSetting( setId ) )
                   return;
                 //only the current theme options + some WP built in settings are eligible
                 //some settings like show_on_front are not eligibile to skope, but they can be reseted
-                if ( ! self.isSettingSkopeEligible(setId) && ! self.isSettingResetEligible(setId) )
-                  return;
+                // if ( ! self.isSettingSkopeEligible(setId) && ! self.isSettingResetEligible(setId) )
+                //   return;
                 api( setId ).callbacks.add( function( new_val, old_val, o ) {
                       api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, new_val, old_val, o );
                       //For skope eligible settings : Update the skope dirties with the new val of this setId
