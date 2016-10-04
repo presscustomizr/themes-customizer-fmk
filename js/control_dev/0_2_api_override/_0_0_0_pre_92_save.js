@@ -51,6 +51,9 @@
                 if ( _.has( api, 'Notification') ) {
                     api.each( function( setting ) {
                       setting.notifications.each( function( notification ) {
+                        if ( 'error' === notification.type ) {
+                          console.log('NOTIFICATION ERROR on SUBMIT SAVE' , notification );
+                        }
                         if ( 'error' === notification.type && ( ! notification.data || ! notification.data.from_server ) ) {
                           invalidSettings.push( setting.id );
                         }
@@ -123,21 +126,49 @@
                     //ARE THERE SKOPE EXCLUDED DIRTIES ?
                     var _skopeExcludedDirties = api.czr_skopeBase.getSkopeExcludedDirties();
                     var promises = [];
+                    var globalSkopeId = api.czr_skopeBase.getGlobalSkopeId();
 
                     //////////////////////////////////SUBMIT EXCLUDED SETTINGS ////////////////////////////
+                    ///@to do : do we need to check if we are not already in the global skope ?
                     if ( ! _.isEmpty( _skopeExcludedDirties ) ) {
-                        console.log('>>>>>>>>>>>>>>>>>>>_skopeExcludedDirties', _skopeExcludedDirties );
-                        var globalSkopeId = api.czr_skopeBase.getGlobalSkopeId();
+                        console.log('>>>>>>>>>>>>>>>>>>> submit request for _skopeExcludedDirties', _skopeExcludedDirties );
                         //each promise is a submit ajax query
                         promises.push( submit( globalSkopeId, _skopeExcludedDirties, 'wp_default_type' ) );
                     }
 
+
                     //////////////////////////////////SUBMIT ELIGIBLE SETTINGS ////////////////////////////
                     _.each( dirtySkopesToSubmit, function( _skop ) {
-                          api.consoleLog('submit request for skope : ', _skop.id );
                           var the_dirties = api.czr_skopeBase.getSkopeDirties(_skop.id);
+                          api.consoleLog('submit request for skope : ', _skop.id, the_dirties );
                           //each promise is a submit ajax query
                           promises.push( submit( _skop.id, the_dirties ) );
+                    });
+
+
+                    ///////////////////////////////////ALWAYS SUBMIT NOT YET REGISTERED WIDGETS TO GLOBAL OPTIONS
+                    _.each( dirtySkopesToSubmit, function( _skop ) {
+                          if ( _skop.id == globalSkopeId )
+                            return;
+
+                          var widget_dirties = {};
+                          var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
+
+                          //loop on each skop dirties and check if there's a new widget not yet registered globally
+                          //if a match is found, add it to the widget_dirties, if not already added, and add it to the promises submission
+                          _.each( the_dirties, function( _val, _setId ) {
+                              //must be a widget setting and not yet registered globally
+                              if ( 'widget_' == _setId.substring(0, 7) && ! api.czr_skopeBase.isWidgetRegisteredGlobally( _setId ) ) {
+                                  if ( ! _.has( widget_dirties, _setId ) )
+                                      widget_dirties[ _setId ] = _val;
+                              }
+                          });
+
+                          console.log('>>>>>>>>>>>>>>>>>>> submit request for missing widgets globally', widget_dirties );
+                          if ( ! _.isEmpty(widget_dirties) ) {
+                            //each promise is a submit ajax query
+                            promises.push( submit( globalSkopeId, widget_dirties, 'wp_default_type' ) );
+                          }
                     });
 
 
