@@ -63,11 +63,17 @@
             //on first load OR if the current skope is the customized one, build the dirtyCustomized the regular way : typically a refresh after setting change
             //otherwise, get the dirties from the requested skope instance : typically a save action on several skopes
             if ( 'refresh' == action || _.isUndefined(action) ) {
-                api.each( function ( value, key ) {
-                  if ( value._dirty ) {
-                    dirtyCustomized[ key ] = value();
-                  }
-                } );
+                if ( _.isUndefined( the_dirties ) ) {
+                    console.log('UNDEFINED DIRTIES ?');
+                    api.each( function ( value, key ) {
+                        if ( value._dirty ) {
+                          dirtyCustomized[ key ] = value();
+                        }
+                    } );
+                    console.log('OVERRIDEN QUERY : dirtyCustomized ONE', dirtyCustomized );
+                } else {
+                    dirtyCustomized = the_dirties;
+                }
             } else {
                 //do we have dirties ?
                 if ( _.isUndefined(the_dirties) ) {
@@ -83,7 +89,7 @@
             if ( 'refresh' == action ) {
                 dirtyCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( dirtyCustomized, skope_id );
             }
-
+            console.log('OVERRIDEN QUERY : dirtyCustomized TWO', dirtyCustomized );
             //the previewer is now skope aware
             api.czr_isPreviewerSkopeAware.resolve();
 

@@ -2,6 +2,9 @@
 (function (api, $, _) {
 
   api.bind('ready', function() {
+        if ( ! serverControlParams.isSkopOn )
+          return;
+
         /**
         * Refresh the preview.
         */
@@ -9,11 +12,11 @@
         //=> we want to know the skope, and the action
         //=> here the action is always refresh.
         //=> this way we are able to better identify what to do in the api.previewer.query method
-        api.previewer._new_refresh = function() {
+        api.previewer._new_refresh = function( the_dirties ) {
           if ( ! _.has( api, 'czr_activeSkope') || _.isUndefined( api.czr_activeSkope() ) ) {
             throw new Error( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
           }
-          console.log('IN NEW REFRESH', api.czr_activeSkope() );
+          console.log('IN NEW REFRESH', api.czr_activeSkope(), the_dirties  );
           var self = this;
 
           // Display loading indicator
@@ -24,7 +27,7 @@
           this.loading = new api.PreviewFrame({
             url:        this.url(),
             previewUrl: this.previewUrl(),
-            query:      this.query( api.czr_activeSkope(), 'refresh' ) || {},
+            query:      this.query( api.czr_activeSkope(), 'refresh', the_dirties ) || {},
             container:  this.container,
             signature:  this.signature
           });
@@ -73,6 +76,7 @@
 
 
         //Overrides the WP api.previewer.refresh method
+        //We may need to pass force dirties here
         api.previewer.refresh = (function( self ) {
           var refresh  = self._new_refresh,
             callback = function() {
