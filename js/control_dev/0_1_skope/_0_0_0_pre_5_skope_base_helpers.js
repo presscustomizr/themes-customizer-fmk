@@ -149,7 +149,7 @@ $.extend( CZRSkopeBaseMths, {
             return false;
           //allow widget_* type
           if ( 'widget_' == setId.substring(0, 7) )
-            return true;
+            return false;
           //exclude widget_* and nav_menu*
           return 'nav_menu' == setId.substring(0, 8);
           //return 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8);
@@ -172,10 +172,16 @@ $.extend( CZRSkopeBaseMths, {
           console.log('WPSETID in getSkopeSettingVAL', api.CZR_Helpers.build_setId(setId));
 
           var self = this,
-              wpSetId = api.CZR_Helpers.build_setId(setId),
+              wpSetId = api.CZR_Helpers.build_setId( setId ),
               val_candidate = '___',
               skope_model = api.czr_skope( skope_id )(),
-              initial_val = api.settings.settings[wpSetId].value;
+              initial_val;
+          //initial val
+          //some settings like widgets may be dynamically added. Therefore their initial val won't be stored in the api.settings.settings
+          if ( _.has( api.settings.settings, wpSetId ) )
+            initial_val = api.settings.settings[wpSetId].value;
+          else
+            initial_val = null;
 
           //if the setting is dirty for this skope, don't go further
           if ( api.czr_skope( skope_id ).getSkopeSettingDirtyness( wpSetId ) )
@@ -185,13 +191,16 @@ $.extend( CZRSkopeBaseMths, {
           var _skope_db_val = self._getDBSettingVal( setId, skope_model );
           if ( _skope_db_val != '_no_db_val' )
             return _skope_db_val;
-
           //if we are already in the final 'global' skope, then let's return its value
-          if( 'global' == skope_model.skope )
+          else if( 'global' == skope_model.skope ) {
+            // if ( _.isNull(initial_val) ) {
+            //   throw new Error('INITIAL VAL IS NULL FOR SETTING ' + setId + ' CHECK IF IT HAS BEEN DYNAMICALLY ADDED. IF SO, THERE SHOULD BE A DIRTY TO GRAB');
+            // }
             return '___' == val_candidate ? initial_val : val_candidate;
-
-          //if not dirty and no db val, then let's recursively apply the inheritance
-          return '___' != val_candidate ? val_candidate : self.getSkopeSettingVal( setId, self._getParentSkopeId( skope_model ) );
+          }
+          else
+            //if not dirty and no db val, then let's recursively apply the inheritance
+            return '___' != val_candidate ? val_candidate : self.getSkopeSettingVal( setId, self._getParentSkopeId( skope_model ) );
     },
 
 
@@ -322,7 +331,60 @@ $.extend( CZRSkopeBaseMths, {
               //var shortOptName = api.CZR_Helpers.getOptionName( setId );
               return self.isSettingSkopeEligible( setId );
           } );
+    },
+
+    /**
+   * @param {String} widgetId
+   * @returns {Object}
+   */
+    parseWidgetId : function( widgetId, prefixToRemove ) {
+        var matches, parsed = {
+          number: null,
+          id_base: null
+        };
+
+        matches = widgetId.match( /^(.+)-(\d+)$/ );
+        if ( matches ) {
+          parsed.id_base = matches[1];
+          parsed.number = parseInt( matches[2], 10 );
+        } else {
+          // likely an old single widget
+          parsed.id_base = widgetId;
+        }
+
+        if ( ! _.isUndefined( prefixToRemove ) )
+          parsed.id_base = parsed.id_base.replace( prefixToRemove , '');
+        return parsed;
+    },
+
+    /**
+     * @param {String} widgetId
+     * @returns {String} settingId
+     */
+    widgetIdToSettingId: function( widgetId , prefixToRemove ) {
+        var parsed = this.parseWidgetId( widgetId, prefixToRemove ), settingId;
+
+        settingId = parsed.id_base;
+        if ( parsed.number ) {
+          settingId += '[' + parsed.number + ']';
+        }
+        return settingId;
+    },
+
+
+
+
+    isWidgetRegisteredGlobally : function( widgetId ) {
+        var self = this;
+            registered = false;
+        _.each( _wpCustomizeWidgetsSettings.registeredWidgets, function( _val, _short_id ) {
+            if ( ! registered && 'widget_' + self.widgetIdToSettingId(_short_id) == widgetId )
+              registered = true;
+        } );
+        return registered;
     }
+
+
 
     //@return the customized value of a setId in a given skop
     //implements the skope inheritance
