@@ -361,8 +361,28 @@ $.extend( CZRSkopeBaseMths, {
               header_image_data = null === api.czr_skopeBase.getSkopeSettingVal( 'header_image_data', skope_id ) ? "" : api.czr_skopeBase.getSkopeSettingVal( 'header_image_data', skope_id );
 
               var attachment_id;
+              var _reset_header_image_crtl = function( _updated_header_control_data ) {
+                _updated_header_control_data = _updated_header_control_data || _header_control_data;
+                //remove the container and its control
+                api.control( 'header_image' ).container.remove();
+                api.control.remove( 'header_image' );
+
+                //reset the HeaderTool objects, captured early
+                api.HeaderTool.UploadsList = api.czr_HeaderTool.UploadsList;
+                api.HeaderTool.DefaultsList = api.czr_HeaderTool.DefaultsList;
+                api.HeaderTool.CombinedList = api.czr_HeaderTool.CombinedList;
+                var _render_control = function() {
+                  //instantiate the control with the updated _header_control_data
+                  api.control.add( 'header_image',  new _header_constructor( 'header_image', { params : _updated_header_control_data, previewer : api.previewer }) );
+                };
+                _render_control = _.debounce( _render_control, 800 );
+                _render_control();
+              };
+
+
               if ( ! _.has( header_image_data, 'attachment_id' ) ) {
                   _promise = true;
+                  _reset_header_image_crtl();
               } else {
                   attachment_id = header_image_data.attachment_id;
 
@@ -370,28 +390,17 @@ $.extend( CZRSkopeBaseMths, {
                   //if no image can be fetched, for example when in the active skope, the image is not set, then
                   //refresh the control without attachment data
                   wp.media.attachment( attachment_id ).fetch().done( function() {
-                        //remove the container and its control
-                        api.control( 'header_image' ).container.remove();
-                        api.control.remove( 'header_image' );
                         //update the data with the new img attributes
                         _header_control_data.attachment = this.attributes;
-                        //reset the HeaderTool objects, captured early
-                        api.HeaderTool.UploadsList = api.czr_HeaderTool.UploadsList;
-                        api.HeaderTool.DefaultsList = api.czr_HeaderTool.DefaultsList;
-                        api.HeaderTool.CombinedList = api.czr_HeaderTool.CombinedList;
-                        var _render_control = function() {
-                          //instantiate the control with the updated _header_control_data
-                          api.control.add( 'header_image',  new _header_constructor( 'header_image', { params : _header_control_data, previewer : api.previewer }) );
-                        };
-                        _render_control = _.debounce( _render_control, 800 );
-                        _render_control();
-
+                        _reset_header_image_crtl( _header_control_data );
                   } ).fail( function() {
+                        //update the data : remove the attachment property
+                        _header_control_data = _.omit( _header_control_data, 'attachment' );
+
                         //remove the container and its control
                         api.control( 'header_image' ).container.remove();
                         api.control.remove( 'header_image' );
-                        //update the data : remove the attachment property
-                        _header_control_data = _.omit( _header_control_data, 'attachment' );
+
                         //reset the HeaderTool objects, captured early
                         api.HeaderTool.UploadsList = api.czr_HeaderTool.UploadsList;
                         api.HeaderTool.DefaultsList = api.czr_HeaderTool.DefaultsList;
@@ -405,6 +414,9 @@ $.extend( CZRSkopeBaseMths, {
               }//else
           }//header_image case
 
+
+
+
           return  { promise : _promise || true, val : val };
-    }
+    }//getSettingUpdatePromise()
 });//$.extend
