@@ -24,7 +24,7 @@
                 return obj.id;
               });
 
-              //stores and update the widget settings
+              //stores and update the widget zone settings
               api.czr_widgetZoneSettings.set( {
                     actives :  data.renderedSidebars,
                     inactives :  _inactives,
@@ -32,7 +32,6 @@
                     candidates :  _candidates,
                     available_locations :  data.availableWidgetLocations//built server side
               } );
-
 
         });
 
