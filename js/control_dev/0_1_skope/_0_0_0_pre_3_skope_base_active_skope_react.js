@@ -221,7 +221,7 @@ $.extend( CZRSkopeBaseMths, {
               skope_id = api.czr_activeSkope(),
               val = api.czr_skopeBase.getSkopeSettingVal( setId, skope_id );
 
-
+          console.log('in getSettingUpdatePromise', current_setting_val, val, api.control.has( wpSetId ), wpSetId );
 
           //if a setId is provided, then let's update it
           if ( ! api.has( wpSetId ) ) {
@@ -241,6 +241,15 @@ $.extend( CZRSkopeBaseMths, {
                 var control_type = api.control( wpSetId ).params.type,
                     _control_data = api.settings.controls[wpSetId],
                     _constructor;
+
+                //////////EXPERIMENT
+                // if ( 'widget_form' == control_type ) {
+                //   console.log('################# ALORS ? ############### ', control_type );
+                //   api.control( wpSetId ).container.remove();
+                //   api.control.remove( wpSetId );
+                // }
+
+                console.log('SPECIFIC TREATMENT ? ', control_type );
 
                 switch ( control_type ) {
                     //CROPPED IMAGE CONTROL
@@ -344,6 +353,7 @@ $.extend( CZRSkopeBaseMths, {
           //when switching skope, we want to refresh the control with the right image
           //This is a setting
           if ( _.has(api.settings.controls, 'header_image') && 'header_image' == wpSetId  ) {
+              console.log('KKKKKKKKKKKKKKKKKKKKKKKK ', wpSetId, api.czr_skopeBase.getSkopeSettingVal( 'header_image_data', skope_id ));
               var _header_constructor = api.controlConstructor.header,
                   _header_control_data = $.extend( true, {}, api.settings.controls.header_image );
 
