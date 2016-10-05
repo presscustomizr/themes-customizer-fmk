@@ -212,13 +212,9 @@ $.extend( CZRSkopeBaseMths, {
                             related_setting_name = 'sidebars_widgets[' + api.section(active_section).params.sidebarId + ']',
                             related_setting_val = self.getSkopeSettingVal( related_setting_name, active_skope );
 
-                        console.log('{{{{{{{{{{{{{{{{{{{{{ ', related_setting_name,  active_skope, self.getSkopeSettingVal( related_setting_name, active_skope ) );
-
-
                         //api( related_setting_name )( self.getSkopeSettingVal( related_setting_name, api.czr_activeSkope() ) );
                         self.updateSkopeDirties( related_setting_name, related_setting_val, active_skope );
 
-                        console.log('api.czr_skope( api.czr_activeSkope() ).dirtyValues()', api.czr_skope( active_skope ).dirtyValues() );
                         api.previewer._new_refresh( api.czr_skope( active_skope ).dirtyValues() );
                     }
                 };
@@ -292,7 +288,8 @@ $.extend( CZRSkopeBaseMths, {
           });
 
           //LISTEN TO GLOBAL DB OPTION CHANGES
-          //When an option is resetted on the global skope, we need to set it to default in _wpCustomizeSettings.settings
+          //When an option is reset on the global skope,
+          //we need to update it in the initially sent _wpCustomizeSettings.settings
           api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
 
           //DECLARE THE LIST OF CONTROL TYPES FOR WHICH THE VIEW IS REFRESHED ON CHANGE
@@ -326,7 +323,6 @@ $.extend( CZRSkopeBaseMths, {
               _bindListener = function( setId ) {
                     //exclude widget controls, menu settings and sidebars
                     if ( self.isExcludedWPBuiltinSetting( setId ) ) {
-                      console.log('setID EXCLUDED ?', setId, self.isExcludedWPBuiltinSetting( setId ) );
                       return;
                     }
                     //only the current theme options + some WP built in settings are eligible
@@ -334,6 +330,10 @@ $.extend( CZRSkopeBaseMths, {
                     // if ( ! self.isSettingSkopeEligible(setId) && ! self.isSettingResetEligible(setId) )
                     //   return;
                     api( setId ).callbacks.add( function( new_val, old_val, o ) {
+                          if ( ! _.has( api, 'czr_activeSkope') || _.isUndefined( api.czr_activeSkope() ) ) {
+                            api.consoleLog( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
+                            //return;
+                          }
                           api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, new_val, old_val, o );
                           //For skope eligible settings : Update the skope dirties with the new val of this setId
                           if ( api(setId)._dirty ) {
@@ -362,7 +362,6 @@ $.extend( CZRSkopeBaseMths, {
           else {
               //parse the current eligible skope settings and write a setting val object
               api.each( function ( value, setId ) {
-                  //console.log('in api listener setup', setId );
                   _bindListener( setId );
               });
           }
@@ -372,7 +371,6 @@ $.extend( CZRSkopeBaseMths, {
     //this method updates a given skope instance dirty values
     //and returns the dirty values object
     //fired on api setting change and in the ajax query
-
     updateSkopeDirties : function( setId, new_val, skope_id ) {
           skope_id = skope_id || api.czr_activeSkope();
 
@@ -407,17 +405,16 @@ $.extend( CZRSkopeBaseMths, {
     *****************************************************************************/
     //cb of api.czr_globalDBoptions.callbacks
     //update the _wpCustomizeSettings.settings if they have been updated by a reset of global skope, or a control reset of global skope
-    //When an option is resetted on the global skope, we need to set it to default in _wpCustomizeSettings.settings
+    //When an option is reset on the global skope, we need to set the new value to default in _wpCustomizeSettings.settings
     globalDBoptionsReact : function( to, from ) {
           var self = this,
               resetted_opts = _.difference( from, to );
 
-          api.consoleLog('in GLOBAL DB OPTION REACT', from, to, resetted_opts );
           if ( _.isEmpty(resetted_opts) )
             return;
 
           api.consoleLog( 'HAS RESET OPTIONS', resetted_opts );
-          //reset each resetted setting to its default val
+          //reset each reset setting to its default val
           _.each( resetted_opts, function( shortSetId ) {
                 var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
                 if ( _.has( api.settings.settings, wpSetId) )

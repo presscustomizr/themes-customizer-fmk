@@ -169,7 +169,6 @@ $.extend( CZRSkopeBaseMths, {
           if ( ! api.czr_skope.has( skope_id ) ) {
               throw new Error('getSkopeSettingVal : the requested skope id is not registered : ' + skope_id );
           }
-          console.log('WPSETID in getSkopeSettingVAL', api.CZR_Helpers.build_setId(setId));
 
           var self = this,
               wpSetId = api.CZR_Helpers.build_setId( setId ),
