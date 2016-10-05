@@ -133,7 +133,11 @@
                                         self._set_single_dependant_control_visibility( depSetId , _params);
                                   });
                               } else {
-                                  self._set_single_dependant_control_visibility( depSetId , _params);
+                                  var _debounce_visibility = function(depSetId , _params) {
+                                    self._set_single_dependant_control_visibility( depSetId , _params);
+                                  };
+                                  _debounce_visibility = _.debounce(_debounce_visibility, 1000 );
+                                  _debounce_visibility( depSetId , _params );
                               }
 
                           } );
