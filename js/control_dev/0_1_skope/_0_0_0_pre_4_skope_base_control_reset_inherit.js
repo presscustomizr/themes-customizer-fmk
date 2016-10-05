@@ -196,10 +196,10 @@ $.extend( CZRSkopeBaseMths, {
 
           if ( ctrl.czr_isDirty() ) {
               warning_message = 'Are you sure you want to reset your current customizations for this control?';
-              success_message = 'Your customizations have been resetted.';
+              success_message = 'Your customizations have been reset.';
           } else {
               warning_message = 'Are you sure you want to reset this option to default?';
-              success_message = 'The options have been resetted to defaults.';
+              success_message = 'The options have been reset to defaults.';
           }
 
           try {

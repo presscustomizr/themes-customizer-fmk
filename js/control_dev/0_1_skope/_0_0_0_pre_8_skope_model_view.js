@@ -43,10 +43,10 @@ $.extend( CZRSkopeMths, {
 
           if ( skope.dirtyness() ) {
               warning_message = 'Are you sure you want to reset your current customizations for skope : ' + skope().id + '?';
-              success_message = 'Your customizations have been resetted for skope ' + skope().id + '.';
+              success_message = 'Your customizations have been reset for skope ' + skope().id + '.';
           } else {
               warning_message = 'Are you sure you want to reset the options to defaults for skope : ' + skope().id + '?';
-              success_message = 'The options have been resetted to defaults for skope ' + skope().id + '.';
+              success_message = 'The options have been reset to defaults for skope ' + skope().id + '.';
           }
 
           try {
