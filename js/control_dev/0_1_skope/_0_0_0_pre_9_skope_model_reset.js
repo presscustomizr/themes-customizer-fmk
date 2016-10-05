@@ -97,6 +97,7 @@ $.extend( CZRSkopeMths, {
           $('body').addClass('czr-resetting-skope');
           $('.czr-reset-warning', skope.resetPanel ).hide();
 
+          //When reseting the db value, wait for the ajax promise to be done before reseting the api values.
           if ( skope.dirtyness() ) {
               _do_reset();
           } else {
