@@ -14,22 +14,26 @@
         //=> this way we are able to better identify what to do in the api.previewer.query method
         api.previewer._new_refresh = function( the_dirties ) {
           if ( ! _.has( api, 'czr_activeSkope') || _.isUndefined( api.czr_activeSkope() ) ) {
-            throw new Error( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
+            console.log( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
           }
-          console.log('IN NEW REFRESH', api.czr_activeSkope(), the_dirties  );
           var self = this;
 
           // Display loading indicator
           this.send( 'loading-initiated' );
 
           this.abort();
+          var query_params = {
+              skope_id : api.czr_activeSkope(),
+              action : 'refresh',
+              the_dirties : the_dirties
+          };
 
           this.loading = new api.PreviewFrame({
-            url:        this.url(),
-            previewUrl: this.previewUrl(),
-            query:      this.query( api.czr_activeSkope(), 'refresh', the_dirties ) || {},
-            container:  this.container,
-            signature:  this.signature
+              url:        this.url(),
+              previewUrl: this.previewUrl(),
+              query:      this.query( query_params ) || {},
+              container:  this.container,
+              signature:  this.signature
           });
 
           this.loading.done( function() {

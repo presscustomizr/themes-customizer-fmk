@@ -35,74 +35,124 @@
 
         //@todo : turn those arguments into an object ?
         //the dyn_type can also be set to 'wp_default_type' when saving a skope excluded setting
-        api.previewer.query =  function( skope_id, action, the_dirties, dyn_type ) {
-            var dirtyCustomized = {};
-
-            ///TO CHANGE !!!!!
-            if ( _.isUndefined(skope_id) ) {
-              console.log( 'OVERRIDEN QUERY : NO SKOPE ID !!' );
-              return _old_previewer_query.apply( this );
-            }
-            ///TO CHANGE !!!!
-
-            skope_id = skope_id || api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
-            //IS SKOP ON OR IS THIS SKOPE REGISTERED ?
+        //@query_params = {
+        //    skope_id : string,
+        //    action : string,
+        //    the_dirties : {},
+        //    dyn_type : string,
+        //    opt_name : string
+        // }
+        api.previewer.query =  function( query_params ) {
+            //IS SKOP ON
             //falls back to WP core treatment if skope is not on or if the requested skope is not registered
-            if ( ! _.has( api, 'czr_skope') || ! api.czr_skope.has( skope_id ) ) {
-              console.log('OVERRIDEN QUERY : SKOPE IS NOT REGISTERED. FALLING BACK ON THE OLD PREVIEWER QUERY');
-              return _old_previewer_query.apply( this );
+            if ( ! _.has( api, 'czr_skope') ) {
+                console.log('QUERY : SKOPE IS NOT ON. FALLING BACK ON CORE QUERY');
+                return _old_previewer_query.apply( this );
             }
 
-            if ( _.isUndefined(action) ) {
-              console.log('OVERRIDEN QUERY :No action defined in api.previewer.query.');
+            //the previewer is now skope aware
+            if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
+                api.czr_isPreviewerSkopeAware.resolve();
+                return _old_previewer_query.apply( this );
             }
 
-            console.log('!!!OVERRIDEN QUERY SKOPE ACTION DIRTIES!!!',skope_id, action, the_dirties);
+            if ( ! _.isObject( query_params ) ) {
+                console.log('QUERY PARAMS : ', query_params );
+                throw new Error( 'QUERY PARAMS MUST BE AN OBJECT.' );
+            }
 
-            /// BUILD THE DIRTIES ///
+            //IS THE SKOPE ID PROVIDED ?
+            //skope_id = skope_id || api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
+            if ( _.isUndefined( query_params.skope_id ) || ! _.isString( query_params.skope_id ) ) {
+                console.log('QUERY PARAMS : ', query_params );
+                throw new Error( 'QUERY : The skope_id must be defined and a string' );
+            }
+
+            var dirtyCustomized = {},
+                default_params = {
+                  skope_id : null,
+                  action : null,
+                  the_dirties : {},
+                  dyn_type : null,
+                  opt_name : null
+                },
+                _defaults = $.extend( true, {}, default_params );
+
+            query_params = $.extend( _defaults, query_params );
+
+            //ARE THE DIRTIES WELL FORMED OR NOT EMPTY ?
+            if ( ! _.isObject( query_params.the_dirties ) ) {
+                console.log('QUERY PARAMS : ', query_params );
+                throw new Error( 'QUERY DIRTIES MUST BE AN OBJECT. Requested action : ' + query_params.action );
+            }
+
+            ///TO CHANGE ?
+            if ( 'pending' != api.czr_isPreviewerSkopeAware.state() && _.isNull( query_params.skope_id ) ) {
+                console.log('QUERY PARAMS : ', query_params );
+                //console.log( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY.' );
+                throw new Error( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY. Requested action : ' + query_params.action );
+                //return _old_previewer_query.apply( this );
+            }
+
+            //IS THE REQUESTED ACTION AUTHORIZED ?
+            if ( ! _.contains( [ null, 'refresh', 'save', 'reset' ], query_params.action ) ) {
+                console.log('QUERY PARAMS : ', query_params );
+                throw new Error( 'A REQUESTED QUERY HAS NO AUTHORIZED ACTION. Requested action : ' + query_params.action );
+            }
+
+            ///BUILD THE DIRTIES
+            ///SET THE DYN TYPE FOR A SAVE ACTION
             //on first load OR if the current skope is the customized one, build the dirtyCustomized the regular way : typically a refresh after setting change
             //otherwise, get the dirties from the requested skope instance : typically a save action on several skopes
-            if ( 'refresh' == action || _.isUndefined(action) ) {
-                if ( _.isUndefined( the_dirties ) ) {
-                    console.log('UNDEFINED DIRTIES ?');
-                    api.each( function ( value, key ) {
-                        if ( value._dirty ) {
-                          dirtyCustomized[ key ] = value();
-                        }
-                    } );
-                    console.log('OVERRIDEN QUERY : dirtyCustomized ONE', dirtyCustomized );
-                } else {
-                    dirtyCustomized = the_dirties;
-                }
-            } else {
-                //do we have dirties ?
-                if ( _.isUndefined(the_dirties) ) {
-                  throw new Error( 'OVERRIDEN QUERY : NO DIRTIES ! THERE SHOULD BE DIRTIES FOR THIS ACTION : ' + action );
-                }
-                dirtyCustomized = the_dirties || api.czr_skopeBase.getSkopeDirties(skope_id);//api.czr_skope( skope_id ).dirtyValues();
-            }
-            console.log('OVERRIDEN QUERY : api.czr_skopeBase.getSkopeDirties(skope_id)', api.czr_skopeBase.getSkopeDirties(skope_id) );
+            switch( query_params.action ) {
+                case null :
+                case 'refresh' :
+                    if ( _.isNull( query_params.the_dirties ) ) {
+                        //build the dirties the regular way
+                        api.each( function ( value, key ) {
+                            if ( value._dirty ) {
+                              dirtyCustomized[ key ] = value();
+                            }
+                        } );
+                    } else {
+                        dirtyCustomized = query_params.the_dirties;
+                    }
+                    //INHERITANCE : FILTER THE DIRTIES
+                    //when refreshing the preview, we need to apply the skope inheritance to the customized values
+                    dirtyCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( dirtyCustomized, query_params.skope_id );
 
+                break;
 
-            //INHERITANCE : FILTER THE DIRTIES
-            //when previewing, we need to apply the skope inheritance to the customized values
-            if ( 'refresh' == action ) {
-                dirtyCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( dirtyCustomized, skope_id );
+                case 'save' :
+                    if ( _.isEmpty( query_params.the_dirties ) ) {
+                      throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A NOT EMPTY DIRTY OBJECT TO SUBMIT' );
+                    }
+                    //Set the Dyn type
+                    //the dyn type might be passed as a param to the query in some cases
+                    //typically to save skope excluded settings. In this case the dyn_type is set to false, to fall back on the default wp one : theme_mod or option
+                    if ( _.isNull( query_params.dyn_type ) )
+                      query_params.dyn_type = api.czr_skope( query_params.skope_id )()[ query_params.dyn_type ];//post_meta, term_meta, user_meta, trans, option
+                    if ( _.isNull( query_params.dyn_type ) || _.isUndefined( query_params.dyn_type ) ) {
+                      throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A VALID DYN TYPE.' + query_params.skope_id );
+                    }
+                    //Set the dirties  || api.czr_skopeBase.getSkopeDirties(skope_id) ?
+                    dirtyCustomized = query_params.the_dirties; //was : api.czr_skope( skope_id ).dirtyValues();
+                break;
+
+                case 'reset' :
+                    //no specific treatment for reset
+                break;
             }
-            console.log('OVERRIDEN QUERY : dirtyCustomized TWO', dirtyCustomized );
-            //the previewer is now skope aware
-            api.czr_isPreviewerSkopeAware.resolve();
 
             // api.consoleLog('DIRTY VALUES TO SUBMIT ? ', dirtyCustomized, api.czr_skopeBase.getSkopeDirties(skope_id) );
             // api.consoleLog('api.czr_skope( skope_id )().skope', api.czr_skope( skope_id )().skope );
+            console.log('OPT NAME ?', query_params.opt_name );
             return {
                 wp_customize: 'on',
-                skope :       api.czr_skope( skope_id )().skope,
-                //the dyn type might be passed as a param to the query in some cases
-                //typically to save skope excluded settings. In this case the dyn_type is set to false, to fall back on the default wp one : theme_mod or option
-                dyn_type:     dyn_type || api.czr_skope( skope_id )().dyn_type,//post_meta, term_meta, user_meta, trans, option
-                opt_name:     api.czr_skope( skope_id )().opt_name,
-                obj_id:       api.czr_skope( skope_id )().obj_id,
+                skope :       api.czr_skope( query_params.skope_id )().skope,
+                dyn_type:     query_params.dyn_type,
+                opt_name:     ! _.isNull( query_params.opt_name ) ? query_params.opt_name : api.czr_skope( query_params.skope_id )().opt_name,
+                obj_id:       api.czr_skope( query_params.skope_id )().obj_id,
                 theme:        _wpCustomizeSettings.theme.stylesheet,
                 customized:   JSON.stringify( dirtyCustomized ),
                 nonce:        this.nonce.preview

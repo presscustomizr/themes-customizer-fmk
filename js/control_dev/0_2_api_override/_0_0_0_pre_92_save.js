@@ -30,19 +30,36 @@
 
             //skope dependant submit()
             //the dyn_type can also be set to 'wp_default_type' when saving a skope excluded setting
-            submit = function( skope_id, the_dirties, dyn_type ) {
-                console.log('SAVE SUBMIT ARGUMENTS', arguments );
-                if ( _.isUndefined( skope_id ) ) {
+            //@params = {
+            //    skope_id : string,
+            //    the_dirties : {},
+            //    dyn_type : string,
+            //    opt_name : string
+            // }
+            submit = function( params ) {
+                var default_params = {
+                      skope_id : null,
+                      the_dirties : {},
+                      dyn_type : null,
+                      opt_name : null
+                    },
+                    _defaults = $.extend( true, {}, default_params );
+
+                params = $.extend( _defaults, params );
+
+                console.log('SAVE SUBMIT PARAMS', params );
+                if ( _.isNull( params.skope_id ) ) {
                   throw new Error( 'OVERRIDEN SAVE::submit : MISSING skope_id');
                 }
-                if ( _.isUndefined( the_dirties ) ) {
+                if ( _.isNull( params.the_dirties ) ) {
                   throw new Error( 'OVERRIDEN SAVE::submit : MISSING the_dirties');
                 }
-                if ( _.isEmpty( the_dirties ) ) {
+                if ( _.isEmpty( params.the_dirties ) ) {
                   throw new Error( 'OVERRIDEN SAVE::submit : empty the_dirties');
                 }
                 var request, query;
-                skope_id = skope_id || api.czr_activeSkope();
+
+                //skope_id = skope_id || api.czr_activeSkope();
               /*
                * Block saving if there are any settings that are marked as
                * invalid from the client (not from the server). Focus on
@@ -68,12 +85,20 @@
                     }
                 }
 
-                //the query takes the skope_id has parameter
-                query = $.extend( self.query( skope_id, 'save', the_dirties, dyn_type ), {
+                //the skope save query takes parameters
+                var query_params = {
+                      skope_id : params.skope_id,
+                      action : 'save',
+                      the_dirties : params.the_dirties,
+                      dyn_type : params.dyn_type,
+                      opt_name : params.opt_name
+                };
+
+                query = $.extend( self.query( query_params ), {
                     nonce:  self.nonce.save
                 } );
 
-                api.consoleLog('in submit : ', skope_id, query, api.previewer.channel() );
+                api.consoleLog('in submit : ', params.skope_id, query, api.previewer.channel() );
 
                 request = wp.ajax.post( 'customize_save', query );
 
@@ -84,7 +109,7 @@
                 // } );
 
                 request.fail( function ( response ) {
-                    api.consoleLog('ALORS FAIL ?', skope_id, response );
+                    api.consoleLog('ALORS FAIL ?', params.skope_id, response );
                     if ( '0' === response ) {
                         response = 'not_logged_in';
                     } else if ( '-1' === response ) {
@@ -105,7 +130,7 @@
                 } );
 
                 request.done( function( response ) {
-                    api.consoleLog('ALORS DONE ?', skope_id, response );
+                    api.consoleLog('ALORS DONE ?', params.skope_id, response );
                 } );
 
                 //return the promise
@@ -133,16 +158,26 @@
                     if ( ! _.isEmpty( _skopeExcludedDirties ) ) {
                         console.log('>>>>>>>>>>>>>>>>>>> submit request for _skopeExcludedDirties', _skopeExcludedDirties );
                         //each promise is a submit ajax query
-                        promises.push( submit( globalSkopeId, _skopeExcludedDirties, 'wp_default_type' ) );
+                        promises.push( submit( {
+                              skope_id : globalSkopeId,
+                              the_dirties : _skopeExcludedDirties,
+                              dyn_type : 'wp_default_type'
+                            })
+                        );
                     }
 
 
                     //////////////////////////////////SUBMIT ELIGIBLE SETTINGS ////////////////////////////
                     _.each( dirtySkopesToSubmit, function( _skop ) {
-                          var the_dirties = api.czr_skopeBase.getSkopeDirties(_skop.id);
-                          api.consoleLog('submit request for skope : ', _skop.id, the_dirties );
+                          var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
+                          api.consoleLog('submit request for skope : ', _skop, the_dirties );
                           //each promise is a submit ajax query
-                          promises.push( submit( _skop.id, the_dirties ) );
+                          promises.push( submit( {
+                              skope_id : _skop.id,
+                              the_dirties : the_dirties,
+                              dyn_type : _skop.dyn_type
+                            })
+                          );
                     });
 
 
@@ -167,11 +202,30 @@
                           console.log('>>>>>>>>>>>>>>>>>>> submit request for missing widgets globally', widget_dirties );
                           if ( ! _.isEmpty(widget_dirties) ) {
                             //each promise is a submit ajax query
-                            promises.push( submit( globalSkopeId, widget_dirties, 'wp_default_type' ) );
+                            promises.push( submit( {
+                                skope_id : globalSkopeId,
+                                the_dirties : widget_dirties,
+                                dyn_type : 'wp_default_type'
+                              } )
+                            );
                           }
                     });
 
+                    ///////////////////////////////////ALWAYS SUBMIT GLOBAL SKOPE ELIGIBLE SETTINGS TO SPECIFIC OPTION
+                    _.each( dirtySkopesToSubmit, function( _skop ) {
+                          if ( _skop.skope != 'global' )
+                            return;
+                          console.log('GGGGGGGGGGGGGGGGGGG Global Skope Dirties for authorized skope settings', dirtySkopesToSubmit );
+                          //each promise is a submit ajax query
+                          promises.push( submit( {
+                              skope_id : globalSkopeId,
+                              the_dirties : api.czr_skopeBase.getSkopeDirties( _skop.id ),
+                              dyn_type : 'global_option',
+                              opt_name : 'hueman_global_skope'
+                            } )
+                          );
 
+                    });
                     return promises;
               };
 
@@ -190,7 +244,8 @@
                           //and reset them
                           _.each( dirtySkopesToSubmit, function( _skp ) {
                                 _saved_dirties[ _skp.id ] = api.czr_skopeBase.getSkopeDirties(_skp.id);
-                                api.czr_skopeBase.getSkopeDirties({});
+                                api.czr_skope(_skp.id).dirtyValues({});
+                                //api.czr_skopeBase.getSkopeDirties();
                           });
                           // Clear api setting dirty states
                           api.each( function ( value ) {

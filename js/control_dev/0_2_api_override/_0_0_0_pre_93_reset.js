@@ -20,14 +20,20 @@
 
                //skope dependant submit()
               submit_reset = function( skope_id, setId ) {
-                    if ( _.isUndefined( skope_id ) )
-                      return;
+                    if ( _.isUndefined( skope_id ) ) {
+                      throw new Error( 'RESET::submit_reset : MISSING skope_id');
+                    }
 
-                    //the query takes the skope_id has parameter
-                    query = $.extend( self.query( skope_id, 'reset' ), {
+                    //the skope reset query takes parameters
+                    var query_params = {
+                          skope_id : skope_id,
+                          action : 'reset'
+                    };
+                    query = $.extend( self.query( query_params ), {
                         nonce:  self.nonce.save
                     } );
 
+                    //2 CASES : entire skope reset or single setting reset
                     if ( ! _.isUndefined( setId ) && api.has(setId) ) {
                         $.extend( query , { set_id : setId } );
                         request = wp.ajax.post( 'czr_setting_reset', query );
