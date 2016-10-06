@@ -43,10 +43,12 @@
         //    opt_name : string
         // }
         api.previewer.query =  function( query_params ) {
+            query_params = query_params || {};
+
             //IS SKOP ON
             //falls back to WP core treatment if skope is not on or if the requested skope is not registered
             if ( ! _.has( api, 'czr_skope') ) {
-                console.log('QUERY : SKOPE IS NOT ON. FALLING BACK ON CORE QUERY');
+                api.consoleLog('QUERY : SKOPE IS NOT ON. FALLING BACK ON CORE QUERY');
                 return _old_previewer_query.apply( this );
             }
 
@@ -57,15 +59,16 @@
             }
 
             if ( ! _.isObject( query_params ) ) {
-                console.log('QUERY PARAMS : ', query_params );
+                api.consoleLog('QUERY PARAMS : ', query_params );
                 throw new Error( 'QUERY PARAMS MUST BE AN OBJECT.' );
             }
 
             //IS THE SKOPE ID PROVIDED ?
+            //When navigating in the preview, the skope_id might not be provided.
+            //In this case, falls back on the activeSkope() or the global skope
             //skope_id = skope_id || api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
             if ( _.isUndefined( query_params.skope_id ) || ! _.isString( query_params.skope_id ) ) {
-                console.log('QUERY PARAMS : ', query_params );
-                throw new Error( 'QUERY : The skope_id must be defined and a string' );
+                query_params.skope_id = api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
             }
 
             var dirtyCustomized = {},
@@ -82,21 +85,21 @@
 
             //ARE THE DIRTIES WELL FORMED OR NOT EMPTY ?
             if ( ! _.isObject( query_params.the_dirties ) ) {
-                console.log('QUERY PARAMS : ', query_params );
+                api.consoleLog('QUERY PARAMS : ', query_params );
                 throw new Error( 'QUERY DIRTIES MUST BE AN OBJECT. Requested action : ' + query_params.action );
             }
 
             ///TO CHANGE ?
             if ( 'pending' != api.czr_isPreviewerSkopeAware.state() && _.isNull( query_params.skope_id ) ) {
-                console.log('QUERY PARAMS : ', query_params );
-                //console.log( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY.' );
+                api.consoleLog('QUERY PARAMS : ', query_params );
+                //api.consoleLog( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY.' );
                 throw new Error( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY. Requested action : ' + query_params.action );
                 //return _old_previewer_query.apply( this );
             }
 
             //IS THE REQUESTED ACTION AUTHORIZED ?
             if ( ! _.contains( [ null, 'refresh', 'save', 'reset' ], query_params.action ) ) {
-                console.log('QUERY PARAMS : ', query_params );
+                api.consoleLog('QUERY PARAMS : ', query_params );
                 throw new Error( 'A REQUESTED QUERY HAS NO AUTHORIZED ACTION. Requested action : ' + query_params.action );
             }
 
@@ -107,7 +110,7 @@
             switch( query_params.action ) {
                 case null :
                 case 'refresh' :
-                    if ( _.isNull( query_params.the_dirties ) ) {
+                    if ( _.isNull( query_params.the_dirties ) || _.isEmpty( query_params.the_dirties ) ) {
                         //build the dirties the regular way
                         api.each( function ( value, key ) {
                             if ( value._dirty ) {
