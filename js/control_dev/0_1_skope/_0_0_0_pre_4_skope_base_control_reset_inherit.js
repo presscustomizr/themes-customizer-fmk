@@ -19,7 +19,9 @@ $.extend( CZRSkopeBaseMths, {
 
           //filter only eligible setIds
           controls = _.filter( controls, function( setId ) {
-              return self.isSettingResetEligible( setId );
+              return true;
+              //return self.isSettingSkopeEligible( setId );
+              //return self.isSettingResetEligible( setId );
           });
 
           if ( _.isEmpty(controls) )
@@ -74,7 +76,7 @@ $.extend( CZRSkopeBaseMths, {
 
                           ctrl.deferred.embedded.then( function() {
                                 $.when( ctrl.container
-                                    .find('.customize-control-title')
+                                    .find('.customize-control-title').first()//was.find('.customize-control-title')
                                     .prepend( $( '<span/>', {
                                       class : 'czr-setting-reset fa fa-refresh',
                                       title : 'Reset'
@@ -92,13 +94,13 @@ $.extend( CZRSkopeBaseMths, {
     },
 
 
-    //@params controls = array of skope eligible control ids
+    //@params controls = array of control candidate to setup
+    //Only the Settings eligible to skope
     setupControlsValues : function( controls ) {
           var self = this;
           _.each( controls, function( setId ) {
                 if ( ! api.has( setId ) || _.isUndefined( api.control( setId ) ) )
                   return;
-
                 var ctrl = api.control( setId ),
                     shortSetId = api.CZR_Helpers.getOptionName( setId );
 

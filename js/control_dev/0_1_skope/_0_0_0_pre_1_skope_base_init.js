@@ -352,12 +352,14 @@ $.extend( CZRSkopeBaseMths, {
                         self.updateSkopeDirties( setId, new_val );
                     }
 
+                    //DEPRECATED
+                    //NOW HANDLED IN activeSkopeReact::_process_silent_update()
                     //Refresh control single reset + observable values
                     //=> needed for some controls like image upload
-                    if ( api.control.has( setId ) && _.contains( self.refreshedControls, api.control( setId ).params.type ) ) {
-                          self.setupControlsReset = _.debounce( self.setupControlsReset, 200 );
-                          self.setupControlsReset( setId );
-                    }
+                    // if ( api.control.has( setId ) && _.contains( self.refreshedControls, api.control( setId ).params.type ) ) {
+                    //       self.setupControlsReset = _.debounce( self.setupControlsReset, 200 );
+                    //       self.setupControlsReset( setId );
+                    // }
 
                     //set the control dirtyness
                     if ( _.has( api.control(setId), 'czr_isDirty' ) ) {
@@ -369,17 +371,11 @@ $.extend( CZRSkopeBaseMths, {
 
 
           if ( ! _.isUndefined( requestedSetId ) ) {
-              //exclude widget controls, menu settings and sidebars
-              if ( ! self.isSettingSkopeEligible( requestedSetId ) )
-                return;
               api( requestedSetId ).bind( function(to, from, o ) { _bindListener( requestedSetId, to, from, o ); });
           }
           else {
               //parse the current eligible skope settings and write a setting val object
               api.each( function ( _setting ) {
-                  //exclude widget controls, menu settings and sidebars
-                  if ( ! self.isSettingSkopeEligible( _setting.id ) )
-                    return;
                   _setting.bind( function(to, from, o ) { _bindListener( _setting.id, to, from, o ); });
               });
           }
