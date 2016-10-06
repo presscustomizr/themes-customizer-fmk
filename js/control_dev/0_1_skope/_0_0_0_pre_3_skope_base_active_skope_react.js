@@ -27,7 +27,7 @@ $.extend( CZRSkopeBaseMths, {
           //=> the silent update will be fired on section expansion anyway
           //=> refresh now if the previewer is not skope aware, this will post the dyn_type used in the preview to get the proper option if the skope is not 'global'
           if ( _.isUndefined( api.czr_activeSectionId() ) ) {
-              if ( api.czr_isPreviewerSkopeAware.state() ) {
+              if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
                 api.consoleLog('ACTIVE SKOPE SWITCH : ' + from + ' => ' + to );
                 api.previewer.refresh();
               }
@@ -163,7 +163,7 @@ $.extend( CZRSkopeBaseMths, {
 
 
           var _deferred = [],
-              _silently_update = function() {
+              _silently_update = function( silent_update_promises ) {
                    _.each( silent_update_promises, function( obj, setId ) {
                           //Silently set
                           var wpSetId = api.CZR_Helpers.build_setId( setId ),
@@ -176,27 +176,29 @@ $.extend( CZRSkopeBaseMths, {
           _.each( silent_update_promises, function( obj, setId ) {
               _deferred.push(obj.promise);
           });
+          console.log('_deferred', _deferred );
+          $.when.apply( null, _deferred )
+          // .always( function() {
+          //       var _has_rejected_promise = false;
+          //       _.each( _deferred, function( _defd ) {
+          //             if ( _.isObject( _defd ) && 'rejected' == _defd.state() ) {
+          //                   _has_rejected_promise = true;
+          //             }
+          //             //@todo improve this!
+          //             $.when( _silently_update() ).done( function() {
+          //                 api.previewer.refresh();
+          //             });
+          //       });
 
-          $.when.apply( null, _deferred ).always( function() {
-                var _has_rejected_promise = false;
-                _.each( _deferred, function( _defd ) {
-                      if ( _.isObject( _defd ) && 'rejected' == _defd.state() ) {
-                            _has_rejected_promise = true;
-                      }
-                      //@todo improve this!
-                      $.when( _silently_update() ).done( function() {
-                          api.previewer.refresh();
-                      });
-                });
-
-          }).then( function() {
+          // })
+          .then( function() {
                 _.each( _deferred, function(prom){
                       if ( _.isObject( prom ) )
                         api.consoleLog( prom.state() );
                 });
-                $.when( _silently_update() ).done( function() {
+                $.when( _silently_update( silent_update_promises ) ).done( function() {
                     if ( refresh )
-                          api.previewer.refresh();
+                        api.previewer.refresh();
                 });
           });
           //return the collection of update promises
