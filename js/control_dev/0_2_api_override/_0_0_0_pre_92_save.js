@@ -211,21 +211,23 @@
                           }
                     });
 
-                    ///////////////////////////////////ALWAYS SUBMIT GLOBAL SKOPE ELIGIBLE SETTINGS TO SPECIFIC OPTION
+                    ///////////////////////////////////ALWAYS SUBMIT GLOBAL SKOPE ELIGIBLE SETTINGS TO SPECIFIC GLOBAL OPTION
                     _.each( dirtySkopesToSubmit, function( _skop ) {
                           if ( _skop.skope != 'global' )
                             return;
-                          console.log('GGGGGGGGGGGGGGGGGGG Global Skope Dirties for authorized skope settings', dirtySkopesToSubmit );
+                          if ( _.isUndefined( serverControlParams.globalSkopeOptName) ) {
+                            throw new Error('serverControlParams.globalSkopeOptName MUST BE DEFINED TO SAVE THE GLOBAL SKOPE.');
+                          }
                           //each promise is a submit ajax query
                           promises.push( submit( {
                               skope_id : globalSkopeId,
                               the_dirties : api.czr_skopeBase.getSkopeDirties( _skop.id ),
                               dyn_type : 'global_option',
-                              opt_name : 'hueman_global_skope'
+                              opt_name : serverControlParams.globalSkopeOptName
                             } )
                           );
-
                     });
+
                     return promises;
               };
 
