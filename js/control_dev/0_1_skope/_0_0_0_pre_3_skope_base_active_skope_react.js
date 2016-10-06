@@ -7,7 +7,6 @@ $.extend( CZRSkopeBaseMths, {
     // => change the to and from skope active() state
     // => silently update each setting values with the skope set of vals
     activeSkopeReact : function( to, from ) {
-          api.consoleLog('in active skope react');
           var self = this;
           //set the to and from scope state on init and switch
           if ( ! _.isUndefined(from) && api.czr_skope.has(from) )
@@ -220,7 +219,6 @@ $.extend( CZRSkopeBaseMths, {
               throw new Error('getSettingUpdatePromise : the provided setId is not defined');
           }
           var self = this,
-              current_skope_instance = api.czr_skope( api.czr_activeSkope() ),
               wpSetId = api.CZR_Helpers.build_setId( setId ),
               current_setting_val = api( wpSetId )(),//typically the previous skope val
               _promise,
@@ -260,7 +258,7 @@ $.extend( CZRSkopeBaseMths, {
                     break;
 
                     case 'czr_module' :
-                          self._processCzrModuleSilentActions( wpSetId, control_type, skope_id );
+                          self._processCzrModuleSilentActions( wpSetId, control_type, skope_id , _control_data);
                     break;
 
                     // case 'czr_multi_module' :
@@ -306,10 +304,15 @@ $.extend( CZRSkopeBaseMths, {
     * ?? @todo : can't we fire this earlier than in getPromises ?
     *****************************************************************************/
     //@return void()
-    _processCzrModuleSilentActions : function( wpSetId, control_type, skope_id ) {
+    _processCzrModuleSilentActions : function( wpSetId, control_type, skope_id, _control_data) {
           var _synced_control_id, _synced_control_val, _synced_control_data, _synced_control_constructor, _syncSektionModuleId,
-              _synced_short_id = _.has( api.control( wpSetId ).params, 'syncCollection' ) ? api.control( wpSetId ).params.syncCollection : '';
+              _synced_short_id = _.has( api.control( wpSetId ).params, 'syncCollection' ) ? api.control( wpSetId ).params.syncCollection : '',
+              _shortSetId =  api.CZR_Helpers.build_setId(wpSetId),
+              _val = api.czr_skopeBase.getSkopeSettingVal( _shortSetId, skope_id ),
+              current_skope_instance = api.czr_skope( api.czr_activeSkope() );
 
+          //if in a multimodule context
+          console.log('_synced_short_id', _synced_short_id );
           if ( ! _.isEmpty( _synced_short_id ) && ! _.isUndefined( _synced_short_id ) ) {
                 _synced_control_id = api.CZR_Helpers.build_setId( _synced_short_id );
                 _synced_control_val = api.czr_skopeBase.getSkopeSettingVal( _synced_control_id, skope_id );
@@ -336,7 +339,7 @@ $.extend( CZRSkopeBaseMths, {
           api.control( wpSetId ).container.remove();
           api.control.remove( wpSetId );
           //Silently set
-          api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+          api( wpSetId ).silent_set( _val, current_skope_instance.getSkopeSettingDirtyness( _shortSetId ) );
 
           //add the current skope to the control
           $.extend( _control_data, { czr_skope : skope_id });
