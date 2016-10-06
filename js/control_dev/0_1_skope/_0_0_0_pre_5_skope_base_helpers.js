@@ -98,14 +98,14 @@ $.extend( CZRSkopeBaseMths, {
 
           if( _.isUndefined( setId ) || ! api.has( setId ) ) {
             api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE UNDEFINED OR NOT REGISTERED IN THE API.' );
-            return;
+            return false;
           }
           //exclude widget controls and menu settings and sidebars
           if ( self.isExcludedWPBuiltinSetting( setId ) )
-            return;
+            return false;
           if ( _.contains( serverControlParams.skopeExcludedSettings, shortSetId ) ) {
             //api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE PART OF THE EXCLUDED LIST.' );
-            return;
+            return false;
           } else if ( -1 != setId.indexOf( serverControlParams.themeOptions ) ) {
             return true;
             //api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE NOT PART OF THE THEME OPTIONS AND NOT WP AUTHORIZED BUILT IN OPTIONS' );
@@ -144,18 +144,25 @@ $.extend( CZRSkopeBaseMths, {
           //allow the list of server defined settings
           if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
             return false;
+
           //allow sidebars_widget* type
           if ( 'sidebars_' == setId.substring(0, 9) )
-            return false;
+            return this.isExcludedSidebarsWidgets();
           //allow widget_* type
           if ( 'widget_' == setId.substring(0, 7) )
-            return false;
+            return this.isExcludedSidebarsWidgets();
           //exclude widget_* and nav_menu*
           return 'nav_menu' == setId.substring(0, 8);
           //return 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8);
           //return 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8) || 'sidebars_' == setId.substring(0, 9);
     },
 
+    //@return bool
+    isExcludedSidebarsWidgets : function() {
+          var SidWidgParam = serverControlParams.isSidebarsWigetsAuthorized;//can be a boolean or a string "" for false, "1" for true
+              isSidebarWidgetSkoped = ! _.isUndefined(SidWidgParam) && ! _.isEmpty( SidWidgParam ) && false !== SidWidgParam;
+          return ! isSidebarWidgetSkoped;
+    },
 
     //@return boolean
     //isAllowedWPBuiltinSetting :
