@@ -182,9 +182,11 @@
               };//_visibility()
 
               //set visibility when control is embedded
-              api.control( depSetId ).deferred.embedded.then( function(){
-                  _visibility( _params.setting() );
-              });
+              if ( api.control.has( depSetId ) ) {
+                  api.control( depSetId ).deferred.embedded.then( function(){
+                      _visibility( _params.setting() );
+                  });
+              }
 
               //reacts on setting _dirty change
               _params.setting.bind( _visibility );
