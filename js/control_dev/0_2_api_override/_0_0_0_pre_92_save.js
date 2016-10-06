@@ -182,34 +182,36 @@
 
 
                     ///////////////////////////////////ALWAYS SUBMIT NOT YET REGISTERED WIDGETS TO GLOBAL OPTIONS
-                    _.each( dirtySkopesToSubmit, function( _skop ) {
-                          if ( _skop.id == globalSkopeId )
-                            return;
+                    if ( ! api.czr_skopeBase.isExcludedSidebarsWidgets() ) {
+                          _.each( dirtySkopesToSubmit, function( _skop ) {
+                                if ( _skop.id == globalSkopeId )
+                                  return;
+                                console.log('>>>>>>>>>>>>>>>>>>> submit request for missing widgets globally', widget_dirties );
+                                var widget_dirties = {};
+                                var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
 
-                          var widget_dirties = {};
-                          var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
+                                //loop on each skop dirties and check if there's a new widget not yet registered globally
+                                //if a match is found, add it to the widget_dirties, if not already added, and add it to the promises submission
+                                _.each( the_dirties, function( _val, _setId ) {
+                                    //must be a widget setting and not yet registered globally
+                                    if ( 'widget_' == _setId.substring(0, 7) && ! api.czr_skopeBase.isWidgetRegisteredGlobally( _setId ) ) {
+                                        if ( ! _.has( widget_dirties, _setId ) )
+                                            widget_dirties[ _setId ] = _val;
+                                    }
+                                });
 
-                          //loop on each skop dirties and check if there's a new widget not yet registered globally
-                          //if a match is found, add it to the widget_dirties, if not already added, and add it to the promises submission
-                          _.each( the_dirties, function( _val, _setId ) {
-                              //must be a widget setting and not yet registered globally
-                              if ( 'widget_' == _setId.substring(0, 7) && ! api.czr_skopeBase.isWidgetRegisteredGlobally( _setId ) ) {
-                                  if ( ! _.has( widget_dirties, _setId ) )
-                                      widget_dirties[ _setId ] = _val;
-                              }
+
+                                if ( ! _.isEmpty(widget_dirties) ) {
+                                  //each promise is a submit ajax query
+                                  promises.push( submit( {
+                                      skope_id : globalSkopeId,
+                                      the_dirties : widget_dirties,
+                                      dyn_type : 'wp_default_type'
+                                    } )
+                                  );
+                                }
                           });
-
-                          console.log('>>>>>>>>>>>>>>>>>>> submit request for missing widgets globally', widget_dirties );
-                          if ( ! _.isEmpty(widget_dirties) ) {
-                            //each promise is a submit ajax query
-                            promises.push( submit( {
-                                skope_id : globalSkopeId,
-                                the_dirties : widget_dirties,
-                                dyn_type : 'wp_default_type'
-                              } )
-                            );
-                          }
-                    });
+                    }
 
                     ///////////////////////////////////ALWAYS SUBMIT GLOBAL SKOPE ELIGIBLE SETTINGS TO SPECIFIC GLOBAL OPTION
                     _.each( dirtySkopesToSubmit, function( _skop ) {
