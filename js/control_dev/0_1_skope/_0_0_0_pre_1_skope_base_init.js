@@ -187,10 +187,12 @@ $.extend( CZRSkopeBaseMths, {
 
           //REACT TO ACTIVE SKOPE UPDATE
           api.czr_activeSkope.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
-
-          api.czr_activeSkope.bind( function( active_skope ) {
-              _forceSidebarDirtyRefresh( api.czr_activeSectionId(), active_skope );
-          });
+          //sidebar widget specifid
+          if ( ! self.isExcludedSidebarsWidgets() ) {
+              api.czr_activeSkope.bind( function( active_skope ) {
+                  _forceSidebarDirtyRefresh( api.czr_activeSectionId(), active_skope );
+              });
+          }
 
 
           //REACT TO EXPANDED SECTION
@@ -203,13 +205,18 @@ $.extend( CZRSkopeBaseMths, {
                       self.silentlyUpdateSettings( _update_candidates );
                       //add control single reset + observable values
                       self.setupControlsReset();
-                      _forceSidebarDirtyRefresh( active_section, api.czr_activeSkope() );
+
+                      //Sidebar Widget specific
+                      if ( ! self.isExcludedSidebarsWidgets() )
+                        _forceSidebarDirtyRefresh( active_section, api.czr_activeSkope() );
                 });
 
           } );
 
 
           var _forceSidebarDirtyRefresh = function( active_section, active_skope ) {
+                if ( self.isExcludedSidebarsWidgets() )
+                  return;
                 var _save_state = api.state('saved')();
 
                 //Specific for widget sidebars section
@@ -249,6 +256,9 @@ $.extend( CZRSkopeBaseMths, {
 
           //WHEN A WIDGET IS ADDED
           $( document ).bind( 'widget-added', function( e, $o ) {
+              if ( self.isExcludedSidebarsWidgets() )
+                  return;
+
               var wgtIdAttr = $o.closest('.customize-control').attr('id'),
                   //get the widget id from the customize-control id attr, and remove 'customize-control-' prefix to get the proper set id
                   wdgtSetId = api.czr_skopeBase.widgetIdToSettingId( wgtIdAttr, 'customize-control-' );
@@ -327,49 +337,50 @@ $.extend( CZRSkopeBaseMths, {
     //In this case, the param SetId is not null
     listenAPISettings : function( requestedSetId ) {
           var self = this,
-              _bindListener = function( setId ) {
-                    //exclude widget controls, menu settings and sidebars
-                    if ( self.isExcludedWPBuiltinSetting( setId ) ) {
-                      return;
-                    }
+              _bindListener = function( setId, new_val, old_val, o ) {
                     //only the current theme options + some WP built in settings are eligible
                     //some settings like show_on_front are not eligibile to skope, but they can be reseted
                     // if ( ! self.isSettingSkopeEligible(setId) && ! self.isSettingResetEligible(setId) )
                     //   return;
-                    api( setId ).callbacks.add( function( new_val, old_val, o ) {
-                          if ( ! _.has( api, 'czr_activeSkope') || _.isUndefined( api.czr_activeSkope() ) ) {
-                            api.consoleLog( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
-                            //return;
-                          }
-                          api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, new_val, old_val, o );
-                          //For skope eligible settings : Update the skope dirties with the new val of this setId
-                          if ( api(setId)._dirty ) {
-                              self.updateSkopeDirties( setId, new_val );
-                          }
+                    if ( ! _.has( api, 'czr_activeSkope') || _.isUndefined( api.czr_activeSkope() ) ) {
+                      api.consoleLog( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
+                      //return;
+                    }
+                    api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, new_val, old_val, o );
+                    //For skope eligible settings : Update the skope dirties with the new val of this setId
+                    if ( api(setId)._dirty ) {
+                        self.updateSkopeDirties( setId, new_val );
+                    }
 
-                          //Refresh control single reset + observable values
-                          //=> needed for some controls like image upload
-                          if ( api.control.has( setId ) && _.contains( self.refreshedControls, api.control( setId ).params.type ) ) {
-                                self.setupControlsReset = _.debounce( self.setupControlsReset, 200 );
-                                self.setupControlsReset( setId );
-                          }
+                    //Refresh control single reset + observable values
+                    //=> needed for some controls like image upload
+                    if ( api.control.has( setId ) && _.contains( self.refreshedControls, api.control( setId ).params.type ) ) {
+                          self.setupControlsReset = _.debounce( self.setupControlsReset, 200 );
+                          self.setupControlsReset( setId );
+                    }
 
-                          //set the control dirtyness
-                          if ( _.has( api.control(setId), 'czr_isDirty' ) ) {
-                              api.control(setId).czr_isDirty( api(setId)._dirty );
-                              // api.consoleLog('DIRTYNESS :', api(setId)._dirty, api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId ) );
-                              // api.consoleLog( 'CURRENT SKOPE DIRTY VALUES : ', api.czr_activeSkope(), api.czr_skope( api.czr_activeSkope() ).dirtyValues() );
-                          }
-                    });
+                    //set the control dirtyness
+                    if ( _.has( api.control(setId), 'czr_isDirty' ) ) {
+                        api.control(setId).czr_isDirty( api(setId)._dirty );
+                        // api.consoleLog('DIRTYNESS :', api(setId)._dirty, api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId ) );
+                        // api.consoleLog( 'CURRENT SKOPE DIRTY VALUES : ', api.czr_activeSkope(), api.czr_skope( api.czr_activeSkope() ).dirtyValues() );
+                    }
               };//bindListener()
 
 
-          if ( ! _.isUndefined( requestedSetId ) )
-              _bindListener( requestedSetId );
+          if ( ! _.isUndefined( requestedSetId ) ) {
+              //exclude widget controls, menu settings and sidebars
+              if ( ! self.isSettingSkopeEligible( requestedSetId ) )
+                return;
+              api( requestedSetId ).bind( function(to, from, o ) { _bindListener( requestedSetId, to, from, o ); });
+          }
           else {
               //parse the current eligible skope settings and write a setting val object
-              api.each( function ( value, setId ) {
-                  _bindListener( setId );
+              api.each( function ( _setting ) {
+                  //exclude widget controls, menu settings and sidebars
+                  if ( ! self.isSettingSkopeEligible( _setting.id ) )
+                    return;
+                  _setting.bind( function(to, from, o ) { _bindListener( _setting.id, to, from, o ); });
               });
           }
     },
@@ -380,20 +391,15 @@ $.extend( CZRSkopeBaseMths, {
     //fired on api setting change and in the ajax query
     updateSkopeDirties : function( setId, new_val, skope_id ) {
           skope_id = skope_id || api.czr_activeSkope();
-
           var self = this,
               skope_instance,
               shortSetId = api.CZR_Helpers.getOptionName( setId );
 
           //for the settings that are excluded from skope, the skope is always the global one
-          if ( _.contains( serverControlParams.skopeExcludedSettings, shortSetId ) ) {
-            skope_instance = api.czr_skope( self.getGlobalSkopeId() );//the global skope instance
-          }
-          else
-            skope_instance = api.czr_skope( skope_id );
+          skope_instance = self.isSettingSkopeEligible( setId ) ? api.czr_skope( skope_id ) : api.czr_skope( self.getGlobalSkopeId() );//the global skope instance
 
           if ( _.isUndefined( skope_instance ) ) {
-            throw new Error('Skope base class : the required skope id is not registered.');
+            throw new Error('updateSkopeDirties : the required skope id is not registered.');
           }
 
           var current_dirties = $.extend( true, {}, skope_instance.dirtyValues() ),
