@@ -55,7 +55,7 @@
             //the previewer is now skope aware
             if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
                 api.czr_isPreviewerSkopeAware.resolve();
-                return _old_previewer_query.apply( this );
+                //return _old_previewer_query.apply( this );
             }
 
             if ( ! _.isObject( query_params ) ) {
@@ -149,7 +149,6 @@
 
             // api.consoleLog('DIRTY VALUES TO SUBMIT ? ', dirtyCustomized, api.czr_skopeBase.getSkopeDirties(skope_id) );
             // api.consoleLog('api.czr_skope( skope_id )().skope', api.czr_skope( skope_id )().skope );
-            console.log('OPT NAME ?', query_params.opt_name );
             return {
                 wp_customize: 'on',
                 skope :       api.czr_skope( query_params.skope_id )().skope,
