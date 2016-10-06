@@ -134,7 +134,7 @@
                     //the dyn type might be passed as a param to the query in some cases
                     //typically to save skope excluded settings. In this case the dyn_type is set to false, to fall back on the default wp one : theme_mod or option
                     if ( _.isNull( query_params.dyn_type ) )
-                      query_params.dyn_type = api.czr_skope( query_params.skope_id )()[ query_params.dyn_type ];//post_meta, term_meta, user_meta, trans, option
+                      query_params.dyn_type = api.czr_skope( query_params.skope_id )().dyn_type;//post_meta, term_meta, user_meta, trans, option
                     if ( _.isNull( query_params.dyn_type ) || _.isUndefined( query_params.dyn_type ) ) {
                       throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A VALID DYN TYPE.' + query_params.skope_id );
                     }
@@ -144,6 +144,11 @@
 
                 case 'reset' :
                     //no specific treatment for reset
+                    if ( _.isNull( query_params.dyn_type ) )
+                      query_params.dyn_type = api.czr_skope( query_params.skope_id )().dyn_type;//post_meta, term_meta, user_meta, trans, option
+                    if ( _.isNull( query_params.dyn_type ) || _.isUndefined( query_params.dyn_type ) ) {
+                      throw new Error( 'QUERY : A RESET QUERY MUST HAVE A VALID DYN TYPE.' + query_params.skope_id );
+                    }
                 break;
             }
 
