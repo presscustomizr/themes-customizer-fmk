@@ -176,7 +176,6 @@ $.extend( CZRSkopeBaseMths, {
           _.each( silent_update_promises, function( obj, setId ) {
               _deferred.push(obj.promise);
           });
-          console.log('_deferred', _deferred );
           $.when.apply( null, _deferred )
           // .always( function() {
           //       var _has_rejected_promise = false;
@@ -194,9 +193,10 @@ $.extend( CZRSkopeBaseMths, {
           .then( function() {
                 _.each( _deferred, function(prom){
                       if ( _.isObject( prom ) )
-                        api.consoleLog( prom.state() );
+                        api.consoleLog( 'promise state() after silent update', prom.state() );
                 });
                 $.when( _silently_update( silent_update_promises ) ).done( function() {
+                    //always refresh by default
                     if ( refresh )
                         api.previewer.refresh();
                 });
@@ -287,8 +287,9 @@ $.extend( CZRSkopeBaseMths, {
           //Special case : the header_image control has 2 associated settings : header_image and header_image_data
           //when switching skope, we want to refresh the control with the right image
           //This is a setting
-          if ( _.has(api.settings.controls, 'header_image') && 'header_image' == wpSetId  )
+          if ( _.has(api.settings.controls, 'header_image') && 'header_image' == wpSetId  ) {
               _promise = self._getHeaderImagePromise( wpSetId, skope_id );
+          }
 
           return  { promise : _promise || true, val : val };
     },//getSettingUpdatePromise()
@@ -314,7 +315,6 @@ $.extend( CZRSkopeBaseMths, {
               current_skope_instance = api.czr_skope( api.czr_activeSkope() );
 
           //if in a multimodule context
-          console.log('_synced_short_id', _synced_short_id );
           if ( ! _.isEmpty( _synced_short_id ) && ! _.isUndefined( _synced_short_id ) ) {
                 _synced_control_id = api.CZR_Helpers.build_setId( _synced_short_id );
                 _synced_control_val = api.czr_skopeBase.getSkopeSettingVal( _synced_control_id, skope_id );
@@ -401,7 +401,7 @@ $.extend( CZRSkopeBaseMths, {
     *****************************************************************************/
     //@return promise
     _getHeaderImagePromise : function( wpSetId, skope_id ) {
-          if ( _.has(api.settings.controls, 'header_image') && 'header_image' == wpSetId  )
+          if ( ! _.has(api.settings.controls, 'header_image') || 'header_image' != wpSetId  )
             return;
 
           var _header_constructor = api.controlConstructor.header,
