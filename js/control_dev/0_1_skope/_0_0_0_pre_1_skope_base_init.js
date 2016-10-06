@@ -162,6 +162,8 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_skope = new api.Values();
           //store the embed state
           self.skopeWrapperEmbedded = $.Deferred();
+          //store the first skope collection state
+          self.initialSkopeCollectionPopulated = $.Deferred();
           //store the resetting state
           api.czr_isResettingSkope = new api.Value( false );
           //store the db saved options name for the global skope
@@ -194,11 +196,16 @@ $.extend( CZRSkopeBaseMths, {
           //REACT TO EXPANDED SECTION
           //=> silently update all eligible controls of this sektion with the current skope values
           api.czr_activeSectionId.bind( function( active_section ) {
-                var _update_candidates = self._getSilentUpdateCandidates( active_section );
-                self.silentlyUpdateSettings( _update_candidates );
-                //add control single reset + observable values
-                self.setupControlsReset();
-                _forceSidebarDirtyRefresh( active_section, api.czr_activeSkope() );
+                //defer the callback execution when the first skope collection has been populated
+                //=> otherwise it might be to early. For example in autofocus request cases.
+                self.initialSkopeCollectionPopulated.then( function() {
+                      var _update_candidates = self._getSilentUpdateCandidates( active_section );
+                      self.silentlyUpdateSettings( _update_candidates );
+                      //add control single reset + observable values
+                      self.setupControlsReset();
+                      _forceSidebarDirtyRefresh( active_section, api.czr_activeSkope() );
+                });
+
           } );
 
 

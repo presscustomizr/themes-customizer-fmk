@@ -225,6 +225,11 @@ $.extend( CZRSkopeBaseMths, {
                 _skp_instance.visible(true);
           } );
 
+          //ON INITIAL COLLECTION POPULATE, RESOLVE THE DEFERRED STATE
+          //=> this way we can defer earlier actions.
+          //For example when autofocus is requested, the section might be expanded before the initial skope collection is sent from the preview.
+          if ( _.isEmpty(from) && ! _.isEmpty(to) )
+            self.initialSkopeCollectionPopulated.resolve();
 
           //MAKE SURE TO SYNCHRONIZE api.settings.settings with the current global skope updated db values
           self.maybeSynchronizeGlobalSkope();
@@ -240,10 +245,10 @@ $.extend( CZRSkopeBaseMths, {
                 _.each( _global_skp_db_values, function( _val, shortSetId ){
                       var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
                       if ( ! _.isEqual( api.settings.settings[wpSetId].value, _val ) ) {
-                          api.consoleLog('SYNCHRONIZE GLOBAL SKOPE WITH API');
                           api.settings.settings[wpSetId].value = _val;
                       }
                 });
+                api.consoleLog('GLOBAL SKOPE HAS BEEN SYNCHRONIZED WITH THE API.');
           }
     },
 
