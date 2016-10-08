@@ -20,7 +20,7 @@ $.extend( CZRSkopeBaseMths, {
             throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
 
           //write the current skope title
-          self.writeCurrentSkopeTitle( to );
+          self._writeCurrentSkopeTitle( to );
 
           //CURRENT EXPANDED SECTION DEPENDANT ACTIONS
           //stop here if the active section is not set yet
@@ -81,8 +81,9 @@ $.extend( CZRSkopeBaseMths, {
     },
 
 
-
-    writeCurrentSkopeTitle : function( skope_id ) {
+    //@return void()
+    //Fired in activeSkopeReact()
+    _writeCurrentSkopeTitle : function( skope_id ) {
           var self = this,
               current_title = api.czr_skope( skope_id|| api.czr_activeSkope() ).long_title;
 
@@ -95,6 +96,11 @@ $.extend( CZRSkopeBaseMths, {
           });
 
     },
+
+
+
+
+
 
 
 
@@ -115,7 +121,7 @@ $.extend( CZRSkopeBaseMths, {
           }
 
           //GET THE CURRENT EXPANDED SECTION SET IDS
-          var section_settings = self._getSectionSettingIds( section_id );
+          var section_settings = api.CZR_Helpers.getSectionSettingIds( section_id );
 
           //keep only the skope eligible setIds
           section_settings = _.filter( section_settings, function(setId) {
@@ -129,6 +135,15 @@ $.extend( CZRSkopeBaseMths, {
 
           return silent_update_candidates;
     },
+
+
+
+
+
+
+
+
+
 
 
 
@@ -196,6 +211,8 @@ $.extend( CZRSkopeBaseMths, {
                         api.consoleLog( 'promise state() after silent update', prom.state() );
                 });
                 $.when( _silently_update( silent_update_promises ) ).done( function() {
+                    console.log( '!!!! silent_update_promises', silent_update_promises );
+                    console.log(' ???? _deferred', _deferred );
                     //always refresh by default
                     if ( refresh )
                         api.previewer.refresh();
