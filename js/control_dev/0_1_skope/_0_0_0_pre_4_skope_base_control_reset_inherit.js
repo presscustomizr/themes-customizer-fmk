@@ -14,7 +14,7 @@ $.extend( CZRSkopeBaseMths, {
               section_id = api.czr_activeSectionId();
 
           api.consoleLog('SETUP CONTROLS RESET ?', controls );
-          controls = _.isUndefined( controls ) ? self._getSectionControlIds( section_id  ) : controls;
+          controls = _.isUndefined( controls ) ? api.CZR_Helpers.getSectionControlIds( section_id  ) : controls;
           controls = _.isString( controls ) ? [controls] : controls;
 
           //filter only eligible setIds
@@ -44,7 +44,7 @@ $.extend( CZRSkopeBaseMths, {
           var self = this;
           //create the control ids list if not set
           if ( _.isUndefined( controls ) || _.isEmpty( controls ) ) {
-                controls = self._getSectionControlIds( api.czr_activeSectionId() );
+                controls = api.CZR_Helpers.getSectionControlIds( api.czr_activeSectionId() );
                 //filter only eligible setIds
                 controls = _.filter( controls, function( setId ) {
                     return self.isSettingSkopeEligible( setId );
@@ -144,7 +144,7 @@ $.extend( CZRSkopeBaseMths, {
                                         if ( ! ctrl.czr_isDirty() && ! ctrl.czr_hasDBVal() )
                                           return;
                                         //close all other warnings expanded in the section
-                                        _.each( _.without( self._getSectionControlIds( ctrl.section() ), setId ) , function( _id ) {
+                                        _.each( _.without( api.CZR_Helpers.getSectionControlIds( ctrl.section() ), setId ) , function( _id ) {
                                               if ( _.has( api.control(_id), 'czr_resetVisibility') )
                                                 api.control(_id).czr_resetVisibility(false);
                                         });
@@ -315,7 +315,7 @@ $.extend( CZRSkopeBaseMths, {
               section_id = api.czr_activeSectionId();
 
           api.consoleLog('SETUP CONTROLS RESET ?', controls );
-          controls = _.isUndefined( controls ) ? self._getSectionControlIds( section_id  ) : controls;
+          controls = _.isUndefined( controls ) ? api.CZR_Helpers.getSectionControlIds( section_id  ) : controls;
           controls = _.isString( controls ) ? [controls] : controls;
 
           //filter only eligible setIds
