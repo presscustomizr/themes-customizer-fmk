@@ -168,13 +168,6 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_isResettingSkope = new api.Value( false );
           //store the db saved options name for the global skope
           api.czr_globalDBoptions = new api.Value([]);
-          //store the currently active setion
-          api.czr_activeSectionId = new api.Value();
-          api.section.each( function( _sec ) {
-                _sec.expanded.bind( function( expanded ) {
-                      api.czr_activeSectionId( expanded ? _sec.id : api.czr_activeSectionId() );
-                });
-          });
 
           api.czr_savedDirties = new api.Value({ channel : '', saved : {} });
 
@@ -419,16 +412,21 @@ $.extend( CZRSkopeBaseMths, {
           var self = this,
               resetted_opts = _.difference( from, to );
 
-          if ( _.isEmpty(resetted_opts) )
-            return;
+          //reset option case
+          if ( ! _.isEmpty(resetted_opts) ) {
+              api.consoleLog( 'HAS RESET OPTIONS', resetted_opts );
+              //reset each reset setting to its default val
+              _.each( resetted_opts, function( shortSetId ) {
+                    var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
+                    if ( _.has( api.settings.settings, wpSetId) )
+                      api.settings.settings[wpSetId].value = serverControlParams.defaultOptionsValues[shortSetId];
+                    self.silentlyUpdateSettings( [], false );//silently update with no refresh
+              });
+          }
 
-          api.consoleLog( 'HAS RESET OPTIONS', resetted_opts );
-          //reset each reset setting to its default val
-          _.each( resetted_opts, function( shortSetId ) {
-                var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
-                if ( _.has( api.settings.settings, wpSetId) )
-                  api.settings.settings[wpSetId].value = serverControlParams.defaultOptionsValues[shortSetId];
-                self.silentlyUpdateSettings( [], false );//silently update with no refresh
-          });
+          //make sure the hasDBValues is synchronized with the server
+          api.czr_skope( self.getGlobalSkopeId() ).hasDBValues( ! _.isEmpty( to ) );//might trigger cb hasDBValuesReact()
+          api.czr_skope( self.getGlobalSkopeId() )().has_db_val = ! _.isEmpty( to );
+
     }
 });//$.extend()
