@@ -31,7 +31,24 @@ var api = api || wp.customize, $ = $ || jQuery;
       api.sidebar_insights.create('registered');
       api.sidebar_insights.create('available_locations');
 
+
+      /*****************************************************************************
+      * DEFINE SOME USEFUL OBSERVABLE VALUES
+      *****************************************************************************/
       //PARTIAL REFRESHS => stores and observes the partials sent by the preview
       api.czr_partials = new api.Value();
+
+      //STORE THE CURRENTLY ACTIVE SECTION IN AN OBSERVABLE VALUE
+      api.czr_activeSectionId = new api.Value();
+      api.bind('ready', function() {
+          if ( 'function' != typeof api.Section ) {
+            throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
+          }
+          api.section.each( function( _sec ) {
+                _sec.expanded.bind( function( expanded ) {
+                      api.czr_activeSectionId( expanded ? _sec.id : api.czr_activeSectionId() );
+                });
+          });
+      });
 
 })( wp.customize , jQuery, _);
