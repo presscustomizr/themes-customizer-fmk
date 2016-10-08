@@ -4,99 +4,104 @@
       translatedStrings = serverControlParams.translatedStrings || {};
 
   api.bind( 'ready' , function() {
-    api.czr_visibilities = new api.CZR_visibilities();
+    if ( ! _.has( api, 'czr_visibilities') )
+      api.czr_visibilities = new api.CZR_visibilities();
   } );
 
+
   api.CZR_visibilities = api.Class.extend( {
-          controlDeps : {},
+          dominosDeps : [],
           initialize: function() {
                 var self = this;
+
+                this.defaultDominusParams = {
+                      dominus : '',
+                      servos : [],
+                      visibility : null,
+                      actions : null,
+                      onSectionExpand : true
+                };
+
                 //store the default control dependencies
-                this.controlDeps = _.extend( this.controlDeps, this._getControlDeps() );
-                this._setControlVisibilities();
+                this.dominosDeps = _.extend( this.dominosDeps, this._getControlDeps() );
+                if ( ! _.isArray( self.dominosDeps ) ) {
+                    throw new Error('Visibilities : the dominos dependency array is not an array.');
+                }
+                api.czr_activeSectionId.bind( function( section_id ) {
+                    self.setServosVisibility( section_id );
+                });
+
+                //FAVICON SPECIFICS
+                //@todo => move to the theme ?
                 //favicon note on load and on change(since wp 4.3)
                 this._handleFaviconNote();
-
           },
 
-          //bind all actions to wp.customize ready event
+
           //map each setting with its dependencies
-          _setControlVisibilities : function() {
-                var self = this;
-                _.each( self.controlDeps , function( opts , setId ) {
-                      self._prepare_visibilities( setId, opts );
-                });
+          //@param _id.
+          //This method can take the setId param.
+          //=> useful if a control has been re-rendered on skope switch to re-bind the visibility actions
+          setServosVisibility : function( section_id, _id ) {
+                var self = this, params;
+
+                if ( ! _.isUndefined( _id ) && api.control.has( api.CZR_Helpers.build_setId( _id ) ) ) {
+                          params = self._prepareDominusParams( self.dominosDeps[_id] );
+                          self._processDominusCallbacks( _id, params );
+                    }
+                else
+                    {
+                          if ( _.isUndefined( section_id ) || ! api.section.has( section_id ) ) {
+                            throw new Error( 'Visibilities : the section_id is missing or not registered : ' + section_id );
+                          }
+                          _.each( self.dominosDeps , function( params ) {
+                                params = self._prepareDominusParams( params );
+                                var wpDominusId = api.CZR_Helpers.build_setId( params.dominus );
+                                if ( api.control( wpDominusId ).section() != section_id )
+                                  return;
+                                self._processDominusCallbacks( params.dominus, params );
+                          });
+                    }
+
+
+
+
+                //check if the current expanded section contains controls for which the visibility can be set by a setting not included in this section.
+                //Let's call this setting external
+                //if so, then don't wait for this external setting to be bound on section expansion. Prepare its visibilities now.
+                // api.czr_activeSectionId.bind( function( current_section_id ){
+                //     var _ctrls = api.CZR_Helpers.getSectionControlIds( current_section_id ),
+                //         _earlyPrepare = [];
+
+                //     console.log('PRRRRRRRRRRRRRROUT', current_section_id, _ctrls );
+                //     //create the list of early preparation controls
+                //     _.each( _ctrls, function( intSetId ) {
+                //           var _shortSetId = api.CZR_Helpers.getOptionName( intSetId );
+
+                //           _.each( self.dominosDeps, function( data, extSetId ){
+                //                 var _wpExtSetId = api.CZR_Helpers.build_setId( extSetId );
+
+                //                 if ( ! api.control.has(_wpExtSetId) || api.control( _wpExtSetId ).section() == current_section_id )
+                //                   return;
+
+                //                 if ( ! _.contains( data.controls, _shortSetId ) || ! api.control.has( intSetId ) )
+                //                   return;
+                //                 if ( ! _.contains(_earlyPrepare, extSetId ) )
+                //                   _earlyPrepare.push( extSetId );
+                //           } );
+                //     });
+
+                //     //prepare
+                //     _.each( _earlyPrepare, function( _id ){
+                //           console.log('A MATCH HAS BEEN FOUND => extSetId is : ', _id);
+                //           o = self.dominosDeps[_id];
+                //           $.extend( o, { onSectionExpand : false } );
+                //           //self._processDominusCallbacks( _id, o );
+                //     });
+
+                // });
           },
 
-          /*
-          * Main control dependencies object
-          */
-          _getControlDeps : function() {
-            return {};
-          },
-
-          /*****************************************************************************
-          * HELPERS
-          *****************************************************************************/
-          /*
-          * find the setId key in the _controlDependencies object
-          * get the controls, merge show and hide if needed
-          * return an []
-          */
-          _get_dependants : function( setId ) {
-                if ( ! this.controlDeps[setId] )
-                  return [];
-                var _dependants = this.controlDeps[setId];
-
-                if ( _dependants.show && _dependants.hide )
-                  return _.union(_dependants.show.controls , _dependants.hide.controls);
-                if ( _dependants.show && ! _dependants.hide )
-                  return _dependants.show.controls;
-                if ( ! _dependants.show && _dependants.hide )
-                  return _dependants.hide.controls;
-
-                return _dependants.controls;
-          },
-
-          /*
-          * @return string hide or show. default is hide
-          */
-          _get_visibility_action : function ( setId , depSetId ) {
-                if ( ! this.controlDeps[setId] )
-                  return 'both';
-                var _dependants = this.controlDeps[setId];
-                if ( _dependants.show && -1 != _.indexOf( _dependants.show.controls, depSetId ) )
-                  return 'show';
-                if ( _dependants.hide && -1 != _.indexOf( _dependants.hide.controls, depSetId ) )
-                  return 'hide';
-                return 'both';
-          },
-
-
-          _get_visibility_cb : function( setId , _action ) {
-                if ( ! this.controlDeps[setId] )
-                  return;
-                var _dependants = this.controlDeps[setId];
-                if ( ! _dependants[_action] )
-                  return _dependants.callback;
-                return (_dependants[_action]).callback;
-          },
-
-
-          _check_cross_dependant : function( setId, depSetId ) {
-                if ( ! this.controlDeps[setId] )
-                  return true;
-                var _dependants = this.controlDeps[setId];
-                if ( ! _dependants.cross || ! _dependants.cross[depSetId] )
-                  return true;
-                var _cross  = _dependants.cross[depSetId],
-                    _id     = _cross.master,
-                    _cb     = _cross.callback;
-
-                _id = api.CZR_Helpers.build_setId(_id);
-                //if _cb returns true => show
-                return _cb( api.instance(_id)() );
-              },
 
           /*
           * @return void
@@ -104,94 +109,179 @@
           * @params setId = the short setting id, whitout the theme option prefix OR the WP built-in setting
           * @params o = { controls [], callback fn, onSectionExpand bool }
           */
-          _prepare_visibilities : function( setId, o ) {
+          _processDominusCallbacks : function( shortDominusId, dominusParams ) {
                 var self = this,
-                    wpSetId = api.CZR_Helpers.build_setId( setId );
-                //we only handle controls having an existing setting registered in the api.
-                if ( ! api.has( wpSetId ) ) {
-                  api.consoleLog( 'The following setting for which visibility dependencies are defined, is not registered in the api : ' + wpSetId );
-                  return;
-                }
-                //a function wrapper
-                var _set_visibility = function() {
-                    api( wpSetId , function (setting) {
-                          var _params = {
-                            setting   : setting,
-                            setId : setId,
-                            controls  : self._get_dependants(setId),
-                            onSectionExpand : ! _.isUndefined( o.onSectionExpand ) ? o.onSectionExpand : true
-                          };
-                          _.each( _params.controls , function( depSetId ) {
-                              wpDepSetId = api.CZR_Helpers.build_setId(depSetId );
-                              if ( ! api.control.has(wpDepSetId) )
-                                return;
-                              //When section() is supported ( > wp 4.2 ? )
-                              //wait for the section to be expanded before actually binding the visibiities.
-                              //=> Performance improvement + fixes the problem of controls with specific rendering workflows like the header_image for ex.
-                              if ( 'function' == typeof( api.control( wpDepSetId ).section ) && _params.onSectionExpand ) {
-                                  api.section( api.control( wpDepSetId ).section() ).expanded.bind( function(to) {
-                                        self._set_single_dependant_control_visibility( depSetId , _params);
+                    wpDominusId = api.CZR_Helpers.build_setId( shortDominusId ),
+                    dominusSetInst = api( wpDominusId );
+
+                //loop on the dominus servos and apply + bind the visibility cb
+                _.each( dominusParams.servos , function( servusShortSetId ) {
+                        if ( ! api.control.has( api.CZR_Helpers.build_setId( servusShortSetId ) ) ) {
+                            return;
+                        }
+                        //set visibility when control is embedded
+                        //or when control is added to the api
+                        //=> solves the problem of visibility callbacks lost when control are re-rendered
+                        var _fireDominusCallbacks = function( dominusSetVal, servusShortSetId, dominusParams ) {
+                                  var _toFire = [],
+                                      _args = arguments;
+                                  _.each( dominusParams, function( _item, _key ) {
+                                        switch( _key ) {
+                                            case 'visibility' :
+                                                self._setVisibility.apply( null, _args );
+                                            break;
+                                            case 'actions' :
+                                                if ( _.isFunction( _item ) )
+                                                    _item.apply( null, _args );
+                                            break;
+                                        }
                                   });
-                              } else {
-                                  var _debounce_visibility = function(depSetId , _params) {
-                                    self._set_single_dependant_control_visibility( depSetId , _params);
-                                  };
-                                  _debounce_visibility = _.debounce(_debounce_visibility, 1000 );
-                                  _debounce_visibility( depSetId , _params );
+                            },
+                            _deferCallbacks = function( dominusSetVal ) {
+                                  dominusSetVal = dominusSetVal  || dominusSetInst();
+                                  var wpServusSetId = api.CZR_Helpers.build_setId( servusShortSetId );
+                                  if ( api.control.has( wpServusSetId ) ) {
+                                        if ( 'resolved' == api.control( wpServusSetId ).deferred.embedded.state() ) {
+                                              _fireDominusCallbacks( dominusSetVal, servusShortSetId, dominusParams );
+                                        } else {
+                                              api.control( wpServusSetId ).deferred.embedded.then( function(){
+                                                    _fireDominusCallbacks( dominusSetVal, servusShortSetId, dominusParams );
+                                              });
+                                        }
+                                  } else {
+                                        api.control.when( wpServusSetId, function() {
+                                            api.control( wpServusSetId ).deferred.embedded.then( function(){
+                                                  _fireDominusCallbacks( dominusSetVal, servusShortSetId, dominusParams );
+                                            });
+                                        });
+                                  }
+                            };
+
+
+                        //APPLY THE VISIBILITY
+                        _deferCallbacks();
+
+                        //BIND THE DOMINUS SETTING INSTANCE
+                        //store the visibility bound state
+                        if ( ! _.has( dominusSetInst, 'czr_visibilityServos' ) )
+                            dominusSetInst.czr_visibilityServos = new api.Value( [] );
+
+                        //Maybe bind to react on setting _dirty change
+                        var _currentDependantBound = dominusSetInst.czr_visibilityServos();
+                        //Make sure a dependant visibility action is bound only once for a setting id to another setting control id
+                        if ( ! _.contains( _currentDependantBound, servusShortSetId ) ) {
+                              dominusSetInst.bind( function( dominusSetVal ) {
+                                  _deferCallbacks( dominusSetVal );
+                              });
+                              dominusSetInst.czr_visibilityServos( _.union( _currentDependantBound, [ servusShortSetId ] ) );
+                        }
+                } );//_.each
+          },
+
+
+
+          //@return void()
+          _setVisibility : function ( dominusSetVal, servusShortSetId, dominusParams ) {
+                var wpServusSetId = api.CZR_Helpers.build_setId( servusShortSetId ),
+                    visibility = dominusParams.visibility( dominusSetVal, servusShortSetId, dominusParams.dominus );
+
+                //Allows us to filter between visibility callbacks and other actions
+                //a non visibility callback shall return null
+                if ( ! _.isBoolean( visibility ) || 'unchanged' == visibility )
+                  return;
+                api.control( wpServusSetId, function( _controlInst ) {
+                      var _args = {
+                            duration : 'fast',
+                            completeCallback : function() {},
+                            unchanged : false
+                      };
+
+                      if ( _.has( _controlInst, 'active' ) )
+                        visibility = visibility && _controlInst.active();
+
+                      if ( _.has( _controlInst, 'defaultActiveArguments' ) )
+                        _args = control.defaultActiveArguments;
+
+                      _controlInst.onChangeActive( visibility , _controlInst.defaultActiveArguments );
+                });
+          },
+
+
+
+          /*****************************************************************************
+          * HELPERS
+          *****************************************************************************/
+          /*
+          * Abstract
+          * Will be provided by the theme
+          * @return main control dependencies object
+          */
+          _getControlDeps : function() {
+            return {};
+          },
+
+
+          //@return a visibility ready object of param describing the dependencies between a dominus and its servos.
+          //this.defaultDominusParams = {
+          //       dominus : '',
+          //       servos : [],
+          //       visibility : fn() {},
+          //       actions : fn() {},
+          //       onSectionExpand : true
+          // };
+          _prepareDominusParams : function( params_candidate ) {
+                var self = this,
+                    _ready_params = {};
+
+                //Check mandatory conditions
+                if ( ! _.isObject( params_candidate ) ) {
+                    throw new Error('Visibilities : a dominus param definition must be an object.');
+                }
+                if ( ! _.has( params_candidate, 'visibility' ) && ! _.has( params_candidate, 'actions' ) ) {
+                    throw new Error('Visibilities : a dominus definition must include a visibility or an actions callback.');
+                }
+                if ( ! _.has( params_candidate, 'dominus' ) || ! _.isString( params_candidate.dominus ) || _.isEmpty( params_candidate.dominus ) ) {
+                      throw new Error( 'Visibilities : a dominus control id must be a not empty string.');
+                }
+                var wpDominusId = api.CZR_Helpers.build_setId( params_candidate.dominus );
+                if ( ! api.control.has( wpDominusId ) ) {
+                      throw new Error( 'Visibilities : a dominus control id is not registered : ' + wpDominusId );
+                }
+                if ( ! _.has( params_candidate, 'servos' ) || _.isUndefined( params_candidate.servos ) || ! _.isArray( params_candidate.servos ) || _.isEmpty( params_candidate.servos ) ) {
+                      throw new Error( 'Visibilities : servos must be set as an array not empty.');
+                }
+
+                _.each( self.defaultDominusParams , function( _value, _key ) {
+                    var _candidate_val = params_candidate[ _key ];
+
+                    switch( _key ) {
+                          case 'visibility' :
+                              if ( ! _.isUndefined( _candidate_val ) && ! _.isEmpty( _candidate_val ) && ! _.isFunction( _candidate_val ) ) {
+                                    throw new Error( 'Visibilities : a dominus visibility callback must be a function : ' + params_candidate.dominus );
                               }
+                          break;
+                          case 'actions' :
+                              if ( ! _.isUndefined( _candidate_val ) && ! _.isEmpty( _candidate_val ) && ! _.isFunction( _candidate_val ) ) {
+                                    throw new Error( 'Visibilities : a dominus actions callback must be a function : ' + params_candidate.dominus );
+                              }
+                          break;
+                          case 'onSectionExpand' :
+                              if ( ! _.isUndefined( _candidate_val ) && ! _.isEmpty( _candidate_val ) && ! _.isBoolean( _candidate_val ) ) {
+                                    throw new Error( 'Visibilities : a dominus onSectionExpand param must be a boolean : ' + params_candidate.dominus );
+                              }
+                          break;
+                    }
+                    _ready_params[_key] = _candidate_val;
+                });
 
-                          } );
-                    });
-                };
-                _set_visibility();
+                return _ready_params;
           },
 
 
 
-          _set_single_dependant_control_visibility : function( depSetId , _params ) {
-                var self = this;
-
-                depSetId = api.CZR_Helpers.build_setId(depSetId);
-                var control = api.control( depSetId );
-                // api.control( depSetId , function (control) {
-
-                // });
-
-                var _visibility = function (to) {
-                  var _action   = self._get_visibility_action( _params.setId , depSetId ),
-                      _callback = self._get_visibility_cb( _params.setId , _action ),
-                      _bool     = false;
-
-                  if ( 'show' == _action && _callback(to, depSetId, _params.setId ) )
-                    _bool = true;
-                  if ( 'hide' == _action && _callback(to, depSetId, _params.setId ) )
-                    _bool = false;
-                  if ( 'both' == _action )
-                    _bool = _callback(to, depSetId, _params.setId );
-
-                  //check if there are any cross dependencies to look at
-                  //_check_cross_dependant return true if there are no cross dependencies.
-                  //if cross dependency :
-                  //1) return true if we must show, false if not.
-                  _bool = self._check_cross_dependant( _params.setId, depSetId ) && _bool;
-
-                  if ( _.has(control, 'active') )
-                    control.container.toggle( _bool && control.active() );
-                  else
-                    control.container.toggle( _bool );
-              };//_visibility()
-
-              //set visibility when control is embedded
-              if ( api.control.has( depSetId ) ) {
-                  api.control( depSetId ).deferred.embedded.then( function(){
-                      _visibility( _params.setting() );
-                  });
-              }
-
-              //reacts on setting _dirty change
-              _params.setting.bind( _visibility );
-          },
-
+          /*****************************************************************************
+          * FAVICON SPECIFICS
+          *****************************************************************************/
           /**
           * Fired on api ready
           * May change the site_icon description on load
