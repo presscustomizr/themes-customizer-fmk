@@ -194,14 +194,16 @@ $.extend( CZRSkopeBaseMths, {
                 //defer the callback execution when the first skope collection has been populated
                 //=> otherwise it might be to early. For example in autofocus request cases.
                 self.initialSkopeCollectionPopulated.then( function() {
-                      var _update_candidates = self._getSilentUpdateCandidates( active_section );
-                      self.silentlyUpdateSettings( _update_candidates );
-                      //add control single reset + observable values
-                      self.setupControlsReset();
+                      self.processSilentUpdates( { section_id : active_section } );
+                      // var _update_candidates = self._getSilentUpdateCandidates( active_section );
+                      // self.silentlyUpdateSettings( _update_candidates );
+                      // //add control single reset + observable values
+                      // self.setupControlsReset();
 
                       //Sidebar Widget specific
-                      if ( ! self.isExcludedSidebarsWidgets() )
-                        _forceSidebarDirtyRefresh( active_section, api.czr_activeSkope() );
+                      if ( ! self.isExcludedSidebarsWidgets() ) {
+                            _forceSidebarDirtyRefresh( active_section, api.czr_activeSkope() );
+                      }
                 });
 
           } );
@@ -351,7 +353,7 @@ $.extend( CZRSkopeBaseMths, {
                     //=> needed for some controls like image upload
                     // if ( api.control.has( setId ) && _.contains( self.refreshedControls, api.control( setId ).params.type ) ) {
                     //       self.setupControlsReset = _.debounce( self.setupControlsReset, 200 );
-                    //       self.setupControlsReset( setId );
+                    //       self.setupControlsReset( { controls : [ setId ] } );
                     // }
 
                     //set the control dirtyness

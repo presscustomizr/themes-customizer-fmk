@@ -353,10 +353,42 @@ $.extend( CZRSkopeBaseMths, {
               registered = true;
         } );
         return registered;
+    },
+
+
+
+
+    /*****************************************************************************
+    * GET SILENT UPDATE CANDIDATE FROM A SECTION. FALLS BACK ON THE CURRENT ONE
+    *****************************************************************************/
+    _getSilentUpdateCandidates : function( section_id ) {
+          var self = this,
+              SilentUpdateCands = [];
+          section_id = ( _.isUndefined( section_id ) || _.isNull( section_id ) ) ? api.czr_activeSectionId() : section_id;
+
+          if ( _.isUndefined( section_id ) ) {
+            api.consoleLog( '_getSilentUpdateCandidates : No active section provided');
+            return;
+          }
+          if ( ! api.section.has( section_id ) ) {
+              throw new Error( '_getSilentUpdateCandidates : The section ' + section_id + ' is not registered in the API.');
+          }
+
+          //GET THE CURRENT EXPANDED SECTION SET IDS
+          var section_settings = api.CZR_Helpers.getSectionSettingIds( section_id );
+
+          //keep only the skope eligible setIds
+          section_settings = _.filter( section_settings, function(setId) {
+              return self.isSettingSkopeEligible( setId );
+          });
+
+          //Populates the silent update candidates array
+          _.each( section_settings, function( setId ) {
+                SilentUpdateCands.push( setId );
+          });
+
+          return SilentUpdateCands;
     }
-
-
-
     //@return the customized value of a setId in a given skop
     //implements the skope inheritance
     //@recursive

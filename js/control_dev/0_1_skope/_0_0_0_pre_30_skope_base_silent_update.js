@@ -1,148 +1,48 @@
 
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 $.extend( CZRSkopeBaseMths, {
+    //@param obj :
+    // {
+    //   silent_update_candidates : silentUpdateCands,
+    //   section_id : section_id
+    // }
+    processSilentUpdates : function( obj ) {
+          var self = this, silentUpdateCands, _params,
+              defaultParams = {
+                  silent_update_candidates : [],
+                  section_id : api.czr_activeSectionId()
+              };
+          _params = $.extend( defaultParams, obj );
 
-    //declared in initialize, cb of api.czr_activeSkope.callbacks
-    //react when the active skope has been set to a new value
-    // => change the to and from skope active() state
-    // => silently update each setting values with the skope set of vals
-    activeSkopeReact : function( to, from ) {
-          var self = this;
-          //set the to and from scope state on init and switch
-          if ( ! _.isUndefined(from) && api.czr_skope.has(from) )
-            api.czr_skope(from).active(false);
-          else if ( ! _.isUndefined(from) )
-            throw new Error('listenToActiveSkope : previous scope does not exist in the collection');
-
-          if ( ! _.isUndefined(to) && api.czr_skope.has(to) )
-            api.czr_skope(to).active(true);
-          else
-            throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
-
-          //write the current skope title
-          self._writeCurrentSkopeTitle( to );
-
-          //CURRENT EXPANDED SECTION DEPENDANT ACTIONS
-          //stop here if the active section is not set yet
-          //=> the silent update will be fired on section expansion anyway
-          //=> refresh now if the previewer is not skope aware, this will post the dyn_type used in the preview to get the proper option if the skope is not 'global'
-          if ( _.isUndefined( api.czr_activeSectionId() ) ) {
-              if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
-                api.consoleLog('ACTIVE SKOPE SWITCH : ' + from + ' => ' + to );
-                api.previewer.refresh();
-              }
-              return;
-          }
-
-          //close the module panel id needed
-          if ( _.has( api, 'czrModulePanelState') )
-            api.czrModulePanelState(false);
-
-
-          var _process_silent_update = function() {
-                //populates with the current section setting ids
-                var silent_update_candidates = self._getSilentUpdateCandidates();
-
-                //add the previous skope dirty settings ids
-                if ( ! _.isUndefined( from ) ) {
-                  _.each( api.czr_skope( from ).dirtyValues(), function( val, _setId ) {
-                        if ( ! _.contains( silent_update_candidates, _setId ) )
-                            silent_update_candidates.push(_setId);
-                  } );
-                }
-                if ( ! _.isUndefined( to ) ) {
-                  _.each( api.czr_skope( to ).dirtyValues(), function( val, _setId ) {
-                        if ( ! _.contains( silent_update_candidates, _setId ) )
-                            silent_update_candidates.push(_setId);
-                  } );
-                }
-
-                //silently update the settings of a the currently active section() to the values of the current skope
-                self.silentlyUpdateSettings( silent_update_candidates );
-
-                //re-render control single reset when needed (Media control are re-rendered, that's why we need this method fired on each skope switch)
-                var _setup_control_reset = function() {
-                    self.setupControlsReset();
-                };
-                _setup_control_reset = _.debounce(_setup_control_reset, 1200 );
-                _setup_control_reset();
-
-          };
-
-          //Collapse the current expanded module if any
-          if ( _.has(api, 'czr_isModuleExpanded') && false !== api.czr_isModuleExpanded() ) {
-                api.czr_isModuleExpanded().setupModuleViewStateListeners(false);
-                _process_silent_update = _.debounce( _process_silent_update, 400 );
-                _process_silent_update();
+          //do we have well defined silent update candidates ?
+          if ( _.isUndefined( _params.silent_update_candidates ) || _.isEmpty( _params.silent_update_candidates ) )
+                silentUpdateCands = self._getSilentUpdateCandidates( _params.section_id );
+          else if ( ! _.isArray( _params.silent_update_candidates ) ) {
+                throw new Error('processSilentUpdates : the update candidates must be an array.');
           } else {
-                _process_silent_update();
+                silentUpdateCands = _params.silent_update_candidates;
           }
 
+          console.log('silentUpdateCands ============>>> ', _params, silentUpdateCands);
+
+          //silently update the settings of a the currently active section() to the values of the current skope
+          //silentlyUpdateSettings returns an array of promises.
+          //Let's wait fot all promises to be done before firing the next actions
+          var _promises = self.silentlyUpdateSettings( silentUpdateCands );
+          $.when.apply( null, _promises )
+                .then( function() {
+                      //re-render control single reset when needed (Media control are re-rendered, that's why we need this method fired on each skope switch)
+                      var _debouncedSetupControlReset = function() {
+                          self.setupControlsReset( {
+                              section_id : _params.section_id
+                          });
+                      };
+                      _debouncedSetupControlReset = _.debounce( _debouncedSetupControlReset, 1200 );
+                      _debouncedSetupControlReset();
+                });
+
+          return _promises;
     },
-
-
-    //@return void()
-    //Fired in activeSkopeReact()
-    _writeCurrentSkopeTitle : function( skope_id ) {
-          var self = this,
-              current_title = api.czr_skope( skope_id|| api.czr_activeSkope() ).long_title;
-
-          self.skopeWrapperEmbedded.then( function() {
-                if ( ! $('.czr-scope-switcher').find('.czr-current-skope-title').length )
-                  $('.czr-scope-switcher').prepend( $( '<h2/>', { class : 'czr-current-skope-title'} ) );
-                $('.czr-scope-switcher').find('.czr-current-skope-title').html(
-                    '<strong>Current Options Scope : </strong></br>' + '<span class="czr-skope-title">' + current_title + '</span>'
-                );
-          });
-
-    },
-
-
-
-
-
-
-
-
-    /*****************************************************************************
-    * GET SILENT UPDATE CANDIDATE FROM THE CURRENTLY EXPANDED SECTION
-    *****************************************************************************/
-    _getSilentUpdateCandidates : function( section_id ) {
-          var self = this,
-              silent_update_candidates = [];
-          section_id = section_id || api.czr_activeSectionId();
-
-          if ( _.isUndefined( section_id ) ) {
-            api.consoleLog( '_getSilentUpdateCandidates : No active section provided');
-            return;
-          }
-          if ( ! api.section.has( section_id ) ) {
-              throw new Error( '_getSilentUpdateCandidates : The section ' + section_id + ' is not registered in the API.');
-          }
-
-          //GET THE CURRENT EXPANDED SECTION SET IDS
-          var section_settings = api.CZR_Helpers.getSectionSettingIds( section_id );
-
-          //keep only the skope eligible setIds
-          section_settings = _.filter( section_settings, function(setId) {
-              return self.isSettingSkopeEligible( setId );
-          });
-
-          //Populates the silent update candidates array
-          _.each( section_settings, function( setId ) {
-                silent_update_candidates.push( setId );
-          });
-
-          return silent_update_candidates;
-    },
-
-
-
-
-
-
-
-
 
 
 
@@ -153,43 +53,44 @@ $.extend( CZRSkopeBaseMths, {
     //silently update a set of settings or a given setId
     //1) Build an array of promises for each settings
     //2) When all asynchronous promises are done(). Refresh()
-    silentlyUpdateSettings : function( _silent_update_candidates, refresh ) {
+    //@return an array of promises. Typically if a setting update has to re-render an image related control, the promise is the ajax request object
+    silentlyUpdateSettings : function( _silentUpdateCands, refresh ) {
           var self = this,
-              silent_update_promises = {};
+              SilentUpdatePromises = {};
 
           refresh = refresh || true;
 
-          if ( _.isUndefined( _silent_update_candidates ) || _.isEmpty( _silent_update_candidates ) ) {
-            _silent_update_candidates = self._getSilentUpdateCandidates();
+          if ( _.isUndefined( _silentUpdateCands ) || _.isEmpty( _silentUpdateCands ) ) {
+            _silentUpdateCands = self._getSilentUpdateCandidates();
           }
 
-          if ( _.isString( _silent_update_candidates ) ) {
-            _silent_update_candidates = [ _silent_update_candidates ];
+          if ( _.isString( _silentUpdateCands ) ) {
+            _silentUpdateCands = [ _silentUpdateCands ];
           }
 
-          api.consoleLog('the silent_update_candidates', _silent_update_candidates );
+          api.consoleLog('the silentUpdateCands', _silentUpdateCands );
 
           //Fire the silent updates promises
-          _.each( _silent_update_candidates, function( setId ) {
+          _.each( _silentUpdateCands, function( setId ) {
                 if ( api.control.has( setId ) &&  'czr_multi_module' == api.control(setId).params.type )
                   return;
-                silent_update_promises[setId] = self.getSettingUpdatePromise( setId );
+                SilentUpdatePromises[setId] = self.getSettingUpdatePromise( setId );
           });
 
 
           var _deferred = [],
-              _silently_update = function( silent_update_promises ) {
-                   _.each( silent_update_promises, function( obj, setId ) {
-                          //Silently set
-                          var wpSetId = api.CZR_Helpers.build_setId( setId ),
-                              _skopeDirtyness = api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId );
-                          api( wpSetId ).silent_set( obj.val, _skopeDirtyness );
-                    });
+              _silently_update = function( SilentUpdatePromises ) {
+                     _.each( SilentUpdatePromises, function( obj, setId ) {
+                            //Silently set
+                            var wpSetId = api.CZR_Helpers.build_setId( setId ),
+                                _skopeDirtyness = api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId );
+                            api( wpSetId ).silent_set( obj.val, _skopeDirtyness );
+                      });
               };
 
          //Populates the promises
-          _.each( silent_update_promises, function( obj, setId ) {
-              _deferred.push(obj.promise);
+          _.each( SilentUpdatePromises, function( obj, setId ) {
+                _deferred.push(obj.promise);
           });
           $.when.apply( null, _deferred )
           // .always( function() {
@@ -210,16 +111,16 @@ $.extend( CZRSkopeBaseMths, {
                       if ( _.isObject( prom ) )
                         api.consoleLog( 'promise state() after silent update', prom.state() );
                 });
-                $.when( _silently_update( silent_update_promises ) ).done( function() {
-                    console.log( '!!!! silent_update_promises', silent_update_promises );
-                    console.log(' ???? _deferred', _deferred );
+                $.when( _silently_update( SilentUpdatePromises ) ).done( function() {
+                    console.log( '!!!! SilentUpdatePromises', SilentUpdatePromises );
                     //always refresh by default
                     if ( refresh )
                         api.previewer.refresh();
                 });
           });
+
           //return the collection of update promises
-          //return silent_update_promises;
+          return _deferred;
     },
 
 
@@ -271,32 +172,32 @@ $.extend( CZRSkopeBaseMths, {
                 // }
 
                 switch ( control_type ) {
-                    //CROPPED IMAGE CONTROL
-                    case 'czr_cropped_image' :
-                          _promise = self._getCzrCroppedImagePromise( wpSetId, _control_data );
-                    break;
+                      //CROPPED IMAGE CONTROL
+                      case 'czr_cropped_image' :
+                            _promise = self._getCzrCroppedImagePromise( wpSetId, _control_data );
+                      break;
 
-                    case 'czr_module' :
-                          self._processCzrModuleSilentActions( wpSetId, control_type, skope_id , _control_data);
-                    break;
+                      case 'czr_module' :
+                            self._processCzrModuleSilentActions( wpSetId, control_type, skope_id , _control_data);
+                      break;
 
-                    // case 'czr_multi_module' :
-                    //       _constructor = api.controlConstructor[control_type];
-                    //       if ( api.control.has( wpSetId ) ) {
-                    //           //remove the container and its control
-                    //           api.control( wpSetId ).container.remove();
-                    //           api.control.remove( wpSetId );
-                    //       }
-                    //       //Silently set
-                    //       api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
-                    //       //re-instantiate the control with the updated _control_data
-                    //       api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
-                    // break;
+                      // case 'czr_multi_module' :
+                      //       _constructor = api.controlConstructor[control_type];
+                      //       if ( api.control.has( wpSetId ) ) {
+                      //           //remove the container and its control
+                      //           api.control( wpSetId ).container.remove();
+                      //           api.control.remove( wpSetId );
+                      //       }
+                      //       //Silently set
+                      //       api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+                      //       //re-instantiate the control with the updated _control_data
+                      //       api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
+                      // break;
 
-                    // default :
-                    //       //Silent set
-                    //       api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
-                    // break;
+                      // default :
+                      //       //Silent set
+                      //       api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+                      // break;
                 }//switch
           }//end if api.control.has( wpSetId )
 
@@ -368,8 +269,8 @@ $.extend( CZRSkopeBaseMths, {
 
           //Fire the sektion module if there's a synced sektion
           if ( ! _.isEmpty( _synced_short_id ) && ! _.isUndefined( _synced_short_id ) ) {
-              api.consoleLog('FIRE SEKTION MODULE?', _syncSektionModuleId, api.control( wpSetId ).czr_Module( _syncSektionModuleId ).isReady.state() );
-              api.control( wpSetId ).czr_Module( _syncSektionModuleId ).fireSektionModule();
+                api.consoleLog('FIRE SEKTION MODULE?', _syncSektionModuleId, api.control( wpSetId ).czr_Module( _syncSektionModuleId ).isReady.state() );
+                api.control( wpSetId ).czr_Module( _syncSektionModuleId ).fireSektionModule();
           }
     },
 

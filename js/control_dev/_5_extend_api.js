@@ -24,9 +24,9 @@
     api.czr_HeaderTool = $.extend(  true, {}, api.HeaderTool );
   }
   api.bind( 'ready' , function() {
-      if ( serverControlParams.isSkopOn ) {
-        api.czr_skopeBase = new api.CZR_skopeBase();
-      }
+        if ( serverControlParams.isSkopOn ) {
+              api.czr_skopeBase = new api.CZR_skopeBase();
+        }
   } );
 
   //INPUTS => used as constructor when creating the collection of inputs

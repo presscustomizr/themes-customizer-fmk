@@ -9,12 +9,35 @@ $.extend( CZRSkopeBaseMths, {
     * SETUP CONTROL RESET ON SECTION EXPANSION + SKOPE SWITCH
     *****************************************************************************/
     //fired on section expansion + skope switch
-    setupControlsReset : function( controls ) {
-          var self = this,
-              section_id = api.czr_activeSectionId();
+    //@param obj :
+    //{
+    //  controls : [] of controls or controlId string
+    //  section_id : string
+    //}
+    setupControlsReset : function( obj ) {
+          var self = this, section_id, controls, setupParams,
+              defaultSetupParams = {
+                  controls : [],
+                  section_id : api.czr_activeSectionId()
+              };
+          setupParams = $.extend( defaultSetupParams, obj );
 
-          api.consoleLog('SETUP CONTROLS RESET ?', controls );
-          controls = _.isUndefined( controls ) ? api.CZR_Helpers.getSectionControlIds( section_id  ) : controls;
+          api.consoleLog('SETUP CONTROLS RESET ?', obj.controls );
+
+          if ( ! _.isObject( setupParams ) || ! _.has( setupParams, 'controls' ) || ! _.has( setupParams, 'section_id' ) ) {
+                throw new Error( 'SetupControlsReset : the setupParams param must be an object with properties controls and section_id.');
+          }
+
+          section_id = setupParams.section_id;
+          controls = setupParams.controls;
+
+          if ( _.isEmpty( section_id ) || ! _.isString( section_id ) ) {
+                section_id = api.czr_activeSectionId();
+          }
+          if ( _.isEmpty( controls ) ) {
+                controls = api.CZR_Helpers.getSectionControlIds( section_id  );
+          }
+
           controls = _.isString( controls ) ? [controls] : controls;
 
           //filter only eligible setIds
@@ -237,7 +260,7 @@ $.extend( CZRSkopeBaseMths, {
                           setTimeout( function() {
                               ctrl.container.removeClass('czr-resetting-control');//hides the spinner
                               ctrl.czr_resetVisibility(false);
-                              self.setupControlsReset( setId );
+                              self.setupControlsReset( { controls : [ setId ] } );
                           }, 2000 );
                     });
 
