@@ -10,25 +10,47 @@
 
 
   api.CZR_visibilities = api.Class.extend( {
-          dominosDeps : [],
+          dominiDeps : [],
           initialize: function() {
                 var self = this;
 
                 this.defaultDominusParams = {
                       dominus : '',
-                      servos : [],
+                      servi : [],
                       visibility : null,
                       actions : null,
                       onSectionExpand : true
                 };
 
                 //store the default control dependencies
-                this.dominosDeps = _.extend( this.dominosDeps, this._getControlDeps() );
-                if ( ! _.isArray( self.dominosDeps ) ) {
+                this.dominiDeps = _.extend( this.dominiDeps, this._getControlDeps() );
+                if ( ! _.isArray( self.dominiDeps ) ) {
                     throw new Error('Visibilities : the dominos dependency array is not an array.');
                 }
                 api.czr_activeSectionId.bind( function( section_id ) {
-                    self.setServosVisibility( section_id );
+                    self.setServiVisibility( section_id );
+                });
+
+
+                //@param target_source is an object :
+                // {
+                //    target : section_id to awake
+                //    source : section_id from which the request for awaking has been done
+                // }
+                api.bind( 'awaken-section', function( target_source ) {
+                      //if skope on ( serverControlParams.isSkopOn ), then defer the visibility awakening after the silent updates
+                      if ( _.has( api ,'czr_skopeBase' ) ) {
+                            var _promises = api.czr_skopeBase.processSilentUpdates( {
+                                  silent_update_candidates : {},
+                                  section_id : target_source.target
+                            } );
+                            $.when.apply( null, _promises )
+                                  .then( function() {
+                                        self.setServiVisibility( target_source.target, target_source.source );
+                                  });
+                      } else {
+                            self.setServiVisibility( target_source.target, target_source.source );
+                      }
                 });
 
                 //FAVICON SPECIFICS
@@ -38,68 +60,100 @@
           },
 
 
-          //map each setting with its dependencies
-          //@param _id.
-          //This method can take the setId param.
-          //=> useful if a control has been re-rendered on skope switch to re-bind the visibility actions
-          setServosVisibility : function( section_id, _id ) {
+          //Process the visibility callbacks for the controls of a target targetSectionId
+          //@param targetSectionId : string
+          //@param sourceSectionId : string, the section from which the request has been done
+          setServiVisibility : function( targetSectionId, sourceSectionId ) {
                 var self = this, params;
+                if ( _.isUndefined( targetSectionId ) || ! api.section.has( targetSectionId ) ) {
+                  throw new Error( 'Visibilities : the targetSectionId is missing or not registered : ' + targetSectionId );
+                }
+                _.each( self.dominiDeps , function( params ) {
+                      params = self._prepareDominusParams( params );
+                      var wpDominusId = api.CZR_Helpers.build_setId( params.dominus );
+                      if ( api.control( wpDominusId ).section() != targetSectionId )
+                        return;
+                      self._processDominusCallbacks( params.dominus, params );
+                });
 
-                if ( ! _.isUndefined( _id ) && api.control.has( api.CZR_Helpers.build_setId( _id ) ) ) {
-                          params = self._prepareDominusParams( self.dominosDeps[_id] );
-                          self._processDominusCallbacks( _id, params );
-                    }
-                else
-                    {
-                          if ( _.isUndefined( section_id ) || ! api.section.has( section_id ) ) {
-                            throw new Error( 'Visibilities : the section_id is missing or not registered : ' + section_id );
-                          }
-                          _.each( self.dominosDeps , function( params ) {
+
+                //EXTERNAL DOMINI : AWAKE THE SECTIONS
+                //check if any control of the current section is the servus of a dominus located in another section
+                var _secCtrls = api.CZR_Helpers.getSectionControlIds( targetSectionId ),
+                    _getServusDomini = function( shortServudId ) {
+                          var _dominiIds = [];
+                          _.each( self.dominiDeps , function( params ) {
                                 params = self._prepareDominusParams( params );
-                                var wpDominusId = api.CZR_Helpers.build_setId( params.dominus );
-                                if ( api.control( wpDominusId ).section() != section_id )
-                                  return;
-                                self._processDominusCallbacks( params.dominus, params );
+                                if ( _.contains( params.servi , shortServudId ) &&  ! _.contains( _dominiIds , params.dominus ) ) {
+                                    _dominiIds.push( params.dominus );
+                                }
                           });
-                    }
+                          return ! _.isArray( _dominiIds ) ? [] : _dominiIds;
+                    },
+                    _servusDominiIds = [];
+
+                //Build the domini array
+                _.each( _secCtrls, function( servusCandidateId ) {
+                      if ( _.isEmpty( _getServusDomini( servusCandidateId ) ) )
+                        return;
+
+                      _servusDominiIds = _.union( _servusDominiIds, _getServusDomini( servusCandidateId ) );
+                });
+
+                //let's loop on the domini ids and check if we need to "awake" an external section
+                _.each( _servusDominiIds, function( shortDominusId ){
+                      var wpDominusId = api.CZR_Helpers.build_setId( shortDominusId );
+                      //This dominus must be located in another section
+                      if ( api.control( wpDominusId ).section() == targetSectionId )
+                          return;
+                      //The dominus section can't be the current source if set. => otherwise potential infinite loop scenario.
+                      if ( sourceSectionId == api.control( wpDominusId ).section() )
+                          return;
+
+                      //inform the api that a section has to be awaken
+                      //=> first silently update the section controls if skope on
+                      //=> then fire the visibilities
+                      api.trigger( 'awaken-section', {
+                          target : api.control( wpDominusId ).section(),
+                          source : targetSectionId
+                      } );
+                } );
+
+          },
 
 
+          //This method fires a callback when a control is registered in the api.
+          //If the control is registered, then it fires the callback when it is embedded
+          //If the control is embedeed, it fires the callback
+          //=> typical use case : a control can be both removed from the API and the DOM, and then added back on skope switch
+          //
+          //@param wpCtrlId : string name of the control as registered in the WP API
+          //@param callback : fn callback to fire
+          //@param args : [] or callback arguments
+          _deferCallbackForControl : function( wpCrtlId, callback, args ) {
+                if ( _.isEmpty(wpCrtlId) || ! _.isString(wpCrtlId) ) {
+                    throw new Error( '_deferCallbackForControl : the control id is missing.' );
+                }
+                if ( ! _.isFunction( callback ) ) {
+                    throw new Error( '_deferCallbackForControl : callback must be a funtion.' );
+                }
+                args = ( _.isUndefined(args) || ! _.isArray( args ) ) ? [] : args;
 
-
-                //check if the current expanded section contains controls for which the visibility can be set by a setting not included in this section.
-                //Let's call this setting external
-                //if so, then don't wait for this external setting to be bound on section expansion. Prepare its visibilities now.
-                // api.czr_activeSectionId.bind( function( current_section_id ){
-                //     var _ctrls = api.CZR_Helpers.getSectionControlIds( current_section_id ),
-                //         _earlyPrepare = [];
-
-                //     console.log('PRRRRRRRRRRRRRROUT', current_section_id, _ctrls );
-                //     //create the list of early preparation controls
-                //     _.each( _ctrls, function( intSetId ) {
-                //           var _shortSetId = api.CZR_Helpers.getOptionName( intSetId );
-
-                //           _.each( self.dominosDeps, function( data, extSetId ){
-                //                 var _wpExtSetId = api.CZR_Helpers.build_setId( extSetId );
-
-                //                 if ( ! api.control.has(_wpExtSetId) || api.control( _wpExtSetId ).section() == current_section_id )
-                //                   return;
-
-                //                 if ( ! _.contains( data.controls, _shortSetId ) || ! api.control.has( intSetId ) )
-                //                   return;
-                //                 if ( ! _.contains(_earlyPrepare, extSetId ) )
-                //                   _earlyPrepare.push( extSetId );
-                //           } );
-                //     });
-
-                //     //prepare
-                //     _.each( _earlyPrepare, function( _id ){
-                //           console.log('A MATCH HAS BEEN FOUND => extSetId is : ', _id);
-                //           o = self.dominosDeps[_id];
-                //           $.extend( o, { onSectionExpand : false } );
-                //           //self._processDominusCallbacks( _id, o );
-                //     });
-
-                // });
+                if ( api.control.has( wpCrtlId ) ) {
+                      if ( 'resolved' == api.control(wpCrtlId ).deferred.embedded.state() ) {
+                            callback.apply( null, args );
+                      } else {
+                            api.control( wpCrtlId ).deferred.embedded.then( function(){
+                                  callback.apply( null, args );
+                            });
+                      }
+                } else {
+                      api.control.when( wpCrtlId, function() {
+                            api.control( wpCrtlId ).deferred.embedded.then( function(){
+                                  callback.apply( null, args );
+                            });
+                      });
+                }
           },
 
 
@@ -114,8 +168,8 @@
                     wpDominusId = api.CZR_Helpers.build_setId( shortDominusId ),
                     dominusSetInst = api( wpDominusId );
 
-                //loop on the dominus servos and apply + bind the visibility cb
-                _.each( dominusParams.servos , function( servusShortSetId ) {
+                //loop on the dominus servi and apply + bind the visibility cb
+                _.each( dominusParams.servi , function( servusShortSetId ) {
                         if ( ! api.control.has( api.CZR_Helpers.build_setId( servusShortSetId ) ) ) {
                             return;
                         }
@@ -140,21 +194,11 @@
                             _deferCallbacks = function( dominusSetVal ) {
                                   dominusSetVal = dominusSetVal  || dominusSetInst();
                                   var wpServusSetId = api.CZR_Helpers.build_setId( servusShortSetId );
-                                  if ( api.control.has( wpServusSetId ) ) {
-                                        if ( 'resolved' == api.control( wpServusSetId ).deferred.embedded.state() ) {
-                                              _fireDominusCallbacks( dominusSetVal, servusShortSetId, dominusParams );
-                                        } else {
-                                              api.control( wpServusSetId ).deferred.embedded.then( function(){
-                                                    _fireDominusCallbacks( dominusSetVal, servusShortSetId, dominusParams );
-                                              });
-                                        }
-                                  } else {
-                                        api.control.when( wpServusSetId, function() {
-                                            api.control( wpServusSetId ).deferred.embedded.then( function(){
-                                                  _fireDominusCallbacks( dominusSetVal, servusShortSetId, dominusParams );
-                                            });
-                                        });
-                                  }
+                                  self._deferCallbackForControl(
+                                        wpServusSetId,
+                                        _fireDominusCallbacks,
+                                        [ dominusSetVal, servusShortSetId, dominusParams ]
+                                  );
                             };
 
 
@@ -163,17 +207,17 @@
 
                         //BIND THE DOMINUS SETTING INSTANCE
                         //store the visibility bound state
-                        if ( ! _.has( dominusSetInst, 'czr_visibilityServos' ) )
-                            dominusSetInst.czr_visibilityServos = new api.Value( [] );
+                        if ( ! _.has( dominusSetInst, 'czr_visibilityServi' ) )
+                            dominusSetInst.czr_visibilityServi = new api.Value( [] );
 
                         //Maybe bind to react on setting _dirty change
-                        var _currentDependantBound = dominusSetInst.czr_visibilityServos();
+                        var _currentDependantBound = dominusSetInst.czr_visibilityServi();
                         //Make sure a dependant visibility action is bound only once for a setting id to another setting control id
                         if ( ! _.contains( _currentDependantBound, servusShortSetId ) ) {
                               dominusSetInst.bind( function( dominusSetVal ) {
                                   _deferCallbacks( dominusSetVal );
                               });
-                              dominusSetInst.czr_visibilityServos( _.union( _currentDependantBound, [ servusShortSetId ] ) );
+                              dominusSetInst.czr_visibilityServi( _.union( _currentDependantBound, [ servusShortSetId ] ) );
                         }
                 } );//_.each
           },
@@ -221,10 +265,10 @@
           },
 
 
-          //@return a visibility ready object of param describing the dependencies between a dominus and its servos.
+          //@return a visibility ready object of param describing the dependencies between a dominus and its servi.
           //this.defaultDominusParams = {
           //       dominus : '',
-          //       servos : [],
+          //       servi : [],
           //       visibility : fn() {},
           //       actions : fn() {},
           //       onSectionExpand : true
@@ -247,8 +291,8 @@
                 if ( ! api.control.has( wpDominusId ) ) {
                       throw new Error( 'Visibilities : a dominus control id is not registered : ' + wpDominusId );
                 }
-                if ( ! _.has( params_candidate, 'servos' ) || _.isUndefined( params_candidate.servos ) || ! _.isArray( params_candidate.servos ) || _.isEmpty( params_candidate.servos ) ) {
-                      throw new Error( 'Visibilities : servos must be set as an array not empty.');
+                if ( ! _.has( params_candidate, 'servi' ) || _.isUndefined( params_candidate.servi ) || ! _.isArray( params_candidate.servi ) || _.isEmpty( params_candidate.servi ) ) {
+                      throw new Error( 'Visibilities : servi must be set as an array not empty.');
                 }
 
                 _.each( self.defaultDominusParams , function( _value, _key ) {
