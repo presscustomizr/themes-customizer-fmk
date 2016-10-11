@@ -231,20 +231,12 @@ $.extend( CZRModuleMths, {
   //is this module multi item ?
   //@return bool
   isMultiItem : function() {
-        var module = this;
-        if ( ! _.has( api.czrModuleMap, module.module_type ) )
-          return;
-
-        return api.czrModuleMap[module.module_type].crud || api.czrModuleMap[module.module_type].multi_item || false;
+        return api.CZR_Helpers.isMultiItemModule( null, this );
   },
 
   //is this module crud ?
   //@return bool
   isCrud : function() {
-        var module = this;
-        if ( ! _.has( api.czrModuleMap, module.module_type ) )
-          return;
-
-        return api.czrModuleMap[module.module_type].crud || false;
+        return api.CZR_Helpers.isCrudModule( null, this );
   }
 });//$.extend//CZRBaseControlMths

@@ -8,9 +8,6 @@
   //@event map = [ {event1}, {event2}, ... ]
   //@new_event = {  trigger   : event name , actions   : [ 'cb1', 'cb2', ... ] }
   api.CZR_Helpers = $.extend( api.CZR_Helpers, {
-        /*****************************************************************************
-        * ADD SOME HELPERS AND PROPERTIES TO THE ALWAYS ACCESSIBLE API OBJECT.
-        *****************************************************************************/
         getDocSearchLink : function( text ) {
                 text = ! _.isString(text) ? '' : text;
                 var _searchtext = text.replace( / /g, '+'),
@@ -112,6 +109,40 @@
                     s_ = isTooLong ? string.substr(0,n-1) : string;
                     s_ = (useWordBoundary && isTooLong) ? s_.substr(0,s_.lastIndexOf(' ')) : s_;
                 return  isTooLong ? s_ + '...' : s_;
+        },
+
+
+        //////////////////////////////////////////////////
+        /// STRINGS HELPERS
+        //////////////////////////////////////////////////
+        //is a module multi item ?
+        //@return bool
+        isMultiItemModule : function( module_type, moduleInst ) {
+              if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
+                return;
+              if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
+                module_type = moduleInst.module_type;
+              else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
+                return;
+              if ( ! _.has( api.czrModuleMap, module_type ) )
+                return;
+
+              return api.czrModuleMap[module_type].crud || api.czrModuleMap[module_type].multi_item || false;
+        },
+
+        //is a module crud ?
+        //@return bool
+        isCrudModule : function( module_type, moduleInst ) {
+              if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
+                return;
+              if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
+                module_type = moduleInst.module_type;
+              else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
+                return;
+              if ( ! _.has( api.czrModuleMap, module_type ) )
+                return;
+
+              return api.czrModuleMap[module_type].crud || false;
         }
 
   });//$.extend
