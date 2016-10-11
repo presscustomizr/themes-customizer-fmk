@@ -70,6 +70,7 @@ $.extend( CZRBaseModuleControlMths, {
                 });
           } else {
                 var single_module = {};
+                console.log('control.getSavedModules()', control.getSavedModules() );
                 //inits the collection with the saved module => there's only one module to instantiate in this case.
                 //populates the collection with the saved module
                 _.each( control.getSavedModules() , function( _mod, _key ) {
@@ -177,7 +178,8 @@ $.extend( CZRBaseModuleControlMths, {
   //@return the collection [] of saved module(s) to instantiate
   getSavedModules : function() {
           var control = this,
-              savedModules = [];
+              savedModules = [],
+              _module_type = control.params.module_type;
 
           //In the case of multi module control synchronized with a sektion
           // => the saved modules is a collection saved in the setting
@@ -190,7 +192,12 @@ $.extend( CZRBaseModuleControlMths, {
               //in a normal case, it should be an array of saved properties
               //But it might not be if coming from a previous option system.
               //=> let's normalize it.
-             var _saved_items = _.isArray( api(control.id)() ) ? api(control.id)() : [];
+              //First let's perform a quick check on the current saved db val.
+              //If the module is not multi-item, the saved value should be an object or empty if not set yet
+              if ( api.CZR_Helpers.isMultiItemModule( _module_type ) && ! _.isEmpty( api(control.id)() ) && ! _.isObject( api(control.id)() ) ) {
+                  api.consoleLog('Module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
+              }
+              var _saved_items = _.isArray( api(control.id)() ) ? api(control.id)() : [ api(control.id)() ];
 
               //for now this is a collection with one module
               savedModules.push(
