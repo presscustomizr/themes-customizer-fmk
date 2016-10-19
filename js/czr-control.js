@@ -645,11 +645,33 @@ $.extend( CZRSkopeBaseMths, {
           });
           if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkope() } ) ) )
             api.czr_activeSkope( self.getActiveSkope( _new_collection ) );
+          var _activeSkopeNum = _.size( _new_collection ),
+              _setLayoutClass = function( _skp_instance ) {
+                    var _newClasses = _skp_instance.container.attr('class').split(' ');
+                    _.each( _skp_instance.container.attr('class').split(' '), function( _c ) {
+                          if ( 'width-' == _c.substring( 0, 6) ) {
+                              _newClasses = _.without( _newClasses, _c );
+                          }
+                    });
+                    $.when( _skp_instance.container.attr('class', _newClasses.join(' ') ) )
+                          .done( function() {
+                                _skp_instance.container.addClass( 'width-' + ( Math.round( 100 / _activeSkopeNum ) ) );
+                          });
+              };
           api.czr_skope.each( function( _skp_instance ){
-              if ( _.isUndefined( _.findWhere( _new_collection, { id : _skp_instance().id } ) ) )
-                _skp_instance.visible(false);
-              else
-                _skp_instance.visible(true);
+                if ( _.isUndefined( _.findWhere( _new_collection, { id : _skp_instance().id } ) ) ) {
+                      _skp_instance.visible(false);
+                }
+                else {
+                      _skp_instance.visible(true);
+                      if ( 'pending' == _skp_instance.embedded.state() ) {
+                            _skp_instance.embedded.then( function() {
+                                  _setLayoutClass( _skp_instance );
+                            });
+                      } else {
+                            _setLayoutClass( _skp_instance );
+                      }
+                }
           } );
           if ( _.isEmpty(from) && ! _.isEmpty(to) )
             self.initialSkopeCollectionPopulated.resolve();
@@ -2267,6 +2289,30 @@ $.extend( CZRSkopeMths, {
                     s_ = isTooLong ? string.substr(0,n-1) : string;
                     s_ = (useWordBoundary && isTooLong) ? s_.substr(0,s_.lastIndexOf(' ')) : s_;
                 return  isTooLong ? s_ + '...' : s_;
+        },
+        isMultiItemModule : function( module_type, moduleInst ) {
+              if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
+                return;
+              if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
+                module_type = moduleInst.module_type;
+              else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
+                return;
+              if ( ! _.has( api.czrModuleMap, module_type ) )
+                return;
+
+              return api.czrModuleMap[module_type].crud || api.czrModuleMap[module_type].multi_item || false;
+        },
+        isCrudModule : function( module_type, moduleInst ) {
+              if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
+                return;
+              if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
+                module_type = moduleInst.module_type;
+              else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
+                return;
+              if ( ! _.has( api.czrModuleMap, module_type ) )
+                return;
+
+              return api.czrModuleMap[module_type].crud || false;
         }
 
   });//$.extend
@@ -3484,18 +3530,10 @@ $.extend( CZRModuleMths, {
         return _.has( module, 'sektion_id' );
   },
   isMultiItem : function() {
-        var module = this;
-        if ( ! _.has( api.czrModuleMap, module.module_type ) )
-          return;
-
-        return api.czrModuleMap[module.module_type].crud || api.czrModuleMap[module.module_type].multi_item || false;
+        return api.CZR_Helpers.isMultiItemModule( null, this );
   },
   isCrud : function() {
-        var module = this;
-        if ( ! _.has( api.czrModuleMap, module.module_type ) )
-          return;
-
-        return api.czrModuleMap[module.module_type].crud || false;
+        return api.CZR_Helpers.isCrudModule( null, this );
   }
 });//$.extend//CZRBaseControlMths//MULTI CONTROL CLASS
 
@@ -6112,6 +6150,7 @@ $.extend( CZRBaseModuleControlMths, {
                 });
           } else {
                 var single_module = {};
+                console.log('control.getSavedModules()', control.getSavedModules() );
                 _.each( control.getSavedModules() , function( _mod, _key ) {
                       single_module = _mod;
                       control.instantiateModule( _mod, {} );
@@ -6174,11 +6213,15 @@ $.extend( CZRBaseModuleControlMths, {
   },
   getSavedModules : function() {
           var control = this,
-              savedModules = [];
+              savedModules = [],
+              _module_type = control.params.module_type;
           if ( control.isMultiModuleControl() ) {
               savedModules = $.extend( true, [], api(control.id)() );//deep clone
           } else {
-             var _saved_items = _.isArray( api(control.id)() ) ? api(control.id)() : [];
+              if ( api.CZR_Helpers.isMultiItemModule( _module_type ) && ! _.isEmpty( api(control.id)() ) && ! _.isObject( api(control.id)() ) ) {
+                  api.consoleLog('Module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
+              }
+              var _saved_items = _.isArray( api(control.id)() ) ? api(control.id)() : [ api(control.id)() ];
               savedModules.push(
                     {
                       id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
