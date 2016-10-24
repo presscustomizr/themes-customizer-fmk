@@ -33,6 +33,8 @@
         */
         var _old_previewer_query = api.previewer.query;
 
+
+
         //@todo : turn those arguments into an object ?
         //the dyn_type can also be set to 'wp_default_type' when saving a skope excluded setting
         //@query_params = {
@@ -45,10 +47,18 @@
         api.previewer.query =  function( query_params ) {
             query_params = query_params || {};
 
+
+
             //IS SKOP ON
             //falls back to WP core treatment if skope is not on or if the requested skope is not registered
             if ( ! _.has( api, 'czr_skope') ) {
                 api.consoleLog('QUERY : SKOPE IS NOT ON. FALLING BACK ON CORE QUERY');
+                return _old_previewer_query.apply( this );
+            }
+
+            //HAS THE FIRST SKOPE COLLECTION BEEN POPULATED ?
+            if ( 'pending' == api.czr_skopeBase.initialSkopeCollectionPopulated.state() ) {
+                api.consoleLog('QUERY : INITIAL SKOPE COLLECTION NOT POPULATED YET. FALLING BACK ON CORE QUERY');
                 return _old_previewer_query.apply( this );
             }
 
@@ -70,6 +80,7 @@
             if ( _.isUndefined( query_params.skope_id ) || ! _.isString( query_params.skope_id ) ) {
                 query_params.skope_id = api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
             }
+            console.log('IN QUERY!', query_params );
 
             var dirtyCustomized = {},
                 default_params = {
