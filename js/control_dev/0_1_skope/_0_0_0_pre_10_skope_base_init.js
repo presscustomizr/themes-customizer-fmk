@@ -180,6 +180,7 @@ $.extend( CZRSkopeBaseMths, {
 
           //REACT TO ACTIVE SKOPE UPDATE
           api.czr_activeSkope.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
+
           //sidebar widget specifid
           if ( ! self.isExcludedSidebarsWidgets() ) {
               api.czr_activeSkope.bind( function( active_skope ) {
