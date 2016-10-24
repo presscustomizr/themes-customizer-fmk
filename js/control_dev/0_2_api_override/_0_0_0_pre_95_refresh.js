@@ -16,64 +16,65 @@
           if ( ! _.has( api, 'czr_activeSkope') || _.isUndefined( api.czr_activeSkope() ) ) {
             console.log( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
           }
-          var self = this;
+          var previewer = this;
 
           // Display loading indicator
-          this.send( 'loading-initiated' );
+          previewer.send( 'loading-initiated' );
 
-          this.abort();
+          previewer.abort();
+
           var query_params = {
               skope_id : api.czr_activeSkope(),
               action : 'refresh',
               the_dirties : the_dirties
           };
 
-          this.loading = new api.PreviewFrame({
-              url:        this.url(),
-              previewUrl: this.previewUrl(),
-              query:      this.query( query_params ) || {},
-              container:  this.container,
-              signature:  this.signature
+          previewer.loading = new api.PreviewFrame({
+              url:        previewer.url(),
+              previewUrl: previewer.previewUrl(),
+              query:      previewer.query( query_params ) || {},
+              container:  previewer.container,
+              signature:  previewer.signature
           });
 
-          this.loading.done( function() {
+          previewer.loading.done( function() {
             // 'this' is the loading frame
-            this.bind( 'synced', function() {
-              if ( self.preview )
-                self.preview.destroy();
-              self.preview = this;
-              delete self.loading;
+            previewer.bind( 'synced', function() {
+              if ( previewer.preview )
+                previewer.preview.destroy();
+              previewer.preview = this;
+              delete previewer.loading;
 
-              self.targetWindow( this.targetWindow() );
-              self.channel( this.channel() );
+              previewer.targetWindow( previewer.targetWindow() );
+              previewer.channel( previewer.channel() );
 
-              self.deferred.active.resolve();
-              self.send( 'active' );
+              previewer.deferred.active.resolve();
+              previewer.send( 'active' );
             });
 
-            this.send( 'sync', {
-              scroll:   self.scroll,
+            previewer.send( 'sync', {
+              scroll:   previewer.scroll,
               settings: api.get()
             });
           });
 
-          this.loading.fail( function( reason, location ) {
-            self.send( 'loading-failed' );
+          previewer.loading.fail( function( reason, location ) {
+            previewer.send( 'loading-failed' );
             if ( 'redirect' === reason && location ) {
-              self.previewUrl( location );
+              previewer.previewUrl( location );
             }
 
             if ( 'logged out' === reason ) {
-              if ( self.preview ) {
-                self.preview.destroy();
-                delete self.preview;
+              if ( previewer.preview ) {
+                previewer.preview.destroy();
+                delete previewer.preview;
               }
 
-              self.login().done( self.refresh );
+              previewer.login().done( previewer.refresh );
             }
 
             if ( 'cheatin' === reason ) {
-              self.cheatin();
+              previewer.cheatin();
             }
           });
         };
