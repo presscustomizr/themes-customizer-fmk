@@ -253,7 +253,7 @@ $.extend( CZRSkopeBaseMths, {
           //=> this way we can defer earlier actions.
           //For example when autofocus is requested, the section might be expanded before the initial skope collection is sent from the preview.
           if ( _.isEmpty(from) && ! _.isEmpty(to) )
-            self.initialSkopeCollectionPopulated.resolve();
+            api.czr_initialSkopeCollectionPopulated.resolve();
 
           //MAKE SURE TO SYNCHRONIZE api.settings.settings with the current global skope updated db values
           self.maybeSynchronizeGlobalSkope();

@@ -160,10 +160,14 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_activeSkope = new api.Value();
           //declare the collection
           api.czr_skope = new api.Values();
+          //Deferred used to make sure the overriden api.previewer.query method has been taken into account
+          api.czr_isPreviewerSkopeAware = $.Deferred();
+          //store the first skope collection state
+          api.czr_initialSkopeCollectionPopulated = $.Deferred();
+
           //store the embed state
           self.skopeWrapperEmbedded = $.Deferred();
-          //store the first skope collection state
-          self.initialSkopeCollectionPopulated = $.Deferred();
+
           //store the resetting state
           api.czr_isResettingSkope = new api.Value( false );
           //store the db saved options name for the global skope
@@ -194,7 +198,7 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_activeSectionId.bind( function( active_section ) {
                 //defer the callback execution when the first skope collection has been populated
                 //=> otherwise it might be to early. For example in autofocus request cases.
-                self.initialSkopeCollectionPopulated.then( function() {
+                api.czr_initialSkopeCollectionPopulated.then( function() {
                       self.processSilentUpdates( { section_id : active_section } );
                       // var _update_candidates = self._getSilentUpdateCandidates( active_section );
                       // self.silentlyUpdateSettings( _update_candidates );
@@ -307,7 +311,7 @@ $.extend( CZRSkopeBaseMths, {
 
           //DECLARE THE LIST OF CONTROL TYPES FOR WHICH THE VIEW IS REFRESHED ON CHANGE
           self.refreshedControls = [ 'czr_cropped_image'];// [ 'czr_cropped_image', 'czr_multi_module', 'czr_module' ];
-    },
+    },//initialize
 
 
     //fired in initialize
