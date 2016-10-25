@@ -39,7 +39,7 @@
                 // }
                 api.bind( 'awaken-section', function( target_source ) {
                       //if skope on ( serverControlParams.isSkopOn ), then defer the visibility awakening after the silent updates
-                      if ( _.has( api ,'czr_skopeBase' ) ) {
+                      if ( serverControlParams.isSkopOn && _.has( api ,'czr_skopeBase' ) ) {
                             var _promises = api.czr_skopeBase.processSilentUpdates( {
                                   silent_update_candidates : {},
                                   section_id : target_source.target
