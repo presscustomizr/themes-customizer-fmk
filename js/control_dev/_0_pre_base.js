@@ -15,6 +15,13 @@ var api = api || wp.customize, $ = $ || jQuery;
             console.log.apply( console, arguments );
       };
 
+      api.czr_isSkopOn = function() {
+          return serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
+      };
+
+      api.czr_isChangedSetOn = function() {
+          return serverControlParams.isChangedSetOn;
+      };
 
       /*****************************************************************************
       * CAPTURE PREVIEW INFORMATIONS ON REFRESH + REACT TO THEM
