@@ -14,6 +14,7 @@
   $.extend( CZRModuleMths, api.CZR_Helpers );
   $.extend( CZRSkopeMths, api.CZR_Helpers );
 
+
   //SKOPE
   api.CZR_skopeBase             = api.Class.extend( CZRSkopeBaseMths );
   api.CZR_skope                 = api.Value.extend( CZRSkopeMths ); //=> used as constructor when creating the collection of skopes
@@ -28,7 +29,13 @@
               api.czr_skopeBase = new api.CZR_skopeBase();
               api.trigger('czr-skope-ready');
         }
+
+        //in dev mode, let's set a lower autosave interval ( default is 60000 ms )
+        if ( serverControlParams.isDevMode && serverControlParams.isChangedSetOn ) {
+          api.settings.timeouts.changesetAutoSave = 2000;
+        }
   } );
+
 
   //INPUTS => used as constructor when creating the collection of inputs
   api.CZRInput                 = api.Value.extend( CZRInputMths );
