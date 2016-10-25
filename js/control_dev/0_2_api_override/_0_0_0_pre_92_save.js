@@ -10,7 +10,7 @@
         *****************************************************************************/
         //OVERRIDES WP
         var _old_previewer_save = api.previewer.save;
-        api.previewer.save = function() {
+        api.previewer.__save = function() {
             var self = this,
                 processing = api.state( 'processing' ),
                 submitWhenDoneProcessing,
