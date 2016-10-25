@@ -26,6 +26,7 @@
   api.bind( 'ready' , function() {
         if ( serverControlParams.isSkopOn ) {
               api.czr_skopeBase = new api.CZR_skopeBase();
+              api.trigger('czr-skope-ready');
         }
   } );
 
