@@ -75,7 +75,8 @@
                     queryVars.skope_id = api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
               }
 
-              var dirtyCustomized = {},
+              var globalCustomized = {},
+                  skopeCustomized = {},
                   _defaults = {
                         skope_id : null,
                         action : null,
@@ -110,28 +111,56 @@
 
               console.log('IN QUERY!', queryVars, queryVars.action );
 
+              //@return an object of customized values for each of the current skopes :
+              //{
+              //  'skope_id_1' = { ... },
+              //  'skope_id_2' = { ... }
+              //}
+              var _getSkopesCustomized = function() {
+                    //if the initial skope collection has been populated, let's populate the skopeCustomized
+                    if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
+                      return {};
+                    var _skpCust = {};
+                    //Loop current collection
+                    //Exclude the global skope
+                    _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                          if ( 'global' == _skp.skope )
+                            return;
+                          _skpCust[_skp.id] = api.czr_skopeBase.getSkopeDirties( _skp.id );
+                    } );
+                    return _skpCust;
+              };
 
-              ///BUILD THE DIRTIES
-              ///SET THE DYN TYPE FOR A SAVE ACTION
-              //on first load OR if the current skope is the customized one, build the dirtyCustomized the regular way : typically a refresh after setting change
+              ///1) BUILD THE DIRTIES
+              ///2) SET THE DYN TYPE FOR A SAVE ACTION
+              //on first load OR if the current skope is the customized one, build the globalCustomized the regular way : typically a refresh after setting change
               //otherwise, get the dirties from the requested skope instance : typically a save action on several skopes
               switch( queryVars.action ) {
                     case null :
+                    //There are case ( _forceSidebarDirtyRefresh ) when the dirties can be passed as param
+                    //In this case, we use them and assign them to the relevant customized object
+                    //Since 4.7 and the changeset introduction, the boolean param 'excludeCustomizedSaved' can be passed to the query
                     case 'refresh' :
                           if ( _.isNull( queryVars.the_dirties ) || _.isEmpty( queryVars.the_dirties ) ) {
-                                //build the dirties the regular way
-                                api.each( function ( value, key ) {
-                                      if ( value._dirty ) {
-                                        dirtyCustomized[ key ] = value();
-                                      }
-                                } );
+                                globalCustomized = api.dirtyValues( { unsaved:  queryVars.excludeCustomizedSaved || false } );
+                                skopeCustomized = _getSkopesCustomized();
                           } else {
-                                dirtyCustomized = queryVars.the_dirties;
+                                if ( 'global' == api.czr_skopeBase.getActiveSkopeName() )
+                                  globalCustomized = queryVars.the_dirties;
+                                else
+                                  skopeCustomized[ api.czr_activeSkope() ] = queryVars.the_dirties;
                           }
+
                           //INHERITANCE : FILTER THE DIRTIES
                           //when refreshing the preview, we need to apply the skope inheritance to the customized values
-                          dirtyCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( dirtyCustomized, queryVars.skope_id );
+                          //apply the inheritance
+                          var _inheritanceReadyCustomized = {};
+                          _.each( skopeCustomized, function( _custValues, _skopId ) {
+                                _inheritanceReadyCustomized[_skopId] =  api.czr_skopeBase.applyDirtyCustomizedInheritance( _custValues, _skopId );
+                          } );
+                          skopeCustomized = _inheritanceReadyCustomized;
 
+                          globalCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( globalCustomized, api.czr_skopeBase.getGlobalSkopeId() );
                     break;
 
                     case 'save' :
@@ -147,7 +176,7 @@
                                 throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A VALID DYN TYPE.' + queryVars.skope_id );
                           }
                           //Set the dirties  || api.czr_skopeBase.getSkopeDirties(skope_id) ?
-                          dirtyCustomized = queryVars.the_dirties; //was : api.czr_skope( skope_id ).dirtyValues();
+                          globalCustomized = queryVars.the_dirties; //was : api.czr_skope( skope_id ).dirtyValues();
                     break;
 
                     case 'reset' :
@@ -166,7 +195,7 @@
               //{
               //  wp_customize: 'on',
               //  theme:      api.settings.theme.stylesheet,
-              //  customized: JSON.stringify( dirtyCustomized ),
+              //  customized: JSON.stringify( globalCustomized ),
               //  nonce:      this.nonce.preview
               //}
 
@@ -183,12 +212,16 @@
               _to_return = {
                     wp_customize: 'on',
                     //theme is added after, because the property name has been changed to customize_theme in 4.7
-                    customized:   JSON.stringify( dirtyCustomized ),
-                    nonce:        this.nonce.preview,
-                    skope :       api.czr_skope( queryVars.skope_id )().skope,
-                    dyn_type:     queryVars.dyn_type,
-                    opt_name:     ! _.isNull( queryVars.opt_name ) ? queryVars.opt_name : api.czr_skope( queryVars.skope_id )().opt_name,
-                    obj_id:       api.czr_skope( queryVars.skope_id )().obj_id
+                    //always make sure that the customized values is not empty, otherwise nothing will be posted since 4.7.
+                    //@see api.PreviewFrame::run()
+                    customized:      '{}' == JSON.stringify( globalCustomized ) ? '{\"__not_customized__\"}' : JSON.stringify( globalCustomized ),
+                    skopeCustomized:  JSON.stringify( skopeCustomized ),
+                    nonce:            this.nonce.preview,
+                    skope:            api.czr_skope( queryVars.skope_id )().skope,
+                    skope_id:         queryVars.skope_id,
+                    dyn_type:         queryVars.dyn_type,
+                    opt_name:         ! _.isNull( queryVars.opt_name ) ? queryVars.opt_name : api.czr_skope( queryVars.skope_id )().opt_name,
+                    obj_id:           api.czr_skope( queryVars.skope_id )().obj_id
               };
 
               //since 4.7
@@ -204,8 +237,8 @@
                           theme: api.settings.theme.stylesheet
                     });
               }
-              // api.consoleLog('DIRTY VALUES TO SUBMIT ? ', dirtyCustomized, api.czr_skopeBase.getSkopeDirties(skope_id) );
-              // api.consoleLog('api.czr_skope( skope_id )().skope', api.czr_skope( skope_id )().skope );
+              // api.consoleLog('DIRTY VALUES TO SUBMIT ? ', globalCustomized, api.czr_skopeBase.getSkopeDirties(skope_id) );
+              //api.consoleLog('QUERY VARS ?', _to_return );
               return _to_return;
         };
   });//api.bind('ready')
