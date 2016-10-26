@@ -69,9 +69,10 @@ $.extend( CZRSkopeBaseMths, {
     },
 
 
-    //@return the current active skope
+    //@return the current active skope id
     //If a skope different than global has saved db values, let's set it as active
-    getActiveSkope : function( _current_skope_collection ) {
+    getActiveSkopeId : function( _current_skope_collection ) {
+          _current_skope_collection = _current_skope_collection || api.czr_currentSkopesCollection();
           var _active_candidates = {},
               _def = _.findWhere( _current_skope_collection, {is_default : true } ).id;
           _def = ! _.isUndefined(_def) ? _def : _.findWhere( _current_skope_collection, { skope : 'global' } ).id;
@@ -89,6 +90,14 @@ $.extend( CZRSkopeBaseMths, {
             return active_candidates.special_group;
           return _def;
     },
+
+    //@return a skope name string : local, group, special_group, global
+    getActiveSkopeName : function() {
+          if ( ! api.czr_skope.has( api.czr_activeSkope() ) )
+            return 'global';
+          return api.czr_skope( api.czr_activeSkope() )().skope;
+    },
+
 
     //@return boolean
     //! important : the setId param must be the full name. For example : hu_theme_option[color-1]
@@ -278,9 +287,7 @@ $.extend( CZRSkopeBaseMths, {
 
     //@return {} of dirties
     getSkopeDirties : function( skope_id ) {
-          if ( ! api.czr_skope.has( skope_id) )
-            return {};
-          return api.czr_skope( skope_id ).dirtyValues();
+          return ! api.czr_skope.has( skope_id ) ? {} : api.czr_skope( skope_id ).dirtyValues();
     },
 
     getSkopeExcludedDirties : function() {
