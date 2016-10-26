@@ -20,7 +20,7 @@ var api = api || wp.customize, $ = $ || jQuery;
       };
 
       api.czr_isChangedSetOn = function() {
-          return serverControlParams.isChangedSetOn;
+          return serverControlParams.isChangedSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
       };
 
       /*****************************************************************************
