@@ -121,7 +121,7 @@
                     if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
                       return {};
                     var _skpCust = {};
-                    //Loop current collection
+                    //Loop current skopes collection
                     //Exclude the global skope
                     _.each( api.czr_currentSkopesCollection(), function( _skp ) {
                           if ( 'global' == _skp.skope )
