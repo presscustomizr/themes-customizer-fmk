@@ -4,7 +4,7 @@
         return;
 
       //WP Changeset is requested for an update with an ajax query in the following situation :
-      //1) before unloading the winddow
+      //1) before unloading the window
       //2) when focus removed from window.
       //3) on schedule : every 60 000 ms. ( api.settings.timeouts.changesetAutoSave )
       //
@@ -30,70 +30,139 @@
       //=> this will allow an ajax update of the changeset post metas for the modified skopes.
 
 
-      api._requestSkopeChangetsetUpdate = function() {
-
-      };
-
-
-
-      var _getMediasFilenamePromises = function() {
-            var deferred = $.Deferred(),
-                promises = [],
-                medias = [];
-
-            _.each( [ 64,65,66,67,68,69,70,71,72,73,74,75 ], function( _id ) {
-                  promises.push( wp.media.attachment( _id ).fetch() );
-            } );
-            _.each( promises, function( prom ) {
-                  prom.done( function( med ) {
-                      medias.push( med.filename );
-                  } );
-            });
-
-            $.when.apply( null, promises ).done( function() {
-                setTimeout( function() {
-                    deferred.resolve( medias );
-                }, 3000 );
-
-            });
-            return deferred.promise();
-      };
-
-      var _printMedias = function() {
-            _getMediasFilenamePromises().done( function( medias ) {
-                  console.log( 'MEDIA LIST' , medias );
-            });
-      };
-      _printMedias();
-
-
-
-
-
-
-
-
-
-
-
-
-
       //Backup the original method
       var _original_requestChangesetUpdate = api.requestChangesetUpdate;
 
       /**
        * Request updates to the changeset.
+       * Always calls the original method when the first promise (the skope changeset save) has been executed.
+       * Returns the $ promise with the set of data from the original method
        *
        * @param {object} [changes] Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
        *                           If not provided, then the changes will still be obtained from unsaved dirty settings.
        * @returns {jQuery.Promise}
        */
       api.requestChangesetUpdate = function( changes ) {
-            var _promise;
-            $.when( api._requestSkopeChangetsetUpdate() ).done( function( promise ) {
-                  _promise = _original_requestChangesetUpdate(changes);
+            console.log('OVERRIDEN REQUEST CHANGESET UPDATE', api._latestRevision, api._lastSavedRevision );
+            var dfd = $.Deferred(),
+                promises = [];
+
+            //POPULATE THE SKOPE CHANGESET UPDATES PROMISES
+            //Loop current skopes collection
+            //Exclude the global skope
+            _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                  if ( 'global' == _skp.skope )
+                    return;
+                  promises.push( api._requestSkopeChangetsetUpdate( changes, _skp.id ) );
+            } );
+
+            //RESOLVE WITH THE WP GLOBAL CHANGESET PROMISE WHEN ALL SKOPE PROMISES ARE DONE
+            $.when.apply( null, promises ).then( function() {
+                  console.log('OUR DEFERRED THEN');
+                  _original_requestChangesetUpdate(changes).then( function( data ) {
+                        console.log('WP DEFERRED THEN', data );
+                        dfd.resolve( data );
+                  });
             });
-            return _promise;
+            return dfd.promise();
       };
+
+
+
+      //@update the changeset meta for a given skope
+      api._requestSkopeChangetsetUpdate = function( changes, skope_id ) {
+            var deferred, request, submittedChanges = {}, data;
+            deferred = new $.Deferred();
+            //if no skope has been provided, then let's use the active one
+            skope_id = skope_id || api.czr_activeSkope();
+
+            if ( changes ) {
+              _.extend( submittedChanges, changes );
+            }
+
+            //Ensure all revised settings (changes pending save) are also included, but not if marked for deletion in changes.
+            _.each( api.czr_skopeBase.getSkopeDirties( skope_id ) , function( dirtyValue, settingId ) {
+                  if ( ! changes || null !== changes[ settingId ] ) {
+                        submittedChanges[ settingId ] = _.extend(
+                              {},
+                              submittedChanges[ settingId ] || {},
+                              { value: dirtyValue }
+                        );
+                  }
+            } );
+
+            // Short-circuit when there are no pending changes.
+            if ( _.isEmpty( submittedChanges ) ) {
+              deferred.resolve( {} );
+              return deferred.promise();
+            }
+
+            if ( api._latestRevision <= api._lastSavedRevision ) {
+              deferred.resolve( {} );
+              return deferred.promise();
+            }
+
+            // Make sure that publishing a changeset waits for all changeset update requests to complete.
+            api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
+            deferred.always( function() {
+              api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+            } );
+
+            // Allow plugins to attach additional params to the settings.
+            api.trigger( 'skope-changeset-save', submittedChanges );
+
+            // Ensure that if any plugins add data to save requests by extending query() that they get included here.
+            data = api.previewer.query( { excludeCustomizedSaved: true } );
+            delete data.customized; // Being sent in customize_changeset_data instead.
+            _.extend( data, {
+                  nonce: api.settings.nonce.save,
+                  customize_changeset_data: JSON.stringify( submittedChanges )
+            } );
+
+            console.log('DATA in SKOPE CHANGESET UPDATE', data);
+
+            ////////////////////// FIRE THE REQUEST //////////////////////
+            request = wp.ajax.post( 'customize_skope_changeset_save', data );
+            //////////////////////////////////////////////////////////////
+
+            request.done( function requestChangesetUpdateDone( data ) {
+              console.log('SKOPE CHANGETSET DONE', data );
+              var savedChangesetValues = {};
+
+              // Ensure that all settings updated subsequently will be included in the next changeset update request.
+              api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
+
+              api.state( 'changesetStatus' ).set( data.changeset_status );
+              deferred.resolve( data );
+              api.trigger( 'changeset-saved', data );
+
+              if ( data.setting_validities ) {
+                _.each( data.setting_validities, function( validity, settingId ) {
+                  if ( true === validity && _.isObject( submittedChanges[ settingId ] ) && ! _.isUndefined( submittedChanges[ settingId ].value ) ) {
+                    savedChangesetValues[ settingId ] = submittedChanges[ settingId ].value;
+                  }
+                } );
+              }
+
+              api.previewer.send( 'changeset-saved', _.extend( {}, data, { saved_changeset_values: savedChangesetValues } ) );
+            } );
+            request.fail( function requestChangesetUpdateFail( data ) {
+              console.log('SKOPE CHANGETSET FAIL', data );
+              deferred.reject( data );
+              api.trigger( 'changeset-error', data );
+            } );
+            request.always( function( data ) {
+              if ( data.setting_validities ) {
+                api._handleSettingValidities( {
+                  settingValidities: data.setting_validities
+                } );
+              }
+            } );
+
+            return deferred.promise();
+      };
+
+
+
 
 })( wp.customize , jQuery, _ );
