@@ -28,6 +28,14 @@
       //Therefore, as soon as we detect that api._latestRevision > api._lastSavedRevision, then we can authorize a changeset update.
       //The changeset update request will pass the usual skope query parameters, including the current skope dirtyness.
       //=> this will allow an ajax update of the changeset post metas for the modified skopes.
+      //
+      //
+      //IMPORTANT :
+      //If the 0 === api._lastSavedRevision is empty and that we are not customizing the global skope,
+      //it means that the changeset post ID will not be set yet
+      //=> But the skope meta changeset need a post ID ! when doing the ajax request server side
+      //so the original method has to be fired with a dummy change,
+      //this will pass the write the _.isEmpty( submittedChanges ) test in api.requestChangesetUpdate() and create a post ID
 
 
       //Backup the original method
@@ -45,25 +53,45 @@
       api.requestChangesetUpdate = function( changes ) {
             console.log('OVERRIDEN REQUEST CHANGESET UPDATE', api._latestRevision, api._lastSavedRevision );
             var dfd = $.Deferred(),
-                promises = [];
-
-            //POPULATE THE SKOPE CHANGESET UPDATES PROMISES
-            //Loop current skopes collection
-            //Exclude the global skope
-            _.each( api.czr_currentSkopesCollection(), function( _skp ) {
-                  if ( 'global' == _skp.skope )
-                    return;
-                  promises.push( api._requestSkopeChangetsetUpdate( changes, _skp.id ) );
-            } );
-
-            //RESOLVE WITH THE WP GLOBAL CHANGESET PROMISE WHEN ALL SKOPE PROMISES ARE DONE
-            $.when.apply( null, promises ).then( function() {
-                  console.log('OUR DEFERRED THEN');
-                  _original_requestChangesetUpdate(changes).then( function( data ) {
+                promises = [],
+                data,
+                _original = function( changes ) {
+                    _original_requestChangesetUpdate(changes).then( function( data ) {
                         console.log('WP DEFERRED THEN', data );
                         dfd.resolve( data );
+                    });
+                };
+
+            //If the 0 === api._lastSavedRevision OR is empty api.state( 'changesetStatus' )(),
+            //and that we are not customizing the global skope,
+            //it means that the changeset post ID will not be set yet, so let's fire the original
+            if ( 0 === api._lastSavedRevision && _.isEmpty( api.state( 'changesetStatus' )() ) ) {
+                  //Why this ?
+                  //=> because the original WP function checks if some changes have been submitted
+                  $.when( _original( {
+                              blogname : { dummy_change : 'dummy_change' }
+                        } ) ).then( function( data ) {
+                              dfd.resolve( data );
                   });
-            });
+            } else {
+                  //POPULATE THE SKOPE CHANGESET UPDATES PROMISES
+                  //Loop current skopes collection
+                  //Exclude the global skope
+                  _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                        if ( 'global' == _skp.skope )
+                          return;
+                        promises.push( api._requestSkopeChangetsetUpdate( changes, _skp.id ) );
+                  } );
+                  //RESOLVE WITH THE WP GLOBAL CHANGESET PROMISE WHEN ALL SKOPE PROMISES ARE DONE
+                  $.when( _original( changes ) ).then( function( data ) {
+                          console.log('WP DEFERRED THEN', data );
+                          $.when.apply( null, promises ).then( function() {
+                                console.log('OUR DEFERRED THEN => resolve WP');
+                                dfd.resolve( data );
+                          });
+                  });
+            }
+
             return dfd.promise();
       };
 
