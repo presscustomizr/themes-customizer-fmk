@@ -23,7 +23,7 @@
                         settingRevision = api._latestSettingRevisions[ _setId ];
                         console.log('IN NEW DIRTY VALUES : options, settingRevision and api._lastSavedRevision', options, _setId, settingRevision , api._lastSavedRevision);
                         // Skip including settings that have already been included in the changeset, if only requesting unsaved.
-                        if ( ( options && options.unsaved ) && ( _.isUndefined( settingRevision ) || settingRevision <= api._lastSavedRevision ) ) {
+                        if ( api.state( 'changesetStatus' ).get() && ( options && options.unsaved ) && ( _.isUndefined( settingRevision ) || settingRevision <= api._lastSavedRevision ) ) {
                           return;
                         }
                   }
