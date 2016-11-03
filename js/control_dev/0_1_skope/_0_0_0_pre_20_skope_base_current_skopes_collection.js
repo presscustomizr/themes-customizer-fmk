@@ -111,7 +111,7 @@ $.extend( CZRSkopeBaseMths, {
                       break;
                       case 'dyn_type' :
                           if ( ! _.isString( _candidate_val ) || ! _.contains( serverControlParams.skopeDynTypes, _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : missing or invalid dyn type for skope ' + _candidate_val.skope );
+                              throw new Error('prepareSkopeForAPI : missing or invalid dyn type for skope ' + skope_candidate );
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;

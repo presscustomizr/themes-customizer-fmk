@@ -54,13 +54,13 @@
             console.log('OVERRIDEN REQUEST CHANGESET UPDATE', api._latestRevision, api._lastSavedRevision );
             var dfd = $.Deferred(),
                 promises = [],
-                data,
-                _original = function( changes ) {
-                    _original_requestChangesetUpdate(changes).then( function( data ) {
-                        console.log('WP DEFERRED THEN', data );
-                        dfd.resolve( data );
-                    });
-                };
+                data;
+                // _original = function( changes ) {
+                //     _original_requestChangesetUpdate(changes).then( function( data ) {
+                //         console.log('WP DEFERRED THEN', data );
+                //         dfd.resolve( data );
+                //     });
+                // };
 
             //If the 0 === api._lastSavedRevision OR is empty api.state( 'changesetStatus' )(),
             //and that we are not customizing the global skope,
@@ -68,7 +68,7 @@
             if ( 0 === api._lastSavedRevision && _.isEmpty( api.state( 'changesetStatus' )() ) ) {
                   //Why this ?
                   //=> because the original WP function checks if some changes have been submitted
-                  $.when( _original( {
+                  $.when( _original_requestChangesetUpdate( {
                               blogname : { dummy_change : 'dummy_change' }
                         } ) ).then( function( data ) {
                               dfd.resolve( data );
@@ -80,10 +80,11 @@
                   _.each( api.czr_currentSkopesCollection(), function( _skp ) {
                         if ( 'global' == _skp.skope )
                           return;
+                        console.log( );
                         promises.push( api._requestSkopeChangetsetUpdate( changes, _skp.id ) );
                   } );
                   //RESOLVE WITH THE WP GLOBAL CHANGESET PROMISE WHEN ALL SKOPE PROMISES ARE DONE
-                  $.when( _original( changes ) ).then( function( data ) {
+                  $.when( _original_requestChangesetUpdate( changes ) ).then( function( data ) {
                           console.log('WP DEFERRED THEN', data );
                           $.when.apply( null, promises ).then( function() {
                                 console.log('OUR DEFERRED THEN => resolve WP');
