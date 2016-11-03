@@ -240,7 +240,8 @@
               // api.consoleLog('DIRTY VALUES TO SUBMIT ? ', globalCustomized, api.czr_skopeBase.getSkopeDirties(skope_id) );
               //api.consoleLog('QUERY VARS ?', _to_return );
               return _to_return;
-        };
+
+        };//api.previewer.query
   });//api.bind('ready')
 
 })( wp.customize , jQuery, _ );

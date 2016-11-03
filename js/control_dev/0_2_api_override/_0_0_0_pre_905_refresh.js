@@ -63,6 +63,16 @@
                       signature:  'WP_CUSTOMIZER_SIGNATURE'//will be deprecated in 4.7
                 });
 
+
+                previewer.settingsModifiedWhileLoading = {};
+                onSettingChange = function( setting ) {
+                      previewer.settingsModifiedWhileLoading[ setting.id ] = true;
+                };
+                api.bind( 'change', onSettingChange );
+                previewer.loading.always( function() {
+                      api.unbind( 'change', onSettingChange );
+                } );
+
                 previewer.loading.done( function( readyData ) {
                       var loadingFrame = this, previousPreview, onceSynced;
 
