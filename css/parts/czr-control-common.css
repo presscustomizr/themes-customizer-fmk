@@ -529,3 +529,9 @@ li#customize-control-tc_theme_options-tc_custom_css textarea {
   margin-top: 14px;
   border-bottom: 1px solid #ddd;
 }
+
+
+/* HEADER MENU NOTICE */
+.control-panel-content .hu-menu-notice {
+    margin-left: 3%;
+}
