@@ -131,34 +131,37 @@
                     return _skpCust;
               };
 
-              ///1) BUILD THE DIRTIES
-              ///2) SET THE DYN TYPE FOR A SAVE ACTION
+
+
+              ///BUILD THE DIRTIES
+              //There are cases ( _forceSidebarDirtyRefresh ) when the dirties can be passed as param
+              //In this cases, we use them and assign them to the relevant customized object
+              //Since 4.7 and the changeset introduction, the boolean param 'excludeCustomizedSaved' can be passed to the query
+              if ( _.isNull( queryVars.the_dirties ) || _.isEmpty( queryVars.the_dirties ) ) {
+                    globalCustomized = api.dirtyValues( { unsaved:  queryVars.excludeCustomizedSaved || false } );
+                    skopeCustomized = _getSkopesCustomized();
+              } else {
+                    if ( 'global' == api.czr_skopeBase.getActiveSkopeName() )
+                      globalCustomized = queryVars.the_dirties;
+                    else
+                      skopeCustomized[ api.czr_activeSkope() ] = queryVars.the_dirties;
+              }
+
+
+              ///HANDLE THE VARIOUS CASES : REFRESH, SAVE, RESET
               //on first load OR if the current skope is the customized one, build the globalCustomized the regular way : typically a refresh after setting change
               //otherwise, get the dirties from the requested skope instance : typically a save action on several skopes
               switch( queryVars.action ) {
                     case null :
-                    //There are case ( _forceSidebarDirtyRefresh ) when the dirties can be passed as param
-                    //In this case, we use them and assign them to the relevant customized object
-                    //Since 4.7 and the changeset introduction, the boolean param 'excludeCustomizedSaved' can be passed to the query
                     case 'refresh' :
-                          if ( _.isNull( queryVars.the_dirties ) || _.isEmpty( queryVars.the_dirties ) ) {
-                                globalCustomized = api.dirtyValues( { unsaved:  queryVars.excludeCustomizedSaved || false } );
-                                skopeCustomized = _getSkopesCustomized();
-                          } else {
-                                if ( 'global' == api.czr_skopeBase.getActiveSkopeName() )
-                                  globalCustomized = queryVars.the_dirties;
-                                else
-                                  skopeCustomized[ api.czr_activeSkope() ] = queryVars.the_dirties;
-                          }
-
                           //INHERITANCE : FILTER THE DIRTIES
                           //when refreshing the preview, we need to apply the skope inheritance to the customized values
                           //apply the inheritance
-                          var _inheritanceReadyCustomized = {};
-                          _.each( skopeCustomized, function( _custValues, _skopId ) {
-                                _inheritanceReadyCustomized[_skopId] =  api.czr_skopeBase.applyDirtyCustomizedInheritance( _custValues, _skopId );
-                          } );
-                          skopeCustomized = _inheritanceReadyCustomized;
+                          // var _inheritanceReadyCustomized = {};
+                          // _.each( skopeCustomized, function( _custValues, _skopId ) {
+                          //       _inheritanceReadyCustomized[_skopId] =  api.czr_skopeBase.applyDirtyCustomizedInheritance( _custValues, _skopId );
+                          // } );
+                          // skopeCustomized = _inheritanceReadyCustomized;
 
                           globalCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( globalCustomized, api.czr_skopeBase.getGlobalSkopeId() );
                     break;

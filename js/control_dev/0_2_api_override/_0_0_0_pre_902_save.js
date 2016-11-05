@@ -24,6 +24,12 @@
         //
         var _old_previewer_save = api.previewer.save;
         api.previewer.save = function( args ) {
+              var parent = new api.Messenger({
+                        url: api.settings.url.parent,
+                        channel: 'loader',
+                  }),//this has to be reinstantiated because not accessible from core
+                  saveBtn = $( '#save' );
+
               var previewer = this,
                   deferred = $.Deferred(),
                   changesetStatus = 'publish',
@@ -78,10 +84,10 @@
                     if ( _.isNull( params.the_dirties ) ) {
                           throw new Error( 'OVERRIDEN SAVE::submit : MISSING the_dirties');
                     }
-                    if ( _.isEmpty( params.the_dirties ) ) {
-                          throw new Error( 'OVERRIDEN SAVE::submit : empty the_dirties');
-                    }
-                    var request, query;
+                    // if ( _.isEmpty( params.the_dirties ) ) {
+                    //       throw new Error( 'OVERRIDEN SAVE::submit : empty the_dirties');
+                    // }
+                    var request, query, submit_dfd = $.Deferred();
 
                     //skope_id = skope_id || api.czr_activeSkope();
                     /*
@@ -197,14 +203,16 @@
                                 } );
                           }
                           api.trigger( 'error', response );
+                          submit_dfd.reject( response );
                     } );
 
                     request.done( function( response ) {
                           api.consoleLog('ALORS DONE ?', params.skope_id, response );
+                          submit_dfd.resolve( response );
                     } );
 
                     //return the promise
-                    return request;
+                    return submit_dfd.promise();
               };//submit()
 
 
@@ -216,35 +224,38 @@
                   }),
                   _saved_dirties = {};//will be used as param to update the skope model db val after all ajx requests are done
 
+
               //loop on the registered skopes and submit each save ajax request
-              var submitDirtySkopes = function() {
-                    //ARE THERE SKOPE EXCLUDED DIRTIES ?
-                    var _skopeExcludedDirties = api.czr_skopeBase.getSkopeExcludedDirties();
+              //@return an array of deferred promises()
+              var getSubmitPromises = function() {
                     var promises = [];
                     var globalSkopeId = api.czr_skopeBase.getGlobalSkopeId();
 
+                    //ARE THERE SKOPE EXCLUDED DIRTIES ?
+                    //var _skopeExcludedDirties = api.czr_skopeBase.getSkopeExcludedDirties();
+
                     //////////////////////////////////SUBMIT EXCLUDED SETTINGS ////////////////////////////
                     ///@to do : do we need to check if we are not already in the global skope ?
-                    if ( ! _.isEmpty( _skopeExcludedDirties ) ) {
-                          console.log('>>>>>>>>>>>>>>>>>>> submit request for _skopeExcludedDirties', _skopeExcludedDirties );
-                          //each promise is a submit ajax query
-                          promises.push( submit( {
-                                skope_id : globalSkopeId,
-                                the_dirties : _skopeExcludedDirties,
-                                dyn_type : 'wp_default_type'
-                              })
-                          );
-                    }
+                    // if ( ! _.isEmpty( _skopeExcludedDirties ) ) {
+                    //       console.log('>>>>>>>>>>>>>>>>>>> submit request for _skopeExcludedDirties', _skopeExcludedDirties );
+                    //       //each promise is a submit ajax query
+                    //       promises.push( submit( {
+                    //             skope_id : globalSkopeId,
+                    //             the_dirties : _skopeExcludedDirties,
+                    //             dyn_type : 'wp_default_type'
+                    //           })
+                    //       );
+                    // }
 
 
-                    //////////////////////////////////SUBMIT ELIGIBLE SETTINGS ////////////////////////////
+                    //////////////////////////////////SUBMIT THE ELIGIBLE SETTINGS OF EACH SKOPE ////////////////////////////
                     _.each( dirtySkopesToSubmit, function( _skop ) {
                           var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
                           api.consoleLog('submit request for skope : ', _skop, the_dirties );
                           //each promise is a submit ajax query
                           promises.push( submit( {
                                 skope_id : _skop.id,
-                                the_dirties : the_dirties,
+                                the_dirties : the_dirties,//{}
                                 dyn_type : _skop.dyn_type
                             })
                           );
@@ -303,19 +314,18 @@
                     });
 
                     return promises;
-              };//submitDirtySkopes
+              };//getSubmitPromises
 
 
-
-              //
+              //defer some actions (included WP core ones ) when all promises are done
               var reactWhenPromisesDone = function( promises ) {
                     if ( _.isEmpty( promises ) ) {
-                        console.log('THE SAVE PROMISES ARE EMPTY. PROBABLY BECAUSE THERE WAS ONLY EXCLUDED SKOPE SETTINGS TO SAVE', dirtySkopesToSubmit, api.czr_skopeBase.getSkopeExcludedDirties() );
-                        return deferred.promise();
+                        console.log('THE SAVE SUBMIT PROMISES ARE EMPTY. PROBABLY BECAUSE THERE WAS ONLY EXCLUDED SKOPE SETTINGS TO SAVE', dirtySkopesToSubmit, api.czr_skopeBase.getSkopeExcludedDirties() );
+                        //return deferred.promise();
                     }
 
                     $.when.apply( null, promises).done( function( response ) {
-                          console.log('>>>>>>>>>>>>>>>>', promises);
+                          console.log('>>>>>>>>>>>>>>>>', promises, response, '<<<<<<<<<<<<<<<<<<<<<<<');
                           //store the saved dirties (will be used as param to update the db val property of each saved skope)
                           //and reset them
                           _.each( dirtySkopesToSubmit, function( _skp ) {
@@ -326,6 +336,7 @@
 
                           //since 4.7 : if changeset is on, let's add stuff to the query object
                           if ( api.czr_isChangedSetOn() ) {
+                                var latestRevision = api._latestRevision;
                                 api.state( 'changesetStatus' ).set( response.changeset_status );
                                 if ( 'publish' === response.changeset_status ) {
                                       // Mark all published as clean if they haven't been modified during the request.
@@ -354,7 +365,7 @@
 
                           /////////////////WP default treatments
                           api.state( 'saving' ).set( false );
-                          $( '#save' ).prop( 'disabled', false );
+                          saveBtn.prop( 'disabled', false );
 
                           //api.unbind( 'change', captureSettingModifiedDuringSave );
                           // Clear setting dirty states, if setting wasn't modified while saving.
@@ -387,16 +398,18 @@
               };//reactWhenPromisesDone
 
 
+
+              //FIRE SUBMISSIONS
               if ( 0 === processing() ) {
-                  $.when( submitDirtySkopes() ).done( function( promises) {
-                        reactWhenPromisesDone(promises);
-                  });//submit();
+                    $.when( getSubmitPromises() ).done( function( promises) {
+                          reactWhenPromisesDone(promises);
+                    });//submit();
               } else {
                     submitWhenDoneProcessing = function () {
                           if ( 0 === processing() ) {
                                 api.state.unbind( 'change', submitWhenDoneProcessing );
-                                $.when( submitDirtySkopes() ).done( function( promises) {
-                                    reactWhenPromisesDone(promises);
+                                $.when( getSubmitPromises() ).done( function( promises) {
+                                      reactWhenPromisesDone(promises);
                                 });//submit();
                           }
                       };

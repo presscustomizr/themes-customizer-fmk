@@ -155,6 +155,14 @@ $.extend( CZRSkopeBaseMths, {
                           }
                           api_ready_skope[_key] = _candidate_val;
                       break;
+                      case  'changeset' :
+                          if ( _.isArray( _candidate_val ) || _.isEmpty( _candidate_val ) )
+                            _candidate_val = {};
+                          if ( _.isUndefined( _candidate_val) || ! _.isObject( _candidate_val ) ) {
+                              throw new Error('prepareSkopeForAPI : skope property "changeset" must be an object');
+                          }
+                          api_ready_skope[_key] = _candidate_val;
+                      break;
                       case  'has_db_val' :
                           if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
                               throw new Error('prepareSkopeForAPI : skope property "has_db_val" must be a boolean');

@@ -212,19 +212,19 @@ $.extend( CZRSkopeMths, {
 
     //cb of skope.winner.callbacks
     winnerReact : function( is_winner ) {
-        var skope = this;
-        this.container.toggleClass('is_winner', is_winner );
+          var skope = this;
+          this.container.toggleClass('is_winner', is_winner );
 
-        if ( is_winner ) {
-              //make sure there's only one winner in the current skope collection
-              _.each( api.czr_currentSkopesCollection(), function( _skope ) {
-                    if ( _skope.id == skope().id )
-                      return;
-                    var _current_model = $.extend( true, {}, _skope );
-                    $.extend( _current_model, { is_winner : false } );
-                    api.czr_skope( _skope.id )( _current_model );
-              });
-        }
+          if ( is_winner ) {
+                //make sure there's only one winner in the current skope collection
+                _.each( api.czr_currentSkopesCollection(), function( _skope ) {
+                      if ( _skope.id == skope().id )
+                        return;
+                      var _current_model = $.extend( true, {}, _skope );
+                      $.extend( _current_model, { is_winner : false } );
+                      api.czr_skope( _skope.id )( _current_model );
+                });
+          }
     },
 
 
@@ -249,20 +249,33 @@ $.extend( CZRSkopeMths, {
 
     //@return the boolean dirtyness state of a given setId for a given skope
     getSkopeSettingDirtyness : function( setId ) {
-        var skope = this;
-        return _.has( skope.dirtyValues(), api.CZR_Helpers.build_setId( setId ) );
+          var skope = this;
+          return skope.getSkopeSettingAPIDirtyness( setId ) || skope.getSkopeSettingChangesetDirtyness( setId );
     },
 
+    //Has this skope already be customized in the API ?
+    getSkopeSettingAPIDirtyness : function( setId ) {
+          var skope = this;
+          return _.has( skope.dirtyValues(), api.CZR_Helpers.build_setId( setId ) );
+    },
+
+    //Has this skope already be customized in the API ?
+    getSkopeSettingChangesetDirtyness : function( setId ) {
+          var skope = this;
+          if ( ! api.czr_isChangedSetOn() || ! _.has( skope(), 'changeset' ) )
+            return skope.getSkopeSettingAPIDirtyness( setId );
+          return _.has( skope().changeset, api.CZR_Helpers.build_setId( setId ) );
+    },
 
     //@return boolean
     hasSkopeSettingDBValues : function( setId ) {
-        var skope = this,
-            shortSetId = api.CZR_Helpers.getOptionName(setId);
+          var skope = this,
+              shortSetId = api.CZR_Helpers.getOptionName(setId);
 
-        if ( 'global' == skope().skope ) {
-          return _.contains( api.czr_globalDBoptions(), shortSetId );
-        } else {
-          return ! _.isUndefined( api.czr_skope( api.czr_activeSkope() )().db[shortSetId] );
-        }
+          if ( 'global' == skope().skope ) {
+            return _.contains( api.czr_globalDBoptions(), shortSetId );
+          } else {
+            return ! _.isUndefined( api.czr_skope( api.czr_activeSkope() )().db[shortSetId] );
+          }
     }
   } );//$.extend(

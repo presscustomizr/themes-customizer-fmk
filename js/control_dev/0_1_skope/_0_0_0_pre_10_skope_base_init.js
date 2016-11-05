@@ -364,8 +364,6 @@ $.extend( CZRSkopeBaseMths, {
                     //set the control dirtyness
                     if ( _.has( api.control(setId), 'czr_isDirty' ) ) {
                         api.control(setId).czr_isDirty( api(setId)._dirty );
-                        // api.consoleLog('DIRTYNESS :', api(setId)._dirty, api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId ) );
-                        // api.consoleLog( 'CURRENT SKOPE DIRTY VALUES : ', api.czr_activeSkope(), api.czr_skope( api.czr_activeSkope() ).dirtyValues() );
                     }
               };//bindListener()
 

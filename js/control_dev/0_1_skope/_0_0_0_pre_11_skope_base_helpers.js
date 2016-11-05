@@ -198,9 +198,15 @@ $.extend( CZRSkopeBaseMths, {
           else
             initial_val = null;
 
-          //if the setting is dirty for this skope, don't go further
-          if ( api.czr_skope( skope_id ).getSkopeSettingDirtyness( wpSetId ) )
+          //is the setting API dirty ?
+          if ( api.czr_skope( skope_id ).getSkopeSettingAPIDirtyness( wpSetId ) )
             return api.czr_skope( skope_id ).dirtyValues()[ wpSetId ];
+
+          //is the setting CHANGESET dirty ?
+          if ( api.czr_isChangedSetOn() && _.has( api.czr_skope( skope_id )(), 'changeset' ) ) {
+                if ( api.czr_skope( skope_id ).getSkopeSettingChangesetDirtyness( wpSetId ) )
+                  return api.czr_skope( skope_id )().changeset[ wpSetId ];
+          }
 
           //do we have a db val stored ?
           var _skope_db_val = self._getDBSettingVal( setId, skope_model );
@@ -269,8 +275,13 @@ $.extend( CZRSkopeBaseMths, {
     _getDBSettingVal : function( setId, skope_model  ) {
           var shortSetId = api.CZR_Helpers.getOptionName(setId),
               wpSetId = api.CZR_Helpers.build_setId(setId);
-
-          return _.has( skope_model.db, shortSetId ) ? skope_model.db[shortSetId] : '_no_db_val';
+          if ( _.has( skope_model.db, wpSetId ) ) {
+                return skope_model.db[wpSetId];
+          } else if ( _.has( skope_model.db, shortSetId ) ) {
+                return skope_model.db[shortSetId];
+          } else {
+                return '_no_db_val';
+          }
     },
 
     //@return boolean
