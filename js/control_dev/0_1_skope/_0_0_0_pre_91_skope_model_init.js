@@ -234,18 +234,19 @@ $.extend( CZRSkopeMths, {
     * HELPERS
     *****************************************************************************/
     //get the current skope dirty values
-    getDirties : function() {
-          var skope = this,
-              _dirtyCustomized = {};
-          //populate with the current skope settings dirtyValues
-          api.each( function ( value, setId ) {
-              if ( value._dirty ) {
-                //var _k = key.replace(serverControlParams.themeOptions, '').replace(/[|]/gi, '' );
-                _dirtyCustomized[ setId ] = value();
-              }
-          } );
-          return _dirtyCustomized;
-    },
+    //DEPRECATED
+    // getDirties : function() {
+    //       var skope = this,
+    //           _dirtyCustomized = {};
+    //       //populate with the current skope settings dirtyValues
+    //       api.each( function ( value, setId ) {
+    //           if ( value._dirty ) {
+    //             //var _k = key.replace(serverControlParams.themeOptions, '').replace(/[|]/gi, '' );
+    //             _dirtyCustomized[ setId ] = value();
+    //           }
+    //       } );
+    //       return _dirtyCustomized;
+    // },
 
     //@return the boolean dirtyness state of a given setId for a given skope
     getSkopeSettingDirtyness : function( setId ) {

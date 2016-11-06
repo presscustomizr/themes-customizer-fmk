@@ -127,12 +127,13 @@
     api.bind( 'preview-ready', function(){
         //Talk with the panel when he informs us that the current preview frame is 'active'.
         //We could also use the 'sync' event, just before 'active'.
-        api.preview.bind('active', function() {
+        api.preview.bind( 'active', function() {
             api.czr_preview = new api.CZR_preview();
         });
     });
   }
 
+  //FIRED ON API 'preview-ready'
   api.CZR_preview = api.Class.extend( {
         setting_cbs : {},
         subsetting_cbs : {},//nested sub settings
@@ -147,6 +148,9 @@
               //api.trigger('czr-preview-ready');
 
               this.addCbs();
+              //Remove this class if it's still there
+              //=> added since changeset update, WP 4.7
+              $( 'body' ).removeClass( 'wp-customizer-unloading' );
         },
         getSettingCbs : function() { return {}; },
         getSubSettingCbs : function() { return {}; },
@@ -162,6 +166,7 @@
             //console.log('_wpCustomizeSettings', _wpCustomizeSettings, _wpCustomizeSettings.activeSections );
             //console.log('_wpWidgetCustomizerPreviewSettings', _wpWidgetCustomizerPreviewSettings);
             //console.log(' _customizePartialRefreshExports',  _customizePartialRefreshExports);
+            console.log(' IN PREVIEW : ', _wpCustomizeSettings );
             api.preview.send(
               'czr-skopes-ready',
               {

@@ -33,16 +33,14 @@
 
         //@todo : turn those arguments into an object ?
         //the dyn_type can also be set to 'wp_default_type' when saving a skope excluded setting
-        //@query_params = {
+        //@queryVars = {
         //    skope_id : string,
         //    action : string,
         //    the_dirties : {},
         //    dyn_type : string,
         //    opt_name : string
         // }
-        api.previewer.query =  function( query_params ) {
-              var queryVars = query_params || {};
-
+        api.previewer.query =  function( queryVars ) {
               //IS SKOP ON
               //falls back to WP core treatment if skope is not on or if the requested skope is not registered
               if ( ! _.has( api, 'czr_skope') ) {
@@ -167,9 +165,9 @@
                     break;
 
                     case 'save' :
-                          if ( _.isEmpty( queryVars.the_dirties ) ) {
-                                throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A NOT EMPTY DIRTY OBJECT TO SUBMIT' );
-                          }
+                          // if ( _.isEmpty( queryVars.the_dirties ) ) {
+                          //       throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A NOT EMPTY DIRTY OBJECT TO SUBMIT' );
+                          // }
                           //Set the Dyn type
                           //the dyn type might be passed as a param to the query in some cases
                           //typically to save skope excluded settings. In this case the dyn_type is set to false, to fall back on the default wp one : theme_mod or option
@@ -192,6 +190,12 @@
                     break;
               }
 
+
+              //BUILD THE CURRENT SKOPES ARRAY
+              var _current_skopes = {};
+              _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                  _current_skopes[_skp.skope] = { id : _skp.id, opt_name : _skp.opt_name };
+              });
 
 
               //Before 4.7 and the changeset introduction, the queryVars were :
@@ -224,7 +228,8 @@
                     skope_id:         queryVars.skope_id,
                     dyn_type:         queryVars.dyn_type,
                     opt_name:         ! _.isNull( queryVars.opt_name ) ? queryVars.opt_name : api.czr_skope( queryVars.skope_id )().opt_name,
-                    obj_id:           api.czr_skope( queryVars.skope_id )().obj_id
+                    obj_id:           api.czr_skope( queryVars.skope_id )().obj_id,
+                    current_skopes:   JSON.stringify( _current_skopes ) || {}
               };
 
               //since 4.7
