@@ -315,10 +315,11 @@ $.extend( CZRSkopeBaseMths, {
                 //since 4.7 and the changeset, only the settings not yet saved in the db changeset are returned
                 if ( api.czr_isChangedSetOn() ) {
                       settingRevision = api._latestSettingRevisions[ _setId ];
-                      //console.log('IN NEW DIRTY VALUES : options, settingRevision and api._lastSavedRevision', options, _setId, settingRevision , api._lastSavedRevision);
+                      console.log('IN NEW DIRTY VALUES : _setId, settingRevision and api._lastSavedRevision', _setId, settingRevision , api._lastSavedRevision);
                       // Skip including settings that have already been included in the changeset, if only requesting unsaved.
                       if ( api.state( 'changesetStatus' ).get() && ( options && options.unsaved ) && ( _.isUndefined( settingRevision ) || settingRevision <= api._lastSavedRevision ) ) {
-                        return;
+                            api.consoleLog( 'DIRTIES : ' + _setId + ' will be excluded from dirties because last revision was : ' + settingRevision + ' == to last saved revision : ' + api._lastSavedRevision );
+                            return;
                       }
                 }
 

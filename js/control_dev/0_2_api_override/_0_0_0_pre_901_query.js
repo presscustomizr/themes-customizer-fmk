@@ -101,13 +101,13 @@
               }
 
               //IS THE REQUESTED ACTION AUTHORIZED ?
-              if ( ! _.contains( [ null, 'refresh', 'save', 'reset' ], queryVars.action ) ) {
+              if ( ! _.contains( [ null, 'refresh', 'save', 'reset', 'changeset_update' ], queryVars.action ) ) {
                     api.consoleLog('QUERY PARAMS : ', queryVars );
                     throw new Error( 'A REQUESTED QUERY HAS NO AUTHORIZED ACTION. Requested action : ' + queryVars.action );
               }
 
 
-              console.log('IN QUERY!', queryVars, queryVars.action );
+              //console.log('IN QUERY!', queryVars, queryVars.action );
 
               //@return an object of customized values for each of the current skopes :
               //{
@@ -163,6 +163,13 @@
 
                           globalCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( globalCustomized, api.czr_skopeBase.getGlobalSkopeId() );
                     break;
+
+                    case 'changeset_update' :
+                          if ( _.isUndefined( queryVars.opt_name ) ) {
+                                throw new Error('Missing opt_name param in the changeset_update query for skope : ' + queryVars.skope_id );
+                          }
+                    break;
+
 
                     case 'save' :
                           // if ( _.isEmpty( queryVars.the_dirties ) ) {

@@ -392,6 +392,7 @@
                           //   api.state( 'saved' ).set( false );
                           // }
                     }).then( function() {
+                          console.log('WHAT ARE THE SAVED DIRTIES', _saved_dirties );
                           api.czr_savedDirties( { channel : api.previewer.channel() , saved : _saved_dirties });
                           api.czr_skopeBase.trigger('skopes-saved', _saved_dirties );
                     });//when()

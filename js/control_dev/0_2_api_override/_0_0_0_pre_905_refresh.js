@@ -37,6 +37,8 @@
           //=> this way we are able to better identify what to do in the api.previewer.query method
           api.previewer._new_refresh = function( the_dirties ) {
                 console.log('NEW REFRESH PARAMS', the_dirties );
+                var dfd = $.Deferred();
+
                 if ( ! _.has( api, 'czr_activeSkope') || _.isUndefined( api.czr_activeSkope() ) ) {
                       console.log( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
                 }
@@ -53,7 +55,10 @@
                       the_dirties : the_dirties
                 });
 
-                console.log('query_params query_params query_params', query_params);
+                if ( ! _.has(api, '_previewer_loading' ) ) {
+                      api._previewer_loading = $.Deferred();
+                }
+
 
                 previewer.loading = new api.PreviewFrame({
                       url:        previewer.url(),
@@ -64,11 +69,13 @@
                 });
 
 
+
                 previewer.settingsModifiedWhileLoading = {};
                 onSettingChange = function( setting ) {
                       previewer.settingsModifiedWhileLoading[ setting.id ] = true;
                 };
                 api.bind( 'change', onSettingChange );
+
                 previewer.loading.always( function() {
                       api.unbind( 'change', onSettingChange );
                 } );
@@ -86,8 +93,13 @@
                             if ( previousPreview ) {
                                   previousPreview.destroy();
                             }
-                            previewer.deferred.active.resolve();
-                            delete previewer.loading;
+                            $.when( (function( previewer ) {
+                                  previewer.deferred.active.resolve();
+                                  delete previewer.loading;
+                            })( previewer ) ).done( function() {
+                                  api._previewer_loading.resolve( { channel : previewer.channel } );
+                                  dfd.resolve( { channel : previewer.channel } );
+                            });
                       };
                       loadingFrame.bind( 'synced', onceSynced );
 
@@ -96,6 +108,7 @@
                 });
 
                 previewer.loading.fail( function( reason ) {
+                      console.log('LOADING FAILED : ' , reason );
                       previewer.send( 'loading-failed' );
 
                       if ( 'logged out' === reason ) {
@@ -111,6 +124,12 @@
                             previewer.cheatin();
                       }
                 });
+
+                // previewer.loading.then( function() {
+                //       console.log('PREVIEWER LOADING THEN');
+                // } );
+
+                return dfd.promise();
           };
 
 
@@ -124,14 +143,23 @@
                             isProcessingComplete = function() {
                                   return 0 === api.state( 'processing' ).get();
                             };
+                            if ( _.has( api, '_previewer_loading' ) && 'pending' == api._previewer_loading.state() ) {
+                                  console.log('A PREVIEWER IS STILL LOADING. WAIT PLEASE.');
+                                  return;
+                            } else {
+                                  api._previewer_loading = $.Deferred();
+                            }
                             if ( isProcessingComplete() ) {
-                                  _new_refresh.call( api.previewer );
+                                  $.when( _new_refresh.call( api.previewer ) ).done( function( data ) {
+                                        console.log('CHANNEL WHEN RESOLVED : ', data.channel() );
+                                  });
                             } else {
                                   refreshOnceProcessingComplete = function() {
-                                    if ( isProcessingComplete() ) {
-                                      _new_refresh.call( api.previewer );
-                                      api.state( 'processing' ).unbind( refreshOnceProcessingComplete );
-                                    }
+                                        if ( isProcessingComplete() ) {
+                                              $.when( _new_refresh.call( api.previewer ) ).done( function() {
+                                                    api.state( 'processing' ).unbind( refreshOnceProcessingComplete );
+                                              });
+                                        }
                                   };
                                   api.state( 'processing' ).bind( refreshOnceProcessingComplete );
                             }

@@ -22,7 +22,7 @@ $.extend( CZRSkopeBaseMths, {
               };
           setupParams = $.extend( defaultSetupParams, obj );
 
-          api.consoleLog('SETUP CONTROLS RESET ?', obj.controls );
+          //api.consoleLog('SETUP CONTROLS RESET ?', obj.controls );
 
           if ( ! _.isObject( setupParams ) || ! _.has( setupParams, 'controls' ) || ! _.has( setupParams, 'section_id' ) ) {
                 throw new Error( 'SetupControlsReset : the setupParams param must be an object with properties controls and section_id.');
@@ -76,7 +76,7 @@ $.extend( CZRSkopeBaseMths, {
 
           var setIds = _.isArray(controls) ? controls : [controls],
               render_reset_icons = function( setIds ) {
-                    api.consoleLog('IN RENDER RESET ICONS', setIds );
+                    //api.consoleLog('IN RENDER RESET ICONS', setIds );
                     _.each( setIds, function( _id ) {
                           //stop here if the control is not registered in the api.
                           //can happen in scenarios when a control gets removed and added back.
@@ -140,7 +140,7 @@ $.extend( CZRSkopeBaseMths, {
                       });
                 }
 
-                api.consoleLog( 'SETUP CONTROL VALUES ?', setId, ctrl.czr_hasDBVal(), api.czr_skope( api.czr_activeSkope() ).hasSkopeSettingDBValues( setId ) );
+                //api.consoleLog( 'SETUP CONTROL VALUES ?', setId, ctrl.czr_hasDBVal(), api.czr_skope( api.czr_activeSkope() ).hasSkopeSettingDBValues( setId ) );
 
                 //set
                 ctrl.czr_hasDBVal(

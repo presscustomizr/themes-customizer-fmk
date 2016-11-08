@@ -346,7 +346,7 @@ $.extend( CZRSkopeBaseMths, {
                       api.consoleLog( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
                       //return;
                     }
-                    api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, new_val, old_val, o );
+                    api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, old_val + ' => ' +  new_val, o );
                     //For skope eligible settings : Update the skope dirties with the new val of this setId
                     if ( api(setId)._dirty ) {
                         self.updateSkopeDirties( setId, new_val );

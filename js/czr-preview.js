@@ -166,7 +166,7 @@
             //console.log('_wpCustomizeSettings', _wpCustomizeSettings, _wpCustomizeSettings.activeSections );
             //console.log('_wpWidgetCustomizerPreviewSettings', _wpWidgetCustomizerPreviewSettings);
             //console.log(' _customizePartialRefreshExports',  _customizePartialRefreshExports);
-            console.log(' IN PREVIEW : ', _wpCustomizeSettings );
+            //console.log(' IN PREVIEW : ', _wpCustomizeSettings );
             api.preview.send(
               'czr-skopes-ready',
               {

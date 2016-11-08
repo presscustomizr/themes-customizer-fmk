@@ -50,7 +50,7 @@
 
             //       values[ setting.id ] = setting.get();
             // } );
-            console.log('DIRTY VALUES, BEFORE RETURNING VALUES : ', options, api._lastSavedRevision );
+            //console.log('DIRTY VALUES, BEFORE RETURNING VALUES : ', options, api._lastSavedRevision );
             return api.czr_skopeBase.getSkopeDirties( api.czr_skopeBase.getGlobalSkopeId(), options );
       };
 

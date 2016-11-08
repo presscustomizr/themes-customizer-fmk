@@ -52,7 +52,7 @@
         api.previewer.bind( 'czr-skopes-ready', function( data ) {
               if ( ! serverControlParams.isSkopOn )
                 return;
-              api.consoleLog('czr-skopes-ready DATA', data );
+              //api.consoleLog('czr-skopes-ready DATA', data );
               var preview = this;
               //initialize skopes with the server sent data
               if ( _.has(data, 'czr_skopes') )

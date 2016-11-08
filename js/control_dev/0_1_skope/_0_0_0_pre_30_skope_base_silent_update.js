@@ -23,7 +23,7 @@ $.extend( CZRSkopeBaseMths, {
                 silentUpdateCands = _params.silent_update_candidates;
           }
 
-          console.log('silentUpdateCands ============>>> ', _params, silentUpdateCands);
+          //console.log('silentUpdateCands ============>>> ', _params, silentUpdateCands);
 
           //silently update the settings of a the currently active section() to the values of the current skope
           //silentlyUpdateSettings returns an array of promises.
@@ -68,7 +68,7 @@ $.extend( CZRSkopeBaseMths, {
             _silentUpdateCands = [ _silentUpdateCands ];
           }
 
-          api.consoleLog('the silentUpdateCands', _silentUpdateCands );
+          //api.consoleLog('the silentUpdateCands', _silentUpdateCands );
 
           //Fire the silent updates promises
           _.each( _silentUpdateCands, function( setId ) {
@@ -112,7 +112,7 @@ $.extend( CZRSkopeBaseMths, {
                         api.consoleLog( 'promise state() after silent update', prom.state() );
                 });
                 $.when( _silently_update( SilentUpdatePromises ) ).done( function() {
-                    console.log( '!!!! SilentUpdatePromises', SilentUpdatePromises );
+                    //console.log( '!!!! SilentUpdatePromises', SilentUpdatePromises );
                     //always refresh by default
                     if ( refresh )
                         api.previewer.refresh();
