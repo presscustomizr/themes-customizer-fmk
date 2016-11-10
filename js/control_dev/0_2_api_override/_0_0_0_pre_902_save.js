@@ -217,19 +217,21 @@
 
 
 
-              var //skopeRequestDoneCollection = new api.Value( [] ),
-                  //skopeRequests = $.Deferred(),
-                  dirtySkopesToSubmit = _.filter( api.czr_skopeCollection(), function( _skop ) {
-                        return api.czr_skope( _skop.id ).dirtyness();
-                  }),
-                  _saved_dirties = {};//will be used as param to update the skope model db val after all ajx requests are done
+              var getDirtySkopesToSubmit = function() {
+                    //skopeRequestDoneCollection = new api.Value( [] ),
+                    //skopeRequests = $.Deferred(),
+                    return _.filter( api.czr_skopeCollection(), function( _skop ) {
+                          return api.czr_skope( _skop.id ).dirtyness();
+                    });
+              };
+
+              var _saved_dirties = {};//will be used as param to update the skope model db val after all ajx requests are done
 
 
               //loop on the registered skopes and submit each save ajax request
-              //@return an array of deferred promises()
-              var getSubmitPromises = function() {
-                    var promises = [];
-                    var globalSkopeId = api.czr_skopeBase.getGlobalSkopeId();
+              //@return a promise()
+              var getSubmitPromise = function( dirtySkopesToSubmit  ) {
+                    var dfd = $.Deferred(), promises = [], globalSkopeId = api.czr_skopeBase.getGlobalSkopeId();
 
                     //ARE THERE SKOPE EXCLUDED DIRTIES ?
                     //var _skopeExcludedDirties = api.czr_skopeBase.getSkopeExcludedDirties();
@@ -257,8 +259,7 @@
                                 skope_id : _skop.id,
                                 the_dirties : the_dirties,//{}
                                 dyn_type : _skop.dyn_type
-                            })
-                          );
+                          } ) );
                     });
 
 
@@ -313,107 +314,151 @@
                           );
                     });
 
-                    return promises;
-              };//getSubmitPromises
+                    //WE NEED TO BUILD A PROPER RESPONSE HERE
+                    var _responses_ = {};
+                    _.each( promises, function( _prom ) {
+                          _prom.always( function( response ) {
+                                if ( _.isEmpty( _responses_ ) ) {
+                                      _responses_ = response;
+                                } else {
+                                      _responses_ = $.extend( _responses_ , response );
+                                }
+                          } );
+                    } );
 
-
-              //defer some actions (included WP core ones ) when all promises are done
-              var reactWhenPromisesDone = function( promises ) {
                     if ( _.isEmpty( promises ) ) {
-                        console.log('THE SAVE SUBMIT PROMISES ARE EMPTY. PROBABLY BECAUSE THERE WAS ONLY EXCLUDED SKOPE SETTINGS TO SAVE', dirtySkopesToSubmit, api.czr_skopeBase.getSkopeExcludedDirties() );
-                        //return deferred.promise();
+                          console.log('THE SAVE SUBMIT PROMISES ARE EMPTY. PROBABLY BECAUSE THERE WAS ONLY EXCLUDED SKOPE SETTINGS TO SAVE', getDirtySkopesToSubmit() , api.czr_skopeBase.getSkopeExcludedDirties() );
+                          //deferred.resolve();
                     }
 
-                    $.when.apply( null, promises).done( function( response ) {
-                          console.log('>>>>>>>>>>>>>>>>', promises, response, '<<<<<<<<<<<<<<<<<<<<<<<');
-                          //store the saved dirties (will be used as param to update the db val property of each saved skope)
-                          //and reset them
-                          _.each( dirtySkopesToSubmit, function( _skp ) {
-                                _saved_dirties[ _skp.id ] = api.czr_skopeBase.getSkopeDirties(_skp.id);
-                                api.czr_skope(_skp.id).dirtyValues({});
-                                //api.czr_skopeBase.getSkopeDirties();
-                          });
+                    $.when.apply( null, promises ).done( function( response ) {
+                          console.log('WHAT IS THE CONCATENATED RESPONSE ?? ', _responses_ );
+                          dfd.resolve( response );
+                    }).fail( function() {
+                          console.log('GETSUBMIT PROMISE FAILED');
+                          dfd.reject();
+                    });
 
-                          //since 4.7 : if changeset is on, let's add stuff to the query object
-                          if ( api.czr_isChangedSetOn() ) {
-                                var latestRevision = api._latestRevision;
-                                api.state( 'changesetStatus' ).set( response.changeset_status );
-                                if ( 'publish' === response.changeset_status ) {
-                                      // Mark all published as clean if they haven't been modified during the request.
-                                      api.each( function( setting ) {
-                                            /*
-                                             * Note that the setting revision will be undefined in the case of setting
-                                             * values that are marked as dirty when the customizer is loaded, such as
-                                             * when applying starter content. All other dirty settings will have an
-                                             * associated revision due to their modification triggering a change event.
-                                             */
-                                            if ( setting._dirty && ( _.isUndefined( api._latestSettingRevisions[ setting.id ] ) || api._latestSettingRevisions[ setting.id ] <= latestRevision ) ) {
-                                                  setting._dirty = false;
-                                            }
-                                      } );
+                    return dfd.promise();
+              };//getSubmitPromise
 
-                                      api.state( 'changesetStatus' ).set( '' );
-                                      api.settings.changeset.uuid = response.next_changeset_uuid;
-                                      parent.send( 'changeset-uuid', api.settings.changeset.uuid );
-                                }
-                          } else {
-                                // Clear api setting dirty states
-                                api.each( function ( value ) {
-                                      value._dirty = false;
+
+
+
+              //defer some actions (included WP core ones ) when all submit promises are done
+              var reactWhenPromisesDone = function( response ) {
+                    console.log('>>>>>>>>>>>>>>>> reactWhenPromisesDone response : ',response, '<<<<<<<<<<<<<<<<<<<<<<<');
+                    //response can be undefined, always set them as an object with 'publish' changet_setstatus by default
+                    //because this will be used in various api events ( 'saved', ... ) that does not accept an undefined val.
+                    response = _.extend( { changeset_status : 'publish' },  response || {} );
+
+                    //since 4.7 : if changeset is on, let's add stuff to the query object
+                    if ( api.czr_isChangedSetOn() ) {
+                          var latestRevision = api._latestRevision;
+                          api.state( 'changesetStatus' ).set( response.changeset_status );
+                          if ( 'publish' === response.changeset_status ) {
+                                // Mark all published as clean if they haven't been modified during the request.
+                                api.each( function( setting ) {
+                                      /*
+                                       * Note that the setting revision will be undefined in the case of setting
+                                       * values that are marked as dirty when the customizer is loaded, such as
+                                       * when applying starter content. All other dirty settings will have an
+                                       * associated revision due to their modification triggering a change event.
+                                       */
+                                      if ( setting._dirty && ( _.isUndefined( api._latestSettingRevisions[ setting.id ] ) || api._latestSettingRevisions[ setting.id ] <= latestRevision ) ) {
+                                            setting._dirty = false;
+                                      }
                                 } );
-                          }
 
+                                api.state( 'changesetStatus' ).set( '' );
+                                api.settings.changeset.uuid = response.next_changeset_uuid;
+                                parent.send( 'changeset-uuid', api.settings.changeset.uuid );
+                          }
+                    } else {
+                          // Clear api setting dirty states
+                          api.each( function ( value ) {
+                                value._dirty = false;
+                          } );
+                    }
+
+                    //api.unbind( 'change', captureSettingModifiedDuringSave );
+                    // Clear setting dirty states, if setting wasn't modified while saving.
+                    // api.each( function( setting ) {
+                    //   if ( ! modifiedWhileSaving[ setting.id ] ) {
+                    //     setting._dirty = false;
+                    //   }
+                    // } );
+
+                    api.previewer.send( 'saved', response );
+
+                    if ( response.setting_validities ) {
+                          api._handleSettingValidities( {
+                                settingValidities: response.setting_validities,
+                                focusInvalidControl: true
+                          } );
+                    }
+
+                    var _applyWPDefaultReaction = function( response ) {
                           /////////////////WP default treatments
                           api.state( 'saving' ).set( false );
+                          api.trigger( 'saved', response || {} );
                           saveBtn.prop( 'disabled', false );
+                          console.log('WP DEFAULT REACTIUION', saveBtn , saveBtn.prop( 'disabled') );
+                    };
 
-                          //api.unbind( 'change', captureSettingModifiedDuringSave );
-                          // Clear setting dirty states, if setting wasn't modified while saving.
-                          // api.each( function( setting ) {
-                          //   if ( ! modifiedWhileSaving[ setting.id ] ) {
-                          //     setting._dirty = false;
-                          //   }
-                          // } );
+                    _applyWPDefaultReaction( response );
 
-                          api.previewer.send( 'saved', response );
-
-                          if ( response.setting_validities ) {
-                                api._handleSettingValidities( {
-                                      settingValidities: response.setting_validities,
-                                      focusInvalidControl: true
-                                } );
-                          }
-
-                          deferred.resolveWith( previewer, [ response ] );
-                          api.trigger( 'saved', response );
-
-                          // Restore the global dirty state if any settings were modified during save.
-                          // if ( ! _.isEmpty( modifiedWhileSaving ) ) {
-                          //   api.state( 'saved' ).set( false );
-                          // }
-                    }).then( function() {
-                          console.log('WHAT ARE THE SAVED DIRTIES', _saved_dirties );
-                          api.czr_savedDirties( { channel : api.previewer.channel() , saved : _saved_dirties });
-                          api.czr_skopeBase.trigger('skopes-saved', _saved_dirties );
-                    });//when()
+                    // Restore the global dirty state if any settings were modified during save.
+                    // if ( ! _.isEmpty( modifiedWhileSaving ) ) {
+                    //   api.state( 'saved' ).set( false );
+                    // }
               };//reactWhenPromisesDone
 
 
 
               //FIRE SUBMISSIONS
+              //ALWAYS FIRE THE GLOBAL SKOPE WHEN ALL OTHER SKOPES HAVE BEEN DONE.
+              //=> BECAUSE WHEN SAVING THE GLOBAL SKOPE, THE CHANGESET POST STATUS WILL BE CHANGED TO 'publish' AND THEREFORE NOT ACCESSIBLE ANYMORE
+              var _doProcesSaveSubmissions = function() {
+                    console.log( 'DO PROCESS SAVE SUBMISSION : ', getDirtySkopesToSubmit() );
+                    getSubmitPromise( getDirtySkopesToSubmit() )
+                    .done( function( response ) {
+                          console.log( 'SUCCESS _doProcesSaveSubmissions()', response );
+                          reactWhenPromisesDone( response );
+                    })
+                    .fail( function( response ) {
+                          console.log( 'FAILURE IN _doProcesSaveSubmissions()', response );
+                    })
+                    .then( function( response ) {
+                          console.log( 'THEN _doProcesSaveSubmissions()', response );
+                          //store the saved dirties (will be used as param to update the db val property of each saved skope)
+                          //and reset them
+                          _.each( getDirtySkopesToSubmit(), function( _skp ) {
+                                _saved_dirties[ _skp.id ] = api.czr_skopeBase.getSkopeDirties(_skp.id);
+                                api.czr_skope(_skp.id).dirtyValues({});
+                                //api.czr_skopeBase.getSkopeDirties();
+                          });
+                          console.log('WHAT ARE THE SAVED DIRTIES', _saved_dirties );
+                          if ( _.isEmpty( _saved_dirties ) )
+                            return;
+
+                          api.czr_savedDirties( { channel : api.previewer.channel() , saved : _saved_dirties });
+                          api.previewer.refresh().done( function( previewer ) {
+                                api.czr_skopeBase.trigger('skopes-saved', _saved_dirties );
+                                deferred.resolveWith( previewer, [ response ] );
+                          } );
+                    });//when()
+              };
+
               if ( 0 === processing() ) {
-                    $.when( getSubmitPromises() ).done( function( promises) {
-                          reactWhenPromisesDone(promises);
-                    });//submit();
+                    _doProcesSaveSubmissions();
               } else {
                     submitWhenDoneProcessing = function () {
                           if ( 0 === processing() ) {
                                 api.state.unbind( 'change', submitWhenDoneProcessing );
-                                $.when( getSubmitPromises() ).done( function( promises) {
-                                      reactWhenPromisesDone(promises);
-                                });//submit();
+                                _doProcesSaveSubmissions();
                           }
-                      };
+                    };
                     api.state.bind( 'change', submitWhenDoneProcessing );
               }
 

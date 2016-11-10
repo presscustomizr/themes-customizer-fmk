@@ -11,7 +11,8 @@ $.extend( CZRSkopeBaseMths, {
               defaultParams = {
                   silent_update_candidates : [],
                   section_id : api.czr_activeSectionId()
-              };
+              },
+              dfd = $.Deferred();
           _params = $.extend( defaultParams, obj );
 
           //do we have well defined silent update candidates ?
@@ -26,10 +27,8 @@ $.extend( CZRSkopeBaseMths, {
           //console.log('silentUpdateCands ============>>> ', _params, silentUpdateCands);
 
           //silently update the settings of a the currently active section() to the values of the current skope
-          //silentlyUpdateSettings returns an array of promises.
-          //Let's wait fot all promises to be done before firing the next actions
-          var _promises = self.silentlyUpdateSettings( silentUpdateCands );
-          $.when.apply( null, _promises )
+          //silentlyUpdateSettings returns a promise.
+          self.silentlyUpdateSettings( silentUpdateCands )
                 .then( function() {
                       //re-render control single reset when needed (Media control are re-rendered, that's why we need this method fired on each skope switch)
                       var _debouncedSetupControlReset = function() {
@@ -39,9 +38,10 @@ $.extend( CZRSkopeBaseMths, {
                       };
                       _debouncedSetupControlReset = _.debounce( _debouncedSetupControlReset, 1200 );
                       _debouncedSetupControlReset();
+                      dfd.resolve();
                 });
 
-          return _promises;
+          return dfd.promise();
     },
 
 
@@ -56,7 +56,8 @@ $.extend( CZRSkopeBaseMths, {
     //@return an array of promises. Typically if a setting update has to re-render an image related control, the promise is the ajax request object
     silentlyUpdateSettings : function( _silentUpdateCands, refresh ) {
           var self = this,
-              SilentUpdatePromises = {};
+              _silentUpdatePromises = {},
+              dfd = $.Deferred();
 
           refresh = refresh || true;
 
@@ -74,24 +75,34 @@ $.extend( CZRSkopeBaseMths, {
           _.each( _silentUpdateCands, function( setId ) {
                 if ( api.control.has( setId ) &&  'czr_multi_module' == api.control(setId).params.type )
                   return;
-                SilentUpdatePromises[setId] = self.getSettingUpdatePromise( setId );
+                _silentUpdatePromises[setId] = self.getSettingUpdatePromise( setId );
           });
 
 
-          var _deferred = [],
-              _silently_update = function( SilentUpdatePromises ) {
-                     _.each( SilentUpdatePromises, function( obj, setId ) {
-                            //Silently set
-                            var wpSetId = api.CZR_Helpers.build_setId( setId ),
-                                _skopeDirtyness = api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId );
-                            api( wpSetId ).silent_set( obj.val, _skopeDirtyness );
-                      });
-              };
+          var _deferred = [];
+              // _silently_update = function( _silentUpdatePromises ) {
+              //        _.each( _silentUpdatePromises, function( _promise_ , setId ) {
+              //               //Silently set
+              //               var wpSetId = api.CZR_Helpers.build_setId( setId ),
+              //                   _skopeDirtyness = api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId );
+              //               api( wpSetId ).silent_set( obj.val, _skopeDirtyness );
+              //         });
+              // };
 
          //Populates the promises
-          _.each( SilentUpdatePromises, function( obj, setId ) {
-                _deferred.push(obj.promise);
+         //Silently set each setting when its promise is done.
+          _.each( _silentUpdatePromises, function( _promise_ , setId ) {
+                _promise_.done( function( _new_setting_val_ ) {
+                      //Silently set
+                      var wpSetId = api.CZR_Helpers.build_setId( setId ),
+                          _skopeDirtyness = api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId );
+                      api( wpSetId ).silent_set( _new_setting_val_ , _skopeDirtyness );
+                });
+
+                _deferred.push( _promise_ );
           });
+
+          //Resolve this method deferred when all setting promises are done
           $.when.apply( null, _deferred )
           // .always( function() {
           //       var _has_rejected_promise = false;
@@ -106,21 +117,29 @@ $.extend( CZRSkopeBaseMths, {
           //       });
 
           // })
+          .fail( function() {
+                console.log('silentlyUpdateSettings FAILED');
+          })
+          .always( function() {
+                console.log('silentlyUpdateSettings ALWAYS, No action, just for information');
+          })
           .then( function() {
-                _.each( _deferred, function(prom){
+                _.each( _deferred, function( prom ){
                       if ( _.isObject( prom ) )
                         api.consoleLog( 'promise state() after silent update', prom.state() );
                 });
-                $.when( _silently_update( SilentUpdatePromises ) ).done( function() {
-                    //console.log( '!!!! SilentUpdatePromises', SilentUpdatePromises );
-                    //always refresh by default
-                    if ( refresh )
-                        api.previewer.refresh();
-                });
+                //always refresh by default
+                if ( refresh ) {
+                    $.when( api.previewer.refresh() ).done( function() {
+                          dfd.resolve();
+                    });
+                } else {
+                    dfd.resolve();
+                }
           });
 
           //return the collection of update promises
-          return _deferred;
+          return dfd.promise();
     },
 
 
@@ -141,7 +160,8 @@ $.extend( CZRSkopeBaseMths, {
           var self = this,
               wpSetId = api.CZR_Helpers.build_setId( setId ),
               current_setting_val = api( wpSetId )(),//typically the previous skope val
-              _promise,
+              dfd = $.Deferred(),
+              _promise = false,
               skope_id = api.czr_activeSkope(),
               val = api.czr_skopeBase.getSkopeSettingVal( setId, skope_id );
 
@@ -150,9 +170,10 @@ $.extend( CZRSkopeBaseMths, {
               throw new Error('getSettingUpdatePromise : the provided setId is not registered in the api.');
           }
 
-          //stop here if the setting val was unchanged
-          if ( _.isEqual( current_setting_val, val ) )
-            return { promise : true, val : val };
+          //resolve here if the setting val was unchanged
+          if ( _.isEqual( current_setting_val, val ) ) {
+                return dfd.resolve( val ).promise();
+          }
 
           //THE FOLLOWING TREATMENTS ARE ADAPTED TO SETTING WITH A CORRESPONDING CONTROL
           //header_image_data not concerned for example
@@ -206,10 +227,17 @@ $.extend( CZRSkopeBaseMths, {
           //when switching skope, we want to refresh the control with the right image
           //This is a setting
           if ( _.has(api.settings.controls, 'header_image') && 'header_image' == wpSetId  ) {
-              _promise = self._getHeaderImagePromise( wpSetId, skope_id );
+                _promise = self._getHeaderImagePromise( wpSetId, skope_id );
+          }
+          if ( ! _promise || ! _.isObject( _promise ) ) {
+                dfd.resolve( val );
+          } else {
+                _promise.always( function() {
+                      dfd.resolve( val );
+                });
           }
 
-          return  { promise : _promise || true, val : val };
+          return dfd.promise();
     },//getSettingUpdatePromise()
 
 
@@ -283,7 +311,7 @@ $.extend( CZRSkopeBaseMths, {
     *****************************************************************************/
     //@return promise
     _getCzrCroppedImagePromise : function( wpSetId, _control_data ) {
-          _constructor = api.controlConstructor.czr_cropped_image;
+          var _constructor = api.controlConstructor.czr_cropped_image, dfd = $.Deferred();
           //@make sure that the val is not null => won't be accepted in silent set
           val = null === val ? "" : val;
 
@@ -298,6 +326,7 @@ $.extend( CZRSkopeBaseMths, {
                 _control_data.attachment = this.attributes;
                 //instantiate the control with the updated _control_data
                 api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
+                dfd.resolve();
           } ).fail( function() {
                 //remove the container and its control
                 api.control( wpSetId ).container.remove();
@@ -306,10 +335,11 @@ $.extend( CZRSkopeBaseMths, {
                 _control_data = _.omit( _control_data, 'attachment' );
                 //instantiate the control with the updated _control_data
                 api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
+                dfd.reject();
           });
 
           //set the media fetched as promise to return;
-          return wp.media.attachment( val ).fetch();
+          return dfd.promise();
     },
 
 
@@ -319,8 +349,10 @@ $.extend( CZRSkopeBaseMths, {
     *****************************************************************************/
     //@return promise
     _getHeaderImagePromise : function( wpSetId, skope_id ) {
-          if ( ! _.has(api.settings.controls, 'header_image') || 'header_image' != wpSetId  )
-            return;
+          var dfd = $.Deferred();
+          if ( ! _.has(api.settings.controls, 'header_image') || 'header_image' != wpSetId  ) {
+            return dfd.resolve().promise();
+          }
 
           var _header_constructor = api.controlConstructor.header,
               _header_control_data = $.extend( true, {}, api.settings.controls.header_image );
@@ -340,8 +372,8 @@ $.extend( CZRSkopeBaseMths, {
               api.HeaderTool.DefaultsList = api.czr_HeaderTool.DefaultsList;
               api.HeaderTool.CombinedList = api.czr_HeaderTool.CombinedList;
               var _render_control = function() {
-                //instantiate the control with the updated _header_control_data
-                api.control.add( 'header_image',  new _header_constructor( 'header_image', { params : _updated_header_control_data, previewer : api.previewer }) );
+                    //instantiate the control with the updated _header_control_data
+                    api.control.add( 'header_image',  new _header_constructor( 'header_image', { params : _updated_header_control_data, previewer : api.previewer }) );
               };
               _render_control = _.debounce( _render_control, 800 );
               _render_control();
@@ -349,38 +381,38 @@ $.extend( CZRSkopeBaseMths, {
 
 
           if ( ! _.has( header_image_data, 'attachment_id' ) ) {
-              _reset_header_image_crtl();
+                _reset_header_image_crtl();
+                dfd.resolve();
           } else {
-              attachment_id = header_image_data.attachment_id;
+                attachment_id = header_image_data.attachment_id;
 
-              //re-add the control when the new image has been fetched asynchronously.
-              //if no image can be fetched, for example when in the active skope, the image is not set, then
-              //refresh the control without attachment data
-              wp.media.attachment( attachment_id ).fetch().done( function() {
-                    //update the data with the new img attributes
-                    _header_control_data.attachment = this.attributes;
-                    _reset_header_image_crtl( _header_control_data );
-              } ).fail( function() {
-                    //update the data : remove the attachment property
-                    _header_control_data = _.omit( _header_control_data, 'attachment' );
+                //re-add the control when the new image has been fetched asynchronously.
+                //if no image can be fetched, for example when in the active skope, the image is not set, then
+                //refresh the control without attachment data
+                wp.media.attachment( attachment_id ).fetch().done( function() {
+                      //update the data with the new img attributes
+                      _header_control_data.attachment = this.attributes;
+                      _reset_header_image_crtl( _header_control_data );
+                      dfd.resolve();
+                } ).fail( function() {
+                      //update the data : remove the attachment property
+                      _header_control_data = _.omit( _header_control_data, 'attachment' );
 
-                    //remove the container and its control
-                    api.control( 'header_image' ).container.remove();
-                    api.control.remove( 'header_image' );
+                      //remove the container and its control
+                      api.control( 'header_image' ).container.remove();
+                      api.control.remove( 'header_image' );
 
-                    //reset the HeaderTool objects, captured early
-                    api.HeaderTool.UploadsList = api.czr_HeaderTool.UploadsList;
-                    api.HeaderTool.DefaultsList = api.czr_HeaderTool.DefaultsList;
-                    api.HeaderTool.CombinedList = api.czr_HeaderTool.CombinedList;
-                    //instantiate the control with the updated _header_control_data
-                    api.control.add( 'header_image',  new _header_constructor( 'header_image', { params : _header_control_data, previewer : api.previewer }) );
-              });
-
-              //set the media fetched as promise to return;
-              return wp.media.attachment( attachment_id ).fetch();
+                      //reset the HeaderTool objects, captured early
+                      api.HeaderTool.UploadsList = api.czr_HeaderTool.UploadsList;
+                      api.HeaderTool.DefaultsList = api.czr_HeaderTool.DefaultsList;
+                      api.HeaderTool.CombinedList = api.czr_HeaderTool.CombinedList;
+                      //instantiate the control with the updated _header_control_data
+                      api.control.add( 'header_image',  new _header_constructor( 'header_image', { params : _header_control_data, previewer : api.previewer }) );
+                      dfd.reject();
+                });
           }//else
 
-          //return a boolean true promise by default
-          return true;
+          //return the promise
+          return dfd.promise();
     }
 });//$.extend

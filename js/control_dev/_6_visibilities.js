@@ -40,14 +40,12 @@
                 api.bind( 'awaken-section', function( target_source ) {
                       //if skope on ( serverControlParams.isSkopOn ), then defer the visibility awakening after the silent updates
                       if ( serverControlParams.isSkopOn && _.has( api ,'czr_skopeBase' ) ) {
-                            var _promises = api.czr_skopeBase.processSilentUpdates( {
+                            api.czr_skopeBase.processSilentUpdates( {
                                   silent_update_candidates : {},
                                   section_id : target_source.target
-                            } );
-                            $.when.apply( null, _promises )
-                                  .then( function() {
-                                        self.setServiVisibility( target_source.target, target_source.source );
-                                  });
+                            } ).then( function() {
+                                  self.setServiVisibility( target_source.target, target_source.source );
+                            });
                       } else {
                             self.setServiVisibility( target_source.target, target_source.source );
                       }

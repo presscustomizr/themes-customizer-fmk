@@ -199,16 +199,17 @@ $.extend( CZRSkopeBaseMths, {
                 //defer the callback execution when the first skope collection has been populated
                 //=> otherwise it might be to early. For example in autofocus request cases.
                 api.czr_initialSkopeCollectionPopulated.then( function() {
-                      self.processSilentUpdates( { section_id : active_section } );
-                      // var _update_candidates = self._getSilentUpdateCandidates( active_section );
-                      // self.silentlyUpdateSettings( _update_candidates );
-                      // //add control single reset + observable values
-                      // self.setupControlsReset();
+                      self.processSilentUpdates( { section_id : active_section } ).done( function() {
+                            // var _update_candidates = self._getSilentUpdateCandidates( active_section );
+                            // self.silentlyUpdateSettings( _update_candidates );
+                            // //add control single reset + observable values
+                            // self.setupControlsReset();
 
-                      //Sidebar Widget specific
-                      if ( ! self.isExcludedSidebarsWidgets() ) {
-                            _forceSidebarDirtyRefresh( active_section, api.czr_activeSkope() );
-                      }
+                            //Sidebar Widget specific
+                            if ( ! self.isExcludedSidebarsWidgets() ) {
+                                  _forceSidebarDirtyRefresh( active_section, api.czr_activeSkope() );
+                            }
+                            });
                 });
 
           } );
@@ -272,8 +273,12 @@ $.extend( CZRSkopeBaseMths, {
           //LISTEN TO THE GLOBAL API SAVED STATE
           //=> this value is set on control and skope reset
           //+ set by wp
-          api.state('saved').bind( function( saved ) {
-              $('body').toggleClass('czr-api-dirty', ! saved );
+          api.state.bind( 'change', function() {
+              if ( api.czr_isChangedSetOn() ) {
+                    $('body').toggleClass('czr-api-dirty', ! api.state( 'saved')() || '' !== api.state( 'changesetStatus')() );
+              } else {
+                    $('body').toggleClass('czr-api-dirty', ! api.state( 'saved')() );
+              }
           });
 
           //LISTEN TO SKOPE SAVE EVENT
@@ -286,9 +291,6 @@ $.extend( CZRSkopeBaseMths, {
           //  ...
           //}
           self.bind( 'skopes-saved', function( _saved_dirties ) {
-                api.previewer.refresh();
-                //clean the dirtyness state of each control
-
                 //set the db state of each control
                 //=> make sure this is set for the active skope only
                 _.each( _saved_dirties, function( _skp_dirties, _skp_id ){
@@ -301,7 +303,7 @@ $.extend( CZRSkopeBaseMths, {
                             api.control(setId).czr_hasDBVal(true);
                       });
                 });
-                api.consoleLog( 'SAVED DIRTIES', _saved_dirties );
+                api.consoleLog( 'skopes_saved reaction : SAVED DIRTIES', _saved_dirties );
           });
 
           //LISTEN TO GLOBAL DB OPTION CHANGES

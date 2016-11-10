@@ -43,6 +43,7 @@ $.extend( CZRSkopeBaseMths, {
           if ( ! _.isEmpty(api.czr_savedDirties().channel) && sent_channel != api.czr_savedDirties().channel ) {
                 var not_sync = [];
                 //lets check that we are synchronized
+                console.log('AFTER SAVED : BEFORE SYNC CHECK SAVED DIRTIES : ', api.czr_savedDirties().saved );
                 _.each( api.czr_savedDirties().saved, function( skp_data, skp_id ) {
                       _.each( skp_data, function( _val, _setId ) {
                             //first, let's check if the sent skopes have not changed ( typically, if a user has opened another page in the preview )

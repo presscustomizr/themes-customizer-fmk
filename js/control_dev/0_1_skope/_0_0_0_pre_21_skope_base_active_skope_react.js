@@ -30,11 +30,12 @@ $.extend( CZRSkopeBaseMths, {
           api.consoleLog('ACTIVE SKOPE SWITCH : ' + from + ' => ' + to );
 
           if ( _.isUndefined( api.czr_activeSectionId() ) ) {
-                if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
-                    api.previewer.refresh();
-                } else {
-                    api.previewer.refresh();
-                }
+                // if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
+                //     api.previewer.refresh();
+                // } else {
+                //     api.previewer.refresh();
+                // }
+                api.previewer.refresh();
                 return;
           }
 
@@ -45,32 +46,32 @@ $.extend( CZRSkopeBaseMths, {
           //PROCESS SILENT UPDATES
           //Build the silent update candidates array
           //populates with the current section setting ids or the one provided
-          var SilentUpdateCands = self._getSilentUpdateCandidates();
+          var _silentUpdateCands = self._getSilentUpdateCandidates();
 
           //add the previous skope dirty settings ids
           if ( ! _.isUndefined( from ) ) {
             _.each( api.czr_skope( from ).dirtyValues(), function( val, _setId ) {
-                  if ( ! _.contains( SilentUpdateCands, _setId ) )
-                      SilentUpdateCands.push( _setId );
+                  if ( ! _.contains( _silentUpdateCands, _setId ) )
+                      _silentUpdateCands.push( _setId );
             } );
           }
           if ( ! _.isUndefined( to ) ) {
             _.each( api.czr_skope( to ).dirtyValues(), function( val, _setId ) {
-                  if ( ! _.contains( SilentUpdateCands, _setId ) )
-                      SilentUpdateCands.push( _setId );
+                  if ( ! _.contains( _silentUpdateCands, _setId ) )
+                      _silentUpdateCands.push( _setId );
             } );
           }
 
+
+          //Process Silent Updates and
+          //make sure that the visibility is processed after the silent updates
           var _debouncedProcessSilentUpdates = function() {
-                var _promises = self.processSilentUpdates( {
-                      silent_update_candidates : SilentUpdateCands,
+                self.processSilentUpdates( {
+                      silent_update_candidates : _silentUpdateCands,
                       section_id : null
-                } );
-                //make sure that the visibility is processed after the silent updates
-                $.when.apply( null, _promises )
-                      .then( function() {
-                            api.czr_visibilities.setServiVisibility( api.czr_activeSectionId() );
-                      });
+                } ).then( function() {
+                      api.czr_visibilities.setServiVisibility( api.czr_activeSectionId() );
+                });
           };
 
           //Process silent updates
@@ -78,6 +79,7 @@ $.extend( CZRSkopeBaseMths, {
           if ( _.has(api, 'czr_isModuleExpanded') && false !== api.czr_isModuleExpanded() ) {
                 api.czr_isModuleExpanded().setupModuleViewStateListeners(false);
                 _debouncedProcessSilentUpdates = _.debounce( _debouncedProcessSilentUpdates, 400 );
+                _debouncedProcessSilentUpdates();
           } else {
                 _debouncedProcessSilentUpdates();
           }

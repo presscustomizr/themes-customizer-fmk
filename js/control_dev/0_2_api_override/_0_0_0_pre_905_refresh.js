@@ -81,25 +81,21 @@
                 } );
 
                 previewer.loading.done( function( readyData ) {
-                      var loadingFrame = this, previousPreview, onceSynced;
+                      var loadingFrame = this, onceSynced;
 
-                      previousPreview = previewer.preview;
                       previewer.preview = loadingFrame;
                       previewer.targetWindow( loadingFrame.targetWindow() );
                       previewer.channel( loadingFrame.channel() );
 
                       onceSynced = function() {
                             loadingFrame.unbind( 'synced', onceSynced );
-                            if ( previousPreview ) {
-                                  previousPreview.destroy();
+                            if ( api._previousPreview ) {
+                                api._previousPreview.destroy();
                             }
-                            $.when( (function( previewer ) {
-                                  previewer.deferred.active.resolve();
-                                  delete previewer.loading;
-                            })( previewer ) ).done( function() {
-                                  api._previewer_loading.resolve( { channel : previewer.channel } );
-                                  dfd.resolve( { channel : previewer.channel } );
-                            });
+                            api._previousPreview = previewer.preview;
+                            previewer.deferred.active.resolve();
+                            delete previewer.loading;
+                            dfd.resolve( previewer );
                       };
                       loadingFrame.bind( 'synced', onceSynced );
 
@@ -139,30 +135,27 @@
           api.previewer.refresh = _.debounce(
                 ( function( _new_refresh ) {
                       return function() {
-                            var isProcessingComplete, refreshOnceProcessingComplete;
-                            isProcessingComplete = function() {
+                            var dfd = $.Deferred(), refreshOnceProcessingComplete,
+                                isProcessingComplete = function() {
                                   return 0 === api.state( 'processing' ).get();
-                            };
-                            if ( _.has( api, '_previewer_loading' ) && 'pending' == api._previewer_loading.state() ) {
-                                  console.log('A PREVIEWER IS STILL LOADING. WAIT PLEASE.');
-                                  return;
-                            } else {
-                                  api._previewer_loading = $.Deferred();
-                            }
+                                },
+                                resolveRefresh = function() {
+                                      _new_refresh.call( api.previewer ).done( function( previewer ) {
+                                            dfd.resolve( previewer );
+                                      });
+                                };
                             if ( isProcessingComplete() ) {
-                                  $.when( _new_refresh.call( api.previewer ) ).done( function( data ) {
-                                        console.log('CHANNEL WHEN RESOLVED : ', data.channel() );
-                                  });
+                                  resolveRefresh();
                             } else {
                                   refreshOnceProcessingComplete = function() {
                                         if ( isProcessingComplete() ) {
-                                              $.when( _new_refresh.call( api.previewer ) ).done( function() {
-                                                    api.state( 'processing' ).unbind( refreshOnceProcessingComplete );
-                                              });
+                                              resolveRefresh();
+                                              api.state( 'processing' ).unbind( refreshOnceProcessingComplete );
                                         }
                                   };
                                   api.state( 'processing' ).bind( refreshOnceProcessingComplete );
                             }
+                            return dfd.promise();
                       };
                 }( api.previewer._new_refresh ) ),
                 api.previewer.refreshBuffer
