@@ -89,10 +89,10 @@
 
                       onceSynced = function() {
                             loadingFrame.unbind( 'synced', onceSynced );
-                            if ( api._previousPreview ) {
-                                api._previousPreview.destroy();
+                            if ( previewer._previousPreview ) {
+                              previewer._previousPreview.destroy();
                             }
-                            api._previousPreview = previewer.preview;
+                            previewer._previousPreview = previewer.preview;
                             previewer.deferred.active.resolve();
                             delete previewer.loading;
                             dfd.resolve( previewer );

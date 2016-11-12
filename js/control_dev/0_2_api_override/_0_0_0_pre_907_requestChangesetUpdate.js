@@ -52,7 +52,10 @@
        */
       api.requestChangesetUpdate = function( changes ) {
             var dfd = $.Deferred(),
-                data;
+                data,
+                _skopesToUpdate = [],
+                _promises = [],
+                _global_skope_changes = changes || {};
                 // _original = function( changes ) {
                 //     _original_requestChangesetUpdate(changes).then( function( data ) {
                 //         console.log('WP DEFERRED THEN', data );
@@ -60,99 +63,96 @@
                 //     });
                 // };
 
-            //If the 0 === api._lastSavedRevision OR is empty api.state( 'changesetStatus' )(),
+            //MAKES SURE THAT A CHANGESET POST ID EXISTS
+            //=> add a dummy_change to global if if ( 0 === api._lastSavedRevision || _.isEmpty( api.state( 'changesetStatus' )() ) )
+            //
             //and that we are not customizing the global skope,
             //it means that the changeset post ID will not be set yet, so let's fire the original
-            if ( 0 === api._lastSavedRevision && _.isEmpty( api.state( 'changesetStatus' )() ) ) {
-                  //Why this ?
-                  //=> because the original WP function checks if some changes have been submitted
-                  $.when( _original_requestChangesetUpdate( {
-                              blogname : { dummy_change : 'dummy_change' }
-                        } ) ).then( function( data ) {
-                              dfd.resolve( data );
-                  });
-            } else {
-                  var _skopesToUpdate = [],
-                      promises = [];
-
-                  //POPULATE THE SKOPE CHANGESET UPDATES PROMISES
-                  //Loop current skopes collection
-                  //Exclude the global skope
-                  _.each( api.czr_currentSkopesCollection(), function( _skp ) {
-                        if ( 'global' == _skp.skope )
-                          return;
-                        _skopesToUpdate.push( _skp.id );
+            //The core WP method will only create a new changeset post if there is something to save
+            //=> that's the purpose of this dummy_change
+            if ( 0 === api._lastSavedRevision || _.isEmpty( api.state( 'changesetStatus' )() ) ) {
+                  _global_skope_changes = _.extend( _global_skope_changes, {
+                        blogname : { dummy_change : 'dummy_change' }
                   } );
-
-                  console.log('SKOPE CHANGESETS TO UPDATE', _skopesToUpdate );
-
-                  var _pushPromise = function( _skp_id ) {
-                        var dfrd = $.Deferred(),
-                            _requestUpdate = api._requestSkopeChangetsetUpdate( changes, _skp_id );
-                        promises.push( _requestUpdate );
-                        $.when( _requestUpdate ).done( function( _data_ ) {
-                              setTimeout( function() {
-                                  dfrd.resolve( _data_ );
-                              }, 0 );
-
-                        });
-                        return dfrd.promise();
-                  };
-
-                  var _recursivePushDeferred = $.Deferred(),
-                      _all_skopes_data_ = [];
-
-                  var recursivePush = function( _index ) {
-                        //on first push run, set the api state to processing.
-                        // Make sure that publishing a changeset waits for all changeset update requests to complete.
-                        if ( _.isUndefined( _index ) || ( ( 0 * 0 ) == _index ) ) {
-                            api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
-                        }
-
-                        _index = _index || 0;
-                        if ( _.isUndefined( _skopesToUpdate[_index] ) ) {
-                              _recursivePushDeferred.resolve( _all_skopes_data_ );
-                        } else {
-                              $.when( _pushPromise( _skopesToUpdate[_index] ) ).done( function( _skope_data_ ) {
-                                    console.log('RECURSIVE PUSH DONE FOR SKOPE : ', _skopesToUpdate[_index] );
-                                    _all_skopes_data_.push( _skope_data_ );
-                                    recursivePush( _index + 1 );
-                              } );
-                        }
-                        return _recursivePushDeferred.promise();
-                  };
-
-
-                  //RESOLVE WITH THE WP GLOBAL CHANGESET PROMISE WHEN ALL SKOPE PROMISES ARE DONE
-                  //PROBLEM TO SOLVE : in the core original changeset method, the api._lastSavedRevision property is incremented when global dirties are saved
-                  //=> between the core changeset update and before the skope changeset update, we need to reset the api._lastSavedRevision to its previous value
-                  //=> otherwise some dirties might not be taken into account in the skope.
-                  //=> This can happen typically for a setting dirty both in global and other skope(s)
-                  var _lastSavedRevisionBefore = api._lastSavedRevision;
-                  $.when( _original_requestChangesetUpdate( changes ) ).then( function( data ) {
-                          console.log('GLOBAL SKOPE CHANGESET UPDATE PROCESSED BY WP : ', data );
-                          //console.log('WP DEFERRED THEN', data );
-                          // $.when.apply( null, promises ).then( function() {
-                          //       //console.log('OUR DEFERRED THEN => resolve WP');
-                          //       dfd.resolve( data );
-                          // });
-                          //Restore the _lastSavedRevision index to its previous state to not miss any setting that could have been updated by WP for global.
-                           api._lastSavedRevision = _lastSavedRevisionBefore;
-                          $.when( recursivePush() ).then( function() {
-                                console.log('ALL RECURSIVE PUSHES ARE DONE NOW', _all_skopes_data_ );
-
-                                var savedChangesetValues = {};
-
-                                // Ensure that all settings updated subsequently will be included in the next changeset update request.
-                                api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
-
-                                //api.state( 'changesetStatus' ).set( _data_.changeset_status );
-                                // Make sure that publishing a changeset waits for all changeset update requests to complete.
-                                api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
-                                dfd.resolve( data );
-                          });
-                  });
             }
+
+            //POPULATE THE SKOPE CHANGESET UPDATES PROMISES
+            //Loop current skopes collection
+            //Exclude the global skope
+            _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                  if ( 'global' == _skp.skope )
+                    return;
+                  _skopesToUpdate.push( _skp.id );
+            } );
+
+            console.log('SKOPE CHANGESETS TO UPDATE', _skopesToUpdate );
+
+            var _pushPromise = function( _skp_id ) {
+                  var dfrd = $.Deferred(),
+                      _requestUpdate = api._requestSkopeChangetsetUpdate( changes, _skp_id );
+                  _promises.push( _requestUpdate );
+                  $.when( _requestUpdate ).done( function( _data_ ) {
+                        setTimeout( function() {
+                            dfrd.resolve( _data_ );
+                        }, 0 );
+
+                  });
+                  return dfrd.promise();
+            };
+
+            var _recursivePushDeferred = $.Deferred(),
+                _all_skopes_data_ = [];
+
+            var recursivePush = function( _index ) {
+                  //on first push run, set the api state to processing.
+                  // Make sure that publishing a changeset waits for all changeset update requests to complete.
+                  if ( _.isUndefined( _index ) || ( ( 0 * 0 ) == _index ) ) {
+                      api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
+                  }
+
+                  _index = _index || 0;
+                  if ( _.isUndefined( _skopesToUpdate[_index] ) ) {
+                        _recursivePushDeferred.resolve( _all_skopes_data_ );
+                  } else {
+                        $.when( _pushPromise( _skopesToUpdate[_index] ) ).done( function( _skope_data_ ) {
+                              console.log('RECURSIVE PUSH DONE FOR SKOPE : ', _skopesToUpdate[_index] );
+                              _all_skopes_data_.push( _skope_data_ );
+                              recursivePush( _index + 1 );
+                        } );
+                  }
+                  return _recursivePushDeferred.promise();
+            };
+
+
+            //RESOLVE WITH THE WP GLOBAL CHANGESET PROMISE WHEN ALL SKOPE PROMISES ARE DONE
+            //PROBLEM TO SOLVE : in the core original changeset method, the api._lastSavedRevision property is incremented when global dirties are saved
+            //=> between the core changeset update and before the skope changeset update, we need to reset the api._lastSavedRevision to its previous value
+            //=> otherwise some dirties might not be taken into account in the skope.
+            //=> This can happen typically for a setting dirty both in global and other skope(s)
+            var _lastSavedRevisionBefore = api._lastSavedRevision;
+            $.when( _original_requestChangesetUpdate( _global_skope_changes ) ).then( function( wp_original_response ) {
+                    console.log('GLOBAL SKOPE CHANGESET UPDATE PROCESSED BY WP : ', _global_skope_changes, wp_original_response );
+                    //console.log('WP DEFERRED THEN', wp_original_response );
+                    // $.when.apply( null, _promises ).then( function() {
+                    //       //console.log('OUR DEFERRED THEN => resolve WP');
+                    //       dfd.resolve( wp_original_response );
+                    // });
+                    //Restore the _lastSavedRevision index to its previous state to not miss any setting that could have been updated by WP for global.
+                     api._lastSavedRevision = _lastSavedRevisionBefore;
+                    $.when( recursivePush() ).then( function() {
+                          console.log('ALL RECURSIVE PUSHES ARE DONE NOW', _all_skopes_data_ );
+
+                          var savedChangesetValues = {};
+
+                          // Ensure that all settings updated subsequently will be included in the next changeset update request.
+                          api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
+
+                          //api.state( 'changesetStatus' ).set( _data_.changeset_status );
+                          // Make sure that publishing a changeset waits for all changeset update requests to complete.
+                          api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+                          dfd.resolve( wp_original_response );
+                    });
+            });
 
             return dfd.promise();
       };
@@ -166,8 +166,11 @@
                   throw new Error( 'In api._requestSkopeChangetsetUpdate() : a valid and registered skope_id must be provided' );
             }
 
-            var deferred, request, submittedChanges = {}, data;
-            deferred = new $.Deferred();
+            var deferred = new $.Deferred(),
+                request,
+                submittedChanges = {},
+                data;
+
             //if no skope has been provided, then let's use the active one
             skope_id = skope_id || api.czr_activeSkope();
 

@@ -1874,7 +1874,9 @@ $.extend( CZRSkopeMths, {
                   submitWhenDoneProcessing,
                   submit,
                   invalidSettings = [],
-                  invalidControls;
+                  invalidControls,
+                  globalSkopeId = api.czr_skopeBase.getGlobalSkopeId(),
+                  _saved_dirties = {};// will be used as param to update the skope model db val after all ajx requests are done
 
               if ( args && args.status ) {
                     changesetStatus = args.status;
@@ -1884,7 +1886,6 @@ $.extend( CZRSkopeMths, {
                   deferred.reject( 'already_saving' );
                   deferred.promise();
               }
-
               api.state( 'saving' ).set( true );
               submit = function( params ) {
                     var default_params = {
@@ -1956,13 +1957,16 @@ $.extend( CZRSkopeMths, {
 
 
                     api.consoleLog('in submit : ', params.skope_id, query, api.previewer.channel() );
-                    request = wp.ajax.post( 'customize_save', query );
+                    request = wp.ajax.post(
+                          'global' !== query.skope ? 'customize_skope_changeset_save' : 'customize_save',
+                          query
+                    );
                     saveBtn.prop( 'disabled', true );
 
                     api.trigger( 'save', request );
 
                     request.fail( function ( response ) {
-                          api.consoleLog('ALORS FAIL ?', params.skope_id, response );
+                          api.consoleLog('SUBMIT REQUEST FAIL ?', params.skope_id, response );
                           if ( '0' === response ) {
                                 response = 'not_logged_in';
                           } else if ( '-1' === response ) {
@@ -1983,100 +1987,45 @@ $.extend( CZRSkopeMths, {
                     } );
 
                     request.done( function( response ) {
-                          api.consoleLog('ALORS DONE ?', params.skope_id, response );
+                          api.consoleLog('SUBMIT REQUEST DONE ?', params.skope_id, response );
                           submit_dfd.resolve( response );
                     } );
                     return submit_dfd.promise();
               };//submit()
+              var getSubmitPromise = function( skope_id ) {
+                    var dfd = $.Deferred();
 
+                    if ( _.isEmpty( skope_id ) || ! api.czr_skope.has( skope_id ) ) {
+                          api.consoleLog( 'getSubmitPromise : no skope id requested OR skope_id not registered : ' + skope_id );
+                          dfd.resolve();
+                    }
 
+                    var skopeObjectToSubmit = api.czr_skope( skope_id )();
+                    if ( ! api.czr_skope( skope_id ).dirtyness() && skope_id !== globalSkopeId ) {
+                        dfd.resolve();
+                    }
+                    var _submit_request = submit( {
+                              skope_id : skope_id,
+                              the_dirties : api.czr_skopeBase.getSkopeDirties( skope_id ),//{}
+                              dyn_type : skopeObjectToSubmit.dyn_type
+                        } );
 
-              var getDirtySkopesToSubmit = function() {
-                    return _.filter( api.czr_skopeCollection(), function( _skop ) {
-                          return api.czr_skope( _skop.id ).dirtyness();
-                    });
-              };
+                    api.consoleLog('submit request for skope : id, object, dirties : ', skope_id, skopeObjectToSubmit , api.czr_skopeBase.getSkopeDirties( skope_id ) );
 
-              var _saved_dirties = {};//will be used as param to update the skope model db val after all ajx requests are done
-              var getSubmitPromise = function( dirtySkopesToSubmit  ) {
-                    var dfd = $.Deferred(), promises = [], globalSkopeId = api.czr_skopeBase.getGlobalSkopeId();
-                    _.each( dirtySkopesToSubmit, function( _skop ) {
-                          var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
-                          api.consoleLog('submit request for skope : ', _skop, the_dirties );
-                          promises.push( submit( {
-                                skope_id : _skop.id,
-                                the_dirties : the_dirties,//{}
-                                dyn_type : _skop.dyn_type
-                          } ) );
-                    });
-                    if ( ! api.czr_skopeBase.isExcludedSidebarsWidgets() ) {
-                          _.each( dirtySkopesToSubmit, function( _skop ) {
-                                if ( _skop.id == globalSkopeId )
-                                  return;
-                                console.log('>>>>>>>>>>>>>>>>>>> submit request for missing widgets globally', widget_dirties );
-                                var widget_dirties = {};
-                                var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
-                                _.each( the_dirties, function( _val, _setId ) {
-                                      if ( 'widget_' == _setId.substring(0, 7) && ! api.czr_skopeBase.isWidgetRegisteredGlobally( _setId ) ) {
-                                            if ( ! _.has( widget_dirties, _setId ) ) {
-                                                  widget_dirties[ _setId ] = _val;
-                                            }
-                                      }
-                                });
-
-
-                                if ( ! _.isEmpty(widget_dirties) ) {
-                                      promises.push( submit( {
-                                            skope_id : globalSkopeId,
-                                            the_dirties : widget_dirties,
-                                            dyn_type : 'wp_default_type'
-                                        } )
-                                      );
-                                }
+                    _submit_request
+                          .done( function( _resp) { console.log('GETSUBMIT DONE PROMISE SUCCEEDED', _resp); })
+                          .fail( function( _resp ) { console.log('GETSUBMIT FAILED PROMISE', _resp ); })
+                          .then( function( _resp ) {
+                                console.log('GETSUBMIT THEN ', _resp );
+                                dfd.resolve( _resp );
                           });
-                    }
-                    _.each( dirtySkopesToSubmit, function( _skop ) {
-                          if ( _skop.skope != 'global' )
-                                return;
-
-                          if ( _.isUndefined( serverControlParams.globalSkopeOptName) ) {
-                                throw new Error('serverControlParams.globalSkopeOptName MUST BE DEFINED TO SAVE THE GLOBAL SKOPE.');
-                          }
-                          promises.push( submit( {
-                                skope_id : globalSkopeId,
-                                the_dirties : api.czr_skopeBase.getSkopeDirties( _skop.id ),
-                                dyn_type : 'global_option',
-                                opt_name : serverControlParams.globalSkopeOptName
-                            } )
-                          );
-                    });
-                    var _responses_ = {};
-                    _.each( promises, function( _prom ) {
-                          _prom.always( function( response ) {
-                                if ( _.isEmpty( _responses_ ) ) {
-                                      _responses_ = response;
-                                } else {
-                                      _responses_ = $.extend( _responses_ , response );
-                                }
-                          } );
-                    } );
-
-                    if ( _.isEmpty( promises ) ) {
-                          console.log('THE SAVE SUBMIT PROMISES ARE EMPTY. PROBABLY BECAUSE THERE WAS ONLY EXCLUDED SKOPE SETTINGS TO SAVE', getDirtySkopesToSubmit() , api.czr_skopeBase.getSkopeExcludedDirties() );
-                    }
-
-                    $.when.apply( null, promises ).done( function( response ) {
-                          console.log('WHAT IS THE CONCATENATED RESPONSE ?? ', _responses_ );
-                          dfd.resolve( response );
-                    }).fail( function() {
-                          console.log('GETSUBMIT PROMISE FAILED');
-                          dfd.reject();
-                    });
 
                     return dfd.promise();
               };//getSubmitPromise
-              var reactWhenPromisesDone = function( response ) {
-                    console.log('>>>>>>>>>>>>>>>> reactWhenPromisesDone response : ',response, '<<<<<<<<<<<<<<<<<<<<<<<');
+              var reactWhenSubmissionsDone = function( response ) {
+                    var dfd = $.Deferred();
+
+                    console.log('>>>>>>>>>>>>>>>> reactWhenSubmissionsDone response : ',response, '<<<<<<<<<<<<<<<<<<<<<<<');
                     response = _.extend( { changeset_status : 'publish' },  response || {} );
                     if ( api.czr_isChangedSetOn() ) {
                           var latestRevision = api._latestRevision;
@@ -2115,47 +2064,102 @@ $.extend( CZRSkopeMths, {
                     };
 
                     _applyWPDefaultReaction( response );
-              };//reactWhenPromisesDone
-              var _doProcesSaveSubmissions = function() {
-                    console.log( 'DO PROCESS SAVE SUBMISSION : ', getDirtySkopesToSubmit() );
-                    getSubmitPromise( getDirtySkopesToSubmit() )
-                    .done( function( response ) {
-                          console.log( 'SUCCESS _doProcesSaveSubmissions()', response );
-                          reactWhenPromisesDone( response );
-                    })
-                    .fail( function( response ) {
-                          console.log( 'FAILURE IN _doProcesSaveSubmissions()', response );
-                    })
-                    .then( function( response ) {
-                          console.log( 'THEN _doProcesSaveSubmissions()', response );
-                          _.each( getDirtySkopesToSubmit(), function( _skp ) {
-                                _saved_dirties[ _skp.id ] = api.czr_skopeBase.getSkopeDirties(_skp.id);
-                                api.czr_skope(_skp.id).dirtyValues({});
-                          });
-                          console.log('WHAT ARE THE SAVED DIRTIES', _saved_dirties );
-                          if ( _.isEmpty( _saved_dirties ) )
-                            return;
+                    _.each( api.czr_skopeCollection(), function( _skp_ ) {
+                          _saved_dirties[ _skp_.id ] = api.czr_skopeBase.getSkopeDirties( _skp_.id );
+                          api.czr_skope( _skp_.id ).dirtyValues({});
+                    });
 
-                          api.czr_savedDirties( { channel : api.previewer.channel() , saved : _saved_dirties });
-                          api.previewer.refresh().done( function( previewer ) {
-                                api.czr_skopeBase.trigger('skopes-saved', _saved_dirties );
-                                deferred.resolveWith( previewer, [ response ] );
-                          } );
-                    });//when()
+                    console.log('WHAT ARE THE SAVED DIRTIES', _saved_dirties );
+
+                    if ( _.isEmpty( _saved_dirties ) ) {
+                          console.log( 'NO SAVED DIRTIES, NO NEED TO REFRESH AFTER SAVE.');
+                          dfd.resolve();
+                    }
+
+                    api.czr_savedDirties( { channel : api.previewer.channel() , saved : _saved_dirties });
+                    api.previewer.refresh().done( function( previewer ) {
+                          api.czr_skopeBase.trigger('skopes-saved', _saved_dirties );
+                          dfd.resolve( previewer );
+                    } );
+
+                    return dfd.promise();
+              };//reactWhenSubmissionsDone
+              var skopesToSave = [],
+                  _recursivePushDeferred = $.Deferred(),
+                  _responses_ = {};
+              _.each( api.czr_skopeCollection(), function( _skp_ ) {
+                    if ( 'global' !== _skp_.skope ) {
+                          skopesToSave.push( _skp_.id );
+                    }
+              });
+              var recursivePush = function( _index ) {
+                    if ( _.isUndefined( _index ) || ( ( 0 * 0 ) == _index ) ) {
+                        api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
+                    }
+
+                    _index = _index || 0;
+                    if ( _.isUndefined( skopesToSave[_index] ) ) {
+                          _recursivePushDeferred.resolve( _responses_ );
+                    } else {
+                          $.when( getSubmitPromise( skopesToSave[ _index ] ) )
+                                .done( function( response ) {
+                                      console.log('RECURSIVE PUSH DONE FOR SKOPE : ', skopesToSave[_index] );
+                                } )
+                                .fail( function( response ) {
+                                      console.log('RECURSIVE PUSH FAIL FOR SKOPE : ', skopesToSave[_index] );
+                                } )
+                                .then( function( response ) {
+                                      response = response || {};
+                                      if ( _.isEmpty( _responses_ ) ) {
+                                            _responses_ = response || {};
+                                      } else {
+                                            _responses_ = $.extend( _responses_ , response );
+                                      }
+                                      recursivePush( _index + 1 );
+                                } );
+                    }
+                    return _recursivePushDeferred.promise();
+              };
+              var fireAllSubmission = function() {
+                    recursivePush()
+                          .done( function( r ) { console.log('RECURSIVE PUSH DONE', r );  })
+                          .fail( function( r ) { console.log('RECURSIVE PUSH FAIL', r );  })
+                          .then( function( r ) {
+                                console.log('RECURSIVE PUSH THEN', r );
+                                getSubmitPromise( globalSkopeId )
+                                      .done( function( r ) { console.log('GLOBAL SUBMIT DONE', r );  })
+                                      .fail( function( r ) { console.log('GLOBAL SUBMIT FAIL', r );  })
+                                      .then( function( r ) {
+                                            console.log('GLOBAL SUBMIT THEN', r );
+                                            if ( _.isEmpty( _responses_ ) ) {
+                                                  _responses_ = r || {};
+                                            } else {
+                                                  _responses_ = $.extend( _responses_ , r );
+                                            }
+                                            console.log('CONCATENATED RESONSE : ', _responses_ );
+                                            reactWhenSubmissionsDone( _responses_ )
+                                                  .done( function( _previewer_ ) { console.log('reactWhenSubmissionsDone DONE', r );  })
+                                                  .fail( function( _previewer_ ) { console.log('reactWhenSubmissionsDone FAIL', r );  })
+                                                  .then( function( _previewer_ ) {
+                                                        console.log('reactWhenSubmissionsDone THEN', _previewer_ );
+                                                        deferred.resolveWith( _previewer_, [ _responses_ ] );
+                                                  });
+
+                                      });
+                          });
               };
 
               if ( 0 === processing() ) {
-                    _doProcesSaveSubmissions();
+                    fireAllSubmission();
               } else {
                     submitWhenDoneProcessing = function () {
                           if ( 0 === processing() ) {
                                 api.state.unbind( 'change', submitWhenDoneProcessing );
-                                _doProcesSaveSubmissions();
+                                fireAllSubmission();
                           }
                     };
                     api.state.bind( 'change', submitWhenDoneProcessing );
               }
-
               return deferred.promise();
         };//save()
 
@@ -2352,10 +2356,10 @@ $.extend( CZRSkopeMths, {
 
                       onceSynced = function() {
                             loadingFrame.unbind( 'synced', onceSynced );
-                            if ( api._previousPreview ) {
-                                api._previousPreview.destroy();
+                            if ( previewer._previousPreview ) {
+                              previewer._previousPreview.destroy();
                             }
-                            api._previousPreview = previewer.preview;
+                            previewer._previousPreview = previewer.preview;
                             previewer.deferred.active.resolve();
                             delete previewer.loading;
                             dfd.resolve( previewer );
@@ -2430,71 +2434,69 @@ $.extend( CZRSkopeMths, {
       var _original_requestChangesetUpdate = api.requestChangesetUpdate;
       api.requestChangesetUpdate = function( changes ) {
             var dfd = $.Deferred(),
-                data;
-            if ( 0 === api._lastSavedRevision && _.isEmpty( api.state( 'changesetStatus' )() ) ) {
-                  $.when( _original_requestChangesetUpdate( {
-                              blogname : { dummy_change : 'dummy_change' }
-                        } ) ).then( function( data ) {
-                              dfd.resolve( data );
-                  });
-            } else {
-                  var _skopesToUpdate = [],
-                      promises = [];
-                  _.each( api.czr_currentSkopesCollection(), function( _skp ) {
-                        if ( 'global' == _skp.skope )
-                          return;
-                        _skopesToUpdate.push( _skp.id );
+                data,
+                _skopesToUpdate = [],
+                _promises = [],
+                _global_skope_changes = changes || {};
+            if ( 0 === api._lastSavedRevision || _.isEmpty( api.state( 'changesetStatus' )() ) ) {
+                  _global_skope_changes = _.extend( _global_skope_changes, {
+                        blogname : { dummy_change : 'dummy_change' }
                   } );
-
-                  console.log('SKOPE CHANGESETS TO UPDATE', _skopesToUpdate );
-
-                  var _pushPromise = function( _skp_id ) {
-                        var dfrd = $.Deferred(),
-                            _requestUpdate = api._requestSkopeChangetsetUpdate( changes, _skp_id );
-                        promises.push( _requestUpdate );
-                        $.when( _requestUpdate ).done( function( _data_ ) {
-                              setTimeout( function() {
-                                  dfrd.resolve( _data_ );
-                              }, 0 );
-
-                        });
-                        return dfrd.promise();
-                  };
-
-                  var _recursivePushDeferred = $.Deferred(),
-                      _all_skopes_data_ = [];
-
-                  var recursivePush = function( _index ) {
-                        if ( _.isUndefined( _index ) || ( ( 0 * 0 ) == _index ) ) {
-                            api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
-                        }
-
-                        _index = _index || 0;
-                        if ( _.isUndefined( _skopesToUpdate[_index] ) ) {
-                              _recursivePushDeferred.resolve( _all_skopes_data_ );
-                        } else {
-                              $.when( _pushPromise( _skopesToUpdate[_index] ) ).done( function( _skope_data_ ) {
-                                    console.log('RECURSIVE PUSH DONE FOR SKOPE : ', _skopesToUpdate[_index] );
-                                    _all_skopes_data_.push( _skope_data_ );
-                                    recursivePush( _index + 1 );
-                              } );
-                        }
-                        return _recursivePushDeferred.promise();
-                  };
-                  var _lastSavedRevisionBefore = api._lastSavedRevision;
-                  $.when( _original_requestChangesetUpdate( changes ) ).then( function( data ) {
-                          console.log('GLOBAL SKOPE CHANGESET UPDATE PROCESSED BY WP : ', data );
-                           api._lastSavedRevision = _lastSavedRevisionBefore;
-                          $.when( recursivePush() ).then( function() {
-                                console.log('ALL RECURSIVE PUSHES ARE DONE NOW', _all_skopes_data_ );
-
-                                var savedChangesetValues = {};
-                                api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
-                                api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
-                                dfd.resolve( data );
-                          });
-                  });
             }
+            _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                  if ( 'global' == _skp.skope )
+                    return;
+                  _skopesToUpdate.push( _skp.id );
+            } );
+
+            console.log('SKOPE CHANGESETS TO UPDATE', _skopesToUpdate );
+
+            var _pushPromise = function( _skp_id ) {
+                  var dfrd = $.Deferred(),
+                      _requestUpdate = api._requestSkopeChangetsetUpdate( changes, _skp_id );
+                  _promises.push( _requestUpdate );
+                  $.when( _requestUpdate ).done( function( _data_ ) {
+                        setTimeout( function() {
+                            dfrd.resolve( _data_ );
+                        }, 0 );
+
+                  });
+                  return dfrd.promise();
+            };
+
+            var _recursivePushDeferred = $.Deferred(),
+                _all_skopes_data_ = [];
+
+            var recursivePush = function( _index ) {
+                  if ( _.isUndefined( _index ) || ( ( 0 * 0 ) == _index ) ) {
+                      api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
+                  }
+
+                  _index = _index || 0;
+                  if ( _.isUndefined( _skopesToUpdate[_index] ) ) {
+                        _recursivePushDeferred.resolve( _all_skopes_data_ );
+                  } else {
+                        $.when( _pushPromise( _skopesToUpdate[_index] ) ).done( function( _skope_data_ ) {
+                              console.log('RECURSIVE PUSH DONE FOR SKOPE : ', _skopesToUpdate[_index] );
+                              _all_skopes_data_.push( _skope_data_ );
+                              recursivePush( _index + 1 );
+                        } );
+                  }
+                  return _recursivePushDeferred.promise();
+            };
+            var _lastSavedRevisionBefore = api._lastSavedRevision;
+            $.when( _original_requestChangesetUpdate( _global_skope_changes ) ).then( function( wp_original_response ) {
+                    console.log('GLOBAL SKOPE CHANGESET UPDATE PROCESSED BY WP : ', _global_skope_changes, wp_original_response );
+                     api._lastSavedRevision = _lastSavedRevisionBefore;
+                    $.when( recursivePush() ).then( function() {
+                          console.log('ALL RECURSIVE PUSHES ARE DONE NOW', _all_skopes_data_ );
+
+                          var savedChangesetValues = {};
+                          api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
+                          api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+                          dfd.resolve( wp_original_response );
+                    });
+            });
 
             return dfd.promise();
       };
@@ -2504,8 +2506,10 @@ $.extend( CZRSkopeMths, {
                   throw new Error( 'In api._requestSkopeChangetsetUpdate() : a valid and registered skope_id must be provided' );
             }
 
-            var deferred, request, submittedChanges = {}, data;
-            deferred = new $.Deferred();
+            var deferred = new $.Deferred(),
+                request,
+                submittedChanges = {},
+                data;
             skope_id = skope_id || api.czr_activeSkope();
 
             if ( changes ) {

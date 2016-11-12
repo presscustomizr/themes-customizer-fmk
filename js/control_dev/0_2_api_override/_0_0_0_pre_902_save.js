@@ -38,7 +38,9 @@
                   submit,
                   //modifiedWhileSaving = {},
                   invalidSettings = [],
-                  invalidControls;
+                  invalidControls,
+                  globalSkopeId = api.czr_skopeBase.getGlobalSkopeId(),
+                  _saved_dirties = {};// will be used as param to update the skope model db val after all ajx requests are done
 
               if ( args && args.status ) {
                     changesetStatus = args.status;
@@ -49,6 +51,8 @@
                   deferred.promise();
               }
 
+              // set saving state.
+              // => will be set to false when all saved promises resolved
               api.state( 'saving' ).set( true );
 
 
@@ -171,7 +175,10 @@
                      * will get re-validated, perhaps in the case of settings that are invalid
                      * due to dependencies on other settings.
                      */
-                    request = wp.ajax.post( 'customize_save', query );
+                    request = wp.ajax.post(
+                          'global' !== query.skope ? 'customize_skope_changeset_save' : 'customize_save',
+                          query
+                    );
 
                     // Disable save button during the save request.
                     saveBtn.prop( 'disabled', true );
@@ -185,7 +192,7 @@
                     // } );
 
                     request.fail( function ( response ) {
-                          api.consoleLog('ALORS FAIL ?', params.skope_id, response );
+                          api.consoleLog('SUBMIT REQUEST FAIL ?', params.skope_id, response );
                           if ( '0' === response ) {
                                 response = 'not_logged_in';
                           } else if ( '-1' === response ) {
@@ -207,7 +214,7 @@
                     } );
 
                     request.done( function( response ) {
-                          api.consoleLog('ALORS DONE ?', params.skope_id, response );
+                          api.consoleLog('SUBMIT REQUEST DONE ?', params.skope_id, response );
                           submit_dfd.resolve( response );
                     } );
 
@@ -216,128 +223,42 @@
               };//submit()
 
 
-
-              var getDirtySkopesToSubmit = function() {
-                    //skopeRequestDoneCollection = new api.Value( [] ),
-                    //skopeRequests = $.Deferred(),
-                    return _.filter( api.czr_skopeCollection(), function( _skop ) {
-                          return api.czr_skope( _skop.id ).dirtyness();
-                    });
-              };
-
-              var _saved_dirties = {};//will be used as param to update the skope model db val after all ajx requests are done
-
-
               //loop on the registered skopes and submit each save ajax request
               //@return a promise()
-              var getSubmitPromise = function( dirtySkopesToSubmit  ) {
-                    var dfd = $.Deferred(), promises = [], globalSkopeId = api.czr_skopeBase.getGlobalSkopeId();
+              //
+              var getSubmitPromise = function( skope_id ) {
+                    var dfd = $.Deferred();
 
-                    //ARE THERE SKOPE EXCLUDED DIRTIES ?
-                    //var _skopeExcludedDirties = api.czr_skopeBase.getSkopeExcludedDirties();
+                    if ( _.isEmpty( skope_id ) || ! api.czr_skope.has( skope_id ) ) {
+                          api.consoleLog( 'getSubmitPromise : no skope id requested OR skope_id not registered : ' + skope_id );
+                          dfd.resolve();
+                    }
 
-                    //////////////////////////////////SUBMIT EXCLUDED SETTINGS ////////////////////////////
-                    ///@to do : do we need to check if we are not already in the global skope ?
-                    // if ( ! _.isEmpty( _skopeExcludedDirties ) ) {
-                    //       console.log('>>>>>>>>>>>>>>>>>>> submit request for _skopeExcludedDirties', _skopeExcludedDirties );
-                    //       //each promise is a submit ajax query
-                    //       promises.push( submit( {
-                    //             skope_id : globalSkopeId,
-                    //             the_dirties : _skopeExcludedDirties,
-                    //             dyn_type : 'wp_default_type'
-                    //           })
-                    //       );
-                    // }
+                    var skopeObjectToSubmit = api.czr_skope( skope_id )();
 
+                    // Resolve here if not dirty AND not global skope
+                    // always submit the global skope, even if not dirty => required to properly clean the changeset post server side
+                    if ( ! api.czr_skope( skope_id ).dirtyness() && skope_id !== globalSkopeId ) {
+                        dfd.resolve();
+                    }
 
                     //////////////////////////////////SUBMIT THE ELIGIBLE SETTINGS OF EACH SKOPE ////////////////////////////
-                    _.each( dirtySkopesToSubmit, function( _skop ) {
-                          var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
-                          api.consoleLog('submit request for skope : ', _skop, the_dirties );
-                          //each promise is a submit ajax query
-                          promises.push( submit( {
-                                skope_id : _skop.id,
-                                the_dirties : the_dirties,//{}
-                                dyn_type : _skop.dyn_type
-                          } ) );
-                    });
+                    //a submit call returns a promise resolved when the db ajax query is done().
+                    var _submit_request = submit( {
+                              skope_id : skope_id,
+                              the_dirties : api.czr_skopeBase.getSkopeDirties( skope_id ),//{}
+                              dyn_type : skopeObjectToSubmit.dyn_type
+                        } );
 
+                    api.consoleLog('submit request for skope : id, object, dirties : ', skope_id, skopeObjectToSubmit , api.czr_skopeBase.getSkopeDirties( skope_id ) );
 
-                    ///////////////////////////////////ALWAYS SUBMIT NOT YET REGISTERED WIDGETS TO GLOBAL OPTIONS
-                    if ( ! api.czr_skopeBase.isExcludedSidebarsWidgets() ) {
-                          _.each( dirtySkopesToSubmit, function( _skop ) {
-                                if ( _skop.id == globalSkopeId )
-                                  return;
-                                console.log('>>>>>>>>>>>>>>>>>>> submit request for missing widgets globally', widget_dirties );
-                                var widget_dirties = {};
-                                var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
-
-                                //loop on each skop dirties and check if there's a new widget not yet registered globally
-                                //if a match is found, add it to the widget_dirties, if not already added, and add it to the promises submission
-                                _.each( the_dirties, function( _val, _setId ) {
-                                      //must be a widget setting and not yet registered globally
-                                      if ( 'widget_' == _setId.substring(0, 7) && ! api.czr_skopeBase.isWidgetRegisteredGlobally( _setId ) ) {
-                                            if ( ! _.has( widget_dirties, _setId ) ) {
-                                                  widget_dirties[ _setId ] = _val;
-                                            }
-                                      }
-                                });
-
-
-                                if ( ! _.isEmpty(widget_dirties) ) {
-                                      //each promise is a submit ajax query
-                                      promises.push( submit( {
-                                            skope_id : globalSkopeId,
-                                            the_dirties : widget_dirties,
-                                            dyn_type : 'wp_default_type'
-                                        } )
-                                      );
-                                }
+                    _submit_request
+                          .done( function( _resp) { console.log('GETSUBMIT DONE PROMISE SUCCEEDED', _resp); })
+                          .fail( function( _resp ) { console.log('GETSUBMIT FAILED PROMISE', _resp ); })
+                          .then( function( _resp ) {
+                                console.log('GETSUBMIT THEN ', _resp );
+                                dfd.resolve( _resp );
                           });
-                    }
-
-                    ///////////////////////////////////ALWAYS SUBMIT GLOBAL SKOPE ELIGIBLE SETTINGS TO SPECIFIC GLOBAL OPTION
-                    _.each( dirtySkopesToSubmit, function( _skop ) {
-                          if ( _skop.skope != 'global' )
-                                return;
-
-                          if ( _.isUndefined( serverControlParams.globalSkopeOptName) ) {
-                                throw new Error('serverControlParams.globalSkopeOptName MUST BE DEFINED TO SAVE THE GLOBAL SKOPE.');
-                          }
-                          //each promise is a submit ajax query
-                          promises.push( submit( {
-                                skope_id : globalSkopeId,
-                                the_dirties : api.czr_skopeBase.getSkopeDirties( _skop.id ),
-                                dyn_type : 'global_option',
-                                opt_name : serverControlParams.globalSkopeOptName
-                            } )
-                          );
-                    });
-
-                    //WE NEED TO BUILD A PROPER RESPONSE HERE
-                    var _responses_ = {};
-                    _.each( promises, function( _prom ) {
-                          _prom.always( function( response ) {
-                                if ( _.isEmpty( _responses_ ) ) {
-                                      _responses_ = response;
-                                } else {
-                                      _responses_ = $.extend( _responses_ , response );
-                                }
-                          } );
-                    } );
-
-                    if ( _.isEmpty( promises ) ) {
-                          console.log('THE SAVE SUBMIT PROMISES ARE EMPTY. PROBABLY BECAUSE THERE WAS ONLY EXCLUDED SKOPE SETTINGS TO SAVE', getDirtySkopesToSubmit() , api.czr_skopeBase.getSkopeExcludedDirties() );
-                          //deferred.resolve();
-                    }
-
-                    $.when.apply( null, promises ).done( function( response ) {
-                          console.log('WHAT IS THE CONCATENATED RESPONSE ?? ', _responses_ );
-                          dfd.resolve( response );
-                    }).fail( function() {
-                          console.log('GETSUBMIT PROMISE FAILED');
-                          dfd.reject();
-                    });
 
                     return dfd.promise();
               };//getSubmitPromise
@@ -346,8 +267,10 @@
 
 
               //defer some actions (included WP core ones ) when all submit promises are done
-              var reactWhenPromisesDone = function( response ) {
-                    console.log('>>>>>>>>>>>>>>>> reactWhenPromisesDone response : ',response, '<<<<<<<<<<<<<<<<<<<<<<<');
+              var reactWhenSubmissionsDone = function( response ) {
+                    var dfd = $.Deferred();
+
+                    console.log('>>>>>>>>>>>>>>>> reactWhenSubmissionsDone response : ',response, '<<<<<<<<<<<<<<<<<<<<<<<');
                     //response can be undefined, always set them as an object with 'publish' changet_setstatus by default
                     //because this will be used in various api events ( 'saved', ... ) that does not accept an undefined val.
                     response = _.extend( { changeset_status : 'publish' },  response || {} );
@@ -408,60 +331,139 @@
 
                     _applyWPDefaultReaction( response );
 
+
+                    //store the saved dirties (will be used as param to update the db val property of each saved skope)
+                    //and reset them
+                    _.each( api.czr_skopeCollection(), function( _skp_ ) {
+                          _saved_dirties[ _skp_.id ] = api.czr_skopeBase.getSkopeDirties( _skp_.id );
+                          api.czr_skope( _skp_.id ).dirtyValues({});
+                          //api.czr_skopeBase.getSkopeDirties();
+                    });
+
+                    console.log('WHAT ARE THE SAVED DIRTIES', _saved_dirties );
+
+                    if ( _.isEmpty( _saved_dirties ) ) {
+                          console.log( 'NO SAVED DIRTIES, NO NEED TO REFRESH AFTER SAVE.');
+                          dfd.resolve();
+                    }
+
+                    api.czr_savedDirties( { channel : api.previewer.channel() , saved : _saved_dirties });
+                    api.previewer.refresh().done( function( previewer ) {
+                          api.czr_skopeBase.trigger('skopes-saved', _saved_dirties );
+                          dfd.resolve( previewer );
+                    } );
+
                     // Restore the global dirty state if any settings were modified during save.
                     // if ( ! _.isEmpty( modifiedWhileSaving ) ) {
                     //   api.state( 'saved' ).set( false );
                     // }
-              };//reactWhenPromisesDone
+
+                    return dfd.promise();
+              };//reactWhenSubmissionsDone
 
 
 
-              //FIRE SUBMISSIONS
+              //PROCESS SUBMISSIONS
               //ALWAYS FIRE THE GLOBAL SKOPE WHEN ALL OTHER SKOPES HAVE BEEN DONE.
               //=> BECAUSE WHEN SAVING THE GLOBAL SKOPE, THE CHANGESET POST STATUS WILL BE CHANGED TO 'publish' AND THEREFORE NOT ACCESSIBLE ANYMORE
-              var _doProcesSaveSubmissions = function() {
-                    console.log( 'DO PROCESS SAVE SUBMISSION : ', getDirtySkopesToSubmit() );
-                    getSubmitPromise( getDirtySkopesToSubmit() )
-                    .done( function( response ) {
-                          console.log( 'SUCCESS _doProcesSaveSubmissions()', response );
-                          reactWhenPromisesDone( response );
-                    })
-                    .fail( function( response ) {
-                          console.log( 'FAILURE IN _doProcesSaveSubmissions()', response );
-                    })
-                    .then( function( response ) {
-                          console.log( 'THEN _doProcesSaveSubmissions()', response );
-                          //store the saved dirties (will be used as param to update the db val property of each saved skope)
-                          //and reset them
-                          _.each( getDirtySkopesToSubmit(), function( _skp ) {
-                                _saved_dirties[ _skp.id ] = api.czr_skopeBase.getSkopeDirties(_skp.id);
-                                api.czr_skope(_skp.id).dirtyValues({});
-                                //api.czr_skopeBase.getSkopeDirties();
-                          });
-                          console.log('WHAT ARE THE SAVED DIRTIES', _saved_dirties );
-                          if ( _.isEmpty( _saved_dirties ) )
-                            return;
+              var skopesToSave = [],
+                  _recursivePushDeferred = $.Deferred(),
+                  _responses_ = {};
 
-                          api.czr_savedDirties( { channel : api.previewer.channel() , saved : _saved_dirties });
-                          api.previewer.refresh().done( function( previewer ) {
-                                api.czr_skopeBase.trigger('skopes-saved', _saved_dirties );
-                                deferred.resolveWith( previewer, [ response ] );
-                          } );
-                    });//when()
+              // build the skope ids array to submit recursively
+              _.each( api.czr_skopeCollection(), function( _skp_ ) {
+                    if ( 'global' !== _skp_.skope ) {
+                          skopesToSave.push( _skp_.id );
+                    }
+              });
+
+
+              // recursive pushes for not global skopes
+              var recursivePush = function( _index ) {
+                    //on first push run, set the api state to processing.
+                    // Make sure that publishing a changeset waits for all changeset update requests to complete.
+                    if ( _.isUndefined( _index ) || ( ( 0 * 0 ) == _index ) ) {
+                        api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
+                    }
+
+                    _index = _index || 0;
+                    if ( _.isUndefined( skopesToSave[_index] ) ) {
+                          _recursivePushDeferred.resolve( _responses_ );
+                    } else {
+                          $.when( getSubmitPromise( skopesToSave[ _index ] ) )
+                                .done( function( response ) {
+                                      console.log('RECURSIVE PUSH DONE FOR SKOPE : ', skopesToSave[_index] );
+                                } )
+                                .fail( function( response ) {
+                                      console.log('RECURSIVE PUSH FAIL FOR SKOPE : ', skopesToSave[_index] );
+                                } )
+                                .then( function( response ) {
+                                      response = response || {};
+
+                                      //WE NEED TO BUILD A PROPER RESPONSE HERE
+                                      if ( _.isEmpty( _responses_ ) ) {
+                                            _responses_ = response || {};
+                                      } else {
+                                            _responses_ = $.extend( _responses_ , response );
+                                      }
+                                      //call me again
+                                      recursivePush( _index + 1 );
+                                } );
+                    }
+                    return _recursivePushDeferred.promise();
+              };
+
+
+
+              //FIRE SUBMISSIONS :
+              //1) first all skopes but global, recursively
+              //2) then global => will publish the changeset. Server side, the changeset post will be trashed and the next uuid will be returned to the API
+              var fireAllSubmission = function() {
+                    recursivePush()
+                          .done( function( r ) { console.log('RECURSIVE PUSH DONE', r );  })
+                          .fail( function( r ) { console.log('RECURSIVE PUSH FAIL', r );  })
+                          .then( function( r ) {
+                                console.log('RECURSIVE PUSH THEN', r );
+                                getSubmitPromise( globalSkopeId )
+                                      .done( function( r ) { console.log('GLOBAL SUBMIT DONE', r );  })
+                                      .fail( function( r ) { console.log('GLOBAL SUBMIT FAIL', r );  })
+                                      .then( function( r ) {
+                                            console.log('GLOBAL SUBMIT THEN', r );
+                                            //WE NEED TO BUILD A PROPER RESPONSE HERE
+                                            if ( _.isEmpty( _responses_ ) ) {
+                                                  _responses_ = r || {};
+                                            } else {
+                                                  _responses_ = $.extend( _responses_ , r );
+                                            }
+                                            console.log('CONCATENATED RESONSE : ', _responses_ );
+                                            //EXECUTE POST SAVE ACTIONS => Resolved when refresh.done().
+                                            //- Clean dirtyness
+                                            //- send 'saved' event to previewer
+                                            //- reset 'changesetStatus' to ''
+                                            reactWhenSubmissionsDone( _responses_ )
+                                                  .done( function( _previewer_ ) { console.log('reactWhenSubmissionsDone DONE', r );  })
+                                                  .fail( function( _previewer_ ) { console.log('reactWhenSubmissionsDone FAIL', r );  })
+                                                  .then( function( _previewer_ ) {
+                                                        console.log('reactWhenSubmissionsDone THEN', _previewer_ );
+                                                        //Resolve the general deferred.
+                                                        deferred.resolveWith( _previewer_, [ _responses_ ] );
+                                                  });
+
+                                      });
+                          });
               };
 
               if ( 0 === processing() ) {
-                    _doProcesSaveSubmissions();
+                    fireAllSubmission();
               } else {
                     submitWhenDoneProcessing = function () {
                           if ( 0 === processing() ) {
                                 api.state.unbind( 'change', submitWhenDoneProcessing );
-                                _doProcesSaveSubmissions();
+                                fireAllSubmission();
                           }
                     };
                     api.state.bind( 'change', submitWhenDoneProcessing );
               }
-
               return deferred.promise();
         };//save()
 
