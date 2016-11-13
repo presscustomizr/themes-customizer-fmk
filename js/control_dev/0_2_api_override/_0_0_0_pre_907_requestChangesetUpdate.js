@@ -251,6 +251,7 @@
             } );
             request.always( function( _data_ ) {
                   if ( _data_.setting_validities ) {
+                    console.log('HANDLE SETTING VALIDITIES', _data_ );
                     api._handleSettingValidities( {
                       settingValidities: _data_.setting_validities
                     } );

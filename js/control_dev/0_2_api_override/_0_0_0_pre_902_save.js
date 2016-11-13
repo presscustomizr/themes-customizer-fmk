@@ -66,7 +66,7 @@
               //the dyn_type can also be set to 'wp_default_type' when saving a skope excluded setting
               //@params = {
               //    skope_id : string,
-              //    the_dirties : {},
+              //    customize_changeset_data  : {},
               //    dyn_type : string,
               //    opt_name : string
               // }
@@ -74,6 +74,7 @@
                     var default_params = {
                           skope_id : null,
                           the_dirties : {},
+                          customize_changeset_data : {},
                           dyn_type : null,
                           opt_name : null
                         },
@@ -147,7 +148,8 @@
                      */
                     query = $.extend( previewer.query( query_params ), {
                           nonce:  previewer.nonce.save,
-                          customize_changeset_status: changesetStatus
+                          customize_changeset_status: changesetStatus,
+                          customize_changeset_data : JSON.stringify( params.customize_changeset_data )
                     } );
 
                     //since 4.7 : if changeset is on, let's add stuff to the query object
@@ -227,7 +229,8 @@
               //@return a promise()
               //
               var getSubmitPromise = function( skope_id ) {
-                    var dfd = $.Deferred();
+                    var dfd = $.Deferred(),
+                        submittedChanges = {};
 
                     if ( _.isEmpty( skope_id ) || ! api.czr_skope.has( skope_id ) ) {
                           api.consoleLog( 'getSubmitPromise : no skope id requested OR skope_id not registered : ' + skope_id );
@@ -243,10 +246,18 @@
                     }
 
                     //////////////////////////////////SUBMIT THE ELIGIBLE SETTINGS OF EACH SKOPE ////////////////////////////
+                    //Ensure all revised settings (changes pending save) are also included, but not if marked for deletion in changes.
+                    _.each( api.czr_skopeBase.getSkopeDirties( skope_id ) , function( dirtyValue, settingId ) {
+                          submittedChanges[ settingId ] = _.extend(
+                                { value: dirtyValue }
+                          );
+                    } );
+
+
                     //a submit call returns a promise resolved when the db ajax query is done().
                     var _submit_request = submit( {
                               skope_id : skope_id,
-                              the_dirties : api.czr_skopeBase.getSkopeDirties( skope_id ),//{}
+                              customize_changeset_data : submittedChanges,//{}
                               dyn_type : skopeObjectToSubmit.dyn_type
                         } );
 
@@ -333,11 +344,10 @@
 
 
                     //store the saved dirties (will be used as param to update the db val property of each saved skope)
-                    //and reset them
+                    // reset them
                     _.each( api.czr_skopeCollection(), function( _skp_ ) {
                           _saved_dirties[ _skp_.id ] = api.czr_skopeBase.getSkopeDirties( _skp_.id );
                           api.czr_skope( _skp_.id ).dirtyValues({});
-                          //api.czr_skopeBase.getSkopeDirties();
                     });
 
                     console.log('WHAT ARE THE SAVED DIRTIES', _saved_dirties );
@@ -349,6 +359,7 @@
 
                     api.czr_savedDirties( { channel : api.previewer.channel() , saved : _saved_dirties });
                     api.previewer.refresh().done( function( previewer ) {
+                          console.log('REFRESH IS DONE ?');
                           api.czr_skopeBase.trigger('skopes-saved', _saved_dirties );
                           dfd.resolve( previewer );
                     } );
@@ -390,6 +401,7 @@
                     if ( _.isUndefined( skopesToSave[_index] ) ) {
                           _recursivePushDeferred.resolve( _responses_ );
                     } else {
+                          console.log( 'in recursivePush', _index, skopesToSave[ _index ] );
                           $.when( getSubmitPromise( skopesToSave[ _index ] ) )
                                 .done( function( response ) {
                                       console.log('RECURSIVE PUSH DONE FOR SKOPE : ', skopesToSave[_index] );
@@ -436,6 +448,10 @@
                                                   _responses_ = $.extend( _responses_ , r );
                                             }
                                             console.log('CONCATENATED RESONSE : ', _responses_ );
+
+                                            //ALL SUBMISSIONS ARE DONE, let's inform the processing state of the api
+                                            api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+
                                             //EXECUTE POST SAVE ACTIONS => Resolved when refresh.done().
                                             //- Clean dirtyness
                                             //- send 'saved' event to previewer
