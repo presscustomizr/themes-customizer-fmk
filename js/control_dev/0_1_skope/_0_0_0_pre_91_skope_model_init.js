@@ -84,7 +84,8 @@ $.extend( CZRSkopeMths, {
 
           //LISTEN TO DIRTYNESS
           //@to is {setId1 : val1, setId2, val2, ...}
-          skope.dirtyValues.callbacks.add( function(to) {
+          skope.dirtyValues.callbacks.add( function(to, from) {
+              console.log('IN DIRTY VALUES CALLBACK', to, from );
               //set the model dirtyness boolean state value
               skope.dirtyness( ! _.isEmpty(to) );
           });
@@ -108,6 +109,7 @@ $.extend( CZRSkopeMths, {
 
           //EMBED THE SKOPE VIEW : EMBED AND STORE THE CONTAINER
           $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
+              console.log('  !!!!!!!!!!!!!!! EMBED DIALOG BOX !!!!!!!!!!!!!!!! ');
               if ( false !== $_container.length ) {
                   skope.container = $_container;
                   skope.embedded.resolve();
@@ -165,7 +167,9 @@ $.extend( CZRSkopeMths, {
           }
 
           //INFORM SKOPE API VALUES
+          //=> fired on each update of the skope model
           $.when( skope.embedded.promise() ).done( function() {
+                skope.dirtyness( ! _.isEmpty( skope().changeset ) );
                 skope.hasDBValues( to.has_db_val );
                 skope.winner( to.is_winner );
           });
