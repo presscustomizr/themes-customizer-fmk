@@ -121,3 +121,87 @@ $.extend( CZRSkopeSaveMths, {
                   });
       }//fireAllSubmissions
 });//$.extend
+
+
+
+
+
+
+
+
+///////////////////////////////////ALWAYS SUBMIT NOT YET REGISTERED WIDGETS TO GLOBAL OPTIONS
+// if ( ! api.czr_skopeBase.isExcludedSidebarsWidgets() ) {
+//       _.each( skopeObjectToSubmit, function( _skop ) {
+//             if ( _skop.id == globalSkopeId )
+//               return;
+//             console.log('>>>>>>>>>>>>>>>>>>> submit request for missing widgets globally', widget_dirties );
+//             var widget_dirties = {};
+//             var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
+
+//             //loop on each skop dirties and check if there's a new widget not yet registered globally
+//             //if a match is found, add it to the widget_dirties, if not already added, and add it to the promises submission
+//             _.each( the_dirties, function( _val, _setId ) {
+//                   //must be a widget setting and not yet registered globally
+//                   if ( 'widget_' == _setId.substring(0, 7) && ! api.czr_skopeBase.isWidgetRegisteredGlobally( _setId ) ) {
+//                         if ( ! _.has( widget_dirties, _setId ) ) {
+//                               widget_dirties[ _setId ] = _val;
+//                         }
+//                   }
+//             });
+
+
+//             if ( ! _.isEmpty(widget_dirties) ) {
+//                   //each promise is a submit ajax query
+//                   promises.push( submit( {
+//                         skope_id : globalSkopeId,
+//                         the_dirties : widget_dirties,
+//                         dyn_type : 'wp_default_type'
+//                     } )
+//                   );
+//             }
+//       });
+// }
+
+
+
+
+
+
+
+//ARE THERE SKOPE EXCLUDED DIRTIES ?
+  //var _skopeExcludedDirties = api.czr_skopeBase.getSkopeExcludedDirties();
+
+  //////////////////////////////////SUBMIT EXCLUDED SETTINGS ////////////////////////////
+  ///@to do : do we need to check if we are not already in the global skope ?
+  // if ( ! _.isEmpty( _skopeExcludedDirties ) ) {
+  //       console.log('>>>>>>>>>>>>>>>>>>> submit request for _skopeExcludedDirties', _skopeExcludedDirties );
+  //       //each promise is a submit ajax query
+  //       promises.push( submit( {
+  //             skope_id : globalSkopeId,
+  //             the_dirties : _skopeExcludedDirties,
+  //             dyn_type : 'wp_default_type'
+  //           })
+  //       );
+  // }
+
+
+
+
+
+  ///////////////////////////////////ALWAYS SUBMIT GLOBAL SKOPE ELIGIBLE SETTINGS TO SPECIFIC GLOBAL OPTION
+  // _.each( skopeObjectToSubmit, function( _skop ) {
+  //       if ( _skop.skope != 'global' )
+  //             return;
+
+  //       if ( _.isUndefined( serverControlParams.globalSkopeOptName) ) {
+  //             throw new Error('serverControlParams.globalSkopeOptName MUST BE DEFINED TO SAVE THE GLOBAL SKOPE.');
+  //       }
+  //       //each promise is a submit ajax query
+  //       promises.push( submit( {
+  //             skope_id : globalSkopeId,
+  //             the_dirties : api.czr_skopeBase.getSkopeDirties( _skop.id ),
+  //             dyn_type : 'global_option',
+  //             opt_name : serverControlParams.globalSkopeOptName
+  //         } )
+  //       );
+  // });
