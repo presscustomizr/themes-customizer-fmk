@@ -49,7 +49,7 @@
         //  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || []
         // }
         //
-        api.previewer.bind( 'czr-skopes-ready', function( data ) {
+        api.previewer.bind( 'czr-skopes-synced', function( data ) {
               if ( ! serverControlParams.isSkopOn )
                 return;
               //api.consoleLog('czr-skopes-ready DATA', data );

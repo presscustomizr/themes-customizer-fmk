@@ -30,85 +30,97 @@
   //   });
   // });
 
+
+  /////////////// SEND SKOPES
+  $( function() {
+        api.preview.bind( 'sync', function( events ) {
+              api.preview.send( 'czr-skopes-synced', {
+                    czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+                    skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || [],
+              } );
+        });
+  });
+
+  /////////////// SETUP MODULES ACTIONS ON PREVIEW READY
   wp.customize.bind( 'preview-ready', function() {
-      //SEKTIONS
-      wp.customize.preview.bind('edit_sek', function(o) {
-            if ( ! _.has( o, 'id') || ! $('[data-sek-id="' + o.id +'"]').length )
-              return;
-            $('html, body').animate({
-                  scrollTop : $('[data-sek-id="' + o.id +'"]').offset().top - 50
-            }, 'slow');
-      });
+        //SEKTIONS
+        wp.customize.preview.bind('edit_sek', function(o) {
+              if ( ! _.has( o, 'id') || ! $('[data-sek-id="' + o.id +'"]').length )
+                return;
+              $('html, body').animate({
+                    scrollTop : $('[data-sek-id="' + o.id +'"]').offset().top - 50
+              }, 'slow');
+        });
 
-      wp.customize.preview.bind('start_hovering_sek', function(o) {
-            if ( ! _.has( o, 'id') || ! $('[data-sek-id="' + o.id +'"]').length )
-              return;
-            var $_sek = $('[data-sek-id="' + o.id +'"]'),
-                _width = $_sek.outerWidth(),
-                _height = $_sek.outerHeight();
+        wp.customize.preview.bind('start_hovering_sek', function(o) {
+              if ( ! _.has( o, 'id') || ! $('[data-sek-id="' + o.id +'"]').length )
+                return;
+              var $_sek = $('[data-sek-id="' + o.id +'"]'),
+                  _width = $_sek.outerWidth(),
+                  _height = $_sek.outerHeight();
 
-            //remove all previous hover placeholder from sektion
-            $_sek.closest('.czr-sektion').find('.czr-hover-placeholder').each( function(){ $(this).remove(); } );
+              //remove all previous hover placeholder from sektion
+              $_sek.closest('.czr-sektion').find('.czr-hover-placeholder').each( function(){ $(this).remove(); } );
 
-            //apply placeholder
-            $.when( $_sek.append( $( '<div/>', {
-                  class : 'czr-hover-placeholder',
-                  style : 'width:' + _width +'px;height:' + _height +'px;line-height:' + _height +'px;',
-                  html : '<i class="material-icons">create</i>'
-              })
-            ) ).done( function() {
-                  $('.czr-hover-placeholder').css('opacity', 1).fitText( 0.3, { minFontSize: '50px', maxFontSize: '100px' } );
-            });
-      });
+              //apply placeholder
+              $.when( $_sek.append( $( '<div/>', {
+                    class : 'czr-hover-placeholder',
+                    style : 'width:' + _width +'px;height:' + _height +'px;line-height:' + _height +'px;',
+                    html : '<i class="material-icons">create</i>'
+                })
+              ) ).done( function() {
+                    $('.czr-hover-placeholder').css('opacity', 1).fitText( 0.3, { minFontSize: '50px', maxFontSize: '100px' } );
+              });
+        });
 
-      wp.customize.preview.bind('stop_hovering_sek', function(o) {
-            if ( ! _.has( o, 'id') || ! $('[data-sek-id="' + o.id +'"]').length )
-              return;
+        wp.customize.preview.bind('stop_hovering_sek', function(o) {
+              if ( ! _.has( o, 'id') || ! $('[data-sek-id="' + o.id +'"]').length )
+                return;
 
-            var $_sek = $('[data-sek-id="' + o.id +'"]');
-            $.when( $_sek.find('.czr-hover-placeholder').fadeOut(200) ).done( function() {$_sek.find('.czr-hover-placeholder').remove(); });
-      });
-
-
+              var $_sek = $('[data-sek-id="' + o.id +'"]');
+              $.when( $_sek.find('.czr-hover-placeholder').fadeOut(200) ).done( function() {$_sek.find('.czr-hover-placeholder').remove(); });
+        });
 
 
-      //MODULES
-      wp.customize.preview.bind('edit_module', function(o) {
-            if ( ! _.has( o, 'id') || ! $('[data-module-id="' + o.id +'"]').length )
-              return;
-            $('html, body').animate({
-                  scrollTop : $('[data-module-id="' + o.id +'"]').offset().top - 50
-            }, 'slow');
-      });
 
-      wp.customize.preview.bind('start_hovering_module', function(o) {
-            if ( ! _.has( o, 'id') || ! $('[data-module-id="' + o.id +'"]').length )
-              return;
-            var $_module = $('[data-module-id="' + o.id +'"]'),
-                _width = $_module.outerWidth(),
-                _height = $_module.outerHeight();
 
-            //remove all previous hover placeholder from sektion
-            $_module.closest('.czr-sektion').find('.czr-hover-placeholder').each( function(){ $(this).remove(); } );
+        //MODULES
+        wp.customize.preview.bind('edit_module', function(o) {
+              if ( ! _.has( o, 'id') || ! $('[data-module-id="' + o.id +'"]').length )
+                return;
+              $('html, body').animate({
+                    scrollTop : $('[data-module-id="' + o.id +'"]').offset().top - 50
+              }, 'slow');
+        });
 
-            //apply placeholder
-            $.when( $_module.append( $( '<div/>', {
-                  class : 'czr-hover-placeholder',
-                  style : 'width:' + _width +'px;height:' + _height +'px;line-height:' + _height +'px;',
-                  html : '<i class="material-icons">create</i>'
-              })
-            ) ).done( function() {
-                  $('.czr-hover-placeholder').css('opacity', 1).fitText( 0.3, { minFontSize: '50px', maxFontSize: '100px' } );
-            });
-      });
+        wp.customize.preview.bind('start_hovering_module', function(o) {
+              if ( ! _.has( o, 'id') || ! $('[data-module-id="' + o.id +'"]').length )
+                return;
+              var $_module = $('[data-module-id="' + o.id +'"]'),
+                  _width = $_module.outerWidth(),
+                  _height = $_module.outerHeight();
 
-      wp.customize.preview.bind('stop_hovering_module', function(o) {
-            if ( ! _.has( o, 'id') || ! $('[data-module-id="' + o.id +'"]').length )
-              return;
+              //remove all previous hover placeholder from sektion
+              $_module.closest('.czr-sektion').find('.czr-hover-placeholder').each( function(){ $(this).remove(); } );
 
-            var $_module = $('[data-module-id="' + o.id +'"]');
-            $.when( $_module.find('.czr-hover-placeholder').fadeOut(200) ).done( function() {$_module.find('.czr-hover-placeholder').remove(); });
-      });
+              //apply placeholder
+              $.when( $_module.append( $( '<div/>', {
+                    class : 'czr-hover-placeholder',
+                    style : 'width:' + _width +'px;height:' + _height +'px;line-height:' + _height +'px;',
+                    html : '<i class="material-icons">create</i>'
+                })
+              ) ).done( function() {
+                    $('.czr-hover-placeholder').css('opacity', 1).fitText( 0.3, { minFontSize: '50px', maxFontSize: '100px' } );
+              });
+        });
+
+        wp.customize.preview.bind('stop_hovering_module', function(o) {
+              if ( ! _.has( o, 'id') || ! $('[data-module-id="' + o.id +'"]').length )
+                return;
+
+              var $_module = $('[data-module-id="' + o.id +'"]');
+              $.when( $_module.find('.czr-hover-placeholder').fadeOut(200) ).done( function() {$_module.find('.czr-hover-placeholder').remove(); });
+        });
   });
 
 
@@ -121,16 +133,16 @@
   /////////////// SET REACTIONS ON PANEL SETTING CHANGES
   //////////////////////////////////////////////////////////
   if ( HUPreviewParams && ! HUPreviewParams.preview_ready_event_exists ) {
-    api.czr_preview = new api.CZR_preview();
+        api.czr_preview = new api.CZR_preview();
   }
   else {
-    api.bind( 'preview-ready', function(){
-        //Talk with the panel when he informs us that the current preview frame is 'active'.
-        //We could also use the 'sync' event, just before 'active'.
-        api.preview.bind( 'active', function() {
-            api.czr_preview = new api.CZR_preview();
+        api.bind( 'preview-ready', function(){
+              //Talk with the panel when he informs us that the current preview frame is 'active'.
+              //We could also use the 'sync' event, just before 'active'.
+              api.preview.bind( 'active', function() {
+                    api.czr_preview = new api.CZR_preview();
+              });
         });
-    });
   }
 
   //FIRED ON API 'preview-ready'
@@ -158,7 +170,11 @@
           //send infos to panel
             api.preview.send( 'czr-wp-conditional-ready', api.settings.czr_wp_conditionals );
             api.preview.send( 'houston-widget-settings',
-              _.extend( _wpWidgetCustomizerPreviewSettings, { availableWidgetLocations : _.values( api.settings.availableWidgetLocations ) } )
+                  _.extend( _wpWidgetCustomizerPreviewSettings,
+                        {
+                              availableWidgetLocations : _.values( api.settings.availableWidgetLocations )
+                        }
+                  )
             );
             api.preview.send( 'czr-partial-refresh', ! _.isUndefined(_customizePartialRefreshExports) ? _customizePartialRefreshExports.partials : {} );
 
@@ -167,13 +183,6 @@
             //console.log('_wpWidgetCustomizerPreviewSettings', _wpWidgetCustomizerPreviewSettings);
             //console.log(' _customizePartialRefreshExports',  _customizePartialRefreshExports);
             //console.log(' IN PREVIEW : ', _wpCustomizeSettings );
-            api.preview.send(
-              'czr-skopes-ready',
-              {
-                  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
-                  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || [],
-              }
-            );
         },
 
         addCbs : function() {

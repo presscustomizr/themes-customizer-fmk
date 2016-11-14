@@ -261,7 +261,4 @@
             return deferred.promise();
       };
 
-
-
-
 })( wp.customize , jQuery, _ );

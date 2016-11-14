@@ -154,7 +154,7 @@ $.extend( CZRSkopeBaseMths, {
           //this collection is not updated directly
           //=> it's updated on skope() instance change
           api.czr_skopeCollection = new api.Value([]);//all available skope, including the current skopes
-          //the current skopes collection get updated each time the 'czr-skopes-ready' event is triggered on the api by the preview
+          //the current skopes collection get updated each time the 'czr-skopes-synced' event is triggered on the api by the preview
           api.czr_currentSkopesCollection = new api.Value([]);
           //the currently active skope
           api.czr_activeSkope = new api.Value();
@@ -172,8 +172,6 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_isResettingSkope = new api.Value( false );
           //store the db saved options name for the global skope
           api.czr_globalDBoptions = new api.Value([]);
-
-          api.czr_savedDirties = new api.Value({ channel : '', saved : {} });
 
           //Embed the skopes wrapper if needed
           if ( 'pending' == self.skopeWrapperEmbedded.state() ) {
@@ -244,7 +242,7 @@ $.extend( CZRSkopeBaseMths, {
           //api.czr_skopeCollection.callbacks.add( function() { return self.globalSkopeCollectionReact.apply(self, arguments ); } );
 
           //CURRENT SKOPE COLLECTION LISTENER
-          //The skope collection is set on 'czr-skopes-ready' triggered by the preview
+          //The skope collection is set on 'czr-skopes-synced' triggered by the preview
           //setup the callbacks of the skope collection update
           //on init and on preview change : the collection of skopes is populated with new skopes
           //=> instanciate the relevant skope object + render them
@@ -290,21 +288,21 @@ $.extend( CZRSkopeBaseMths, {
           //  skope_id2 : { setId1 : val 1, setId2, val2, ... }
           //  ...
           //}
-          self.bind( 'skopes-saved', function( _saved_dirties ) {
-                //set the db state of each control
-                //=> make sure this is set for the active skope only
-                _.each( _saved_dirties, function( _skp_dirties, _skp_id ){
-                      if ( _skp_id != api.czr_activeSkope() )
-                        return;
-                      _.each( _skp_dirties, function( _v, setId ) {
-                          if ( _.has(api.control(setId), 'czr_isDirty') )
-                            api.control(setId).czr_isDirty(false);
-                          if ( _.has(api.control(setId), 'czr_hasDBVal') )
-                            api.control(setId).czr_hasDBVal(true);
-                      });
-                });
-                api.consoleLog( 'skopes_saved reaction : SAVED DIRTIES', _saved_dirties );
-          });
+          // self.bind( 'skopes-saved', function( _saved_dirties ) {
+          //       //set the db state of each control
+          //       //=> make sure this is set for the active skope only
+          //       _.each( _saved_dirties, function( _skp_dirties, _skp_id ){
+          //             if ( _skp_id != api.czr_activeSkope() )
+          //               return;
+          //             _.each( _skp_dirties, function( _v, setId ) {
+          //                 if ( _.has(api.control(setId), 'czr_isDirty') )
+          //                   api.control(setId).czr_isDirty(false);
+          //                 if ( _.has(api.control(setId), 'czr_hasDBVal') )
+          //                   api.control(setId).czr_hasDBVal(true);
+          //             });
+          //       });
+          //       api.consoleLog( 'skopes_saved reaction : SAVED DIRTIES', _saved_dirties );
+          // });
 
           //LISTEN TO GLOBAL DB OPTION CHANGES
           //When an option is reset on the global skope,
@@ -410,7 +408,7 @@ $.extend( CZRSkopeBaseMths, {
 
     /*****************************************************************************
     * REACT TO api.czr_globalDBoptions changes
-    * fired in api.PreviewFrame.prototype.initialize, event : 'czr-skopes-ready'
+    * fired in api.PreviewFrame.prototype.initialize, event : 'czr-skopes-synced'
     *****************************************************************************/
     //cb of api.czr_globalDBoptions.callbacks
     //update the _wpCustomizeSettings.settings if they have been updated by a reset of global skope, or a control reset of global skope

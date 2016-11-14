@@ -35,8 +35,23 @@
           //=> we want to know the skope, and the action
           //=> here the action is always refresh.
           //=> this way we are able to better identify what to do in the api.previewer.query method
-          api.previewer._new_refresh = function( the_dirties ) {
-                console.log('NEW REFRESH PARAMS', the_dirties );
+          //
+          //@params can hold an obj looking like :
+          //{
+          //  waitSkopeSynced : false,
+          //  the_dirties : {}
+          //}
+          //
+          //When waitSkopeSynced is set to true, the refresh will wait for the 'czr_skopes_synced' event to be synced
+          //if not, it waits for the default 'synced' wp event to be resolved
+          api.previewer._new_refresh = function( params ) {
+                params = _.extend({
+                            waitSkopeSynced : false,
+                            the_dirties : {}
+                      },
+                      params
+                );
+
                 var dfd = $.Deferred();
 
                 if ( ! _.has( api, 'czr_activeSkope') || _.isUndefined( api.czr_activeSkope() ) ) {
@@ -52,13 +67,8 @@
                 var query_params = api.czr_getSkopeQueryParams( {
                       skope_id : api.czr_activeSkope(),
                       action : 'refresh',
-                      the_dirties : the_dirties
+                      the_dirties : params.the_dirties || {}
                 });
-
-                if ( ! _.has(api, '_previewer_loading' ) ) {
-                      api._previewer_loading = $.Deferred();
-                }
-
 
                 previewer.loading = new api.PreviewFrame({
                       url:        previewer.url(),
@@ -67,7 +77,6 @@
                       container:  previewer.container,
                       signature:  'WP_CUSTOMIZER_SIGNATURE'//will be deprecated in 4.7
                 });
-
 
 
                 previewer.settingsModifiedWhileLoading = {};
@@ -86,18 +95,25 @@
                       previewer.preview = loadingFrame;
                       previewer.targetWindow( loadingFrame.targetWindow() );
                       previewer.channel( loadingFrame.channel() );
-
-                      onceSynced = function() {
+                      onceSynced = function( skopesServerData ) {
                             loadingFrame.unbind( 'synced', onceSynced );
+                            loadingFrame.unbind( 'czr-skopes-synced', onceSynced );
+
                             if ( previewer._previousPreview ) {
-                              previewer._previousPreview.destroy();
+                                  previewer._previousPreview.destroy();
                             }
                             previewer._previousPreview = previewer.preview;
                             previewer.deferred.active.resolve();
                             delete previewer.loading;
-                            dfd.resolve( previewer );
+                            dfd.resolve( { previewer : previewer, skopesServerData : skopesServerData || {} } );
                       };
-                      loadingFrame.bind( 'synced', onceSynced );
+                      if ( params.waitSkopeSynced ) {
+                            loadingFrame.bind( 'czr-skopes-synced', onceSynced );
+                      } else {
+                            //default WP behaviour
+                            loadingFrame.bind( 'synced', onceSynced );
+                      }
+
 
                       // This event will be received directly by the previewer in normal navigation; this is only needed for seamless refresh.
                       previewer.trigger( 'ready', readyData );
@@ -121,10 +137,6 @@
                       }
                 });
 
-                // previewer.loading.then( function() {
-                //       console.log('PREVIEWER LOADING THEN');
-                // } );
-
                 return dfd.promise();
           };
 
@@ -132,34 +144,34 @@
           // Debounce to prevent hammering server and then wait for any pending update requests.
           // Overrides the WP api.previewer.refresh method
           // We may need to pass force dirties here
-          api.previewer.refresh = _.debounce(
-                ( function( _new_refresh ) {
-                      return function() {
-                            var dfd = $.Deferred(), refreshOnceProcessingComplete,
-                                isProcessingComplete = function() {
-                                  return 0 === api.state( 'processing' ).get();
-                                },
-                                resolveRefresh = function() {
-                                      _new_refresh.call( api.previewer ).done( function( previewer ) {
-                                            dfd.resolve( previewer );
-                                      });
-                                };
-                            if ( isProcessingComplete() ) {
-                                  resolveRefresh();
-                            } else {
-                                  refreshOnceProcessingComplete = function() {
-                                        if ( isProcessingComplete() ) {
-                                              resolveRefresh();
-                                              api.state( 'processing' ).unbind( refreshOnceProcessingComplete );
-                                        }
-                                  };
-                                  api.state( 'processing' ).bind( refreshOnceProcessingComplete );
-                            }
-                            return dfd.promise();
-                      };
-                }( api.previewer._new_refresh ) ),
-                api.previewer.refreshBuffer
-          );
+          api.previewer.refresh = function( _params_ ) {
+                var dfd = $.Deferred();
+                var _refresh_ = function( params ) {
+                      var refreshOnceProcessingComplete,
+                          isProcessingComplete = function() {
+                            return 0 === api.state( 'processing' ).get();
+                          },
+                          resolveRefresh = function() {
+                                api.previewer._new_refresh( params ).done( function( refresh_data ) {
+                                      dfd.resolve( refresh_data );
+                                });
+                          };
+                      if ( isProcessingComplete() ) {
+                            resolveRefresh();
+                      } else {
+                            refreshOnceProcessingComplete = function() {
+                                  if ( isProcessingComplete() ) {
+                                        resolveRefresh();
+                                        api.state( 'processing' ).unbind( refreshOnceProcessingComplete );
+                                  }
+                            };
+                            api.state( 'processing' ).bind( refreshOnceProcessingComplete );
+                      }
+                };
+                _refresh_ = _.debounce( _refresh_, api.previewer.refreshBuffer );
+                _refresh_( _params_ );
+                return dfd.promise();
+          };
 
   };//czr_override_refresh_for_skope
 

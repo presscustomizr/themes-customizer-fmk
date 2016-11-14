@@ -2,7 +2,7 @@
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 $.extend( CZRSkopeBaseMths, {
 
-    //Fired on 'czr-skopes-ready' triggered by the preview, each time the preview is refreshed.
+    //Fired on 'czr-skopes-synced' triggered by the preview, each time the preview is refreshed.
     //On a Save Action, api.czr_savedDirties has been populated =>
     // 1) check if the server sends the same saved values
     // 2) update the skope db properties with the latests saved ones
@@ -13,7 +13,7 @@ $.extend( CZRSkopeBaseMths, {
           var self = this;
               _api_ready_collection = [];
 
-          //normalize the sent skopes
+          //normalize each sent skopes
           _.each( sent_collection, function( _skope, _key ) {
                 var skope_candidate = $.extend( true, {}, _skope );//deep clone to avoid any shared references
                 _api_ready_collection.push( self.prepareSkopeForAPI( skope_candidate ) );
@@ -32,47 +32,6 @@ $.extend( CZRSkopeBaseMths, {
                         _updated_api_ready_collection.push( _skp );
                 });
                 _api_ready_collection = _updated_api_ready_collection;
-          }
-
-
-          //Shall we update the db values of the skopes ?
-          //1) ON A SAVE ACTION, the czr_saveDirties has been populated,
-          // => let's check if the server sends the same saved values
-          // => update the skope db properties with the latests saved ones
-          // => reset the czr_saveDirties to default.
-          if ( ! _.isEmpty(api.czr_savedDirties().channel) && sent_channel != api.czr_savedDirties().channel ) {
-                var not_sync = [];
-                //lets check that we are synchronized
-                console.log('AFTER SAVED : BEFORE SYNC CHECK SAVED DIRTIES : ', api.czr_savedDirties().saved );
-                _.each( api.czr_savedDirties().saved, function( skp_data, skp_id ) {
-                      _.each( skp_data, function( _val, _setId ) {
-                            //first, let's check if the sent skopes have not changed ( typically, if a user has opened another page in the preview )
-                            if ( _.isUndefined( _.findWhere( _api_ready_collection, { id : skp_id} ) ) )
-                              return;
-
-                            var sent_skope_db_values = _.findWhere( _api_ready_collection, { id : skp_id} ).db,
-                                shortSetId = api.CZR_Helpers.build_setId( _setId ),
-                                sent_set_val = sent_skope_db_values[shortSetId];
-
-                            if ( _.isUndefined( sent_set_val ) || ! _.isEqual(sent_set_val, _val ) ) {
-                                not_sync.push( { skope_id : skp_id, setId : shortSetId, server_val : sent_set_val, api_val : _val } );
-                            }
-                      });
-                });
-
-                if ( ! _.isEmpty( not_sync) ) {
-                    api.consoleLog('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', not_sync);
-                } else {
-                    api.consoleLog('ALL RIGHT : SETTING VALUES ARE SYNCHRONIZED BETWEEN THE SERVER AND THE API');
-                }
-
-                //then update the skope db values, including the global skope
-                $.when( self.updateSavedSkopesDbValues( api.czr_savedDirties().saved ) ).done( function() {
-                      api.czr_savedDirties( { channel : '', saved : {} } );
-                });
-
-                //finally make sure the api.settings.settings values are always synchronized with the global skope
-                self.maybeSynchronizeGlobalSkope();
           }
 
           //set the new collection of current skopes
@@ -288,27 +247,5 @@ $.extend( CZRSkopeBaseMths, {
                 });
                 //api.consoleLog('GLOBAL SKOPE HAS BEEN SYNCHRONIZED WITH THE API.');
           }
-    },
-
-    //fired in updateSkopeCollection
-    updateSavedSkopesDbValues : function( _saved_dirties ) {
-          _.each( _saved_dirties, function( _dirties, _skope_id ) {
-                var _current_model = $.extend( true, {}, api.czr_skope( _skope_id )() ),
-                    _new_db_val = ! _.isObject( _current_model.db ) ? {} : $.extend( true, {}, _current_model.db ),
-                    _api_ready_dirties = {};
-                //build the api ready db value for the skope.
-                //=> it the full name, ex : 'hu_theme_options[background_color]'
-                _.each( _dirties, function( _val, _wp_opt_name ) {
-                      //var _k = api.CZR_Helpers.getOptionName( _wp_opt_name );
-                      _api_ready_dirties[_wp_opt_name] = _val;
-                });
-
-                api.consoleLog('IN UPDATE SAVED SKOPES DB VALUES', _skope_id, _saved_dirties, _new_db_val, _api_ready_dirties);
-                //merge current and new
-                $.extend( _new_db_val, _api_ready_dirties );
-
-                $.extend( _current_model, { db : _new_db_val, has_db_val : ! _.isEmpty(_api_ready_dirties) } );
-                api.czr_skope( _skope_id )( _current_model );
-          });
-    },
+    }
 });//$.extend

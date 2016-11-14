@@ -118,23 +118,22 @@ $.extend( CZRSkopeBaseMths, {
 
           // })
           .fail( function() {
-                console.log('silentlyUpdateSettings FAILED');
+                throw new Error( 'silentlyUpdateSettings FAILED. Candidates : ' + _silentUpdateCands );
           })
-          .always( function() {
-                console.log('silentlyUpdateSettings ALWAYS, No action, just for information');
-          })
+          .always( function() {})
           .then( function() {
                 _.each( _deferred, function( prom ){
-                      if ( _.isObject( prom ) )
-                        api.consoleLog( 'promise state() after silent update', prom.state() );
+                      if ( _.isObject( prom ) && 'resolved' !== prom.state() ) {
+                            throw new Error( 'a silent update promise is unresolved : ' + _silentUpdateCands );
+                      }
                 });
                 //always refresh by default
                 if ( refresh ) {
-                    $.when( api.previewer.refresh() ).done( function() {
-                          dfd.resolve();
-                    });
+                      $.when( api.previewer.refresh() ).done( function() {
+                            dfd.resolve();
+                      });
                 } else {
-                    dfd.resolve();
+                      dfd.resolve();
                 }
           });
 
