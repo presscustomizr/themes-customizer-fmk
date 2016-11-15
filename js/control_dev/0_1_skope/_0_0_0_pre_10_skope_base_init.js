@@ -279,31 +279,6 @@ $.extend( CZRSkopeBaseMths, {
               }
           });
 
-          //LISTEN TO SKOPE SAVE EVENT
-          //refresh the preview when all skopes are saved, to send the db saved values and compare
-          //=> this way we make sure db values in api and actual server db val are properly synchronized.
-          //_saved_dirties is an object :
-          //{
-          //  skope_id1 : { setId1 : val 1, setId2, val2, ... },
-          //  skope_id2 : { setId1 : val 1, setId2, val2, ... }
-          //  ...
-          //}
-          // self.bind( 'skopes-saved', function( _saved_dirties ) {
-          //       //set the db state of each control
-          //       //=> make sure this is set for the active skope only
-          //       _.each( _saved_dirties, function( _skp_dirties, _skp_id ){
-          //             if ( _skp_id != api.czr_activeSkope() )
-          //               return;
-          //             _.each( _skp_dirties, function( _v, setId ) {
-          //                 if ( _.has(api.control(setId), 'czr_isDirty') )
-          //                   api.control(setId).czr_isDirty(false);
-          //                 if ( _.has(api.control(setId), 'czr_hasDBVal') )
-          //                   api.control(setId).czr_hasDBVal(true);
-          //             });
-          //       });
-          //       api.consoleLog( 'skopes_saved reaction : SAVED DIRTIES', _saved_dirties );
-          // });
-
           //LISTEN TO GLOBAL DB OPTION CHANGES
           //When an option is reset on the global skope,
           //we need to update it in the initially sent _wpCustomizeSettings.settings

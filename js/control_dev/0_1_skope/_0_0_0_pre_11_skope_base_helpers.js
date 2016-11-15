@@ -205,7 +205,7 @@ $.extend( CZRSkopeBaseMths, {
           //is the setting CHANGESET dirty ?
           if ( api.czr_isChangedSetOn() && _.has( api.czr_skope( skope_id )(), 'changeset' ) ) {
                 if ( api.czr_skope( skope_id ).getSkopeSettingChangesetDirtyness( wpSetId ) )
-                  return api.czr_skope( skope_id )().changeset[ wpSetId ];
+                  return api.czr_skope( skope_id ).changesetValues()[ wpSetId ];
           }
 
           //do we have a db val stored ?

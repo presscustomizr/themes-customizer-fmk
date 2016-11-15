@@ -38,9 +38,10 @@ $.extend( CZRSkopeMths, {
           skope.resetWarningVisible = new api.Value(false);
 
           //setting values are stored in :
-          skope.hasDBValues    = new api.Value(false);
+          skope.hasDBValues = new api.Value( false );
           skope.dirtyValues = new api.Value({});//stores the current customized value.
-
+          skope.dbValues    = new api.Value( constructor_options.db );//stores the latest db values, initialized with the constructor options and will be updated after a saved action
+          skope.changesetValues = new api.Value( constructor_options.changeset || {} );//stores the latest changeset values, initialized with the constructor options and will be updated after a refresh action
 
           ////////////////////////////////////////////////////
           /// MODULE DOM EVENT MAP
@@ -66,42 +67,55 @@ $.extend( CZRSkopeMths, {
                 }
           ]);//module.userEventMap
 
-
-          ////////////////////////////////////////////////////
-          /// SETUP API LISTENERS
-          ////////////////////////////////////////////////////
-          //How does the view react to model changes ?
-          //When active :
-          //1) add a green point to the view box
-          //2) disable the switch-to icon
-          skope.active.callbacks.add(function() { return skope.activeStateReact.apply(skope, arguments ); } );
-          skope.dirtyness.callbacks.add(function() { return skope.dirtynessReact.apply(skope, arguments ); } );
-          skope.hasDBValues.callbacks.add(function() { return skope.hasDBValuesReact.apply(skope, arguments ); } );
-          skope.winner.callbacks.add(function() { return skope.winnerReact.apply(skope, arguments ); } );
-
           //Reset actions
           skope.resetWarningVisible.callbacks.add(function() { return skope.resetReact.apply(skope, arguments ); } );
 
-          //LISTEN TO DIRTYNESS
-          //@to is {setId1 : val1, setId2, val2, ...}
-          skope.dirtyValues.callbacks.add( function(to, from) {
-              console.log('IN DIRTY VALUES CALLBACK', to, from );
-              //set the model dirtyness boolean state value
-              skope.dirtyness( ! _.isEmpty(to) );
-          });
-
+          //LISTEN TO API DIRTYNESS
+          //@to is {setId1 : val1, setId2 : val2, ...}
+          skope.dirtyValues.callbacks.add(function() { return skope.dirtyValuesReact.apply(skope, arguments ); } );
 
           //UPDATE global skope collection each time a skope model is populated or updated
           skope.callbacks.add(function() { return skope.skopeReact.apply( skope, arguments ); } );
 
-          //SET SKOPE MODEL
-          skope( constructor_options );
+          //PREPARE THE CONSTRUCTOR OPTIONS AND SET SKOPE MODEL WITH IT
+          //=> we don't need to store the db and 'changeset' properties in the model statically
+          //because it will be stored as observable values
+          skope.set( _.omit( constructor_options, function( _v, _key ) {
+                return 'db' === _key || 'changeset' === _key;
+          } ) );
 
-          skope.isReady.done( function() {
-              //api.consoleLog('SKOPE : '  + skope_id + ' IS READY');
-          });
+          ////////////////////////////////////////////////////
+          /// EMBED AND SETUP OBSERVABLE VALUES LISTENERS
+          ////////////////////////////////////////////////////
+          skope.embedded
+                .fail( function() {
+                      throw new Error('The container of skope ' + skope().id + ' has not been embededd');
+                })
+                .done( function() {
+                      //api.consoleLog('SKOPE : '  + skope().id + ' EMBEDDED');
+                      //Setup the user event listeners
+                      skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
+                      //hide when this skope is not in the current skopes list
+                      skope.visible.bind( function( is_visible ){
+                          skope.container.toggle( is_visible );
+                      });
+
+                      //How does the view react to model changes ?
+                      //When active :
+                      //1) add a green point to the view box
+                      //2) disable the switch-to icon
+                      skope.active.callbacks.add(function() { return skope.activeStateReact.apply(skope, arguments ); } );
+                      skope.dirtyness.callbacks.add(function() { return skope.dirtynessReact.apply(skope, arguments ); } );
+                      skope.hasDBValues.callbacks.add(function() { return skope.hasDBValuesReact.apply(skope, arguments ); } );
+                      skope.winner.callbacks.add(function() { return skope.winnerReact.apply(skope, arguments ); } );
+
+                      skope.dirtyness( ! _.isEmpty( constructor_options.changeset ) );
+                      skope.hasDBValues( ! _.isEmpty( constructor_options.db ) );
+                      skope.winner( constructor_options.is_winner );
+
+                      skope.isReady.resolve();
+                });
     },
-
 
     //this skope model is instantiated at this point.
     ready : function() {
@@ -112,31 +126,48 @@ $.extend( CZRSkopeMths, {
               console.log('  !!!!!!!!!!!!!!! EMBED DIALOG BOX !!!!!!!!!!!!!!!! ');
               if ( false !== $_container.length ) {
                   skope.container = $_container;
-                  skope.embedded.resolve();
+                  skope.embedded.resolve( $_container );
               } else {
-                  throw new Error('The container of skope ' + skope().id + ' has not been embededd');
+                  skope.embedded.reject( $_container );
               }
-          });
-
-          skope.embedded.done( function() {
-              //api.consoleLog('SKOPE : '  + skope().id + ' EMBEDDED');
-              //Setup the user event listeners
-              skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
-              //hide when this skope is not in the current skopes list
-              skope.visible.bind( function( is_visible ){
-                  skope.container.toggle( is_visible );
-              });
-              skope.isReady.resolve();
           });
     },
 
 
 
 
+    /*****************************************************************************
+    * SKOPE API DIRTIES REACTIONS
+    *****************************************************************************/
+    dirtyValuesReact : function( to, from ) {
+          var skope = this;
+          console.log('IN DIRTY VALUES CALLBACK', to, from );
+          //set the model dirtyness boolean state value
+          skope.dirtyness( ! _.isEmpty(to) );
+
+          //RESET DIRTYNESS FOR THE CONTROLS IN THE ACTIVE SKOPE
+          //=> make sure this is set for the active skopes only
+          var ctrlIdToReset = [];
+          _.each( from, function( _val, _id ) {
+              if ( _.has( to, _id ) )
+                return;
+              ctrlIdToReset.push( _id );
+          });
+
+          if ( skope().id == api.czr_activeSkope() ) {
+                _.each( ctrlIdToReset , function( setId ) {
+                      if ( _.has( api.control( setId ), 'czr_isDirty') ) {
+                            api.control(setId).czr_isDirty( false );
+                      }
+                });
+          }
+    },
+
+
 
 
     /*****************************************************************************
-    * SKOPE MODEL CALLBACKS
+    * SKOPE MODEL CHANGES CALLBACKS
     *****************************************************************************/
     //cb of skope.callbacks
     skopeReact : function( to, from ) {
@@ -165,14 +196,6 @@ $.extend( CZRSkopeMths, {
                 });
                 api.czr_skopeCollection( _new_collection );
           }
-
-          //INFORM SKOPE API VALUES
-          //=> fired on each update of the skope model
-          $.when( skope.embedded.promise() ).done( function() {
-                skope.dirtyness( ! _.isEmpty( skope().changeset ) );
-                skope.hasDBValues( to.has_db_val );
-                skope.winner( to.is_winner );
-          });
     },
 
 
@@ -182,7 +205,7 @@ $.extend( CZRSkopeMths, {
 
 
     /*****************************************************************************
-    * VALUES CALLBACKS
+    * VALUES CALLBACKS WHEN SKOPE EMBEDDED AND READY
     *****************************************************************************/
     //cb of skope.active.callbacks
     activeStateReact : function(to, from){
@@ -267,9 +290,9 @@ $.extend( CZRSkopeMths, {
     //Has this skope already be customized in the API ?
     getSkopeSettingChangesetDirtyness : function( setId ) {
           var skope = this;
-          if ( ! api.czr_isChangedSetOn() || ! _.has( skope(), 'changeset' ) )
+          if ( ! api.czr_isChangedSetOn() )
             return skope.getSkopeSettingAPIDirtyness( setId );
-          return _.has( skope().changeset, api.CZR_Helpers.build_setId( setId ) );
+          return _.has( skope.changesetValues(), api.CZR_Helpers.build_setId( setId ) );
     },
 
     //@return boolean
@@ -280,7 +303,7 @@ $.extend( CZRSkopeMths, {
           if ( 'global' == skope().skope ) {
             return _.contains( api.czr_globalDBoptions(), shortSetId );
           } else {
-            return ! _.isUndefined( api.czr_skope( api.czr_activeSkope() )().db[shortSetId] );
+            return ! _.isUndefined( api.czr_skope( api.czr_activeSkope() ).dbValues[shortSetId] );
           }
     }
   } );//$.extend(

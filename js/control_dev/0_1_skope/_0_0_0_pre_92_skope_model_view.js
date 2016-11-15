@@ -5,6 +5,7 @@ $.extend( CZRSkopeMths, {
           var skope = this,
               skope_model = $.extend( true, {}, skope() ),
               _tmpl = '';
+
           //@todo will need to be refreshed on scopes change in the future
           if ( ! $('#customize-header-actions').find('.czr-scope-switcher').length ) {
               throw new Error('The skope switcher wrapper is not printed, the skope can not be embedded.');

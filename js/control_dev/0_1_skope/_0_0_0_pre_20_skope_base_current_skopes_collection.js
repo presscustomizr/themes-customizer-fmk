@@ -51,88 +51,88 @@ $.extend( CZRSkopeBaseMths, {
                 var _candidate_val = skope_candidate[_key];
                 switch( _key ) {
                       case 'title' :
-                          if ( ! _.isString( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : a skope title property must a string');
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                            if ( ! _.isString( _candidate_val ) ) {
+                                throw new Error('prepareSkopeForAPI : a skope title property must a string');
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
-                      case 'long_title' :
-                          if ( ! _.isString( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : a skope title property must a string');
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                        case 'long_title' :
+                            if ( ! _.isString( _candidate_val ) ) {
+                                throw new Error('prepareSkopeForAPI : a skope title property must a string');
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'skope' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : a skope "skope" property must a string not empty');
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                            if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                throw new Error('prepareSkopeForAPI : a skope "skope" property must a string not empty');
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'level' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : a skope level must a string not empty for skope ' + _candidate_val.skope );
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                            if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                throw new Error('prepareSkopeForAPI : a skope level must a string not empty for skope ' + _candidate_val.skope );
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'dyn_type' :
-                          if ( ! _.isString( _candidate_val ) || ! _.contains( serverControlParams.skopeDynTypes, _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : missing or invalid dyn type for skope ' + skope_candidate );
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                            if ( ! _.isString( _candidate_val ) || ! _.contains( serverControlParams.skopeDynTypes, _candidate_val ) ) {
+                                throw new Error('prepareSkopeForAPI : missing or invalid dyn type for skope ' + skope_candidate );
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'opt_name' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : invalid "opt_name" property for skope ' + _candidate_val.skope );
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                            if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                throw new Error('prepareSkopeForAPI : invalid "opt_name" property for skope ' + _candidate_val.skope );
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
                       case 'obj_id' :
-                          if ( ! _.isString( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : invalid "obj_id" for skope ' + _candidate_val.skope );
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                            if ( ! _.isString( _candidate_val ) ) {
+                                throw new Error('prepareSkopeForAPI : invalid "obj_id" for skope ' + _candidate_val.skope );
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
                       case  'is_default' :
-                          if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                              throw new Error('prepareSkopeForAPI : skope property "is_default" must be a boolean');
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                            if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                throw new Error('prepareSkopeForAPI : skope property "is_default" must be a boolean');
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
                       case  'is_winner' :
-                          if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                              throw new Error('prepareSkopeForAPI : skope property "is_winner" must be a boolean');
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                            if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                throw new Error('prepareSkopeForAPI : skope property "is_winner" must be a boolean');
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
                       case  'is_forced' :
-                          if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                              throw new Error('prepareSkopeForAPI : skope property "is_primary" must be a boolean');
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                            if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                throw new Error('prepareSkopeForAPI : skope property "is_primary" must be a boolean');
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
                       //when the global db values have been changed, typically on save,
                       //the 'db' property will store the difference between api.settings.settings and the db options server generated
                       case  'db' :
-                          if ( _.isArray( _candidate_val ) || _.isEmpty( _candidate_val ) )
-                            _candidate_val = {};
-                          if ( _.isUndefined( _candidate_val) || ! _.isObject( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : skope property "db" must be an object');
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                            if ( _.isArray( _candidate_val ) || _.isEmpty( _candidate_val ) )
+                              _candidate_val = {};
+                            if ( _.isUndefined( _candidate_val) || ! _.isObject( _candidate_val ) ) {
+                                throw new Error('prepareSkopeForAPI : skope property "db" must be an object');
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
                       case  'changeset' :
-                          if ( _.isArray( _candidate_val ) || _.isEmpty( _candidate_val ) )
-                            _candidate_val = {};
-                          if ( _.isUndefined( _candidate_val) || ! _.isObject( _candidate_val ) ) {
-                              throw new Error('prepareSkopeForAPI : skope property "changeset" must be an object');
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                            if ( _.isArray( _candidate_val ) || _.isEmpty( _candidate_val ) )
+                              _candidate_val = {};
+                            if ( _.isUndefined( _candidate_val) || ! _.isObject( _candidate_val ) ) {
+                                throw new Error('prepareSkopeForAPI : skope property "changeset" must be an object');
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
                       case  'has_db_val' :
-                          if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                              throw new Error('prepareSkopeForAPI : skope property "has_db_val" must be a boolean');
-                          }
-                          api_ready_skope[_key] = _candidate_val;
+                            if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                throw new Error('prepareSkopeForAPI : skope property "has_db_val" must be a boolean');
+                            }
+                            api_ready_skope[_key] = _candidate_val;
                       break;
                 }//switch
           });
@@ -140,11 +140,11 @@ $.extend( CZRSkopeBaseMths, {
           //Finally, generate the id and the title
           api_ready_skope.id = api_ready_skope.skope + '_' + api_ready_skope.level;
           if ( ! _.isString( api_ready_skope.id ) || _.isEmpty( api_ready_skope.id ) ) {
-              throw new Error('prepareSkopeForAPI : a skope id must a string not empty');
+                throw new Error('prepareSkopeForAPI : a skope id must a string not empty');
           }
           if ( ! _.isString( api_ready_skope.title ) || _.isEmpty( api_ready_skope.title ) ) {
-              api_ready_skope.title = id;
-              api_ready_skope.long_title = id;
+                api_ready_skope.title = id;
+                api_ready_skope.long_title = id;
           }
           return api_ready_skope;
     },
@@ -166,21 +166,27 @@ $.extend( CZRSkopeBaseMths, {
 
           //TO INSTANTIATE
           _.each( _new_collection, function( _sent_skope ) {
-              if ( ! api.czr_skope.has( _sent_skope.id  ) )
-                _to_instantiate.push( _sent_skope );
+                if ( ! api.czr_skope.has( _sent_skope.id  ) )
+                  _to_instantiate.push( _sent_skope );
           });
 
           //Instantiate the new skopes
           //api.consoleLog('SKOPES TO INSTANTIATE?', _to_instantiate );
           _.each( _to_instantiate, function( _skope ) {
-              _skope = $.extend( true, {}, _skope );//use a cloned skop to instantiate : @todo : do we still need that ?
-              api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
+                _skope = $.extend( true, {}, _skope );//use a cloned skop to instantiate : @todo : do we still need that ?
+                api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
+          });
 
-              //fire this right after instantiation for the views (we need the model instances in the views)
-              if ( ! api.czr_skope.has( _skope.id ) ) {
-                  throw new Error( 'Skope id : ' + _skope.id + ' has not been instantiated.');
-              }
-              api.czr_skope( _skope.id ).ready();
+          //Then embed the not ready ones
+          //=> we need to do that after the instantiaion of the entire new collection, because a skope instance my need to get other skope instances when embedded
+          _.each( _to_instantiate, function( _skope ) {
+                //fire this right after instantiation for the views (we need the model instances in the views)
+                if ( ! api.czr_skope.has( _skope.id ) ) {
+                    throw new Error( 'Skope id : ' + _skope.id + ' has not been instantiated.');
+                }
+                if ( 'pending' == api.czr_skope( _skope.id ).isReady.state() ) {
+                      api.czr_skope( _skope.id ).ready();
+                }
           });
 
           //if the current acive skope has been removed from the current skopes collection
@@ -197,7 +203,7 @@ $.extend( CZRSkopeBaseMths, {
                     var _newClasses = _skp_instance.container.attr('class').split(' ');
                     _.each( _skp_instance.container.attr('class').split(' '), function( _c ) {
                           if ( 'width-' == _c.substring( 0, 6) ) {
-                              _newClasses = _.without( _newClasses, _c );
+                                _newClasses = _.without( _newClasses, _c );
                           }
                     });
                     $.when( _skp_instance.container.attr('class', _newClasses.join(' ') ) )
@@ -212,8 +218,8 @@ $.extend( CZRSkopeBaseMths, {
                 }
                 else {
                       _skp_instance.visible(true);
-                      if ( 'pending' == _skp_instance.embedded.state() ) {
-                            _skp_instance.embedded.then( function() {
+                      if ( 'pending' == _skp_instance.isReady.state() ) {
+                            _skp_instance.isReady.then( function() {
                                   _setLayoutClass( _skp_instance );
                             });
                       } else {

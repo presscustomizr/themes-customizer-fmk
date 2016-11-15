@@ -36,12 +36,12 @@ $.extend( CZRSkopeSaveMths, {
                         customize_changeset_data : submittedChanges,//{}
                         dyn_type : skopeObjectToSubmit.dyn_type
                   } )
-                  .done( function( _resp) { console.log('GETSUBMIT DONE PROMISE SUCCEEDED', _resp); })
-                  .fail( function( _resp ) { console.log('GETSUBMIT FAILED PROMISE', _resp ); })
-                  .then( function( _resp ) {
-                        console.log('GETSUBMIT THEN ', _resp );
-                        dfd.resolve( _resp );
-                  });
+                  .done( function( _resp) { dfd.resolve( _resp ); console.log('GETSUBMIT DONE PROMISE SUCCEEDED', _resp); })
+                  .fail( function( _resp ) { dfd.reject( _resp ); console.log('GETSUBMIT FAILED PROMISE', _resp ); });
+                  // .then( function( _resp ) {
+                  //       console.log('GETSUBMIT THEN ', _resp );
+                  //       dfd.resolve( _resp );
+                  // });
 
             return dfd.promise();
       },//getSubmitPromise
@@ -96,11 +96,9 @@ $.extend( CZRSkopeSaveMths, {
                   if ( ! _.isEmpty( invalidControls ) ) {
                         _.values( invalidControls )[0][0].focus();
                         //api.unbind( 'change', captureSettingModifiedDuringSave );
-                        self.globalSaveDeferred.rejectWith( self.previewer, [
+                        submit_dfd.rejectWith( self.previewer, [
                               { setting_invalidities: settingInvalidities }
                         ] );
-                        api.state( 'saving' ).set( false );
-                        return self.globalSaveDeferred.promise();
                   }
             }
 
