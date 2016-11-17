@@ -32,14 +32,13 @@ $.extend( CZRSkopeSaveMths, {
                               _recursiveCallDeferred.reject( _responses_ );
                         }
                   } else {
-                        console.log( 'in recursiveCall', _index, skopesToSave[ _index ] );
                         $.when( self.getSubmitPromise( skopesToSave[ _index ] ) )
                               .done( function( response ) {
-                                    console.log('RECURSIVE PUSH DONE FOR SKOPE : ', skopesToSave[_index] );
+                                    //console.log('RECURSIVE PUSH DONE FOR SKOPE : ', skopesToSave[_index] );
                               } )
                               .fail( function( response ) {
                                     failedPromises.push( response );
-                                    console.log('RECURSIVE PUSH FAIL FOR SKOPE : ', skopesToSave[_index] );
+                                    api.consoleLog('RECURSIVE PUSH FAIL FOR SKOPE : ', skopesToSave[_index] );
                               } )
                               .then( function( response ) {
                                     response = response || {};
@@ -61,25 +60,25 @@ $.extend( CZRSkopeSaveMths, {
             // Unleash hell
             recursiveCall()
                   .fail( function( r ) {
-                        console.log('RECURSIVE PUSH FAIL', r );
+                        api.consoleLog('RECURSIVE SAVE CALL FAIL', r );
                         dfd.reject( r );
                   })
                   .done( function( r ) {
-                        console.log('RECURSIVE PUSH DONE', r );
+                        //console.log('RECURSIVE PUSH DONE', r );
                         self.getSubmitPromise( self.globalSkopeId )
                               .fail( function( r ) {
-                                    console.log('GLOBAL SUBMIT FAIL', r );
+                                    api.consoleLog('GLOBAL SAVE SUBMIT FAIL', r );
                                     dfd.reject( r );
                               })
                               .done( function( r ) {
-                                    console.log('GLOBAL SUBMIT DONE', r );
+                                    //console.log('GLOBAL SUBMIT DONE', r );
                                     //WE NEED TO BUILD A PROPER RESPONSE HERE
                                     if ( _.isEmpty( _responses_ ) ) {
                                           _responses_ = r || {};
                                     } else {
                                           _responses_ = $.extend( _responses_ , r );
                                     }
-                                    console.log('CONCATENATED RESPONSES : ', _responses_ );
+                                    //console.log('CONCATENATED RESPONSES : ', _responses_ );
 
                                     dfd.resolve( _responses_ );
                               });

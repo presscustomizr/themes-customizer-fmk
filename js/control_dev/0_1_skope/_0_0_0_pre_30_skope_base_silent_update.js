@@ -29,14 +29,16 @@ $.extend( CZRSkopeBaseMths, {
           //silently update the settings of a the currently active section() to the values of the current skope
           //silentlyUpdateSettings returns a promise.
           self.silentlyUpdateSettings( silentUpdateCands )
-                .then( function() {
+                .fail( function() {
+                      dfd.reject();
+                })
+                .done( function() {
                       //re-render control single reset when needed (Media control are re-rendered, that's why we need this method fired on each skope switch)
                       var _debouncedSetupControlReset = function() {
                           self.setupControlsReset( {
                               section_id : _params.section_id
                           });
                       };
-                      _debouncedSetupControlReset = _.debounce( _debouncedSetupControlReset, 1200 );
                       _debouncedSetupControlReset();
                       dfd.resolve();
                 });
@@ -118,6 +120,7 @@ $.extend( CZRSkopeBaseMths, {
 
           // })
           .fail( function() {
+                dfd.reject();
                 throw new Error( 'silentlyUpdateSettings FAILED. Candidates : ' + _silentUpdateCands );
           })
           .always( function() {})
@@ -129,7 +132,7 @@ $.extend( CZRSkopeBaseMths, {
                 });
                 //always refresh by default
                 if ( refresh ) {
-                      $.when( api.previewer.refresh() ).done( function() {
+                      api.previewer.refresh().done( function() {
                             dfd.resolve();
                       });
                 } else {
@@ -361,21 +364,21 @@ $.extend( CZRSkopeBaseMths, {
 
           var attachment_id;
           var _reset_header_image_crtl = function( _updated_header_control_data ) {
-              _updated_header_control_data = _updated_header_control_data || _header_control_data;
-              //remove the container and its control
-              api.control( 'header_image' ).container.remove();
-              api.control.remove( 'header_image' );
+                _updated_header_control_data = _updated_header_control_data || _header_control_data;
+                //remove the container and its control
+                api.control( 'header_image' ).container.remove();
+                api.control.remove( 'header_image' );
 
-              //reset the HeaderTool objects, captured early
-              api.HeaderTool.UploadsList = api.czr_HeaderTool.UploadsList;
-              api.HeaderTool.DefaultsList = api.czr_HeaderTool.DefaultsList;
-              api.HeaderTool.CombinedList = api.czr_HeaderTool.CombinedList;
-              var _render_control = function() {
-                    //instantiate the control with the updated _header_control_data
-                    api.control.add( 'header_image',  new _header_constructor( 'header_image', { params : _updated_header_control_data, previewer : api.previewer }) );
-              };
-              _render_control = _.debounce( _render_control, 800 );
-              _render_control();
+                //reset the HeaderTool objects, captured early
+                api.HeaderTool.UploadsList = api.czr_HeaderTool.UploadsList;
+                api.HeaderTool.DefaultsList = api.czr_HeaderTool.DefaultsList;
+                api.HeaderTool.CombinedList = api.czr_HeaderTool.CombinedList;
+                var _render_control = function() {
+                      //instantiate the control with the updated _header_control_data
+                      api.control.add( 'header_image',  new _header_constructor( 'header_image', { params : _updated_header_control_data, previewer : api.previewer }) );
+                };
+                _render_control = _.debounce( _render_control, 800 );
+                _render_control();
           };
 
 

@@ -170,8 +170,6 @@ $.extend( CZRSkopeBaseMths, {
 
           //store the resetting state
           api.czr_isResettingSkope = new api.Value( false );
-          //store the db saved options name for the global skope
-          api.czr_globalDBoptions = new api.Value([]);
 
           //Embed the skopes wrapper if needed
           if ( 'pending' == self.skopeWrapperEmbedded.state() ) {
@@ -183,60 +181,9 @@ $.extend( CZRSkopeBaseMths, {
           //REACT TO ACTIVE SKOPE UPDATE
           api.czr_activeSkope.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
 
-          //sidebar widget specifid
-          if ( ! self.isExcludedSidebarsWidgets() ) {
-              api.czr_activeSkope.bind( function( active_skope ) {
-                  _forceSidebarDirtyRefresh( api.czr_activeSectionId(), active_skope );
-              });
-          }
-
-
-          //REACT TO EXPANDED SECTION
+          //REACT TO EXPANDED ACTIVE SECTION
           //=> silently update all eligible controls of this sektion with the current skope values
-          api.czr_activeSectionId.bind( function( active_section ) {
-                //defer the callback execution when the first skope collection has been populated
-                //=> otherwise it might be to early. For example in autofocus request cases.
-                api.czr_initialSkopeCollectionPopulated.then( function() {
-                      self.processSilentUpdates( { section_id : active_section } ).done( function() {
-                            // var _update_candidates = self._getSilentUpdateCandidates( active_section );
-                            // self.silentlyUpdateSettings( _update_candidates );
-                            // //add control single reset + observable values
-                            // self.setupControlsReset();
-
-                            //Sidebar Widget specific
-                            if ( ! self.isExcludedSidebarsWidgets() ) {
-                                  _forceSidebarDirtyRefresh( active_section, api.czr_activeSkope() );
-                            }
-                            });
-                });
-
-          } );
-
-
-          var _forceSidebarDirtyRefresh = function( active_section, active_skope ) {
-                if ( self.isExcludedSidebarsWidgets() )
-                  return;
-                var _save_state = api.state('saved')();
-
-                //Specific for widget sidebars section
-                var _debounced = function() {
-                    if ( api.section.has( active_section ) && "sidebar" == api.section(active_section).params.type ) {
-                        var active_skope = active_skope || api.czr_activeSkope(),
-                            related_setting_name = 'sidebars_widgets[' + api.section(active_section).params.sidebarId + ']',
-                            related_setting_val = self.getSkopeSettingVal( related_setting_name, active_skope );
-
-                        //api( related_setting_name )( self.getSkopeSettingVal( related_setting_name, api.czr_activeSkope() ) );
-                        self.updateSkopeDirties( related_setting_name, related_setting_val, active_skope );
-
-                        api.previewer._new_refresh( api.czr_skope( active_skope ).dirtyValues() );
-                    }
-                };
-                _debounced = _.debounce( _debounced, 2000 );
-                _debounced();
-
-                api.state('saved')( _save_state );
-          };
-
+          api.czr_activeSectionId.callbacks.add( function() { return self.activeSectionReact.apply(self, arguments ); } );
 
           //GLOBAL SKOPE COLLECTION LISTENER
           //api.czr_skopeCollection.callbacks.add( function() { return self.globalSkopeCollectionReact.apply(self, arguments ); } );
@@ -253,21 +200,6 @@ $.extend( CZRSkopeBaseMths, {
           //=>POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
           self.listenAPISettings();
 
-          //WHEN A WIDGET IS ADDED
-          $( document ).bind( 'widget-added', function( e, $o ) {
-              if ( self.isExcludedSidebarsWidgets() )
-                  return;
-
-              var wgtIdAttr = $o.closest('.customize-control').attr('id'),
-                  //get the widget id from the customize-control id attr, and remove 'customize-control-' prefix to get the proper set id
-                  wdgtSetId = api.czr_skopeBase.widgetIdToSettingId( wgtIdAttr, 'customize-control-' );
-              if ( ! api.has( wdgtSetId ) ) {
-                  throw new Error( 'AN ADDED WIDGET COULD NOT BE BOUND IN SKOPE. ' +  wdgtSetId);
-              } else {
-                  self.listenAPISettings( wdgtSetId );
-              }
-          });
-
           //LISTEN TO THE GLOBAL API SAVED STATE
           //=> this value is set on control and skope reset
           //+ set by wp
@@ -279,16 +211,42 @@ $.extend( CZRSkopeBaseMths, {
               }
           });
 
+
+          //LISTEN TO SKOPE SYNC => UPDATE SKOPE COLLECTION ON START AND ON EACH REFRESH
+          //the sent data look like :
+          //{
+          //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+          //  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || []
+          // }
+          //
+          api.previewer.bind( 'czr-skopes-synced', function( data ) {
+                if ( ! serverControlParams.isSkopOn )
+                  return;
+                //api.consoleLog('czr-skopes-ready DATA', data );
+                var preview = this;
+                //initialize skopes with the server sent data
+                if ( _.has(data, 'czr_skopes') )
+                    api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
+          });
+
+
           //LISTEN TO GLOBAL DB OPTION CHANGES
           //When an option is reset on the global skope,
           //we need to update it in the initially sent _wpCustomizeSettings.settings
-          api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
+          //api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
 
           //DECLARE THE LIST OF CONTROL TYPES FOR WHICH THE VIEW IS REFRESHED ON CHANGE
           self.refreshedControls = [ 'czr_cropped_image'];// [ 'czr_cropped_image', 'czr_multi_module', 'czr_module' ];
+
+          //WIDGETS AND SIDEBAR SPECIFIC TREATMENTS
+          self.initWidgetSidebarSpecifics();
     },//initialize
 
 
+
+    /*****************************************************************************
+    * EMBED WRAPPER
+    *****************************************************************************/
     //fired in initialize
     //=> embed the wrapper for all skope boxes
     //=> add a specific class to the body czr-skop-on
@@ -321,7 +279,7 @@ $.extend( CZRSkopeBaseMths, {
                       api.consoleLog( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
                       //return;
                     }
-                    api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, old_val + ' => ' +  new_val, o );
+                    //api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, old_val + ' => ' +  new_val, o );
                     //For skope eligible settings : Update the skope dirties with the new val of this setId
                     if ( api(setId)._dirty ) {
                         self.updateSkopeDirties( setId, new_val );
@@ -337,9 +295,9 @@ $.extend( CZRSkopeBaseMths, {
                     // }
 
                     //set the control dirtyness
-                    if ( _.has( api.control(setId), 'czr_isDirty' ) ) {
-                        api.control(setId).czr_isDirty( api(setId)._dirty );
-                    }
+                    // if ( _.has( api.control(setId), 'czr_isDirty' ) ) {
+                    //     api.control(setId).czr_isDirty( api(setId)._dirty );
+                    // }
               };//bindListener()
 
 
@@ -381,32 +339,56 @@ $.extend( CZRSkopeBaseMths, {
 
 
 
+
+
     /*****************************************************************************
-    * REACT TO api.czr_globalDBoptions changes
-    * fired in api.PreviewFrame.prototype.initialize, event : 'czr-skopes-synced'
+    * REACT TO ACTIVE SECTION EXPANSION
     *****************************************************************************/
+    //cb of api.czr_activeSectionId()
+    activeSectionReact : function( active_section ) {
+          var self = this;
+          //defer the callback execution when the first skope collection has been populated
+          //=> otherwise it might be to early. For example in autofocus request cases.
+          api.czr_initialSkopeCollectionPopulated.then( function() {
+                self.processSilentUpdates( { section_id : active_section } )
+                      .fail( function() {
+                            throw new Error( 'Fail to process silent updates after initial skope collection has been populated' );
+                      })
+                      .done( function() {
+                            // var _update_candidates = self._getSilentUpdateCandidates( active_section );
+                            // self.silentlyUpdateSettings( _update_candidates );
+                            // //add control single reset + observable values
+                            // self.setupControlsReset();
+
+                            //Sidebar Widget specific
+                            if ( ! self.isExcludedSidebarsWidgets() ) {
+                                  self.forceSidebarDirtyRefresh( active_section, api.czr_activeSkope() );
+                            }
+                      });
+          });
+    }
+
+
     //cb of api.czr_globalDBoptions.callbacks
     //update the _wpCustomizeSettings.settings if they have been updated by a reset of global skope, or a control reset of global skope
     //When an option is reset on the global skope, we need to set the new value to default in _wpCustomizeSettings.settings
-    globalDBoptionsReact : function( to, from ) {
-          var self = this,
-              resetted_opts = _.difference( from, to );
+    // globalDBoptionsReact : function( to, from ) {
+    //       var self = this,
+    //           resetted_opts = _.difference( from, to );
 
-          //reset option case
-          if ( ! _.isEmpty(resetted_opts) ) {
-              api.consoleLog( 'HAS RESET OPTIONS', resetted_opts );
-              //reset each reset setting to its default val
-              _.each( resetted_opts, function( shortSetId ) {
-                    var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
-                    if ( _.has( api.settings.settings, wpSetId) )
-                      api.settings.settings[wpSetId].value = serverControlParams.defaultOptionsValues[shortSetId];
-                    self.silentlyUpdateSettings( [], false );//silently update with no refresh
-              });
-          }
+    //       //reset option case
+    //       if ( ! _.isEmpty(resetted_opts) ) {
+    //             api.consoleLog( 'HAS RESET OPTIONS', resetted_opts );
+    //             //reset each reset setting to its default val
+    //             _.each( resetted_opts, function( shortSetId ) {
+    //                   var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
+    //                   if ( _.has( api.settings.settings, wpSetId) )
+    //                     api.settings.settings[wpSetId].value = serverControlParams.defaultOptionsValues[shortSetId];
+    //                   self.silentlyUpdateSettings( [], false );//silently update with no refresh
+    //             });
+    //       }
 
-          //make sure the hasDBValues is synchronized with the server
-          api.czr_skope( self.getGlobalSkopeId() ).hasDBValues( ! _.isEmpty( to ) );//might trigger cb hasDBValuesReact()
-          api.czr_skope( self.getGlobalSkopeId() )().has_db_val = ! _.isEmpty( to );
-
-    }
+    //       //make sure the hasDBValues is synchronized with the server
+    //       api.czr_skope( self.getGlobalSkopeId() ).hasDBValues( ! _.isEmpty( to ) );//might trigger cb hasDBValuesReact()
+    // }
 });//$.extend()

@@ -29,15 +29,21 @@ $.extend( CZRSkopeSaveMths, {
             } );
 
             //a submit call returns a promise resolved when the db ajax query is done().
-            api.consoleLog('submit request for skope : id, object, dirties : ', skope_id, skopeObjectToSubmit , api.czr_skopeBase.getSkopeDirties( skope_id ) );
+            //api.consoleLog('submit request for skope : id, object, dirties : ', skope_id, skopeObjectToSubmit , api.czr_skopeBase.getSkopeDirties( skope_id ) );
 
             this.submit( {
                         skope_id : skope_id,
                         customize_changeset_data : submittedChanges,//{}
                         dyn_type : skopeObjectToSubmit.dyn_type
                   } )
-                  .done( function( _resp) { dfd.resolve( _resp ); console.log('GETSUBMIT DONE PROMISE SUCCEEDED', _resp); })
-                  .fail( function( _resp ) { dfd.reject( _resp ); console.log('GETSUBMIT FAILED PROMISE', _resp ); });
+                  .done( function(_resp) {
+                        dfd.resolve( _resp );
+                        //console.log('GETSUBMIT DONE PROMISE SUCCEEDED', _resp);
+                  } )
+                  .fail( function( _resp ) {
+                        dfd.reject( _resp );
+                        api.consoleLog('GETSUBMIT FAILED PROMISE', _resp );
+                  } );
                   // .then( function( _resp ) {
                   //       console.log('GETSUBMIT THEN ', _resp );
                   //       dfd.resolve( _resp );
@@ -64,7 +70,6 @@ $.extend( CZRSkopeSaveMths, {
 
             params = $.extend( default_params, params );
 
-            console.log('SAVE SUBMIT PARAMS', params );
             if ( _.isNull( params.skope_id ) ) {
                   throw new Error( 'OVERRIDEN SAVE::submit : MISSING skope_id');
             }
@@ -81,7 +86,7 @@ $.extend( CZRSkopeSaveMths, {
                   api.each( function( setting ) {
                         setting.notifications.each( function( notification ) {
                               if ( 'error' === notification.type ) {
-                                    console.log('NOTIFICATION ERROR on SUBMIT SAVE' , notification );
+                                    api.consoleLog('NOTIFICATION ERROR on SUBMIT SAVE' , notification );
                               }
                               if ( 'error' === notification.type && ( ! notification.data || ! notification.data.from_server ) ) {
                                     invalidSettings.push( setting.id );
@@ -139,7 +144,7 @@ $.extend( CZRSkopeSaveMths, {
 
 
 
-            api.consoleLog( 'in submit : ', params.skope_id, query, self.previewer.channel() );
+            //api.consoleLog( 'in submit : ', params.skope_id, query, self.previewer.channel() );
 
             /*
              * Note that the dirty customized values will have already been set in the
@@ -191,7 +196,7 @@ $.extend( CZRSkopeSaveMths, {
             } );
 
             request.done( function( response ) {
-                  api.consoleLog('SUBMIT REQUEST DONE ?', params.skope_id, response );
+                  //api.consoleLog('SUBMIT REQUEST DONE ?', params.skope_id, response );
                   submit_dfd.resolve( response );
             } );
 

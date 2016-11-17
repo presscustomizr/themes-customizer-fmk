@@ -37,12 +37,12 @@ $.extend( CZRSkopeSaveMths, {
             var resolveSave = function() {
                   self.fireAllSubmission()
                         .fail( function( r ) {
-                              console.log('ALL SUBMISSIONS FAILED', r );
+                              api.consoleLog('ALL SUBMISSIONS FAILED', r );
                               self.globalSaveDeferred.reject( r );
                               api.trigger( 'error', r );
                         })
                         .done( function( response ) {
-                              console.log('ALL SUBMISSIONS DONE', response );
+                              //console.log('ALL SUBMISSIONS DONE', response );
 
                               //api.previewer.refresh() method is resolved with an object looking like :
                               //{
@@ -55,7 +55,7 @@ $.extend( CZRSkopeSaveMths, {
                               api.previewer.refresh( { waitSkopeSynced : true } )
                                     .fail( function( refresh_data ) {
                                           self.globalSaveDeferred.reject( self.previewer, [ response ] );
-                                          console.log('SAVE REFRESH FAIL', refresh_data );
+                                          api.consoleLog('SAVE REFRESH FAIL', refresh_data );
                                     })
                                     .always( function() {
                                           //WP default treatments
@@ -70,7 +70,7 @@ $.extend( CZRSkopeSaveMths, {
                                           }
                                     })
                                     .done( function( refresh_data ) {
-                                          console.log('SAVE REFRESH DONE', refresh_data);
+                                          //console.log('SAVE REFRESH DONE', refresh_data);
 
                                           api.previewer.send( 'saved', response );
 

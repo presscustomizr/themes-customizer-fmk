@@ -4,6 +4,11 @@
     //'czr-skope-ready' is fired after the skopeBase has been initialized.
     //the api is 'ready' at this point
     api.bind( 'czr-skope-ready' , function() {
+          //post process after refresh
+          //@param param = { previewer : previewer, skopesServerData : skopesServerData || {} }
+          api.bind( 'pre_refresh_done', function( params ) {
+                api.czr_skopeBase.reactWhenRefreshDone(params);
+          });
           czr_override_refresh_for_skope();
     });
 
@@ -38,7 +43,7 @@
           //
           //@params can hold an obj looking like :
           //{
-          //  waitSkopeSynced : false,
+          //  waitSkopeSynced : true,
           //  the_dirties : {}
           //}
           //
@@ -46,7 +51,7 @@
           //if not, it waits for the default 'synced' wp event to be resolved
           api.previewer._new_refresh = function( params ) {
                 params = _.extend({
-                            waitSkopeSynced : false,
+                            waitSkopeSynced : true,
                             the_dirties : {}
                       },
                       params
@@ -55,7 +60,7 @@
                 var dfd = $.Deferred();
 
                 if ( ! _.has( api, 'czr_activeSkope') || _.isUndefined( api.czr_activeSkope() ) ) {
-                      console.log( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
+                      api.consoleLog( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
                 }
                 var previewer = this;
 
@@ -105,6 +110,7 @@
                             previewer._previousPreview = previewer.preview;
                             previewer.deferred.active.resolve();
                             delete previewer.loading;
+                            api.trigger( 'pre_refresh_done', { previewer : previewer, skopesServerData : skopesServerData || {} } );
                             dfd.resolve( { previewer : previewer, skopesServerData : skopesServerData || {} } );
                       };
                       if ( params.waitSkopeSynced ) {
@@ -120,7 +126,7 @@
                 });
 
                 previewer.loading.fail( function( reason ) {
-                      console.log('LOADING FAILED : ' , reason );
+                      api.consoleLog('LOADING FAILED : ' , reason );
                       previewer.send( 'loading-failed' );
 
                       if ( 'logged out' === reason ) {

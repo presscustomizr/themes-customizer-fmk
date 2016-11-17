@@ -74,14 +74,20 @@ $.extend( CZRSkopeMths, {
           //@to is {setId1 : val1, setId2 : val2, ...}
           skope.dirtyValues.callbacks.add(function() { return skope.dirtyValuesReact.apply(skope, arguments ); } );
 
+          //LISTEN TO CHANGESET VALUES
+          skope.changesetValues.callbacks.add(function() { return skope.changesetValuesReact.apply(skope, arguments ); } );
+
+          //LISTEN TO DB VALUES
+          skope.dbValues.callbacks.add(function() { return skope.dbValuesReact.apply(skope, arguments ); } );
+
           //UPDATE global skope collection each time a skope model is populated or updated
           skope.callbacks.add(function() { return skope.skopeReact.apply( skope, arguments ); } );
 
           //PREPARE THE CONSTRUCTOR OPTIONS AND SET SKOPE MODEL WITH IT
-          //=> we don't need to store the db and 'changeset' properties in the model statically
+          //=> we don't need to store the db , has_db_val, and changeset properties in the model statically
           //because it will be stored as observable values
           skope.set( _.omit( constructor_options, function( _v, _key ) {
-                return 'db' === _key || 'changeset' === _key;
+                return _.contains( [ 'db', 'changeset', 'has_db_val' ], _key );
           } ) );
 
           ////////////////////////////////////////////////////
@@ -109,6 +115,7 @@ $.extend( CZRSkopeMths, {
                       skope.hasDBValues.callbacks.add(function() { return skope.hasDBValuesReact.apply(skope, arguments ); } );
                       skope.winner.callbacks.add(function() { return skope.winnerReact.apply(skope, arguments ); } );
 
+
                       skope.dirtyness( ! _.isEmpty( constructor_options.changeset ) );
                       skope.hasDBValues( ! _.isEmpty( constructor_options.db ) );
                       skope.winner( constructor_options.is_winner );
@@ -123,12 +130,11 @@ $.extend( CZRSkopeMths, {
 
           //EMBED THE SKOPE VIEW : EMBED AND STORE THE CONTAINER
           $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
-              console.log('  !!!!!!!!!!!!!!! EMBED DIALOG BOX !!!!!!!!!!!!!!!! ');
               if ( false !== $_container.length ) {
                   skope.container = $_container;
                   skope.embedded.resolve( $_container );
               } else {
-                  skope.embedded.reject( $_container );
+                  skope.embedded.reject();
               }
           });
     },
@@ -140,30 +146,79 @@ $.extend( CZRSkopeMths, {
     * SKOPE API DIRTIES REACTIONS
     *****************************************************************************/
     dirtyValuesReact : function( to, from ) {
+          console.log('IN DIRTY VALUES REACT', to );
           var skope = this;
-          console.log('IN DIRTY VALUES CALLBACK', to, from );
           //set the model dirtyness boolean state value
           skope.dirtyness( ! _.isEmpty(to) );
 
-          //RESET DIRTYNESS FOR THE CONTROLS IN THE ACTIVE SKOPE
-          //=> make sure this is set for the active skopes only
-          var ctrlIdToReset = [];
+          //build the collection of control ids for which the dirtyness has to be reset
+          var ctrlIdDirtynessToClean = [];
           _.each( from, function( _val, _id ) {
               if ( _.has( to, _id ) )
                 return;
-              ctrlIdToReset.push( _id );
+              ctrlIdDirtynessToClean.push( _id );
           });
 
+          //SET THE ACTIVE SKOPE CONTROLS DIRTYNESSES
           if ( skope().id == api.czr_activeSkope() ) {
-                _.each( ctrlIdToReset , function( setId ) {
+                //RESET DIRTYNESS FOR THE CLEAN SETTINGS CONTROLS IN THE ACTIVE SKOPE
+                _.each( ctrlIdDirtynessToClean , function( setId ) {
                       if ( _.has( api.control( setId ), 'czr_isDirty') ) {
-                            api.control(setId).czr_isDirty( false );
+                            api.control( setId ).czr_isDirty( false );
+                      }
+                });
+                //Set control dirtyness for dirty settings
+                _.each( to, function( _val, _setId ) {
+                      if ( _.has( api.control( _setId ), 'czr_isDirty') ) {
+                            api.control( _setId ).czr_isDirty( true );
                       }
                 });
           }
     },
 
 
+    /*****************************************************************************
+    * SKOPE API CHANGESET REACTIONS
+    *****************************************************************************/
+    changesetValuesReact : function( to, from ) {
+          var skope = this,
+              _currentDbDirties = $.extend( true, {}, skope.dirtyValues() );
+          skope.dirtyValues( $.extend( _currentDbDirties, to ) );
+    },
+
+
+    /*****************************************************************************
+    * SKOPE DB VALUES REACTIONS
+    *****************************************************************************/
+    dbValuesReact : function( to, from ) {
+          var skope = this;
+
+          //set the model dirtyness boolean state value
+          skope.hasDBValues( ! _.isEmpty(to) );
+
+          //RESET DIRTYNESS FOR THE CONTROLS IN THE ACTIVE SKOPE
+          //=> make sure this is set for the active skopes only
+          var ctrlIdDbToReset = [];
+          _.each( from, function( _val, _id ) {
+              if ( _.has( to, _id ) )
+                return;
+              ctrlIdDbToReset.push( _id );
+          });
+
+          if ( skope().id == api.czr_activeSkope() ) {
+                _.each( ctrlIdDbToReset , function( setId ) {
+                      if ( _.has( api.control( setId ), 'czr_hasDBVal') ) {
+                            api.control(setId).czr_hasDBVal ( false );
+                      }
+                });
+                //Set control db dirtyness for settings with a db value
+                _.each( to, function( _val, _setId ) {
+                      if ( _.has( api.control( _setId ), 'czr_hasDBVal') ) {
+                            api.control( _setId ).czr_hasDBVal( true );
+                      }
+                });
+          }
+    },
 
 
     /*****************************************************************************
@@ -218,7 +273,7 @@ $.extend( CZRSkopeMths, {
     //cb of skope.dirtyness.callbacks
     dirtynessReact : function(to, from) {
           var skope = this;
-          $.when( this.container.toggleClass('dirty', to) ).done( function() {
+          $.when( this.container.toggleClass( 'dirty', to) ).done( function() {
               if ( to )
                 $( '.czr-scope-reset', skope.container).fadeIn('slow').attr('title', 'Reset the currently customized values');
               else if ( ! skope.hasDBValues() )
@@ -298,12 +353,8 @@ $.extend( CZRSkopeMths, {
     //@return boolean
     hasSkopeSettingDBValues : function( setId ) {
           var skope = this,
-              shortSetId = api.CZR_Helpers.getOptionName(setId);
+              _setId = api.CZR_Helpers.build_setId(setId);
 
-          if ( 'global' == skope().skope ) {
-            return _.contains( api.czr_globalDBoptions(), shortSetId );
-          } else {
-            return ! _.isUndefined( api.czr_skope( api.czr_activeSkope() ).dbValues[shortSetId] );
-          }
+          return ! _.isUndefined( api.czr_skope( api.czr_activeSkope() ).dbValues()[_setId] );
     }
   } );//$.extend(

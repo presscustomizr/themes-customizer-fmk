@@ -244,11 +244,10 @@ $.extend( CZRSkopeBaseMths, {
     maybeSynchronizeGlobalSkope : function() {
           var self = this;
           if ( self.isGlobalSkopeRegistered() ) {
-                var _global_skp_db_values = api.czr_skope( self.getGlobalSkopeId() )().db;
-                _.each( _global_skp_db_values, function( _val, shortSetId ){
-                      var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
-                      if ( ! _.isEqual( api.settings.settings[wpSetId].value, _val ) ) {
-                          api.settings.settings[wpSetId].value = _val;
+                var _global_skp_db_values = api.czr_skope( self.getGlobalSkopeId() ).dbValues();
+                _.each( _global_skp_db_values, function( _val, setId ){
+                      if ( ! _.isEqual( api.settings.settings[setId].value, _val ) ) {
+                            api.settings.settings[setId].value = _val;
                       }
                 });
                 //api.consoleLog('GLOBAL SKOPE HAS BEEN SYNCHRONIZED WITH THE API.');

@@ -203,7 +203,7 @@ $.extend( CZRSkopeBaseMths, {
             return api.czr_skope( skope_id ).dirtyValues()[ wpSetId ];
 
           //is the setting CHANGESET dirty ?
-          if ( api.czr_isChangedSetOn() && _.has( api.czr_skope( skope_id )(), 'changeset' ) ) {
+          if ( api.czr_isChangedSetOn() ) {
                 if ( api.czr_skope( skope_id ).getSkopeSettingChangesetDirtyness( wpSetId ) )
                   return api.czr_skope( skope_id ).changesetValues()[ wpSetId ];
           }
@@ -243,7 +243,7 @@ $.extend( CZRSkopeBaseMths, {
           //use the parent dirty value if the current skope setId is not dirty and has no db val
           _.each( parent_dirties, function( _val, wpSetId ){
                 var shortSetId = api.CZR_Helpers.getOptionName( wpSetId );
-                if ( _.isUndefined( dirtyCustomized[wpSetId] ) && _.isUndefined( skope_model.db[shortSetId] ) )
+                if ( _.isUndefined( dirtyCustomized[wpSetId] ) && _.isUndefined( api.czr_skope( skope_model.id ).dbValues()[shortSetId] ) )
                     dirtyCustomized[wpSetId] = _val;
           });
           return 'global' == api.czr_skope( parent_skope_id )().skope ? dirtyCustomized : self.applyDirtyCustomizedInheritance( dirtyCustomized, parent_skope_id );
@@ -275,10 +275,10 @@ $.extend( CZRSkopeBaseMths, {
     _getDBSettingVal : function( setId, skope_model  ) {
           var shortSetId = api.CZR_Helpers.getOptionName(setId),
               wpSetId = api.CZR_Helpers.build_setId(setId);
-          if ( _.has( skope_model.db, wpSetId ) ) {
-                return skope_model.db[wpSetId];
-          } else if ( _.has( skope_model.db, shortSetId ) ) {
-                return skope_model.db[shortSetId];
+          if ( _.has( api.czr_skope( skope_model.id ).dbValues(), wpSetId ) ) {
+                return api.czr_skope( skope_model.id ).dbValues()[wpSetId];
+          } else if ( _.has( api.czr_skope( skope_model.id ).dbValues(), shortSetId ) ) {
+                return api.czr_skope( skope_model.id ).dbValues()[shortSetId];
           } else {
                 return '_no_db_val';
           }

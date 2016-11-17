@@ -59,37 +59,6 @@ $.extend( CZRSkopeSaveMths, {
                 api.consoleLog('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', _notSyncedSettings );
           }
 
-          //UPDATE EACH SKOPE MODEL WITH THE NEW DB VAL SENT BY THE SERVER
-          //The sent skope have no id (because assigned in the api)
-          //=> however we can match them with their unique opt_name property
-          //then update the skope db values, including the global skope
-          _.each( api.czr_skopeCollection(), function( _skp ) {
-                var _sent_skope = _.findWhere( _sentSkopeCollection, { opt_name : _skp.opt_name } );
-                //do we have a match based on opt_name with the _sentSkopeCollection ?
-                if ( _.isUndefined( _sent_skope ) )
-                  return;
-
-                //if so then let's update the skope model with the new db values
-                var _skope_model = $.extend( true, {}, api.czr_skope( _skp.id )() ),
-                    _new_db_val = ! _.isObject( _skope_model.db ) ? {} : $.extend( true, {}, _skope_model.db );
-
-                _new_db_val = $.extend( _new_db_val, _sent_skope.db || {} );
-                api.czr_skope( _skp.id ).dbValues( _new_db_val );
-          });
-
-          //SET HAS DB VAL FOR THE CONTROLS IN THE ACTIVE SKOPE
-          //=> make sure this is set for the active skopes only
-          // _.each( saved_dirties, function( _skp_dirties, _skp_id ){
-          //       if ( _skp_id != api.czr_activeSkope() )
-          //         return;
-          //       _.each( _skp_dirties, function( _v, setId ) {
-          //             if ( _.has(api.control( setId ), 'czr_hasDBVal') ) {
-          //                     api.control(setId).czr_hasDBVal(true);
-          //             }
-          //       });
-          // });
-
-
           //SYNCHRONIZE THE API.SETTINGS.SETTINGS WITH THE SAVED VALUE FOR GLOBAL SKOPE
           //finally make sure the api.settings.settings values are always synchronized with the global skope instance
           api.czr_skopeBase.maybeSynchronizeGlobalSkope();

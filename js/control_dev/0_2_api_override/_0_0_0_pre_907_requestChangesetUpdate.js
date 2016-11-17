@@ -85,7 +85,7 @@
                   _skopesToUpdate.push( _skp.id );
             } );
 
-            console.log('SKOPE CHANGESETS TO UPDATE', _skopesToUpdate );
+            //api.consoleLog('SKOPE CHANGESETS TO UPDATE', _skopesToUpdate );
 
             var _pushPromise = function( _skp_id ) {
                   var dfrd = $.Deferred(),
@@ -101,7 +101,8 @@
             };
 
             var _recursivePushDeferred = $.Deferred(),
-                _all_skopes_data_ = [];
+                _all_skopes_data_ = [],
+                _failedPush = [];
 
             var recursivePush = function( _index ) {
                   //on first push run, set the api state to processing.
@@ -114,11 +115,19 @@
                   if ( _.isUndefined( _skopesToUpdate[_index] ) ) {
                         _recursivePushDeferred.resolve( _all_skopes_data_ );
                   } else {
-                        $.when( _pushPromise( _skopesToUpdate[_index] ) ).done( function( _skope_data_ ) {
-                              console.log('RECURSIVE PUSH DONE FOR SKOPE : ', _skopesToUpdate[_index] );
-                              _all_skopes_data_.push( _skope_data_ );
-                              recursivePush( _index + 1 );
-                        } );
+                        _pushPromise( _skopesToUpdate[_index] )
+                              .fail( function( r ) {
+                                    _failedPush.push( r );
+                              })
+                              .done( function( _skope_data_ ) {
+                                    //console.log('RECURSIVE PUSH DONE FOR SKOPE : ', _skopesToUpdate[_index] );
+                                    _all_skopes_data_.push( _skope_data_ );
+                                    recursivePush( _index + 1 );
+                              });
+                  }
+                  if ( ! _.isEmpty( _failedPush ) ) {
+                        api.consoleLog( 'CHANGESET UPDATE RECURSIVE PUSH FAIL', _failedPush );
+                        _recursivePushDeferred.reject();
                   }
                   return _recursivePushDeferred.promise();
             };
@@ -130,29 +139,37 @@
             //=> otherwise some dirties might not be taken into account in the skope.
             //=> This can happen typically for a setting dirty both in global and other skope(s)
             var _lastSavedRevisionBefore = api._lastSavedRevision;
-            $.when( _original_requestChangesetUpdate( _global_skope_changes ) ).then( function( wp_original_response ) {
-                    console.log('GLOBAL SKOPE CHANGESET UPDATE PROCESSED BY WP : ', _global_skope_changes, wp_original_response );
-                    //console.log('WP DEFERRED THEN', wp_original_response );
-                    // $.when.apply( null, _promises ).then( function() {
-                    //       //console.log('OUR DEFERRED THEN => resolve WP');
-                    //       dfd.resolve( wp_original_response );
-                    // });
-                    //Restore the _lastSavedRevision index to its previous state to not miss any setting that could have been updated by WP for global.
-                     api._lastSavedRevision = _lastSavedRevisionBefore;
-                    $.when( recursivePush() ).then( function() {
-                          console.log('ALL RECURSIVE PUSHES ARE DONE NOW', _all_skopes_data_ );
+            _original_requestChangesetUpdate( _global_skope_changes )
+                  .fail( function( r ) {
+                        api.consoleLog( 'WP requestChangesetUpdateFail', r );
+                  })
+                  .done( function( wp_original_response ) {
+                        //console.log('GLOBAL SKOPE CHANGESET UPDATE PROCESSED BY WP : ', _global_skope_changes, wp_original_response );
+                        //console.log('WP DEFERRED THEN', wp_original_response );
+                        // $.when.apply( null, _promises ).then( function() {
+                        //       //console.log('OUR DEFERRED THEN => resolve WP');
+                        //       dfd.resolve( wp_original_response );
+                        // });
+                        //Restore the _lastSavedRevision index to its previous state to not miss any setting that could have been updated by WP for global.
+                         api._lastSavedRevision = _lastSavedRevisionBefore;
+                        $.when( recursivePush() )
+                              .fail( function( r ) {
+                                    api.consoleLog( 'CHANGESET UPDATE RECURSIVE PUSH FAIL', r , _all_skopes_data_ );
+                              } )
+                              .done( function() {
+                                    //console.log('ALL RECURSIVE PUSHES ARE DONE NOW', _all_skopes_data_ );
 
-                          var savedChangesetValues = {};
+                                    var savedChangesetValues = {};
 
-                          // Ensure that all settings updated subsequently will be included in the next changeset update request.
-                          api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
+                                    // Ensure that all settings updated subsequently will be included in the next changeset update request.
+                                    api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
 
-                          //api.state( 'changesetStatus' ).set( _data_.changeset_status );
-                          // Make sure that publishing a changeset waits for all changeset update requests to complete.
-                          api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
-                          dfd.resolve( wp_original_response );
-                    });
-            });
+                                    //api.state( 'changesetStatus' ).set( _data_.changeset_status );
+                                    // Make sure that publishing a changeset waits for all changeset update requests to complete.
+                                    api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+                                    dfd.resolve( wp_original_response );
+                              });
+                  });
 
             return dfd.promise();
       };
@@ -161,7 +178,7 @@
 
       //@update the changeset meta for a given skope
       api._requestSkopeChangetsetUpdate = function( changes, skope_id ) {
-            console.log( 'IN REQUEST SKOPE CHANGESET UPDATE', changes, skope_id );
+            //console.log( 'IN REQUEST SKOPE CHANGESET UPDATE', changes, skope_id );
             if ( _.isUndefined( skope_id ) || ! api.czr_skope.has( skope_id ) ) {
                   throw new Error( 'In api._requestSkopeChangetsetUpdate() : a valid and registered skope_id must be provided' );
             }
@@ -191,7 +208,7 @@
 
             // Short-circuit when there are no pending changes.
             if ( _.isEmpty( submittedChanges ) ) {
-                  console.log( 'NO CHANGES TO SUBMIT FOR SKOPE : ' + skope_id );
+                  //console.log( 'NO CHANGES TO SUBMIT FOR SKOPE : ' + skope_id );
                   deferred.resolve( {} );
                   return deferred.promise();
             }
@@ -205,7 +222,7 @@
             // Allow plugins to attach additional params to the settings.
             api.trigger( 'skope-changeset-save', submittedChanges );
 
-            console.log('CHANGESET UPDATE FOR SKOPE : ', skope_id, submittedChanges );
+            //console.log('CHANGESET UPDATE FOR SKOPE : ', skope_id, submittedChanges );
 
             var queryVars = {
                   skope_id : skope_id,
@@ -223,7 +240,7 @@
 
 
 
-            console.log('DATA in SKOPE CHANGESET UPDATE FOR SKOPE ' + skope_id, data);
+            //console.log('DATA in SKOPE CHANGESET UPDATE FOR SKOPE ' + skope_id, data);
 
             // var _dumby_request = function( _data ) {
             //     var dfd = $.Deferred();
@@ -236,27 +253,24 @@
 
             ////////////////////// FIRE THE REQUEST //////////////////////
             //request = _dumby_request( data );
-            request = wp.ajax.post( 'customize_skope_changeset_save', data );
-            //////////////////////////////////////////////////////////////
-
-            request.done( function requestChangesetUpdateDone( _data_ ) {
-                  api.consoleLog('SKOPE CHANGETSET DONE FOR SKOPE ' + _data_.skope_id , _data_ );
-                  deferred.resolve( _data_ );
-                  //api.trigger( 'changeset-saved', _data_ );
-            } );
-            request.fail( function requestChangesetUpdateFail( _data_ ) {
-                  api.consoleLog('SKOPE CHANGESET FAIL FOR SKOPE ' + _data_.skope_id, _data_ );
-                  deferred.resolve( _data_ );
-                  //api.trigger( 'changeset-error', _data_ );
-            } );
-            request.always( function( _data_ ) {
-                  if ( _data_.setting_validities ) {
-                    console.log('HANDLE SETTING VALIDITIES', _data_ );
-                    api._handleSettingValidities( {
-                      settingValidities: _data_.setting_validities
-                    } );
-                  }
-            } );
+            wp.ajax.post( 'customize_skope_changeset_save', data )
+                  .done( function requestChangesetUpdateDone( _data_ ) {
+                        //api.consoleLog('SKOPE CHANGETSET DONE FOR SKOPE ' + _data_.skope_id , _data_ );
+                        deferred.resolve( _data_ );
+                        //api.trigger( 'changeset-saved', _data_ );
+                  } )
+                  .fail( function requestChangesetUpdateFail( _data_ ) {
+                        api.consoleLog('SKOPE CHANGESET FAIL FOR SKOPE ' + _data_.skope_id, _data_ );
+                        deferred.resolve( _data_ );
+                        //api.trigger( 'changeset-error', _data_ );
+                  } )
+                  .always( function( _data_ ) {
+                        if ( _data_.setting_validities ) {
+                              api._handleSettingValidities( {
+                                    settingValidities: _data_.setting_validities
+                              } );
+                        }
+                  } );
 
             return deferred.promise();
       };

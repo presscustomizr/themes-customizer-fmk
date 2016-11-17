@@ -9,7 +9,8 @@
         * RESET
         *****************************************************************************/
         api.previewer.czr_reset = function( skope_id, setId ) {
-              var self = this,
+              var reset_dfd = $.Deferred(),
+                  self = this,
                   processing = api.state( 'processing' ),
                   submitWhenDoneProcessing,
                   submit_reset,
@@ -64,10 +65,12 @@
                             } );
                           }
                           api.trigger( 'error', response );
+                          reset_dfd.reject( response );
                     } );
 
                     request.done( function( response ) {
                           api.consoleLog('ALORS DONE ?', skope_id, response );
+                          reset_dfd.resolve( response );
                           // // Clear setting dirty states
                           // api.each( function ( value ) {
                           //   value._dirty = false;
@@ -95,7 +98,7 @@
                     api.state.bind( 'change', submitWhenDoneProcessing );
               }
 
-              return request;
+              return reset_dfd.promise();
         };//.czr_reset
 
   });//api.bind('ready')

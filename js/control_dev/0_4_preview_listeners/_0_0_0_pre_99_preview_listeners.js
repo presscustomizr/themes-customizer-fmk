@@ -42,25 +42,5 @@
         api.previewer.bind( 'czr-partial-refresh', function(data) {
               api.czr_partials.set(data);
         });
-
-        //the sent data look like :
-        //{
-        //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
-        //  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || []
-        // }
-        //
-        api.previewer.bind( 'czr-skopes-synced', function( data ) {
-              if ( ! serverControlParams.isSkopOn )
-                return;
-              //api.consoleLog('czr-skopes-ready DATA', data );
-              var preview = this;
-              //initialize skopes with the server sent data
-              if ( _.has(data, 'czr_skopes') )
-                  api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
-              //store the db options name saved for the global skope
-              //for the 'global' skope, we only send the option name instead of sending the heavy and performance expensive entire set of option
-              if ( _.has(data, 'skopeGlobalDBOpt') )
-                  api.czr_globalDBoptions( data.skopeGlobalDBOpt );
-        });
   });//api.bind('ready')
 })( wp.customize , jQuery, _ );
