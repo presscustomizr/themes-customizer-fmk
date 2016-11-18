@@ -189,7 +189,7 @@
                 data;
 
             //if no skope has been provided, then let's use the active one
-            skope_id = skope_id || api.czr_activeSkope();
+            skope_id = skope_id || api.czr_activeSkopeId();
 
             if ( changes ) {
                   _.extend( submittedChanges, changes );

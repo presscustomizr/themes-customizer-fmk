@@ -6,7 +6,7 @@ $.extend( CZRSkopeBaseMths, {
       initWidgetSidebarSpecifics : function() {
             var self = this;
             if ( ! self.isExcludedSidebarsWidgets() ) {
-                api.czr_activeSkope.bind( function( active_skope ) {
+                api.czr_activeSkopeId.bind( function( active_skope ) {
                     self.forceSidebarDirtyRefresh( api.czr_activeSectionId(), active_skope );
                 });
             }
@@ -37,11 +37,11 @@ $.extend( CZRSkopeBaseMths, {
             //Specific for widget sidebars section
             var _debounced = function() {
                 if ( api.section.has( active_section ) && "sidebar" == api.section(active_section).params.type ) {
-                    var active_skope = active_skope || api.czr_activeSkope(),
+                    var active_skope = active_skope || api.czr_activeSkopeId(),
                         related_setting_name = 'sidebars_widgets[' + api.section(active_section).params.sidebarId + ']',
                         related_setting_val = self.getSkopeSettingVal( related_setting_name, active_skope );
 
-                    //api( related_setting_name )( self.getSkopeSettingVal( related_setting_name, api.czr_activeSkope() ) );
+                    //api( related_setting_name )( self.getSkopeSettingVal( related_setting_name, api.czr_activeSkopeId() ) );
                     self.updateSkopeDirties( related_setting_name, related_setting_val, active_skope );
 
                     api.previewer.refresh( { the_dirties : api.czr_skope( active_skope ).dirtyValues() } )

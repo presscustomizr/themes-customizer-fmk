@@ -118,7 +118,7 @@ $.extend( CZRSkopeMths, {
           //  skope_id2 : { setId1 : val 1, setId2, val2, ... }
           //  ...
           //}
-          if ( api.czr_activeSkope() == skope().id ) {
+          if ( api.czr_activeSkopeId() == skope().id ) {
               _.each( skope.dirtyValues(), function( _v, setId ) {
                     if ( _.has(api.control(setId), 'czr_isDirty') )
                       api.control(setId).czr_isDirty(false);
@@ -142,7 +142,7 @@ $.extend( CZRSkopeMths, {
 
           //set the db state of each control
           //Avoid cross skope actions
-          if ( api.czr_activeSkope() == skope().id ) {
+          if ( api.czr_activeSkopeId() == skope().id ) {
                 _.each( skope.dbValues(), function( _v, _setId ) {
                       reset_control_db_state( _setId );
                 });

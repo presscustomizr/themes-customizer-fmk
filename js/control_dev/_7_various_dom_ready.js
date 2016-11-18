@@ -19,7 +19,6 @@
     //    api.consoleLog('AJAX COMPLETE', e, o);
     // });
 
-
     /* RECENTER CURRENT SECTIONS */
     $('.accordion-section').not('.control-panel').click( function () {
       _recenter_current_section($(this));

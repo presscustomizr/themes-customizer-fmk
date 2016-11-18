@@ -35,7 +35,7 @@ $.extend( CZRSkopeBaseMths, {
                 .done( function() {
                       //re-render control single reset when needed (Media control are re-rendered, that's why we need this method fired on each skope switch)
                       var _debouncedSetupControlReset = function() {
-                          self.setupControlsReset( {
+                          self.setupControlsViews( {
                               section_id : _params.section_id
                           });
                       };
@@ -86,7 +86,7 @@ $.extend( CZRSkopeBaseMths, {
               //        _.each( _silentUpdatePromises, function( _promise_ , setId ) {
               //               //Silently set
               //               var wpSetId = api.CZR_Helpers.build_setId( setId ),
-              //                   _skopeDirtyness = api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId );
+              //                   _skopeDirtyness = api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( setId );
               //               api( wpSetId ).silent_set( obj.val, _skopeDirtyness );
               //         });
               // };
@@ -97,7 +97,7 @@ $.extend( CZRSkopeBaseMths, {
                 _promise_.done( function( _new_setting_val_ ) {
                       //Silently set
                       var wpSetId = api.CZR_Helpers.build_setId( setId ),
-                          _skopeDirtyness = api.czr_skope( api.czr_activeSkope() ).getSkopeSettingDirtyness( setId );
+                          _skopeDirtyness = api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( setId );
                       api( wpSetId ).silent_set( _new_setting_val_ , _skopeDirtyness );
                 });
 
@@ -164,7 +164,7 @@ $.extend( CZRSkopeBaseMths, {
               current_setting_val = api( wpSetId )(),//typically the previous skope val
               dfd = $.Deferred(),
               _promise = false,
-              skope_id = api.czr_activeSkope(),
+              skope_id = api.czr_activeSkopeId(),
               val = api.czr_skopeBase.getSkopeSettingVal( setId, skope_id );
 
           //if a setId is provided, then let's update it
@@ -260,7 +260,7 @@ $.extend( CZRSkopeBaseMths, {
               _synced_short_id = _.has( api.control( wpSetId ).params, 'syncCollection' ) ? api.control( wpSetId ).params.syncCollection : '',
               _shortSetId =  api.CZR_Helpers.build_setId(wpSetId),
               _val = api.czr_skopeBase.getSkopeSettingVal( _shortSetId, skope_id ),
-              current_skope_instance = api.czr_skope( api.czr_activeSkope() );
+              current_skope_instance = api.czr_skope( api.czr_activeSkopeId() );
 
           //if in a multimodule context
           if ( ! _.isEmpty( _synced_short_id ) && ! _.isUndefined( _synced_short_id ) ) {

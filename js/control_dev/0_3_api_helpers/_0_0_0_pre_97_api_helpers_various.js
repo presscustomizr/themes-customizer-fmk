@@ -8,6 +8,26 @@
   //@event map = [ {event1}, {event2}, ... ]
   //@new_event = {  trigger   : event name , actions   : [ 'cb1', 'cb2', ... ] }
   api.CZR_Helpers = $.extend( api.CZR_Helpers, {
+        //While a control should always have a default setting,
+        //It can have additional setting assigned
+        //This method returns the default setting or the specified type if requested
+        //Example : header_image has default and data
+        getControlSettingId : function( control_id, setting_type ) {
+                setting_type = 'default' || setting_type;
+                if ( ! api.control.has( control_id ) ) {
+                      throw new Error( 'The requested control_id is not registered in the api yet : ' + control_id );
+                }
+                if ( ! _.has( api.control( control_id ), 'settings' ) || ! _.has( api.control( control_id ).settings, setting_type ) ) {
+                      throw new Error( 'The requested control_id does not have the requested setting type : ' + control_id + ' , ' + setting_type );
+                }
+                if ( _.isUndefined( api.control( control_id ).settings[setting_type].id ) ) {
+                      throw new Error( 'The requested control_id has no setting id assigned : ' + control_id );
+                }
+                return api.control( control_id ).settings[setting_type].id;
+        },
+
+
+
         getDocSearchLink : function( text ) {
                 text = ! _.isString(text) ? '' : text;
                 var _searchtext = text.replace( / /g, '+'),
@@ -27,8 +47,15 @@
                 //exclude the WP built-in settings like blogdescription, show_on_front, etc
                 if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
                   return setId;
-                //exclude the WP built-in settings like sidebars_widgets*, nav_menu_*, widget_*
-                if ( 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8) || 'sidebars_' == setId.substring(0, 9) )
+                //exclude the WP built-in settings like sidebars_widgets*, nav_menu_*, widget_*, custom_css
+                var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css' ],
+                    _isExcld = false;
+                _.each( _patterns, function( _ptrn ) {
+                      if ( _isExcld )
+                        return;
+                      _isExcld = _ptrn == setId.substring( 0, _ptrn.length );
+                });
+                if ( _isExcld )
                   return setId;
 
                 return -1 == setId.indexOf( serverControlParams.themeOptions ) ? [ serverControlParams.themeOptions +'[' , setId  , ']' ].join('') : setId;

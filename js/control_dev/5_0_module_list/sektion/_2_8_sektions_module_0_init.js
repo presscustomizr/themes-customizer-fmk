@@ -104,8 +104,8 @@ $.extend( CZRSektionMths, {
 
 
           api.consoleLog('SEKTION MODULE INIT', module.control.params.czr_skope );
-          if ( _.has( api, 'czr_activeSkope' ) )
-            api.consoleLog('SEKTION MODULE INIT', api.czr_activeSkope() );
+          if ( _.has( api, 'czr_activeSkopeId' ) )
+            api.consoleLog('SEKTION MODULE INIT', api.czr_activeSkopeId() );
 
           //api.czrModulePanelEmbedded.done( function() {
 

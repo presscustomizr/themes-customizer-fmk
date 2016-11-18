@@ -69,15 +69,17 @@ span.czr-skope-title {
   font-weight: bold;
   opacity: 1;
 }
-.czr-scope-switcher .active {
+.czr-scope-switcher .active, .czr-scope-switcher .czr-scope:hover {
   opacity: 1;
+  border-bottom: 2px solid #82b965;
 }
+
 .czr-scope {
     float: left;
     width: 30.5%;
     /*margin-left: 1.5%;*/
     background: #fff;
-    /*border: 1px solid #cccccc;*/
+    border-bottom: 2px solid #cccccc;
     border-top: 1px solid #cccccc;
     /*-webkit-border-radius: 3px;
     border-radius: 3px;*/
@@ -89,6 +91,7 @@ span.czr-skope-title {
     -o-transition: opacity .3s ease-in-out;
     transition: opacity .3s ease-in-out;
 }
+
 /* LAYOUTS */
 .czr-scope-switcher .width-100 { width: 100%; }
 .czr-scope-switcher .width-50 { width: 50%; }
@@ -263,4 +266,59 @@ body.czr-resetting-skope #czr-reset-skope-pane .czr-resetting {
 }
 .czr-reset-skope-pane-open .wp-full-overlay.expanded .collapse-sidebar {
   bottom: 0 !important;
+}
+
+
+/* CONTROL INFOS */
+.customize-control .czr-skope-notice {
+  color: #0073aa;
+}
+.czr-skope-notice .czr-skope-switch {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+
+/* HOME BUTTON */
+#customize-header-actions .customize-controls-close {
+  left:45px;
+}
+.customize-controls-home {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 45px;
+    height: 41px;
+    padding: 0 2px 0 0;
+    background: #eee;
+    border: none;
+    border-top: 4px solid #eee;
+    border-right: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    color: #444;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-transition: color .15s ease-in-out, border-color .15s ease-in-out, background .15s ease-in-out;
+    transition: color .1s ease-in-out, border-color .15s ease-in-out, background .15s ease-in-out;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+}
+
+.customize-controls-home:before {
+    font-size: 17px;
+    line-height:45px;
+    position: relative;
+    top: -4px;
+    left: 14px;
+}
+.customize-controls-home:hover {
+    background: #fff;
+    color: #0073aa;
+    border-top-color: #0073aa;
+    outline: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
 }

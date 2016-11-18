@@ -40,8 +40,8 @@ $.extend( CZRSkopeMths, {
           //setting values are stored in :
           skope.hasDBValues = new api.Value( false );
           skope.dirtyValues = new api.Value({});//stores the current customized value.
-          skope.dbValues    = new api.Value( constructor_options.db );//stores the latest db values, initialized with the constructor options and will be updated after a saved action
-          skope.changesetValues = new api.Value( constructor_options.changeset || {} );//stores the latest changeset values, initialized with the constructor options and will be updated after a refresh action
+          skope.dbValues    = new api.Value({});//stores the latest db values => will be updated on each skope synced event
+          skope.changesetValues = new api.Value({});//stores the latest changeset values => will be updated on each skope synced eventsynced event
 
           ////////////////////////////////////////////////////
           /// MODULE DOM EVENT MAP
@@ -53,7 +53,7 @@ $.extend( CZRSkopeMths, {
                   selector  : '.czr-scope-switch',
                   name      : 'skope_switch',
                   actions   : function() {
-                      api.czr_activeSkope( skope_id );
+                      api.czr_activeSkopeId( skope_id );
                   }
                 },
                 //skope reset : display warning
@@ -146,7 +146,6 @@ $.extend( CZRSkopeMths, {
     * SKOPE API DIRTIES REACTIONS
     *****************************************************************************/
     dirtyValuesReact : function( to, from ) {
-          console.log('IN DIRTY VALUES REACT', to );
           var skope = this;
           //set the model dirtyness boolean state value
           skope.dirtyness( ! _.isEmpty(to) );
@@ -160,7 +159,7 @@ $.extend( CZRSkopeMths, {
           });
 
           //SET THE ACTIVE SKOPE CONTROLS DIRTYNESSES
-          if ( skope().id == api.czr_activeSkope() ) {
+          if ( skope().id == api.czr_activeSkopeId() ) {
                 //RESET DIRTYNESS FOR THE CLEAN SETTINGS CONTROLS IN THE ACTIVE SKOPE
                 _.each( ctrlIdDirtynessToClean , function( setId ) {
                       if ( _.has( api.control( setId ), 'czr_isDirty') ) {
@@ -205,7 +204,7 @@ $.extend( CZRSkopeMths, {
               ctrlIdDbToReset.push( _id );
           });
 
-          if ( skope().id == api.czr_activeSkope() ) {
+          if ( skope().id == api.czr_activeSkopeId() ) {
                 _.each( ctrlIdDbToReset , function( setId ) {
                       if ( _.has( api.control( setId ), 'czr_hasDBVal') ) {
                             api.control(setId).czr_hasDBVal ( false );
@@ -355,6 +354,6 @@ $.extend( CZRSkopeMths, {
           var skope = this,
               _setId = api.CZR_Helpers.build_setId(setId);
 
-          return ! _.isUndefined( api.czr_skope( api.czr_activeSkope() ).dbValues()[_setId] );
+          return ! _.isUndefined( api.czr_skope( api.czr_activeSkopeId() ).dbValues()[_setId] );
     }
   } );//$.extend(

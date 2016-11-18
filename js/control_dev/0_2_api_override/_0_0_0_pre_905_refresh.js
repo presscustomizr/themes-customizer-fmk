@@ -6,9 +6,8 @@
     api.bind( 'czr-skope-ready' , function() {
           //post process after refresh
           //@param param = { previewer : previewer, skopesServerData : skopesServerData || {} }
-          api.bind( 'pre_refresh_done', function( params ) {
-                api.czr_skopeBase.reactWhenRefreshDone(params);
-          });
+          // api.bind( 'pre_refresh_done', function( params ) {
+          // });
           czr_override_refresh_for_skope();
     });
 
@@ -59,8 +58,8 @@
 
                 var dfd = $.Deferred();
 
-                if ( ! _.has( api, 'czr_activeSkope') || _.isUndefined( api.czr_activeSkope() ) ) {
-                      api.consoleLog( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
+                if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
+                      api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.previewer._new_refresh() method.');
                 }
                 var previewer = this;
 
@@ -70,7 +69,7 @@
                 previewer.abort();
 
                 var query_params = api.czr_getSkopeQueryParams( {
-                      skope_id : api.czr_activeSkope(),
+                      skope_id : api.czr_activeSkopeId(),
                       action : 'refresh',
                       the_dirties : params.the_dirties || {}
                 });

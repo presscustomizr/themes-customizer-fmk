@@ -157,7 +157,7 @@ $.extend( CZRSkopeBaseMths, {
           //the current skopes collection get updated each time the 'czr-skopes-synced' event is triggered on the api by the preview
           api.czr_currentSkopesCollection = new api.Value([]);
           //the currently active skope
-          api.czr_activeSkope = new api.Value();
+          api.czr_activeSkopeId = new api.Value();
           //declare the collection
           api.czr_skope = new api.Values();
           //Deferred used to make sure the overriden api.previewer.query method has been taken into account
@@ -179,7 +179,7 @@ $.extend( CZRSkopeBaseMths, {
           }
 
           //REACT TO ACTIVE SKOPE UPDATE
-          api.czr_activeSkope.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
+          api.czr_activeSkopeId.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
 
           //REACT TO EXPANDED ACTIVE SECTION
           //=> silently update all eligible controls of this sektion with the current skope values
@@ -225,8 +225,10 @@ $.extend( CZRSkopeBaseMths, {
                 //api.consoleLog('czr-skopes-ready DATA', data );
                 var preview = this;
                 //initialize skopes with the server sent data
-                if ( _.has(data, 'czr_skopes') )
-                    api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
+                if ( _.has( data, 'czr_skopes') ) {
+                      api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
+                      api.czr_skopeBase.reactWhenSkopeSyncedDone( data );
+                }
           });
 
 
@@ -240,6 +242,11 @@ $.extend( CZRSkopeBaseMths, {
 
           //WIDGETS AND SIDEBAR SPECIFIC TREATMENTS
           self.initWidgetSidebarSpecifics();
+
+          //ON DOM READY : RENDER AND BIND HEADER BUTTONS : HOME, GENERAL RESET
+          $( function($) {
+                self.fireHeaderButtons();
+          } );
     },//initialize
 
 
@@ -271,33 +278,19 @@ $.extend( CZRSkopeBaseMths, {
     listenAPISettings : function( requestedSetId ) {
           var self = this,
               _bindListener = function( setId, new_val, old_val, o ) {
-                    //only the current theme options + some WP built in settings are eligible
-                    //some settings like show_on_front are not eligibile to skope, but they can be reseted
-                    // if ( ! self.isSettingSkopeEligible(setId) && ! self.isSettingResetEligible(setId) )
-                    //   return;
-                    if ( ! _.has( api, 'czr_activeSkope') || _.isUndefined( api.czr_activeSkope() ) ) {
-                      api.consoleLog( 'The api.czr_activeSkope() is undefined in the api.previewer._new_refresh() method.');
+                    if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
+                      api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.previewer._new_refresh() method.');
                       //return;
                     }
+
                     //api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, old_val + ' => ' +  new_val, o );
                     //For skope eligible settings : Update the skope dirties with the new val of this setId
-                    if ( api(setId)._dirty ) {
+                    if ( api( setId )._dirty ) {
                         self.updateSkopeDirties( setId, new_val );
                     }
 
-                    //DEPRECATED
-                    //NOW HANDLED IN activeSkopeReact::_process_silent_update()
-                    //Refresh control single reset + observable values
-                    //=> needed for some controls like image upload
-                    // if ( api.control.has( setId ) && _.contains( self.refreshedControls, api.control( setId ).params.type ) ) {
-                    //       self.setupControlsReset = _.debounce( self.setupControlsReset, 200 );
-                    //       self.setupControlsReset( { controls : [ setId ] } );
-                    // }
-
-                    //set the control dirtyness
-                    // if ( _.has( api.control(setId), 'czr_isDirty' ) ) {
-                    //     api.control(setId).czr_isDirty( api(setId)._dirty );
-                    // }
+                    //Update the skope inehritance notice for the setting control
+                    self.renderControlSkopeNotice( setId );
               };//bindListener()
 
 
@@ -317,7 +310,7 @@ $.extend( CZRSkopeBaseMths, {
     //and returns the dirty values object
     //fired on api setting change and in the ajax query
     updateSkopeDirties : function( setId, new_val, skope_id ) {
-          skope_id = skope_id || api.czr_activeSkope();
+          skope_id = skope_id || api.czr_activeSkopeId();
           var self = this,
               skope_instance,
               shortSetId = api.CZR_Helpers.getOptionName( setId );
@@ -358,11 +351,11 @@ $.extend( CZRSkopeBaseMths, {
                             // var _update_candidates = self._getSilentUpdateCandidates( active_section );
                             // self.silentlyUpdateSettings( _update_candidates );
                             // //add control single reset + observable values
-                            // self.setupControlsReset();
+                            // self.setupControlsViews();
 
                             //Sidebar Widget specific
                             if ( ! self.isExcludedSidebarsWidgets() ) {
-                                  self.forceSidebarDirtyRefresh( active_section, api.czr_activeSkope() );
+                                  self.forceSidebarDirtyRefresh( active_section, api.czr_activeSkopeId() );
                             }
                       });
           });

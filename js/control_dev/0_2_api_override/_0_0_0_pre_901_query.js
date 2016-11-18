@@ -68,9 +68,9 @@
               //IS THE SKOPE ID PROVIDED ?
               //When navigating in the preview, the skope_id might not be provided.
               //In this case, falls back on the activeSkope() or the global skope
-              //skope_id = skope_id || api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
+              //skope_id = skope_id || api.czr_activeSkopeId() || api.czr_skopeBase.getGlobalSkopeId();
               if ( _.isUndefined( queryVars.skope_id ) || ! _.isString( queryVars.skope_id ) ) {
-                    queryVars.skope_id = api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
+                    queryVars.skope_id = api.czr_activeSkopeId() || api.czr_skopeBase.getGlobalSkopeId();
               }
 
               var globalCustomized = {},
@@ -142,7 +142,7 @@
                     if ( 'global' == api.czr_skopeBase.getActiveSkopeName() )
                       globalCustomized = queryVars.the_dirties;
                     else
-                      skopeCustomized[ api.czr_activeSkope() ] = queryVars.the_dirties;
+                      skopeCustomized[ api.czr_activeSkopeId() ] = queryVars.the_dirties;
               }
 
 

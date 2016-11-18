@@ -2,28 +2,30 @@
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 $.extend( CZRSkopeBaseMths, {
 
-      //Fired on 'pre_refresh_done'
-      //with param : { previewer : previewer, skopesServerData : skopesServerData || {} }
-      reactWhenRefreshDone : function( params ) {
-            if ( ! _.isObject( params ) || ! _.has( params, 'skopesServerData' ) || _.isEmpty( params.skopesServerData ) )
-              return;
-            if ( ! _.has( params.skopesServerData, 'czr_skopes' ) || _.isEmpty( params.skopesServerData.czr_skopes ) ) {
-                  throw new Error( 'Missing skope data after refresh', params );
+      //Fired on 'czr-skopes-synced'
+      //with param :
+      //{
+      //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+      //  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || []
+      // }
+      reactWhenSkopeSyncedDone : function( server_params ) {
+            if ( ! _.has( server_params, 'czr_skopes' ) || _.isEmpty( server_params.czr_skopes ) ) {
+                  throw new Error( 'Missing skope data after refresh', server_params );
             }
-            var _sentSkopeCollection = params.skopesServerData.czr_skopes;
+            var _sentSkopeCollection = server_params.czr_skopes;
 
             //CHANGESET UPDATE
             //always update the changesets of the sent skope collection after a refresh
             //match them with the opt_name, because they don't have an id when emitted from server
             _.each( api.czr_skopeCollection(), function( _skp ) {
-                var _sent_skope = _.findWhere( _sentSkopeCollection, { opt_name : _skp.opt_name } );
-                //do we have a match based on opt_name with the _sentSkopeCollection ?
-                if ( _.isUndefined( _sent_skope ) )
-                  return;
-                //if so then let's update the skope model with the new db values
-                var _new_changeset = _.isEmpty( _sent_skope.changeset || {} ) ? {} : _sent_skope.changeset;
-                    //_new_changeset = $.extend( api.czr_skope( _skp.id ).changesetValues(), _sent_changeset );
-                api.czr_skope( _skp.id ).changesetValues( _new_changeset );
+                  var _sent_skope = _.findWhere( _sentSkopeCollection, { opt_name : _skp.opt_name } );
+                  //do we have a match based on opt_name with the _sentSkopeCollection ?
+                  if ( _.isUndefined( _sent_skope ) )
+                    return;
+                  //if so then let's update the skope model with the new db values
+                  var _new_changeset = _.isEmpty( _sent_skope.changeset || {} ) ? {} : _sent_skope.changeset;
+                  //_new_changeset = $.extend( api.czr_skope( _skp.id ).changesetValues(), _sent_changeset );
+                  api.czr_skope( _skp.id ).changesetValues( _new_changeset );
             });
 
             //DB VALUES UPDATE

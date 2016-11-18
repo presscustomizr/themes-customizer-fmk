@@ -5,20 +5,6 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * HELPERS
     *****************************************************************************/
-    //DEPRECATED
-    // getGlobalSettingVal : function() {
-    //       var self = this, _vals = {};
-    //       //parse the current eligible scope settings and write an setting val object
-    //       api.each( function ( value, key ) {
-    //           //only the current theme options are eligible
-    //           if ( ! self.isSettingSkopeEligible(key) )
-    //             return;
-    //           _vals[key] = value();
-    //       });
-    //       return _vals;
-    // },
-
-
     //@return bool
     isSkopeRegisteredInCollection : function( skope_id, collection ) {
           var self = this;
@@ -93,9 +79,9 @@ $.extend( CZRSkopeBaseMths, {
 
     //@return a skope name string : local, group, special_group, global
     getActiveSkopeName : function() {
-          if ( ! api.czr_skope.has( api.czr_activeSkope() ) )
+          if ( ! api.czr_skope.has( api.czr_activeSkopeId() ) )
             return 'global';
-          return api.czr_skope( api.czr_activeSkope() )().skope;
+          return api.czr_skope( api.czr_activeSkopeId() )().skope;
     },
 
 
@@ -146,6 +132,7 @@ $.extend( CZRSkopeBaseMths, {
 
     //@return boolean
     isExcludedWPBuiltinSetting : function( setId ) {
+          var self = this;
           if ( _.isUndefined(setId) )
             return true;
           if ( 'active_theme' == setId )
@@ -154,24 +141,158 @@ $.extend( CZRSkopeBaseMths, {
           if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
             return false;
 
-          //allow sidebars_widget* type
-          if ( 'sidebars_' == setId.substring(0, 9) )
-            return this.isExcludedSidebarsWidgets();
-          //allow widget_* type
-          if ( 'widget_' == setId.substring(0, 7) )
-            return this.isExcludedSidebarsWidgets();
-          //exclude widget_* and nav_menu*
-          return 'nav_menu' == setId.substring(0, 8);
-          //return 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8);
-          //return 'widget_' == setId.substring(0, 7) || 'nav_menu' == setId.substring(0, 8) || 'sidebars_' == setId.substring(0, 9);
+          //exclude the WP built-in settings like sidebars_widgets*, nav_menu_*, widget_*, custom_css
+          var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css' ],
+              _isExcld = false;
+          _.each( _patterns, function( _ptrn ) {
+                switch( _ptrn ) {
+                      case 'widget_' :
+                      case 'sidebars_' :
+                            if ( _ptrn == setId.substring( 0, _ptrn.length ) ) {
+                                  _isExcld = self.isExcludedSidebarsWidgets();
+                            }
+                      break;
+                      case 'nav_menu' :
+                            if ( _ptrn == setId.substring( 0, _ptrn.length ) ) {
+                                  _isExcld = self.isExcludedNavMenu();
+                            }
+                      break;
+                      case 'custom_css' :
+                            if ( _ptrn == setId.substring( 0, _ptrn.length ) ) {
+                                  _isExcld = self.isExcludedWPCustomCss();
+                            }
+                      break;
+
+
+                }
+          });
+          return _isExcld;
     },
 
     //@return bool
     isExcludedSidebarsWidgets : function() {
-          var SidWidgParam = serverControlParams.isSidebarsWigetsAuthorized;//can be a boolean or a string "" for false, "1" for true
-              isSidebarWidgetSkoped = ! _.isUndefined(SidWidgParam) && ! _.isEmpty( SidWidgParam ) && false !== SidWidgParam;
-          return ! isSidebarWidgetSkoped;
+          var _servParam = serverControlParams.isSidebarsWigetsSkoped;//can be a boolean or a string "" for false, "1" for true
+          return ! ( ! _.isUndefined( _servParam ) && ! _.isEmpty( _servParam ) && false !== _servParam );
     },
+
+    //@return bool
+    isExcludedNavMenu : function() {
+          var _servParam = serverControlParams.isNavMenuSkoped;//can be a boolean or a string "" for false, "1" for true
+          return ! ( ! _.isUndefined( _servParam ) && ! _.isEmpty( _servParam ) && false !== _servParam );
+    },
+
+    //@return bool
+    isExcludedWPCustomCss : function() {
+          var _servParam = serverControlParams.isWPCustomCssSkoped;//can be a boolean or a string "" for false, "1" for true
+          return ! ( ! _.isUndefined( _servParam ) && ! _.isEmpty( _servParam ) && false !== _servParam );
+    },
+
+
+    getAppliedPrioritySkopeId : function( setId, skope_id ) {
+          if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
+              throw new Error('getSkopeSettingVal : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+          }
+          if ( ! api.czr_skope.has( skope_id ) ) {
+              throw new Error('getSkopeSettingVal : the requested skope id is not registered : ' + skope_id );
+          }
+
+          //Are we already in the 'local' skope ?
+          var self = this,
+              _local_skope_id = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
+
+          if ( _.isUndefined( _local_skope_id ) || skope_id == _local_skope_id )
+            return skope_id;
+
+          //start from local and do the salmon until either :
+          //1) a value is found
+          //2) the requested skope id is reached in the hierarchy
+          var _salmonToMatch = function( _skp_id ) {
+                var wpSetId = api.CZR_Helpers.build_setId( setId ),
+                    val_candidate = '___',
+                    skope_model = api.czr_skope( _skp_id )(),
+                    initial_val;
+
+                if ( _skp_id == skope_id )
+                  return skope_id;
+
+                //is the setting API dirty ?
+                if ( api.czr_skope( _skp_id ).getSkopeSettingAPIDirtyness( wpSetId ) )
+                  return skope_model.id;
+
+                //is the setting CHANGESET dirty ?
+                if ( api.czr_isChangedSetOn() ) {
+                      if ( api.czr_skope( _skp_id ).getSkopeSettingChangesetDirtyness( wpSetId ) )
+                        return skope_model.id;
+                }
+
+                //do we have a db val stored ?
+                var _skope_db_val = self._getDBSettingVal( setId, skope_model );
+                if ( _skope_db_val != '_no_db_val' ) {
+                  return skope_model.id;
+                }
+                //if we are already in the final 'local' skope, then let's return its value
+                else if( 'global' == skope_model.skope ) {
+                  // if ( _.isNull(initial_val) ) {
+                  //   throw new Error('INITIAL VAL IS NULL FOR SETTING ' + setId + ' CHECK IF IT HAS BEEN DYNAMICALLY ADDED. IF SO, THERE SHOULD BE A DIRTY TO GRAB');
+                  // }
+                  return skope_model.id;
+                }
+                else {
+                  //if not dirty and no db val, then let's recursively apply the inheritance
+                  return '___' != val_candidate ? skope_model.title : _salmonToMatch( self._getParentSkopeId( skope_model ) );
+                }
+          };
+          return _salmonToMatch( _local_skope_id );
+    },
+
+
+    //@return the skope title from which a setting id inherits its current value
+    getInheritedSkopeId : function( setId, skope_id ) {
+          if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
+              throw new Error('getSkopeSettingVal : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+          }
+          if ( ! api.czr_skope.has( skope_id ) ) {
+              throw new Error('getSkopeSettingVal : the requested skope id is not registered : ' + skope_id );
+          }
+
+          var self = this,
+              wpSetId = api.CZR_Helpers.build_setId( setId ),
+              val_candidate = '___',
+              skope_model = api.czr_skope( skope_id )(),
+              initial_val;
+          //initial val
+          //some settings like widgets may be dynamically added. Therefore their initial val won't be stored in the api.settings.settings
+          if ( _.has( api.settings.settings, wpSetId ) )
+            initial_val = api.settings.settings[wpSetId].value;
+          else
+            initial_val = null;
+
+          //is the setting API dirty ?
+          if ( api.czr_skope( skope_id ).getSkopeSettingAPIDirtyness( wpSetId ) )
+            return skope_model.id;
+
+          //is the setting CHANGESET dirty ?
+          if ( api.czr_isChangedSetOn() ) {
+                if ( api.czr_skope( skope_id ).getSkopeSettingChangesetDirtyness( wpSetId ) )
+                  return skope_model.id;
+          }
+
+          //do we have a db val stored ?
+          var _skope_db_val = self._getDBSettingVal( setId, skope_model );
+          if ( _skope_db_val != '_no_db_val' )
+            return skope_model.id;
+          //if we are already in the final 'global' skope, then let's return its value
+          else if( 'global' == skope_model.skope ) {
+            // if ( _.isNull(initial_val) ) {
+            //   throw new Error('INITIAL VAL IS NULL FOR SETTING ' + setId + ' CHECK IF IT HAS BEEN DYNAMICALLY ADDED. IF SO, THERE SHOULD BE A DIRTY TO GRAB');
+            // }
+            return skope_model.id;
+          }
+          else
+            //if not dirty and no db val, then let's recursively apply the inheritance
+            return '___' != val_candidate ? skope_model.id : self.getInheritedSkopeId( setId, self._getParentSkopeId( skope_model ) );
+    },
+
 
     //@return boolean
     //isAllowedWPBuiltinSetting :
@@ -228,7 +349,7 @@ $.extend( CZRSkopeBaseMths, {
     //implement the skope inheritance to build the dirtyCustomized
     //@recursive
     applyDirtyCustomizedInheritance : function( dirtyCustomized, skope_id ) {
-          skope_id = skope_id || api.czr_activeSkope() || api.czr_skopeBase.getGlobalSkopeId();
+          skope_id = skope_id || api.czr_activeSkopeId() || api.czr_skopeBase.getGlobalSkopeId();
           dirtyCustomized = dirtyCustomized || {};
 
           var self = this,
@@ -268,6 +389,26 @@ $.extend( CZRSkopeBaseMths, {
               return self._getParentSkopeId( skope_model, parent_skope_ind + 1 );
           }
           return _.findWhere( api.czr_currentSkopesCollection(), { skope : parent_skope_skope } ).id;
+    },
+
+
+    //@return the parent skope id of a given skope within the collections of currentSkopes
+    //recursive
+    _getChildSkopeId : function( skope_model, _index ) {
+          var self = this,
+              hierark = ['local', 'group', 'special_group', 'global'],
+              child_skope_ind = _index || ( _.findIndex( hierark, function( _skp ) { return skope_model.skope == _skp; } ) - 1 ) * 1,
+              child_skope_skope = hierark[ child_skope_ind ];
+
+          if ( _.isUndefined( child_skope_skope ) ) {
+              return _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
+          }
+
+          //=> the inheritance is limited to current set of skopes
+          if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), { skope : child_skope_skope } ) ) ) {
+              return self._getParentSkopeId( skope_model, child_skope_ind - 1 );
+          }
+          return _.findWhere( api.czr_currentSkopesCollection(), { skope : child_skope_skope } ).id;
     },
 
 
@@ -438,7 +579,7 @@ $.extend( CZRSkopeBaseMths, {
     //@recursive
     //@used when generating the dirtyCustomized object in the preview query
     // getSkopeDirtyVal : function( setId, skope_id ) {
-    //       skope_id = skope_id || api.czr_activeSkope() || 'global';
+    //       skope_id = skope_id || api.czr_activeSkopeId() || 'global';
 
     //       if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
     //           throw new Error('getSkopeSettingVal : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
@@ -450,8 +591,8 @@ $.extend( CZRSkopeBaseMths, {
     //       var self = this,
     //           wpSetId = api.CZR_Helpers.build_setId(setId),
     //           skope_model = api.czr_skope( skope_id )(),
-    //           isDirty = skope_id != api.czr_activeSkope() ? api.czr_skope( skope_id ).getSkopeSettingDirtyness( wpSetId ) : api( wpSetId ).dirty,
-    //           dirtyVal = skope_id != api.czr_activeSkope() ? api.czr_skope( skope_id ).dirtyValues()[ wpSetId ] : api( wpSetId )();
+    //           isDirty = skope_id != api.czr_activeSkopeId() ? api.czr_skope( skope_id ).getSkopeSettingDirtyness( wpSetId ) : api( wpSetId ).dirty,
+    //           dirtyVal = skope_id != api.czr_activeSkopeId() ? api.czr_skope( skope_id ).dirtyValues()[ wpSetId ] : api( wpSetId )();
 
     //       api.consoleLog('in GET SKOPE DIRTY VAL', skope_id, wpSetId, isDirty, dirtyVal );
     //       //if we are already in the final 'global' skope

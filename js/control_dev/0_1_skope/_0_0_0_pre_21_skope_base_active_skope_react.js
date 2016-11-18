@@ -3,7 +3,7 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 $.extend( CZRSkopeBaseMths, {
 
     //declared in initialize
-    //cb of api.czr_activeSkope.callbacks
+    //cb of api.czr_activeSkopeId.callbacks
     //react when the active skope has been set to a new value
     // => change the to and from skope active() state
     // => silently update each setting values with the skope set of vals
@@ -97,7 +97,7 @@ $.extend( CZRSkopeBaseMths, {
     //Fired in activeSkopeReact()
     _writeCurrentSkopeTitle : function( skope_id ) {
           var self = this,
-              current_title = api.czr_skope( skope_id|| api.czr_activeSkope() ).long_title;
+              current_title = api.czr_skope( skope_id|| api.czr_activeSkopeId() ).long_title;
 
           self.skopeWrapperEmbedded.then( function() {
                 if ( ! $('.czr-scope-switcher').find('.czr-current-skope-title').length )
