@@ -9,7 +9,7 @@ $.extend( CZRSkopeSaveMths, {
 
             if ( _.isEmpty( skope_id ) || ! api.czr_skope.has( skope_id ) ) {
                   api.consoleLog( 'getSubmitPromise : no skope id requested OR skope_id not registered : ' + skope_id );
-                  dfd.resolve();
+                  return dfd.resolve().promise();
             }
 
             var skopeObjectToSubmit = api.czr_skope( skope_id )();
@@ -17,7 +17,7 @@ $.extend( CZRSkopeSaveMths, {
             // Resolve here if not dirty AND not global skope
             // always submit the global skope, even if not dirty => required to properly clean the changeset post server side
             if ( ! api.czr_skope( skope_id ).dirtyness() && skope_id !== self.globalSkopeId ) {
-                dfd.resolve();
+                return dfd.resolve().promise();
             }
 
             //////////////////////////////////SUBMIT THE ELIGIBLE SETTINGS OF EACH SKOPE ////////////////////////////
@@ -37,12 +37,12 @@ $.extend( CZRSkopeSaveMths, {
                         dyn_type : skopeObjectToSubmit.dyn_type
                   } )
                   .done( function(_resp) {
+                        api.consoleLog('GETSUBMIT DONE PROMISE FOR SKOPE : ', skope_id, _resp );
                         dfd.resolve( _resp );
-                        //console.log('GETSUBMIT DONE PROMISE SUCCEEDED', _resp);
                   } )
                   .fail( function( _resp ) {
+                        api.consoleLog('GETSUBMIT FAILED PROMISE FOR SKOPE : ', skope_id, _resp );
                         dfd.reject( _resp );
-                        api.consoleLog('GETSUBMIT FAILED PROMISE', _resp );
                   } );
                   // .then( function( _resp ) {
                   //       console.log('GETSUBMIT THEN ', _resp );
@@ -51,6 +51,8 @@ $.extend( CZRSkopeSaveMths, {
 
             return dfd.promise();
       },//getSubmitPromise
+
+
 
 
       submit : function( params ) {
@@ -101,9 +103,9 @@ $.extend( CZRSkopeSaveMths, {
                   if ( ! _.isEmpty( invalidControls ) ) {
                         _.values( invalidControls )[0][0].focus();
                         //api.unbind( 'change', captureSettingModifiedDuringSave );
-                        submit_dfd.rejectWith( self.previewer, [
+                        return submit_dfd.rejectWith( self.previewer, [
                               { setting_invalidities: settingInvalidities }
-                        ] );
+                        ] ).promise();
                   }
             }
 
@@ -174,7 +176,7 @@ $.extend( CZRSkopeSaveMths, {
             // } );
 
             request.fail( function ( response ) {
-                  api.consoleLog('SUBMIT REQUEST FAIL ?', params.skope_id, response );
+                  api.consoleLog('SUBMIT REQUEST FAIL', params.skope_id, response );
                   if ( '0' === response ) {
                         response = 'not_logged_in';
                   } else if ( '-1' === response ) {

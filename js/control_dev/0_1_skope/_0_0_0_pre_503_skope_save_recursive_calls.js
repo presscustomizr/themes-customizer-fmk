@@ -12,6 +12,7 @@ $.extend( CZRSkopeSaveMths, {
                 skopesToSave = [],
                 _recursiveCallDeferred = $.Deferred(),
                 _responses_ = {},
+                _promises  = [],
                 failedPromises = [];
 
             // build the skope ids array to submit recursively
@@ -21,42 +22,71 @@ $.extend( CZRSkopeSaveMths, {
                   }
             });
 
+            var _mayBeresolve = function( _index ) {
+                  console.log(' in may be resolve ?', _index, _promises, failedPromises );
+                  if ( ! _.isUndefined( skopesToSave[ _index + 1 ] ) || _promises.length != skopesToSave.length )
+                    return;
+
+                  if ( _.isEmpty( failedPromises ) ) {
+                        _recursiveCallDeferred.resolve( _responses_ );
+                  } else {
+                        var _buildResponse = function() {
+                                  var _failedResponse = [];
+                                  _.each( failedPromises, function( _r ) {
+                                        //server error
+                                        if ( _.isObject( _r ) ) {
+                                              if ( _.has( _r, 'responseText') && ! _.isEmpty( _r.responseText ) )
+                                                _failedResponse.push( _r.responseText );
+                                              else if ( _.has( _r , 'statusText' ) && ! _.isEmpty( _r.statusText ) )
+                                                _failedResponse.push( _r.statusText );
+                                        } else if ( _.isObject( _r ) ) {
+                                              _failedResponse.JSON.stringify( _r );
+                                        } else {
+                                              _failedResponse.push( _r );
+                                        }
+                                  } );
+                                  return $.trim( _failedResponse.join( ' | ') );
+                        };
+                        _recursiveCallDeferred.reject( _buildResponse() );
+                  }
+                  return true;
+            };
+
 
             // recursive pushes for not global skopes
             var recursiveCall = function( _index ) {
                   _index = _index || 0;
-                  if ( _.isUndefined( skopesToSave[_index] ) ) {
-                        if ( _.isEmpty( failedPromises ) ) {
-                              _recursiveCallDeferred.resolve( _responses_ );
-                        } else {
-                              _recursiveCallDeferred.reject( _responses_ );
-                        }
-                  } else {
-                        $.when( self.getSubmitPromise( skopesToSave[ _index ] ) )
-                              .done( function( response ) {
-                                    //console.log('RECURSIVE PUSH DONE FOR SKOPE : ', skopesToSave[_index] );
-                              } )
-                              .fail( function( response ) {
-                                    failedPromises.push( response );
-                                    api.consoleLog('RECURSIVE PUSH FAIL FOR SKOPE : ', skopesToSave[_index] );
-                              } )
-                              .then( function( response ) {
-                                    response = response || {};
+                  if ( _.isUndefined( skopesToSave[_index] ) )
+                    return;
 
-                                    //WE NEED TO BUILD A PROPER RESPONSE HERE
-                                    if ( _.isEmpty( _responses_ ) ) {
-                                          _responses_ = response || {};
-                                    } else {
-                                          _responses_ = $.extend( _responses_ , response );
-                                    }
-                                    //call me again
-                                    recursiveCall( _index + 1 );
-                              } );
-                  }
+                  console.log( 'BEFORE GET SUBMIT PROMISE CALL');
+                  //_promises.push( self.getSubmitPromise( skopesToSave[ _index ] ) );
+                  self.getSubmitPromise( skopesToSave[ _index ] )
+                        .always( function() { _promises.push( _index ); } )
+                        .fail( function( response ) {
+                              failedPromises.push( response );
+                              api.consoleLog('RECURSIVE PUSH FAIL FOR SKOPE : ', skopesToSave[_index] );
+                              if (  ! _mayBeresolve( _index ) )
+                                recursiveCall( _index + 1 );
+                        } )
+                        .done( function( response ) {
+                              api.consoleLog('RECURSIVE PUSH DONE FOR SKOPE : ', skopesToSave[_index] );
+                              response = response || {};
+
+                              //WE NEED TO BUILD A PROPER RESPONSE HERE
+                              if ( _.isEmpty( _responses_ ) ) {
+                                    _responses_ = response || {};
+                              } else {
+                                    _responses_ = $.extend( _responses_ , response );
+                              }
+                              if (  ! _mayBeresolve( _index ) )
+                                recursiveCall( _index + 1 );
+                        } );
+
                   return _recursiveCallDeferred.promise();
             };
 
-
+            console.log( 'BEFORE RECURSIVE CALL');
             // Unleash hell
             recursiveCall()
                   .fail( function( r ) {

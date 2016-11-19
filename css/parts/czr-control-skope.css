@@ -322,3 +322,34 @@ body.czr-resetting-skope #czr-reset-skope-pane .czr-resetting {
     -webkit-box-shadow: none;
     box-shadow: none;
 }
+
+
+/* Error Notification */
+.wp-full-overlay-header, .wp-full-overlay-sidebar .wp-full-overlay-sidebar-content {
+    -webkit-transition: height, top, .4s ease-in-out;
+    -moz-transition: height, top, .4s ease-in-out;
+    -ms-transition: height, top, .4s ease-in-out;
+    -o-transition: height, top, .4s ease-in-out;
+    transition: height, top, .4s ease-in-out;
+}
+.czr-server-notice {
+    width: calc(100% - 2px);
+    top: 0;
+    text-align: center;
+    background: white;
+    border:1px solid green;
+    color: green;
+    display: none;
+    position: relative;
+}
+.czr-server-notice.czr-server-error {
+    color: red;
+    border-color: red;
+}
+
+.czr-dismiss-notification {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+}

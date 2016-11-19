@@ -125,9 +125,9 @@ $.extend( CZRSkopeBaseMths, {
                           _isCustomized = ! _.isUndefined( api.czr_skope( _overridedBySkopeId ).dirtyValues()[setId] );
 
                           _html.push( [
-                                ! _isCustomized ? 'The value currently published and displayed on front end for ' : 'The value currently customized and displayed on front end for',
+                                ! _isCustomized ? 'The value currently published on front end for ' : 'The value that will be published on front end for',
                                 api.czr_skope( _localSkopeId )().title,
-                                'is set in scope :',
+                                ! _isCustomized ? 'is set in scope :' : 'is customized in scope :',
                                 _buildSkopeLink( _overridedBySkopeId )
                           ].join(' ') );
                     }
