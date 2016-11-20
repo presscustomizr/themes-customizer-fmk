@@ -85,7 +85,7 @@
                 }), true );
         },
 
-         //@return the array of controls in a given section_id
+        //@return the array of controls in a given section_id
         getSectionControlIds : function( section_id ) {
                 section_id = section_id || api.czr_activeSectionId();
                 if ( ! api.section.has( section_id) )

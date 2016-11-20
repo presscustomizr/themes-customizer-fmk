@@ -182,6 +182,7 @@ $.extend( CZRSkopeBaseMths, {
           //the sent data look like :
           //{
           //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+          //  isChangesetDirty : boolean
           //  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || []
           // }
           //
@@ -198,11 +199,15 @@ $.extend( CZRSkopeBaseMths, {
 
                 //always wait for the initial collection to be populated
                 api.czr_initialSkopeCollectionPopulated.then( function() {
-                      api.czr_skopeBase.reactWhenSkopeSyncedDone( data );
-                      //if the current acive skope has been removed from the current skopes collection
-                      //=> set relevant scope as active. Falls back on 'global'
-                      if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) ) )
-                        api.czr_activeSkopeId( self.getActiveSkopeId() );
+                      api.czr_skopeBase.reactWhenSkopeSyncedDone( data ).done( function() {
+                            //if the current acive skope has been removed from the current skopes collection
+                            //=> set relevant scope as active. Falls back on 'global'
+                            if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) ) )
+                              api.czr_activeSkopeId( self.getActiveSkopeId() );
+
+                            //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
+                            self.renderControlSkopeNotice( api.CZR_Helpers.getSectionControlIds() );
+                      });
                 });
           });
 
@@ -413,7 +418,7 @@ $.extend( CZRSkopeBaseMths, {
                 saveBtn.val( api.l10n.saved );
                 closeBtn.find( '.screen-reader-text' ).text( api.l10n.close );
           }
-          var canSave = ! saving() && ( ! activated() || ! saved() ) && ( '' !== changesetStatus() && 'publish' !== changesetStatus() );
+          var canSave = ! saving() && ( ! activated() || ! saved() ) && 'publish' !== changesetStatus();
           saveBtn.prop( 'disabled', ! canSave );
     }
 

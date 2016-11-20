@@ -19,6 +19,7 @@ $.extend( CZRSkopeSaveMths, {
             skopesServerData = _.extend(
                 {
                       czr_skopes : [],
+                      isChangesetDirty : false,
                       skopeGlobalDBOpt : []
                 },
                 skopesServerData
@@ -33,34 +34,34 @@ $.extend( CZRSkopeSaveMths, {
             });
 
 
-          //ARE THE SAVED DIRTIES AND THE UPDATED DB VALUES SENT BY SERVER SYNCHRONIZED ?
-          // => let's check if the server sends the same saved values
-          // => reset the czr_saveDirties to default.
-          var _notSyncedSettings = [],
-              _sentSkopeCollection = skopesServerData.czr_skopes;
+            //ARE THE SAVED DIRTIES AND THE UPDATED DB VALUES SENT BY SERVER SYNCHRONIZED ?
+            // => let's check if the server sends the same saved values
+            // => reset the czr_saveDirties to default.
+            var _notSyncedSettings = [],
+                _sentSkopeCollection = skopesServerData.czr_skopes;
 
-          _.each( saved_dirties, function( skp_data, skp_id ) {
-                _.each( skp_data, function( _val, _setId ) {
-                      //first, let's check if the sent skopes have not changed ( typically, if a user has opened another page in the preview )
-                      if ( _.isUndefined( _.findWhere( _sentSkopeCollection, { id : skp_id} ) ) )
-                        return;
+            _.each( saved_dirties, function( skp_data, skp_id ) {
+                  _.each( skp_data, function( _val, _setId ) {
+                        //first, let's check if the sent skopes have not changed ( typically, if a user has opened another page in the preview )
+                        if ( _.isUndefined( _.findWhere( _sentSkopeCollection, { id : skp_id} ) ) )
+                          return;
 
-                      var sent_skope_db_values = _.findWhere( _sentSkopeCollection, { id : skp_id} ).db,
-                          shortSetId = api.CZR_Helpers.build_setId( _setId ),
-                          sent_set_val = sent_skope_db_values[shortSetId];
+                        var sent_skope_db_values = _.findWhere( _sentSkopeCollection, { id : skp_id} ).db,
+                            shortSetId = api.CZR_Helpers.build_setId( _setId ),
+                            sent_set_val = sent_skope_db_values[shortSetId];
 
-                      if ( _.isUndefined( sent_set_val ) || ! _.isEqual(sent_set_val, _val ) ) {
-                            _notSyncedSettings.push( { skope_id : skp_id, setId : shortSetId, server_val : sent_set_val, api_val : _val } );
-                      }
-                });
-          });
+                        if ( _.isUndefined( sent_set_val ) || ! _.isEqual(sent_set_val, _val ) ) {
+                              _notSyncedSettings.push( { skope_id : skp_id, setId : shortSetId, server_val : sent_set_val, api_val : _val } );
+                        }
+                  });
+            });
 
-          if ( ! _.isEmpty( _notSyncedSettings ) ) {
-                api.consoleLog('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', _notSyncedSettings );
-          }
+            if ( ! _.isEmpty( _notSyncedSettings ) ) {
+                  api.consoleLog('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', _notSyncedSettings );
+            }
 
-          //SYNCHRONIZE THE API.SETTINGS.SETTINGS WITH THE SAVED VALUE FOR GLOBAL SKOPE
-          //finally make sure the api.settings.settings values are always synchronized with the global skope instance
-          api.czr_skopeBase.maybeSynchronizeGlobalSkope();
+            //SYNCHRONIZE THE API.SETTINGS.SETTINGS WITH THE SAVED VALUE FOR GLOBAL SKOPE
+            //finally make sure the api.settings.settings values are always synchronized with the global skope instance
+            api.czr_skopeBase.maybeSynchronizeGlobalSkope();
       }
 });//$.extend

@@ -33,8 +33,8 @@
         }
 
         //in dev mode, let's set a lower autosave interval ( default is 60000 ms )
-        if ( serverControlParams.isDevMode && serverControlParams.isChangedSetOn ) {
-          //api.settings.timeouts.changesetAutoSave = 1000000;
+        if ( serverControlParams.isChangedSetOn ) {
+          api.settings.timeouts.changesetAutoSave = 10000;
         }
   } );
 

@@ -83,9 +83,11 @@ $.extend( CZRSkopeBaseMths, {
                 }
                 api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
                 api.czr_initialSkopeCollectionPopulated.then( function() {
-                      api.czr_skopeBase.reactWhenSkopeSyncedDone( data );
-                      if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) ) )
-                        api.czr_activeSkopeId( self.getActiveSkopeId() );
+                      api.czr_skopeBase.reactWhenSkopeSyncedDone( data ).done( function() {
+                            if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) ) )
+                              api.czr_activeSkopeId( self.getActiveSkopeId() );
+                            self.renderControlSkopeNotice( api.CZR_Helpers.getSectionControlIds() );
+                      });
                 });
           });
           api.czr_currentSkopesCollection.callbacks.add( function() { return self.currentSkopesCollectionReact.apply(self, arguments ); } );
@@ -186,7 +188,7 @@ $.extend( CZRSkopeBaseMths, {
                 saveBtn.val( api.l10n.saved );
                 closeBtn.find( '.screen-reader-text' ).text( api.l10n.close );
           }
-          var canSave = ! saving() && ( ! activated() || ! saved() ) && ( '' !== changesetStatus() && 'publish' !== changesetStatus() );
+          var canSave = ! saving() && ( ! activated() || ! saved() ) && 'publish' !== changesetStatus();
           saveBtn.prop( 'disabled', ! canSave );
     }
 });//$.extend()
@@ -341,14 +343,6 @@ $.extend( CZRSkopeBaseMths, {
                 return '_no_db_val';
           }
     },
-    isAPIDirty : function() {
-          var isDirty = false;
-          _.each( api.czr_currentSkopesCollection(), function( skp ){
-                if ( ! isDirty && api.czr_skope( skp.id ).dirtyness() )
-                  isDirty = true;
-          });
-          return isDirty;
-    },
     getSkopeDirties : function( skope_id, options ) {
           if ( ! api.czr_skope.has( skope_id ) )
             return {};
@@ -361,7 +355,6 @@ $.extend( CZRSkopeBaseMths, {
                 if ( api.czr_isChangedSetOn() ) {
                       settingRevision = api._latestSettingRevisions[ _setId ];
                       if ( api.state( 'changesetStatus' ).get() && ( options && options.unsaved ) && ( _.isUndefined( settingRevision ) || settingRevision <= api._lastSavedRevision ) ) {
-                            api.consoleLog( 'DIRTIES : ' + _setId + ' will be excluded from dirties because last revision was : ' + settingRevision + ' == to last saved revision : ' + api._lastSavedRevision );
                             return;
                       }
                 }
@@ -1158,19 +1151,17 @@ $.extend( CZRSkopeBaseMths, {
 
                           if ( _isCustomized ) {
                                 _html.push( [
-                                      'Customized and not published in the current scope (',
-                                      api.czr_skope( _inheritedFromSkopeId )().title,
-                                      ')'
+                                      'Customized. Will be published to the scope :',
+                                      api.czr_skope( _inheritedFromSkopeId )().title
                                 ].join(' ') );
                           } else {
                                 if ( _hasDBVal ) {
                                       _html.push( [
-                                            'Customized and published in the current scope (',
-                                            api.czr_skope( _inheritedFromSkopeId )().title,
-                                            ')'
+                                            'Customized and published to the scope :',
+                                            api.czr_skope( _inheritedFromSkopeId )().title
                                       ].join(' ') );
                                 } else {
-                                      _html.push( 'Default website value' );
+                                      _html.push( 'Default website value published site wide.' );
                                 }
                           }
                     }
@@ -1211,20 +1202,6 @@ $.extend( CZRSkopeBaseMths, {
 
                             _html = _generateControlNotice( setId, _localSkopeId );
 
-                            if ( _.isEmpty( _html ) ) {
-                                  $noticeContainer
-                                        .stop()
-                                        .slideUp( 'fast', null, function() {
-                                              $( this ).css( 'height', 'auto' );
-                                        } );
-                            } else {
-                                  $noticeContainer
-                                        .stop()
-                                        .slideDown( 'fast', null, function() {
-                                              $( this ).css( 'height', 'auto' );
-                                        } );
-                            }
-
                             if ( $( '.czr-skope-notice', $noticeContainer ).length ) {
                                   $( '.czr-skope-notice', $noticeContainer ).html( _html );
                             } else {
@@ -1232,6 +1209,18 @@ $.extend( CZRSkopeBaseMths, {
                                         [ '<span class="czr-notice czr-skope-notice">', _html ,'</span>' ].join('')
                                   );
                             }
+                            if( $('.czr-toggle-notice', ctrl.container ).length )
+                              return;
+
+                            $.when( ctrl.container
+                                  .find('.customize-control-title').first()//was.find('.customize-control-title')
+                                  .append( $( '<span/>', {
+                                        class : 'czr-toggle-notice fa fa-info-circle',
+                                        title : 'Display option informations'
+                                  } ) ) )
+                            .done( function(){
+                                  $('.czr-toggle-notice', ctrl.container).fadeIn( 400 );
+                            });
                       });
 
                 });
@@ -1284,12 +1273,33 @@ $.extend( CZRSkopeBaseMths, {
 
                 if ( ! _.has( ctrl, 'czr_hasDBVal' ) && ! _.has( ctrl, 'czr_isDirty' ) ) {
                       ctrl.czr_hasDBVal = new api.Value(false);
-                      ctrl.czr_isDirty = new api.Value(false);
+                      ctrl.czr_isDirty  = new api.Value(false);
+                      ctrl.czr_noticeVisible = new api.Value(false);
                       ctrl.czr_hasDBVal.bind( function( has_dbval ) {
                             ctrl.container.toggleClass( 'has-db-val', has_dbval );
                       });
                       ctrl.czr_isDirty.bind( function( is_dirty ) {
                             ctrl.container.toggleClass( 'is-dirty', is_dirty );
+                      });
+                      ctrl.czr_noticeVisible.bind( function( visible ) {
+                            ctrl.container.toggleClass('czr-notice-visible', visible );
+                            var $noticeContainer = ctrl.getNotificationsContainerElement();
+                            if ( ! $noticeContainer || ! $noticeContainer.length )
+                              return;
+
+                             if ( ! visible ) {
+                                  $noticeContainer
+                                        .stop()
+                                        .slideUp( 'fast', null, function() {
+                                              $( this ).css( 'height', 'auto' );
+                                        } );
+                            } else {
+                                  $noticeContainer
+                                        .stop()
+                                        .slideDown( 'fast', null, function() {
+                                              $( this ).css( 'height', 'auto' );
+                                        } );
+                            }
                       });
                 }
                 ctrl.czr_hasDBVal( api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( setId ) );
@@ -1336,6 +1346,14 @@ $.extend( CZRSkopeBaseMths, {
                                           api.czr_activeSkopeId( _skopeIdToSwithTo );
                                   }
                             },
+                            {
+                                  trigger   : 'click keydown',
+                                  selector  : '.czr-toggle-notice',
+                                  name      : 'control_toggle_notice',
+                                  actions   : function( params ) {
+                                        ctrl.czr_noticeVisible( ! ctrl.czr_noticeVisible() );
+                                  }
+                            }
                       ];
                       api.CZR_Helpers.setupDOMListeners( ctrl.userEventMap , { dom_el : ctrl.container }, self );
                 }
@@ -1436,7 +1454,7 @@ $.extend( CZRSkopeBaseMths, {
 
           new_dirties = _.omit( new_dirties, setId );
           skope_instance.dirtyValues( new_dirties );
-          api.state('saved')( ! api.czr_skopeBase.isAPIDirty() );
+          api.state('saved')( ! api.czr_dirtyness() );
     },
 
     _resetControlAPIVal : function( setId ) {
@@ -1861,7 +1879,6 @@ $.extend( CZRSkopeSaveMths, {
             });
 
             var _mayBeresolve = function( _index ) {
-                  console.log(' in may be resolve ?', _index, _promises, failedPromises );
                   if ( ! _.isUndefined( skopesToSave[ _index + 1 ] ) || _promises.length != skopesToSave.length )
                     return;
 
@@ -1945,6 +1962,7 @@ $.extend( CZRSkopeSaveMths, {
             skopesServerData = _.extend(
                 {
                       czr_skopes : [],
+                      isChangesetDirty : false,
                       skopeGlobalDBOpt : []
                 },
                 skopesServerData
@@ -1953,36 +1971,40 @@ $.extend( CZRSkopeSaveMths, {
                   saved_dirties[ _skp_.id ] = api.czr_skopeBase.getSkopeDirties( _skp_.id );
                   api.czr_skope( _skp_.id ).dirtyValues( {} );
             });
-          var _notSyncedSettings = [],
-              _sentSkopeCollection = skopesServerData.czr_skopes;
+            var _notSyncedSettings = [],
+                _sentSkopeCollection = skopesServerData.czr_skopes;
 
-          _.each( saved_dirties, function( skp_data, skp_id ) {
-                _.each( skp_data, function( _val, _setId ) {
-                      if ( _.isUndefined( _.findWhere( _sentSkopeCollection, { id : skp_id} ) ) )
-                        return;
+            _.each( saved_dirties, function( skp_data, skp_id ) {
+                  _.each( skp_data, function( _val, _setId ) {
+                        if ( _.isUndefined( _.findWhere( _sentSkopeCollection, { id : skp_id} ) ) )
+                          return;
 
-                      var sent_skope_db_values = _.findWhere( _sentSkopeCollection, { id : skp_id} ).db,
-                          shortSetId = api.CZR_Helpers.build_setId( _setId ),
-                          sent_set_val = sent_skope_db_values[shortSetId];
+                        var sent_skope_db_values = _.findWhere( _sentSkopeCollection, { id : skp_id} ).db,
+                            shortSetId = api.CZR_Helpers.build_setId( _setId ),
+                            sent_set_val = sent_skope_db_values[shortSetId];
 
-                      if ( _.isUndefined( sent_set_val ) || ! _.isEqual(sent_set_val, _val ) ) {
-                            _notSyncedSettings.push( { skope_id : skp_id, setId : shortSetId, server_val : sent_set_val, api_val : _val } );
-                      }
-                });
-          });
+                        if ( _.isUndefined( sent_set_val ) || ! _.isEqual(sent_set_val, _val ) ) {
+                              _notSyncedSettings.push( { skope_id : skp_id, setId : shortSetId, server_val : sent_set_val, api_val : _val } );
+                        }
+                  });
+            });
 
-          if ( ! _.isEmpty( _notSyncedSettings ) ) {
-                api.consoleLog('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', _notSyncedSettings );
-          }
-          api.czr_skopeBase.maybeSynchronizeGlobalSkope();
+            if ( ! _.isEmpty( _notSyncedSettings ) ) {
+                  api.consoleLog('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', _notSyncedSettings );
+            }
+            api.czr_skopeBase.maybeSynchronizeGlobalSkope();
       }
 });//$.extend
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 $.extend( CZRSkopeBaseMths, {
       reactWhenSkopeSyncedDone : function( server_params ) {
+            var self = this, dfd = $.Deferred();
             if ( ! _.has( server_params, 'czr_skopes' ) || _.isEmpty( server_params.czr_skopes ) ) {
                   throw new Error( 'Missing skope data after refresh', server_params );
             }
+            if ( ! api.czr_dirtyness() )
+              api.czr_dirtyness( _.isBoolean( server_params.isChangesetDirty ) ? server_params.isChangesetDirty : false );
+
             var _sentSkopeCollection = server_params.czr_skopes;
             _.each( api.czr_skopeCollection(), function( _skp ) {
                   var _sent_skope = _.findWhere( _sentSkopeCollection, { opt_name : _skp.opt_name } );
@@ -1999,6 +2021,10 @@ $.extend( CZRSkopeBaseMths, {
 
                   api.czr_skope( _skp.id ).dbValues( _new_db_val );
             });
+            _.delay( function() {
+                dfd.resolve();
+            }, 500 );
+            return dfd.promise();
       }
 });//$.extend
 
@@ -2435,7 +2461,7 @@ $.extend( CZRSkopeMths, {
               });
           }
           skope.dirtyValues({});
-          api.state('saved')( ! api.czr_skopeBase.isAPIDirty() );
+          api.state('saved')( ! api.czr_dirtyness() );
     },
     _resetSkopeAPIValues : function() {
           var skope = this,
@@ -8014,7 +8040,8 @@ $.extend( CZRLayoutSelectMths , {
               api.czr_skopeSave = new api.CZR_skopeSave();
               api.trigger('czr-skope-ready');
         }
-        if ( serverControlParams.isDevMode && serverControlParams.isChangedSetOn ) {
+        if ( serverControlParams.isChangedSetOn ) {
+          api.settings.timeouts.changesetAutoSave = 10000;
         }
   } );
   api.CZRInput                 = api.Value.extend( CZRInputMths );

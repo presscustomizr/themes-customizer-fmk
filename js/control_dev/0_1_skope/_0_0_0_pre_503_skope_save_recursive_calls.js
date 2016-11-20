@@ -23,7 +23,6 @@ $.extend( CZRSkopeSaveMths, {
             });
 
             var _mayBeresolve = function( _index ) {
-                  console.log(' in may be resolve ?', _index, _promises, failedPromises );
                   if ( ! _.isUndefined( skopesToSave[ _index + 1 ] ) || _promises.length != skopesToSave.length )
                     return;
 

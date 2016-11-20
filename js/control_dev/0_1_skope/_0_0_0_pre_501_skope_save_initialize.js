@@ -91,6 +91,7 @@ $.extend( CZRSkopeSaveMths, {
                                   //    previewer : api.previewer,
                                   //    skopesServerData : {
                                   //        czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+                                  //        isChangesetDirty : boolean
                                   //        skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || [],
                                   //    },
                                   // }

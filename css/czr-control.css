@@ -2120,11 +2120,24 @@ body.czr-resetting-skope #czr-reset-skope-pane .czr-resetting {
 
 /* CONTROL INFOS */
 .customize-control .czr-skope-notice {
-  color: #0073aa;
+  color: #357315;
 }
 .czr-skope-notice .czr-skope-switch {
   cursor: pointer;
   text-decoration: underline;
+}
+
+.czr-toggle-notice {
+  color: #95a5a6;
+  -webkit-transition: color 0.4s;
+  transition: color 0.4s;
+  position: absolute;
+  padding-left: 3px;
+  line-height: 21px;
+  display: none;
+}
+.czr-notice-visible .czr-toggle-notice, .czr-toggle-notice:hover {
+  color: #357315;
 }
 
 

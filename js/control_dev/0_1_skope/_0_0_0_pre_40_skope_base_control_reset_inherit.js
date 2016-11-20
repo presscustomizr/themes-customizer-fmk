@@ -84,19 +84,17 @@ $.extend( CZRSkopeBaseMths, {
 
                           if ( _isCustomized ) {
                                 _html.push( [
-                                      'Customized and not published in the current scope (',
-                                      api.czr_skope( _inheritedFromSkopeId )().title,
-                                      ')'
+                                      'Customized. Will be published to the scope :',
+                                      api.czr_skope( _inheritedFromSkopeId )().title
                                 ].join(' ') );
                           } else {
                                 if ( _hasDBVal ) {
                                       _html.push( [
-                                            'Customized and published in the current scope (',
-                                            api.czr_skope( _inheritedFromSkopeId )().title,
-                                            ')'
+                                            'Customized and published to the scope :',
+                                            api.czr_skope( _inheritedFromSkopeId )().title
                                       ].join(' ') );
                                 } else {
-                                      _html.push( 'Default website value' );
+                                      _html.push( 'Default website value published site wide.' );
                                 }
                           }
                     }
@@ -149,19 +147,19 @@ $.extend( CZRSkopeBaseMths, {
 
                             _html = _generateControlNotice( setId, _localSkopeId );
 
-                            if ( _.isEmpty( _html ) ) {
-                                  $noticeContainer
-                                        .stop()
-                                        .slideUp( 'fast', null, function() {
-                                              $( this ).css( 'height', 'auto' );
-                                        } );
-                            } else {
-                                  $noticeContainer
-                                        .stop()
-                                        .slideDown( 'fast', null, function() {
-                                              $( this ).css( 'height', 'auto' );
-                                        } );
-                            }
+                            // if ( _.isEmpty( _html ) ) {
+                            //       $noticeContainer
+                            //             .stop()
+                            //             .slideUp( 'fast', null, function() {
+                            //                   $( this ).css( 'height', 'auto' );
+                            //             } );
+                            // } else {
+                            //       $noticeContainer
+                            //             .stop()
+                            //             .slideDown( 'fast', null, function() {
+                            //                   $( this ).css( 'height', 'auto' );
+                            //             } );
+                            // }
 
                             if ( $( '.czr-skope-notice', $noticeContainer ).length ) {
                                   $( '.czr-skope-notice', $noticeContainer ).html( _html );
@@ -170,6 +168,20 @@ $.extend( CZRSkopeBaseMths, {
                                         [ '<span class="czr-notice czr-skope-notice">', _html ,'</span>' ].join('')
                                   );
                             }
+
+                            //RENDER TOGGLE ICON
+                            if( $('.czr-toggle-notice', ctrl.container ).length )
+                              return;
+
+                            $.when( ctrl.container
+                                  .find('.customize-control-title').first()//was.find('.customize-control-title')
+                                  .append( $( '<span/>', {
+                                        class : 'czr-toggle-notice fa fa-info-circle',
+                                        title : 'Display option informations'
+                                  } ) ) )
+                            .done( function(){
+                                  $('.czr-toggle-notice', ctrl.container).fadeIn( 400 );
+                            });
                       });
 
                 });
@@ -249,7 +261,8 @@ $.extend( CZRSkopeBaseMths, {
 
                 if ( ! _.has( ctrl, 'czr_hasDBVal' ) && ! _.has( ctrl, 'czr_isDirty' ) ) {
                       ctrl.czr_hasDBVal = new api.Value(false);
-                      ctrl.czr_isDirty = new api.Value(false);
+                      ctrl.czr_isDirty  = new api.Value(false);
+                      ctrl.czr_noticeVisible = new api.Value(false);
 
                       //init observ. values + react to changes
                       ctrl.czr_hasDBVal.bind( function( has_dbval ) {
@@ -257,6 +270,26 @@ $.extend( CZRSkopeBaseMths, {
                       });
                       ctrl.czr_isDirty.bind( function( is_dirty ) {
                             ctrl.container.toggleClass( 'is-dirty', is_dirty );
+                      });
+                      ctrl.czr_noticeVisible.bind( function( visible ) {
+                            ctrl.container.toggleClass('czr-notice-visible', visible );
+                            var $noticeContainer = ctrl.getNotificationsContainerElement();
+                            if ( ! $noticeContainer || ! $noticeContainer.length )
+                              return;
+
+                             if ( ! visible ) {
+                                  $noticeContainer
+                                        .stop()
+                                        .slideUp( 'fast', null, function() {
+                                              $( this ).css( 'height', 'auto' );
+                                        } );
+                            } else {
+                                  $noticeContainer
+                                        .stop()
+                                        .slideDown( 'fast', null, function() {
+                                              $( this ).css( 'height', 'auto' );
+                                        } );
+                            }
                       });
                 }
 
@@ -311,6 +344,15 @@ $.extend( CZRSkopeBaseMths, {
                                           api.czr_activeSkopeId( _skopeIdToSwithTo );
                                   }
                             },
+                            //Toggle Notice
+                            {
+                                  trigger   : 'click keydown',
+                                  selector  : '.czr-toggle-notice',
+                                  name      : 'control_toggle_notice',
+                                  actions   : function( params ) {
+                                        ctrl.czr_noticeVisible( ! ctrl.czr_noticeVisible() );
+                                  }
+                            }
                       ];
                       api.CZR_Helpers.setupDOMListeners( ctrl.userEventMap , { dom_el : ctrl.container }, self );
                 }
@@ -418,7 +460,7 @@ $.extend( CZRSkopeBaseMths, {
           new_dirties = _.omit( new_dirties, setId );
           skope_instance.dirtyValues( new_dirties );
           //inform the api about the new dirtyness state
-          api.state('saved')( ! api.czr_skopeBase.isAPIDirty() );
+          api.state('saved')( ! api.czr_dirtyness() );
     },
 
     _resetControlAPIVal : function( setId ) {

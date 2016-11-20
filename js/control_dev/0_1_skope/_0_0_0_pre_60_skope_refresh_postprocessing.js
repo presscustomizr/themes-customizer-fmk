@@ -6,14 +6,19 @@ $.extend( CZRSkopeBaseMths, {
       //with param :
       //{
       //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+      //  isChangesetDirty : boolean,
       //  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || []
       // }
       reactWhenSkopeSyncedDone : function( server_params ) {
+            var self = this, dfd = $.Deferred();
             if ( ! _.has( server_params, 'czr_skopes' ) || _.isEmpty( server_params.czr_skopes ) ) {
                   throw new Error( 'Missing skope data after refresh', server_params );
             }
-            var _sentSkopeCollection = server_params.czr_skopes;
+            //API DIRTYNESS UPDATE
+            if ( ! api.czr_dirtyness() )
+              api.czr_dirtyness( _.isBoolean( server_params.isChangesetDirty ) ? server_params.isChangesetDirty : false );
 
+            var _sentSkopeCollection = server_params.czr_skopes;
             //CHANGESET UPDATE
             //always update the changesets of the sent skope collection after a refresh
             //match them with the opt_name, because they don't have an id when emitted from server
@@ -44,5 +49,11 @@ $.extend( CZRSkopeBaseMths, {
 
                   api.czr_skope( _skp.id ).dbValues( _new_db_val );
             });
+            //introduce a small delay to let the api values be fully updated
+            //useful when attempting to refresh the control notices after a save action
+            _.delay( function() {
+                dfd.resolve();
+            }, 500 );
+            return dfd.promise();
       }
 });//$.extend

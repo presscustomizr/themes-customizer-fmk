@@ -201,17 +201,6 @@ $.extend( CZRSkopeBaseMths, {
           }
     },
 
-    //@return boolean
-    //used after a skope reset or a control reset to update the api save state if needed
-    isAPIDirty : function() {
-          var isDirty = false;
-          _.each( api.czr_currentSkopesCollection(), function( skp ){
-                if ( ! isDirty && api.czr_skope( skp.id ).dirtyness() )
-                  isDirty = true;
-          });
-          return isDirty;
-    },
-
 
     //@return {} of dirties
     //@options object { unsaved: boolean } was introduced with the changeset in WP 4.7.
@@ -234,7 +223,7 @@ $.extend( CZRSkopeBaseMths, {
                       settingRevision = api._latestSettingRevisions[ _setId ];
                       // Skip including settings that have already been included in the changeset, if only requesting unsaved.
                       if ( api.state( 'changesetStatus' ).get() && ( options && options.unsaved ) && ( _.isUndefined( settingRevision ) || settingRevision <= api._lastSavedRevision ) ) {
-                            api.consoleLog( 'DIRTIES : ' + _setId + ' will be excluded from dirties because last revision was : ' + settingRevision + ' == to last saved revision : ' + api._lastSavedRevision );
+                            //api.consoleLog( 'DIRTIES : ' + _setId + ' will be excluded from dirties because last revision was : ' + settingRevision + ' == to last saved revision : ' + api._lastSavedRevision );
                             return;
                       }
                 }
