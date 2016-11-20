@@ -67,19 +67,16 @@ $.extend( CZRSkopeBaseMths, {
           //Process Silent Updates and
           //make sure that the visibility is processed after the silent updates
           var _debouncedProcessSilentUpdates = function() {
-                var dfd = $.Deferred();
                 self.processSilentUpdates( {
                             silent_update_candidates : _silentUpdateCands,
                             section_id : null
-                      } )
+                      })
                       .fail( function() {
                             throw new Error( 'Fail to process silent updates in _debouncedProcessSilentUpdates');
                       })
                       .done( function() {
-                            dfd.resolve();
                             api.czr_visibilities.setServiVisibility( api.czr_activeSectionId() );
                       });
-                return dfd.promise();
           };
 
           //Process silent updates

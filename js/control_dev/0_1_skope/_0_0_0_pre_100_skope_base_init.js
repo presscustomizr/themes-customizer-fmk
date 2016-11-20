@@ -162,8 +162,10 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_skope = new api.Values();
           //Deferred used to make sure the overriden api.previewer.query method has been taken into account
           api.czr_isPreviewerSkopeAware = $.Deferred();
-          //store the first skope collection state
+          //Store the state of the first skope collection state
           api.czr_initialSkopeCollectionPopulated = $.Deferred();
+          //Store the global dirtyness state of the API
+          api.czr_dirtyness = new api.Value( false );
 
           //store the embed state
           self.skopeWrapperEmbedded = $.Deferred();
@@ -171,45 +173,9 @@ $.extend( CZRSkopeBaseMths, {
           //store the resetting state
           api.czr_isResettingSkope = new api.Value( false );
 
-          //Embed the skopes wrapper if needed
-          if ( 'pending' == self.skopeWrapperEmbedded.state() ) {
-              $.when( self.embedSkopeWrapper() ).done( function() {
-                  self.skopeWrapperEmbedded.resolve();
-              });
-          }
 
-          //REACT TO ACTIVE SKOPE UPDATE
-          api.czr_activeSkopeId.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
-
-          //REACT TO EXPANDED ACTIVE SECTION
-          //=> silently update all eligible controls of this sektion with the current skope values
-          api.czr_activeSectionId.callbacks.add( function() { return self.activeSectionReact.apply(self, arguments ); } );
-
-          //GLOBAL SKOPE COLLECTION LISTENER
-          //api.czr_skopeCollection.callbacks.add( function() { return self.globalSkopeCollectionReact.apply(self, arguments ); } );
-
-          //CURRENT SKOPE COLLECTION LISTENER
-          //The skope collection is set on 'czr-skopes-synced' triggered by the preview
-          //setup the callbacks of the skope collection update
-          //on init and on preview change : the collection of skopes is populated with new skopes
-          //=> instanciate the relevant skope object + render them
-          api.czr_currentSkopesCollection.callbacks.add( function() { return self.currentSkopesCollectionReact.apply(self, arguments ); } );
-
-
-          //LISTEN TO EACH API SETTING CHANGES
-          //=>POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
-          self.listenAPISettings();
-
-          //LISTEN TO THE GLOBAL API SAVED STATE
-          //=> this value is set on control and skope reset
-          //+ set by wp
-          api.state.bind( 'change', function() {
-              if ( api.czr_isChangedSetOn() ) {
-                    $('body').toggleClass('czr-api-dirty', ! api.state( 'saved')() || '' !== api.state( 'changesetStatus')() );
-              } else {
-                    $('body').toggleClass('czr-api-dirty', ! api.state( 'saved')() );
-              }
-          });
+          //REACT TO API DIRTYNESS
+          api.czr_dirtyness.callbacks.add( function() { return self.apiDirtynessReact.apply(self, arguments ); } );
 
 
           //LISTEN TO SKOPE SYNC => UPDATE SKOPE COLLECTION ON START AND ON EACH REFRESH
@@ -225,12 +191,54 @@ $.extend( CZRSkopeBaseMths, {
                 //api.consoleLog('czr-skopes-ready DATA', data );
                 var preview = this;
                 //initialize skopes with the server sent data
-                if ( _.has( data, 'czr_skopes') ) {
-                      api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
-                      api.czr_skopeBase.reactWhenSkopeSyncedDone( data );
+                if ( ! _.has( data, 'czr_skopes') ) {
+                      throw new Error('Missing skopes in the server data');
                 }
+                api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
+
+                //always wait for the initial collection to be populated
+                api.czr_initialSkopeCollectionPopulated.then( function() {
+                      api.czr_skopeBase.reactWhenSkopeSyncedDone( data );
+                      //if the current acive skope has been removed from the current skopes collection
+                      //=> set relevant scope as active. Falls back on 'global'
+                      if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) ) )
+                        api.czr_activeSkopeId( self.getActiveSkopeId() );
+                });
           });
 
+
+          //CURRENT SKOPE COLLECTION LISTENER
+          //The skope collection is set on 'czr-skopes-synced' triggered by the preview
+          //setup the callbacks of the skope collection update
+          //on init and on preview change : the collection of skopes is populated with new skopes
+          //=> instanciate the relevant skope object + render them
+          api.czr_currentSkopesCollection.callbacks.add( function() { return self.currentSkopesCollectionReact.apply(self, arguments ); } );
+
+
+
+          //WHEN THE INITIAL SKOPE COLLECTION HAS BEEN POPULATED ( in currentSkopesCollectionReact )
+          //LET'S BIND CALLBACKS TO ACTIVE SKOPE AND ACTIVE SECTION
+          api.czr_initialSkopeCollectionPopulated.done( function() {
+                //REACT TO ACTIVE SKOPE UPDATE
+                api.czr_activeSkopeId.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
+
+                //REACT TO EXPANDED ACTIVE SECTION
+                //=> silently update all eligible controls of this sektion with the current skope values
+                api.czr_activeSectionId.callbacks.add( function() { return self.activeSectionReact.apply(self, arguments ); } );
+                //GLOBAL SKOPE COLLECTION LISTENER
+                //api.czr_skopeCollection.callbacks.add( function() { return self.globalSkopeCollectionReact.apply(self, arguments ); } );
+          });
+
+          //LISTEN TO EACH API SETTING CHANGES
+          //=>POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
+          self.listenAPISettings();
+
+          //LISTEN TO THE API STATES => SET SAVE BUTTON STATE
+          //=> this value is set on control and skope reset
+          //+ set by wp
+          api.state.bind( 'change', function() {
+                self.setSaveButtonStates();
+          });
 
           //LISTEN TO GLOBAL DB OPTION CHANGES
           //When an option is reset on the global skope,
@@ -243,11 +251,21 @@ $.extend( CZRSkopeBaseMths, {
           //WIDGETS AND SIDEBAR SPECIFIC TREATMENTS
           self.initWidgetSidebarSpecifics();
 
+          //EMBED THE SKOPE WRAPPER
+          if ( 'pending' == self.skopeWrapperEmbedded.state() ) {
+              $.when( self.embedSkopeWrapper() ).done( function() {
+                  self.skopeWrapperEmbedded.resolve();
+              });
+          }
+
           //ON DOM READY : RENDER AND BIND HEADER BUTTONS : HOME, GENERAL RESET
           $( function($) {
                 self.fireHeaderButtons();
           } );
     },//initialize
+
+
+
 
 
 
@@ -262,6 +280,7 @@ $.extend( CZRSkopeBaseMths, {
           $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher'}) );
           $('body').addClass('czr-skop-on');
     },
+
 
 
 
@@ -304,6 +323,8 @@ $.extend( CZRSkopeBaseMths, {
               });
           }
     },
+
+
 
 
     //this method updates a given skope instance dirty values
@@ -359,8 +380,42 @@ $.extend( CZRSkopeBaseMths, {
                             }
                       });
           });
-    }
+    },
 
+
+
+    /*****************************************************************************
+    * API DIRTYNESS REACTIONS
+    *****************************************************************************/
+    //cb of api.czr_dirtyness()
+    apiDirtynessReact : function( is_dirty ) {
+          $('body').toggleClass('czr-api-dirty', is_dirty );
+          api.state( 'saved')( ! is_dirty );
+    },
+
+
+    /*****************************************************************************
+    * OVERRIDE SAVE BUTTON STATES : api.state.bind( 'change') callback
+    *****************************************************************************/
+    //@return void()
+    setSaveButtonStates : function() {
+          var saveBtn   = $( '#save' ),
+              closeBtn  = $( '.customize-controls-close' ),
+              saved     = api.state( 'saved'),
+              saving    = api.state( 'saving'),
+              activated = api.state( 'activated' ),
+              changesetStatus = api.state( 'changesetStatus' );
+
+          if ( api.czr_dirtyness() || ! saved() ) {
+                saveBtn.val( api.l10n.save );
+                closeBtn.find( '.screen-reader-text' ).text( api.l10n.cancel );
+          } else {
+                saveBtn.val( api.l10n.saved );
+                closeBtn.find( '.screen-reader-text' ).text( api.l10n.close );
+          }
+          var canSave = ! saving() && ( ! activated() || ! saved() ) && ( '' !== changesetStatus() && 'publish' !== changesetStatus() );
+          saveBtn.prop( 'disabled', ! canSave );
+    }
 
     //cb of api.czr_globalDBoptions.callbacks
     //update the _wpCustomizeSettings.settings if they have been updated by a reset of global skope, or a control reset of global skope

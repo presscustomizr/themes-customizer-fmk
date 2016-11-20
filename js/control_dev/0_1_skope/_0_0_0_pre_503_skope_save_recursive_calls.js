@@ -59,7 +59,6 @@ $.extend( CZRSkopeSaveMths, {
                   if ( _.isUndefined( skopesToSave[_index] ) )
                     return;
 
-                  console.log( 'BEFORE GET SUBMIT PROMISE CALL');
                   //_promises.push( self.getSubmitPromise( skopesToSave[ _index ] ) );
                   self.getSubmitPromise( skopesToSave[ _index ] )
                         .always( function() { _promises.push( _index ); } )
@@ -70,7 +69,7 @@ $.extend( CZRSkopeSaveMths, {
                                 recursiveCall( _index + 1 );
                         } )
                         .done( function( response ) {
-                              api.consoleLog('RECURSIVE PUSH DONE FOR SKOPE : ', skopesToSave[_index] );
+                              //api.consoleLog('RECURSIVE PUSH DONE FOR SKOPE : ', skopesToSave[_index] );
                               response = response || {};
 
                               //WE NEED TO BUILD A PROPER RESPONSE HERE
@@ -86,7 +85,6 @@ $.extend( CZRSkopeSaveMths, {
                   return _recursiveCallDeferred.promise();
             };
 
-            console.log( 'BEFORE RECURSIVE CALL');
             // Unleash hell
             recursiveCall()
                   .fail( function( r ) {

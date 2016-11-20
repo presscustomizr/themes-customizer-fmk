@@ -37,7 +37,7 @@ $.extend( CZRSkopeSaveMths, {
                         dyn_type : skopeObjectToSubmit.dyn_type
                   } )
                   .done( function(_resp) {
-                        api.consoleLog('GETSUBMIT DONE PROMISE FOR SKOPE : ', skope_id, _resp );
+                        //api.consoleLog('GETSUBMIT DONE PROMISE FOR SKOPE : ', skope_id, _resp );
                         dfd.resolve( _resp );
                   } )
                   .fail( function( _resp ) {

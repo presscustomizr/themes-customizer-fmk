@@ -24,7 +24,7 @@ $.extend( CZRSkopeBaseMths, {
                 silentUpdateCands = _params.silent_update_candidates;
           }
 
-          //console.log('silentUpdateCands ============>>> ', _params, silentUpdateCands);
+          //api.consoleLog('silentUpdateCands ============>>> ', api.czr_activeSkopeId(), _params, silentUpdateCands );
 
           //silently update the settings of a the currently active section() to the values of the current skope
           //silentlyUpdateSettings returns a promise.

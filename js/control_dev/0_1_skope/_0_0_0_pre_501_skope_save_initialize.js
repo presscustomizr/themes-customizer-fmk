@@ -79,12 +79,12 @@ $.extend( CZRSkopeSaveMths, {
                                   alwaysAfterSubmission( response , this.state() );
                             })
                             .fail( function( response ) {
-                                  console.log('ALL SUBMISSIONS FAILED', response );
+                                  api.consoleLog('ALL SUBMISSIONS FAILED', response );
                                   self.globalSaveDeferred.reject( response );
                                   api.trigger( 'error', response );
                             })
                             .done( function( response ) {
-                                  console.log('ALL SUBMISSIONS DONE', response );
+                                  //console.log('ALL SUBMISSIONS DONE', response );
 
                                   //api.previewer.refresh() method is resolved with an object looking like :
                                   //{

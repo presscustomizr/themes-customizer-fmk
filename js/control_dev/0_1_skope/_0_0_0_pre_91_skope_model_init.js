@@ -150,6 +150,9 @@ $.extend( CZRSkopeMths, {
           //set the model dirtyness boolean state value
           skope.dirtyness( ! _.isEmpty(to) );
 
+          //set the API global dirtyness
+          api.czr_dirtyness( ! _.isEmpty(to) );
+
           //build the collection of control ids for which the dirtyness has to be reset
           var ctrlIdDirtynessToClean = [];
           _.each( from, function( _val, _id ) {

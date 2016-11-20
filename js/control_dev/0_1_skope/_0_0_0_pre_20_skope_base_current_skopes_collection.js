@@ -189,11 +189,6 @@ $.extend( CZRSkopeBaseMths, {
                 }
           });
 
-          //if the current acive skope has been removed from the current skopes collection
-          //=> set relevant scope as active. Falls back on 'global'
-          if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) ) )
-            api.czr_activeSkopeId( self.getActiveSkopeId( _new_collection ) );
-
           //SET THE CONTEXTUALLY ACTIVE SKOPES VISIBILITY AND LAYOUT
           //Which skopes are visible ?
           //=> the ones sent by the preview
