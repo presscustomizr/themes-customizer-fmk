@@ -51,11 +51,15 @@
        * @returns {jQuery.Promise}
        */
       api.requestChangesetUpdate = function( changes ) {
-            var dfd = $.Deferred(),
+            var self = this,
+                dfd = $.Deferred(),
                 data,
                 _skopesToUpdate = [],
                 _promises = [],
-                _global_skope_changes = changes || {};
+                _global_skope_changes = changes || {},
+                failedPromises = [],
+                _all_skopes_data_ = [],
+                _recursiveCallDeferred = $.Deferred();
                 // _original = function( changes ) {
                 //     _original_requestChangesetUpdate(changes).then( function( data ) {
                 //         console.log('WP DEFERRED THEN', data );
@@ -87,24 +91,28 @@
 
             //api.consoleLog('SKOPE CHANGESETS TO UPDATE', _skopesToUpdate );
 
-            var _pushPromise = function( _skp_id ) {
-                  var dfrd = $.Deferred(),
-                      _requestUpdate = api._requestSkopeChangetsetUpdate( changes, _skp_id );
-                  _promises.push( _requestUpdate );
-                  $.when( _requestUpdate ).done( function( _data_ ) {
-                        setTimeout( function() {
-                            dfrd.resolve( _data_ );
-                        }, 0 );
+            var _mayBeresolve = function( _index ) {
+                  if ( ! _.isUndefined( _skopesToUpdate[ _index + 1 ] ) || _promises.length != _skopesToUpdate.length )
+                    return;
 
-                  });
-                  return dfrd.promise();
+                  if ( _.isEmpty( failedPromises ) ) {
+                        _recursiveCallDeferred.resolve( _all_skopes_data_ );
+                  } else {
+                        var _buildResponse = function() {
+                                  var _failedResponse = [];
+                                  _.each( failedPromises, function( _r ) {
+                                        _failedResponse.push( api.czr_skopeBase.buildServerResponse( _r ) );
+                                  } );
+                                  return $.trim( _failedResponse.join( ' | ') );
+                        };
+                        _recursiveCallDeferred.reject( _buildResponse() );
+                  }
+                  return true;
             };
 
-            var _recursivePushDeferred = $.Deferred(),
-                _all_skopes_data_ = [],
-                _failedPush = [];
 
-            var recursivePush = function( _index ) {
+            // recursive pushes for not global skopes
+            var recursiveCall = function( _index ) {
                   //on first push run, set the api state to processing.
                   // Make sure that publishing a changeset waits for all changeset update requests to complete.
                   if ( _.isUndefined( _index ) || ( ( 0 * 0 ) == _index ) ) {
@@ -112,25 +120,29 @@
                   }
 
                   _index = _index || 0;
-                  if ( _.isUndefined( _skopesToUpdate[_index] ) ) {
-                        _recursivePushDeferred.resolve( _all_skopes_data_ );
-                  } else {
-                        _pushPromise( _skopesToUpdate[_index] )
-                              .fail( function( r ) {
-                                    _failedPush.push( r );
-                              })
-                              .done( function( _skope_data_ ) {
-                                    //console.log('RECURSIVE PUSH DONE FOR SKOPE : ', _skopesToUpdate[_index] );
-                                    _all_skopes_data_.push( _skope_data_ );
-                                    recursivePush( _index + 1 );
-                              });
-                  }
-                  if ( ! _.isEmpty( _failedPush ) ) {
-                        api.consoleLog( 'CHANGESET UPDATE RECURSIVE PUSH FAIL', _failedPush );
-                        _recursivePushDeferred.reject();
-                  }
-                  return _recursivePushDeferred.promise();
+                  if ( _.isUndefined( _skopesToUpdate[_index] ) )
+                    return;
+
+                  //_promises.push( self.getSubmitPromise( _skopesToUpdate[ _index ] ) );
+                  api._requestSkopeChangetsetUpdate( changes, _skopesToUpdate[_index] )
+                        .always( function() { _promises.push( _index ); } )
+                        .fail( function( response ) {
+                              failedPromises.push( response );
+                              api.consoleLog('CHANGESET UPDATE RECURSIVE FAIL FOR SKOPE : ', _skopesToUpdate[_index] );
+                              if (  ! _mayBeresolve( _index ) )
+                                recursiveCall( _index + 1 );
+                        } )
+                        .done( function( _skope_data_ ) {
+                              //console.log('CHANGESET RECURSIVE CALL DONE FOR SKOPE : ', _skopesToUpdate[_index] );
+                              _all_skopes_data_.push( _skope_data_ );
+                              if (  ! _mayBeresolve( _index ) )
+                                recursiveCall( _index + 1 );
+                        } );
+
+                  return _recursiveCallDeferred.promise();
             };
+
+
 
 
             //RESOLVE WITH THE WP GLOBAL CHANGESET PROMISE WHEN ALL SKOPE PROMISES ARE DONE
@@ -141,7 +153,17 @@
             var _lastSavedRevisionBefore = api._lastSavedRevision;
             _original_requestChangesetUpdate( _global_skope_changes )
                   .fail( function( r ) {
-                        api.consoleLog( 'WP requestChangesetUpdateFail', r );
+                        api.consoleLog( 'WP requestChangesetUpdateFail', r, api.czr_skopeBase.buildServerResponse(r) );
+
+                        // Ensure that all settings updated subsequently will be included in the next changeset update request.
+                        api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
+                        //api.state( 'changesetStatus' ).set( _data_.changeset_status );
+                        // Make sure that publishing a changeset waits for all changeset update requests to complete.
+                        api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+
+                        dfd.reject( r );
+                        r = api.czr_skopeBase.buildServerResponse(r);
+                        api.czr_serverNotification( { message: r, status : 'error' } );
                   })
                   .done( function( wp_original_response ) {
                         //console.log('GLOBAL SKOPE CHANGESET UPDATE PROCESSED BY WP : ', _global_skope_changes, wp_original_response );
@@ -151,22 +173,24 @@
                         //       dfd.resolve( wp_original_response );
                         // });
                         //Restore the _lastSavedRevision index to its previous state to not miss any setting that could have been updated by WP for global.
-                         api._lastSavedRevision = _lastSavedRevisionBefore;
-                        $.when( recursivePush() )
-                              .fail( function( r ) {
-                                    api.consoleLog( 'CHANGESET UPDATE RECURSIVE PUSH FAIL', r , _all_skopes_data_ );
-                              } )
-                              .done( function() {
-                                    //console.log('ALL RECURSIVE PUSHES ARE DONE NOW', _all_skopes_data_ );
-
-                                    var savedChangesetValues = {};
-
+                        api._lastSavedRevision = _lastSavedRevisionBefore;
+                        recursiveCall()
+                              .always( function() {
                                     // Ensure that all settings updated subsequently will be included in the next changeset update request.
                                     api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
 
                                     //api.state( 'changesetStatus' ).set( _data_.changeset_status );
                                     // Make sure that publishing a changeset waits for all changeset update requests to complete.
                                     api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+                              })
+                              .fail( function( r ) {
+                                    dfd.reject( r );
+                                    api.consoleLog( 'CHANGESET UPDATE RECURSIVE PUSH FAIL', r , _all_skopes_data_ );
+                                    api.trigger( 'changeset-error', r );
+                                    api.czr_serverNotification( { message: r, status : 'error' } );
+                              } )
+                              .done( function() {
+                                    //console.log('ALL RECURSIVE PUSHES ARE DONE NOW', _all_skopes_data_ );
                                     dfd.resolve( wp_original_response );
                               });
                   });
@@ -261,7 +285,7 @@
                   } )
                   .fail( function requestChangesetUpdateFail( _data_ ) {
                         api.consoleLog('SKOPE CHANGESET FAIL FOR SKOPE ' + _data_.skope_id, _data_ );
-                        deferred.resolve( _data_ );
+                        deferred.reject( _data_ );
                         //api.trigger( 'changeset-error', _data_ );
                   } )
                   .always( function( _data_ ) {

@@ -42,7 +42,8 @@
                       if ( serverControlParams.isSkopOn && _.has( api ,'czr_skopeBase' ) ) {
                             api.czr_skopeBase.processSilentUpdates( {
                                   candidates : {},
-                                  section_id : target_source.target
+                                  section_id : target_source.target,
+                                  refresh : false
                             } ).then( function() {
                                   self.setServiVisibility( target_source.target, target_source.source );
                             });

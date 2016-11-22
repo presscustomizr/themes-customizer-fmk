@@ -8,6 +8,7 @@ $.extend( CZRSkopeBaseMths, {
     // => change the to and from skope active() state
     // => silently update each setting values with the skope set of vals
     activeSkopeReact : function( to, from ) {
+          console.log('ACTIVE SKOPE REACT');
           var self = this, dfd = $.Deferred();
           //set the to and from scope state on init and switch
           if ( ! _.isUndefined(from) && api.czr_skope.has(from) )

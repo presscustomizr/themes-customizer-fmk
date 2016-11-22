@@ -32,17 +32,7 @@ $.extend( CZRSkopeSaveMths, {
                         var _buildResponse = function() {
                                   var _failedResponse = [];
                                   _.each( failedPromises, function( _r ) {
-                                        //server error
-                                        if ( _.isObject( _r ) ) {
-                                              if ( _.has( _r, 'responseText') && ! _.isEmpty( _r.responseText ) )
-                                                _failedResponse.push( _r.responseText );
-                                              else if ( _.has( _r , 'statusText' ) && ! _.isEmpty( _r.statusText ) )
-                                                _failedResponse.push( _r.statusText );
-                                        } else if ( _.isObject( _r ) ) {
-                                              _failedResponse.JSON.stringify( _r );
-                                        } else {
-                                              _failedResponse.push( _r );
-                                        }
+                                        _failedResponse.push( self.buildServerResponse( _r ) );
                                   } );
                                   return $.trim( _failedResponse.join( ' | ') );
                         };
@@ -95,6 +85,7 @@ $.extend( CZRSkopeSaveMths, {
                         self.getSubmitPromise( self.globalSkopeId )
                               .fail( function( r ) {
                                     api.consoleLog('GLOBAL SAVE SUBMIT FAIL', r );
+                                    r = api.czr_skopeBase.buildServerResponse( _r );
                                     dfd.reject( r );
                               })
                               .done( function( r ) {

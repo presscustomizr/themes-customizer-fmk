@@ -8,6 +8,7 @@ $.extend( CZRSkopeBaseMths, {
     //   refresh : true
     // }
     processSilentUpdates : function( params ) {
+          console.log('PROCESS SILENT UPDATES', params );
           //a setting id can be passed as param instead of an object
           if ( _.isString( params ) )
             params = { candidates : [ params ] };
@@ -65,11 +66,12 @@ $.extend( CZRSkopeBaseMths, {
     //2) When all asynchronous promises are done(). Refresh()
     //@return an array of promises. Typically if a setting update has to re-render an image related control, the promise is the ajax request object
     silentlyUpdateSettings : function( _silentUpdateCands, refresh ) {
+          console.log('silentlyUpdateSettings', _silentUpdateCands, refresh );
           var self = this,
               _silentUpdatePromises = {},
               dfd = $.Deferred();
 
-          refresh = refresh || true;
+          refresh = _.isUndefined( refresh ) ? true : refresh;
 
           if ( _.isUndefined( _silentUpdateCands ) || _.isEmpty( _silentUpdateCands ) ) {
             _silentUpdateCands = self._getSilentUpdateCandidates();
@@ -140,6 +142,7 @@ $.extend( CZRSkopeBaseMths, {
                 });
                 //always refresh by default
                 if ( refresh ) {
+                      console.log('OUI LA REFRESH');
                       api.previewer.refresh().done( function() {
                             dfd.resolve();
                       });
@@ -167,6 +170,7 @@ $.extend( CZRSkopeBaseMths, {
           if ( _.isUndefined( setId ) ) {
               throw new Error('getSettingUpdatePromise : the provided setId is not defined');
           }
+          console.log( 'GET SETTING PROMISE : ', setId, api.CZR_Helpers.build_setId( setId ) );
           var self = this,
               wpSetId = api.CZR_Helpers.build_setId( setId ),
               current_setting_val = api( wpSetId )(),//typically the previous skope val

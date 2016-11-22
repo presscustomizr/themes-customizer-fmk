@@ -98,6 +98,21 @@ $.extend( CZRSkopeBaseMths, {
           //exclude widget controls and menu settings and sidebars
           if ( self.isExcludedWPBuiltinSetting( setId ) )
             return false;
+          //skopeExcludedSettings look like ( short IDs ) :
+          //{
+          //   //short ids of theme settings
+          //   'dynamic-styles',
+          //   'post-comments',
+          //   'page-comments',
+          //   'layout-home',
+          //
+          //   //protected theme settings
+          //   'ver'
+          //
+          //   //wp builtins
+          //   'show_on_front',
+          //   'page_on_front',
+          // }
           if ( _.contains( serverControlParams.skopeExcludedSettings, shortSetId ) ) {
             //api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE PART OF THE EXCLUDED LIST.' );
             return false;
