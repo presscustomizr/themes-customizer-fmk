@@ -202,11 +202,12 @@ $.extend( CZRSkopeBaseMths, {
                       api.czr_skopeBase.reactWhenSkopeSyncedDone( data ).done( function() {
                             //if the current acive skope has been removed from the current skopes collection
                             //=> set relevant scope as active. Falls back on 'global'
-                            if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) ) )
-                              api.czr_activeSkopeId( self.getActiveSkopeId() );
-
-                            //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
-                            self.renderControlSkopeNotice( api.CZR_Helpers.getSectionControlIds() );
+                            if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) ) ) {
+                                  api.czr_activeSkopeId( self.getActiveSkopeId() )
+                                        .done( function() {
+                                              api.consoleLog('INITIAL ACTIVE SKOPE SET : ' + arguments[1] + ' => ' + arguments[0] );
+                                        });
+                            }
                       });
                 });
           });
@@ -225,7 +226,21 @@ $.extend( CZRSkopeBaseMths, {
           //LET'S BIND CALLBACKS TO ACTIVE SKOPE AND ACTIVE SECTION
           api.czr_initialSkopeCollectionPopulated.done( function() {
                 //REACT TO ACTIVE SKOPE UPDATE
-                api.czr_activeSkopeId.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
+                //api.czr_activeSkopeId.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
+                api.czr_activeSkopeId.bind( function( to, from ) {
+                        return self.activeSkopeReact( to, from );
+                        // var dfd = $.Deferred();
+                        // self.activeSkopeReact( to, from )
+                        //       .done( function() {
+                        //             api.trigger( 'skope-switched', to );
+                        //             dfd.resolve();
+                        //       })
+                        //       .fail( function() {
+                        //             dfd.reject();
+                        //             throw new Error( 'activeSkopeReact failed');
+                        //       });
+                        // return dfd.promise();
+                }, { deferred : true } );
 
                 //REACT TO EXPANDED ACTIVE SECTION
                 //=> silently update all eligible controls of this sektion with the current skope values
@@ -233,6 +248,16 @@ $.extend( CZRSkopeBaseMths, {
                 //GLOBAL SKOPE COLLECTION LISTENER
                 //api.czr_skopeCollection.callbacks.add( function() { return self.globalSkopeCollectionReact.apply(self, arguments ); } );
           });
+
+
+          api.bind( 'skope-switched', function( skope_id ) {
+                console.log('SKOPE SWITCHED TO', skope_id );
+                //SET VISIBILITIES
+                api.czr_visibilities.setServiVisibility( api.czr_activeSectionId() );
+                //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
+                self.renderControlSkopeNotice( api.CZR_Helpers.getSectionControlIds() );
+          });
+
 
           //LISTEN TO EACH API SETTING CHANGES
           //=>POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
@@ -375,9 +400,9 @@ $.extend( CZRSkopeBaseMths, {
                       })
                       .done( function() {
                             // var _update_candidates = self._getSilentUpdateCandidates( active_section );
-                            // self.silentlyUpdateSettings( _update_candidates );
+                            // self.processSilentUpdates( { candidates : _update_candidates } );
                             // //add control single reset + observable values
-                            // self.setupControlsViews();
+                            // self.setupCurrentControls();
 
                             //Sidebar Widget specific
                             if ( ! self.isExcludedSidebarsWidgets() ) {
@@ -437,7 +462,7 @@ $.extend( CZRSkopeBaseMths, {
     //                   var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
     //                   if ( _.has( api.settings.settings, wpSetId) )
     //                     api.settings.settings[wpSetId].value = serverControlParams.defaultOptionsValues[shortSetId];
-    //                   self.silentlyUpdateSettings( [], false );//silently update with no refresh
+    //                   self.processSilentUpdates( { refresh : false } );//silently update with no refresh
     //             });
     //       }
 

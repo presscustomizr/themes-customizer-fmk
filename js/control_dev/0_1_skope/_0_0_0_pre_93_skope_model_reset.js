@@ -80,7 +80,7 @@ $.extend( CZRSkopeMths, {
               reset_method = skope.dirtyness() ? '_resetSkopeDirties' : '_resetSkopeAPIValues',
               _do_reset = function() {
                     skope[reset_method]();
-                    api.czr_skopeBase.silentlyUpdateSettings().done( function() {
+                    api.czr_skopeBase.processSilentUpdates().done( function() {
                           $('.czr-reset-success', skope.resetPanel ).fadeIn('300');
                           $('body').removeClass('czr-resetting-skope');//hide the spinner
                           api.czr_isResettingSkope( false );

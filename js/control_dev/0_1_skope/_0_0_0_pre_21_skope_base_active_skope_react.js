@@ -8,12 +8,12 @@ $.extend( CZRSkopeBaseMths, {
     // => change the to and from skope active() state
     // => silently update each setting values with the skope set of vals
     activeSkopeReact : function( to, from ) {
-          var self = this;
+          var self = this, dfd = $.Deferred();
           //set the to and from scope state on init and switch
           if ( ! _.isUndefined(from) && api.czr_skope.has(from) )
             api.czr_skope(from).active(false);
           else if ( ! _.isUndefined(from) )
-            throw new Error('listenToActiveSkope : previous scope does not exist in the collection');
+            throw new Error('listenToActiveSkope : previous scope does not exist in the collection', from );
 
           if ( ! _.isUndefined(to) && api.czr_skope.has(to) )
             api.czr_skope(to).active(true);
@@ -28,8 +28,6 @@ $.extend( CZRSkopeBaseMths, {
           //=> the silent update will be fired on section expansion anyway
           //=> refresh now if the previewer is not skope aware, this will post the dyn_type used in the preview to get the proper option if the skope is not 'global'
           //=> otherwise simply refresh to set the new skope in the query params => needed for the preview frame
-          api.consoleLog('ACTIVE SKOPE SWITCH : ' + from + ' => ' + to );
-
           if ( _.isUndefined( api.czr_activeSectionId() ) ) {
                 // if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
                 //     api.previewer.refresh();
@@ -37,7 +35,7 @@ $.extend( CZRSkopeBaseMths, {
                 //     api.previewer.refresh();
                 // }
                 api.previewer.refresh();
-                return;
+                return dfd.resolve().promise();
           }
 
           //close the module panel id needed
@@ -68,14 +66,16 @@ $.extend( CZRSkopeBaseMths, {
           //make sure that the visibility is processed after the silent updates
           var _debouncedProcessSilentUpdates = function() {
                 self.processSilentUpdates( {
-                            silent_update_candidates : _silentUpdateCands,
+                            candidates : _silentUpdateCands,
                             section_id : null
                       })
                       .fail( function() {
+                            dfd.reject();
                             throw new Error( 'Fail to process silent updates in _debouncedProcessSilentUpdates');
                       })
                       .done( function() {
-                            api.czr_visibilities.setServiVisibility( api.czr_activeSectionId() );
+                            api.trigger( 'skope-switched', to );
+                            dfd.resolve();
                       });
           };
 
@@ -88,6 +88,7 @@ $.extend( CZRSkopeBaseMths, {
           } else {
                 _debouncedProcessSilentUpdates();
           }
+          return dfd.promise();
     },
 
     //@return void()

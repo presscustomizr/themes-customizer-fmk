@@ -41,7 +41,7 @@
                       //if skope on ( serverControlParams.isSkopOn ), then defer the visibility awakening after the silent updates
                       if ( serverControlParams.isSkopOn && _.has( api ,'czr_skopeBase' ) ) {
                             api.czr_skopeBase.processSilentUpdates( {
-                                  silent_update_candidates : {},
+                                  candidates : {},
                                   section_id : target_source.target
                             } ).then( function() {
                                   self.setServiVisibility( target_source.target, target_source.source );
