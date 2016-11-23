@@ -47,6 +47,10 @@
                 //exclude the WP built-in settings like blogdescription, show_on_front, etc
                 if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
                   return setId;
+
+                //extract the setting id for theme mods
+                var _pattern;
+
                 //exclude the WP built-in settings like sidebars_widgets*, nav_menu_*, widget_*, custom_css
                 var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css' ],
                     _isExcld = false;

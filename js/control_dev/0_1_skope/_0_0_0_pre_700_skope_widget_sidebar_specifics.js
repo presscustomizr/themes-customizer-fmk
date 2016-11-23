@@ -42,7 +42,7 @@ $.extend( CZRSkopeBaseMths, {
                         related_setting_val = self.getSkopeSettingVal( related_setting_name, active_skope );
 
                     //api( related_setting_name )( self.getSkopeSettingVal( related_setting_name, api.czr_activeSkopeId() ) );
-                    self.updateSkopeDirties( related_setting_name, related_setting_val, active_skope );
+                    api.czr_skope( active_skope ).updateSkopeDirties( related_setting_name, related_setting_val );
 
                     api.previewer.refresh( { the_dirties : api.czr_skope( active_skope ).dirtyValues() } )
                           .done( function() {

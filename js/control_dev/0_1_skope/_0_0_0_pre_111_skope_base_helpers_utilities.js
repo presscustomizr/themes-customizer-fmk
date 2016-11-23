@@ -203,14 +203,18 @@ $.extend( CZRSkopeBaseMths, {
     },
 
 
-    //return the current db value for a pair setId / skope
-    _getDBSettingVal : function( setId, skope_model  ) {
+    //return the current db value for a pair setId / skope_id
+    _getDBSettingVal : function( setId, skope_id  ) {
           var shortSetId = api.CZR_Helpers.getOptionName(setId),
               wpSetId = api.CZR_Helpers.build_setId(setId);
-          if ( _.has( api.czr_skope( skope_model.id ).dbValues(), wpSetId ) ) {
-                return api.czr_skope( skope_model.id ).dbValues()[wpSetId];
-          } else if ( _.has( api.czr_skope( skope_model.id ).dbValues(), shortSetId ) ) {
-                return api.czr_skope( skope_model.id ).dbValues()[shortSetId];
+          if ( ! api.czr_skope.has( skope_id ) ) {
+                api.consoleLog( '_getDBSettingVal : the requested skope id is not registered : ' + skope_id );
+                return '_no_db_val';
+          }
+          if ( _.has( api.czr_skope( skope_id ).dbValues(), wpSetId ) ) {
+                return api.czr_skope( skope_id ).dbValues()[wpSetId];
+          } else if ( _.has( api.czr_skope( skope_id ).dbValues(), shortSetId ) ) {
+                return api.czr_skope( skope_id ).dbValues()[shortSetId];
           } else {
                 return '_no_db_val';
           }
@@ -318,72 +322,5 @@ $.extend( CZRSkopeBaseMths, {
               registered = true;
         } );
         return registered;
-    },
-
-
-
-
-    /*****************************************************************************
-    * GET SILENT UPDATE CANDIDATE FROM A SECTION. FALLS BACK ON THE CURRENT ONE
-    *****************************************************************************/
-    _getSilentUpdateCandidates : function( section_id ) {
-          var self = this,
-              SilentUpdateCands = [];
-          section_id = ( _.isUndefined( section_id ) || _.isNull( section_id ) ) ? api.czr_activeSectionId() : section_id;
-
-          if ( _.isUndefined( section_id ) ) {
-            api.consoleLog( '_getSilentUpdateCandidates : No active section provided');
-            return;
-          }
-          if ( ! api.section.has( section_id ) ) {
-              throw new Error( '_getSilentUpdateCandidates : The section ' + section_id + ' is not registered in the API.');
-          }
-
-          //GET THE CURRENT EXPANDED SECTION SET IDS
-          var section_settings = api.CZR_Helpers.getSectionSettingIds( section_id );
-
-          //keep only the skope eligible setIds
-          section_settings = _.filter( section_settings, function(setId) {
-              return self.isSettingSkopeEligible( setId );
-          });
-
-          //Populates the silent update candidates array
-          _.each( section_settings, function( setId ) {
-                SilentUpdateCands.push( setId );
-          });
-
-          return SilentUpdateCands;
     }
-    //@return the customized value of a setId in a given skop
-    //implements the skope inheritance
-    //@recursive
-    //@used when generating the dirtyCustomized object in the preview query
-    // getSkopeDirtyVal : function( setId, skope_id ) {
-    //       skope_id = skope_id || api.czr_activeSkopeId() || 'global';
-
-    //       if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
-    //           throw new Error('getSkopeSettingVal : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
-    //       }
-    //       if ( ! api.czr_skope.has( skope_id ) ) {
-    //           throw new Error('getSkopeSettingVal : the requested skope id is not registered : ' + skope_id );
-    //       }
-
-    //       var self = this,
-    //           wpSetId = api.CZR_Helpers.build_setId(setId),
-    //           skope_model = api.czr_skope( skope_id )(),
-    //           isDirty = skope_id != api.czr_activeSkopeId() ? api.czr_skope( skope_id ).getSkopeSettingDirtyness( wpSetId ) : api( wpSetId ).dirty,
-    //           dirtyVal = skope_id != api.czr_activeSkopeId() ? api.czr_skope( skope_id ).dirtyValues()[ wpSetId ] : api( wpSetId )();
-
-    //       api.consoleLog('in GET SKOPE DIRTY VAL', skope_id, wpSetId, isDirty, dirtyVal );
-    //       //if we are already in the final 'global' skope
-    //       if ( 'global' == skope_model.skope && ! isDirty )
-    //         return '_no_dirty_val_';
-
-    //       //let's check if the current api val is dirty
-    //       return isDirty ? dirtyVal : self.getSkopeDirtyVal( setId, self._getParentSkopeId( skope_model ) );
-    //
-    // },
-
-
-
 });//$.extend

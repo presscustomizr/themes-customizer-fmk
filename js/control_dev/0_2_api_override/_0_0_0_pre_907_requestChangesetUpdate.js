@@ -120,8 +120,10 @@
                   }
 
                   _index = _index || 0;
-                  if ( _.isUndefined( _skopesToUpdate[_index] ) )
-                    return;
+                  if ( _.isUndefined( _skopesToUpdate[_index] ) ) {
+                        api.consoleLog( 'Undefined Skope in changeset recursive call ', _index, _skopesToUpdate, _skopesToUpdate[_index] );
+                        _recursiveCallDeferred.resolve( _all_skopes_data_ ).promise();
+                  }
 
                   //_promises.push( self.getSubmitPromise( _skopesToUpdate[ _index ] ) );
                   api._requestSkopeChangetsetUpdate( changes, _skopesToUpdate[_index] )

@@ -150,32 +150,39 @@ $.extend( CZRSkopeBaseMths, {
 
     initialize: function() {
           var self = this;
+
+          //DEFINITIONS
+          //this promise will be resolved when
+          //1) the initial skopes collection has been populated
+          //2) the initial skope has been switched to
+          api.czr_skopeReady              = $.Deferred();
+          //Deferred used to make sure the overriden api.previewer.query method has been taken into account
+          api.czr_isPreviewerSkopeAware   = $.Deferred();
+          //Store the state of the first skope collection state
+          api.czr_initialSkopeCollectionPopulated = $.Deferred();
+          //store the embed state
+          self.skopeWrapperEmbedded       = $.Deferred();
+
+          //the skope instance constructor
+          api.czr_skope                   = new api.Values();
+
           //the czr_skopeCollection stores all skopes instantiated by the user
           //this collection is not updated directly
           //=> it's updated on skope() instance change
-          api.czr_skopeCollection = new api.Value([]);//all available skope, including the current skopes
+          api.czr_skopeCollection         = new api.Value([]);//all available skope, including the current skopes
           //the current skopes collection get updated each time the 'czr-skopes-synced' event is triggered on the api by the preview
           api.czr_currentSkopesCollection = new api.Value([]);
+
+
           //the currently active skope
-          api.czr_activeSkopeId = new api.Value();
-          //declare the collection
-          api.czr_skope = new api.Values();
-          //Deferred used to make sure the overriden api.previewer.query method has been taken into account
-          api.czr_isPreviewerSkopeAware = $.Deferred();
-          //Store the state of the first skope collection state
-          api.czr_initialSkopeCollectionPopulated = $.Deferred();
+          api.czr_activeSkopeId           = new api.Value();
           //Store the global dirtyness state of the API
-          api.czr_dirtyness = new api.Value( false );
-
-          //store the embed state
-          self.skopeWrapperEmbedded = $.Deferred();
-
+          api.czr_dirtyness               = new api.Value( false );
           //store the resetting state
-          api.czr_isResettingSkope = new api.Value( false );
+          api.czr_isResettingSkope        = new api.Value( false );
 
 
-          //REACT TO API DIRTYNESS
-          api.czr_dirtyness.callbacks.add( function() { return self.apiDirtynessReact.apply(self, arguments ); } );
+
 
 
           //LISTEN TO SKOPE SYNC => UPDATE SKOPE COLLECTION ON START AND ON EACH REFRESH
@@ -206,11 +213,16 @@ $.extend( CZRSkopeBaseMths, {
                                   api.czr_activeSkopeId( self.getActiveSkopeId() )
                                         .done( function() {
                                               api.consoleLog('INITIAL ACTIVE SKOPE SET : ' + arguments[1] + ' => ' + arguments[0] );
+                                              if ( 'pending' == api.czr_skopeReady.state() ) {
+                                                    api.czr_skopeReady.resolve( self.getActiveSkopeId() );
+                                              }
                                         });
                             }
                       });
                 });
           });
+
+
 
 
           //CURRENT SKOPE COLLECTION LISTENER
@@ -250,36 +262,25 @@ $.extend( CZRSkopeBaseMths, {
           });
 
 
+
+          //LISTEN TO SKOPE SWITCH EVENT :
+          //1) reset visibilities
+          //2) update control skope notices
           api.bind( 'skope-switched', function( skope_id ) {
-                console.log('SKOPE SWITCHED TO', skope_id );
-                //SET VISIBILITIES
-                api.czr_visibilities.setServiVisibility( api.czr_activeSectionId() );
-                //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
-                self.renderControlSkopeNotice( api.CZR_Helpers.getSectionControlIds() );
+                console.log('SKOPE SWITCHED TO', skope_id, api.czr_activeSectionId() );
+                //Skope is ready when :
+                //1) the initial skopes collection has been populated
+                //2) the initial skope has been switched to
+                api.czr_skopeReady.then( function() {
+                      api.czr_CrtlDependenciesReady.then( function() {
+                            //SET VISIBILITIES
+                            api.czr_ctrlDependencies.setServiDependencies( api.czr_activeSectionId() );
+                      });
+                      //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
+                      self.renderControlSkopeNotice( api.CZR_Helpers.getSectionControlIds() );
+                });
           });
 
-
-          //LISTEN TO EACH API SETTING CHANGES
-          //=>POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
-          self.listenAPISettings();
-
-          //LISTEN TO THE API STATES => SET SAVE BUTTON STATE
-          //=> this value is set on control and skope reset
-          //+ set by wp
-          api.state.bind( 'change', function() {
-                self.setSaveButtonStates();
-          });
-
-          //LISTEN TO GLOBAL DB OPTION CHANGES
-          //When an option is reset on the global skope,
-          //we need to update it in the initially sent _wpCustomizeSettings.settings
-          //api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
-
-          //DECLARE THE LIST OF CONTROL TYPES FOR WHICH THE VIEW IS REFRESHED ON CHANGE
-          self.refreshedControls = [ 'czr_cropped_image'];// [ 'czr_cropped_image', 'czr_multi_module', 'czr_module' ];
-
-          //WIDGETS AND SIDEBAR SPECIFIC TREATMENTS
-          self.initWidgetSidebarSpecifics();
 
           //EMBED THE SKOPE WRAPPER
           if ( 'pending' == self.skopeWrapperEmbedded.state() ) {
@@ -292,6 +293,21 @@ $.extend( CZRSkopeBaseMths, {
           $( function($) {
                 self.fireHeaderButtons();
           } );
+
+
+          //REACT TO API DIRTYNESS
+          api.czr_dirtyness.callbacks.add( function() { return self.apiDirtynessReact.apply(self, arguments ); } );
+
+          //LISTEN TO EACH API SETTING CHANGES
+          //=>POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
+          self.listenAPISettings();
+
+          //LISTEN TO THE API STATES => SET SAVE BUTTON STATE
+          //=> this value is set on control and skope reset
+          //+ set by wp
+          api.state.bind( 'change', function() {
+                self.setSaveButtonStates();
+          });
 
 
           //SERVER NOTIFICATION SETUP
@@ -311,6 +327,17 @@ $.extend( CZRSkopeBaseMths, {
                 }
           ];
           api.CZR_Helpers.setupDOMListeners( self.notificationsEventMap , { dom_el : $('.czr-scope-switcher') }, self );
+
+          //DECLARE THE LIST OF CONTROL TYPES FOR WHICH THE VIEW IS REFRESHED ON CHANGE
+          self.refreshedControls = [ 'czr_cropped_image'];// [ 'czr_cropped_image', 'czr_multi_module', 'czr_module' ];
+
+          //WIDGETS AND SIDEBAR SPECIFIC TREATMENTS
+          self.initWidgetSidebarSpecifics();
+
+          //LISTEN TO GLOBAL DB OPTION CHANGES
+          //When an option is reset on the global skope,
+          //we need to update it in the initially sent _wpCustomizeSettings.settings
+          //api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
     },//initialize
 
 
@@ -351,10 +378,14 @@ $.extend( CZRSkopeBaseMths, {
                       //return;
                     }
 
-                    //api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, old_val + ' => ' +  new_val, o );
+                    var skope_id;
+
                     //For skope eligible settings : Update the skope dirties with the new val of this setId
+                    //=> not eligibile skope will update the global skope dirties
                     if ( api( setId )._dirty ) {
-                        self.updateSkopeDirties( setId, new_val );
+                          //api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, old_val + ' => ' +  new_val, o );
+                          skope_id = self.isSettingSkopeEligible( setId ) ? api.czr_activeSkopeId() : self.getGlobalSkopeId();
+                          api.czr_skope( skope_id ).updateSkopeDirties( setId, new_val );
                     }
 
                     //Update the skope inehritance notice for the setting control
@@ -372,34 +403,6 @@ $.extend( CZRSkopeBaseMths, {
               });
           }
     },
-
-
-
-
-    //this method updates a given skope instance dirty values
-    //and returns the dirty values object
-    //fired on api setting change and in the ajax query
-    updateSkopeDirties : function( setId, new_val, skope_id ) {
-          skope_id = skope_id || api.czr_activeSkopeId();
-          var self = this,
-              skope_instance,
-              shortSetId = api.CZR_Helpers.getOptionName( setId );
-
-          //for the settings that are excluded from skope, the skope is always the global one
-          skope_instance = self.isSettingSkopeEligible( setId ) ? api.czr_skope( skope_id ) : api.czr_skope( self.getGlobalSkopeId() );//the global skope instance
-
-          if ( _.isUndefined( skope_instance ) ) {
-            throw new Error('updateSkopeDirties : the required skope id is not registered.');
-          }
-
-          var current_dirties = $.extend( true, {}, skope_instance.dirtyValues() ),
-              _dirtyCustomized = {};
-
-          _dirtyCustomized[ setId ] = new_val;
-          skope_instance.dirtyValues.set( $.extend( current_dirties , _dirtyCustomized ) );
-          return skope_instance.dirtyValues();
-    },
-
 
 
     /*****************************************************************************
@@ -431,9 +434,20 @@ $.extend( CZRSkopeBaseMths, {
                 if ( _.isUndefined( _sent_skope ) )
                   return;
                 //if so then let's update the skope model with the new db values
-                var _new_changeset = _.isEmpty( _sent_skope.changeset || {} ) ? {} : _sent_skope.changeset;
+                var _changeset_candidate = _.isEmpty( _sent_skope.changeset || {} ) ? {} : _sent_skope.changeset,
+                    _api_ready_chgset = {};
+
+                //We only update the changeset with registered setting id
+                _.each( _changeset_candidate, function( _val, _setId ) {
+                      if ( ! api.has( _setId ) ) {
+                            api.consoleLog( 'In reactWhenSkopeSyncedDone : attempting to update the changeset with a non registered setting : ' + _setId );
+                      }
+                      _api_ready_chgset[_setId] = _val;
+                });
+
                 //_new_changeset = $.extend( api.czr_skope( _skp.id ).changesetValues(), _sent_changeset );
-                api.czr_skope( _skp.id ).changesetValues( _new_changeset );
+                //=> updating the changeset will also trigger a skope dirtyValues() update
+                api.czr_skope( _skp.id ).changesetValues( _api_ready_chgset );
           });
 
           //DB VALUES UPDATE
@@ -448,9 +462,20 @@ $.extend( CZRSkopeBaseMths, {
                   return;
 
                 //if so then let's update the skope model with the new db values
-                var _new_db_val = $.extend( api.czr_skope( _skp.id ).dbValues(), _sent_skope.db || {} );
+                var _current_db_vals  = $.extend( true, {}, api.czr_skope( _skp.id ).dbValues() ),
+                    _dbVals_candidate = $.extend( _current_db_vals , _sent_skope.db || {} ),
+                    _api_ready_dbvals = {};
 
-                api.czr_skope( _skp.id ).dbValues( _new_db_val );
+                //We only update the dbValues with registered setting id
+                _.each( _dbVals_candidate, function( _val, _setId ) {
+                      if ( ! api.has( _setId ) ) {
+                            api.consoleLog( 'In reactWhenSkopeSyncedDone : attempting to update the db values with a non registered setting : ' + _setId );
+                      }
+                      _api_ready_dbvals[_setId] = _val;
+                });
+
+
+                api.czr_skope( _skp.id ).dbValues( _api_ready_dbvals );
           });
           //introduce a small delay to let the api values be fully updated
           //useful when attempting to refresh the control notices after a save action

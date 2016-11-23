@@ -332,6 +332,27 @@ $.extend( CZRSkopeMths, {
     //       return _dirtyCustomized;
     // },
 
+    //this method updates a given skope instance dirty values
+    //and returns the dirty values object
+    //fired on api setting change and in the ajax query
+    updateSkopeDirties : function( setId, new_val ) {
+          var skope = this,
+              shortSetId = api.CZR_Helpers.getOptionName( setId );
+
+          //for the settings that are excluded from skope, the skope is always the global one
+          if ( ! api.czr_skopeBase.isSettingSkopeEligible( setId ) )
+            return api.czr_skope( api.czr_skopeBase.getGlobalSkopeId() ).updateSkopeDirties( setId, new_val );
+
+          var current_dirties = $.extend( true, {}, skope.dirtyValues() ),
+              _dirtyCustomized = {};
+
+          _dirtyCustomized[ setId ] = new_val;
+          skope.dirtyValues.set( $.extend( current_dirties , _dirtyCustomized ) );
+          return skope.dirtyValues();
+    },
+
+
+
     //@return the boolean dirtyness state of a given setId for a given skope
     getSkopeSettingDirtyness : function( setId ) {
           var skope = this;

@@ -4,10 +4,10 @@ $.extend( CZRSkopeBaseMths, {
 
     getAppliedPrioritySkopeId : function( setId, skope_id ) {
           if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
-              throw new Error('getSkopeSettingVal : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+              throw new Error('getAppliedPrioritySkopeId : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
           }
           if ( ! api.czr_skope.has( skope_id ) ) {
-              throw new Error('getSkopeSettingVal : the requested skope id is not registered : ' + skope_id );
+              throw new Error('getAppliedPrioritySkopeId : the requested skope id is not registered : ' + skope_id );
           }
 
           //Are we already in the 'local' skope ?
@@ -40,7 +40,7 @@ $.extend( CZRSkopeBaseMths, {
                 }
 
                 //do we have a db val stored ?
-                var _skope_db_val = self._getDBSettingVal( setId, skope_model );
+                var _skope_db_val = self._getDBSettingVal( setId, _skp_id);
                 if ( _skope_db_val != '_no_db_val' ) {
                   return skope_model.id;
                 }
@@ -63,10 +63,10 @@ $.extend( CZRSkopeBaseMths, {
     //@return the skope title from which a setting id inherits its current value
     getInheritedSkopeId : function( setId, skope_id ) {
           if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
-              throw new Error('getSkopeSettingVal : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+              throw new Error('getInheritedSkopeId : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
           }
           if ( ! api.czr_skope.has( skope_id ) ) {
-              throw new Error('getSkopeSettingVal : the requested skope id is not registered : ' + skope_id );
+              throw new Error('getInheritedSkopeId : the requested skope id is not registered : ' + skope_id );
           }
 
           var self = this,
@@ -83,28 +83,28 @@ $.extend( CZRSkopeBaseMths, {
 
           //is the setting API dirty ?
           if ( api.czr_skope( skope_id ).getSkopeSettingAPIDirtyness( wpSetId ) )
-            return skope_model.id;
+            return skope_id;
 
           //is the setting CHANGESET dirty ?
           if ( api.czr_isChangedSetOn() ) {
                 if ( api.czr_skope( skope_id ).getSkopeSettingChangesetDirtyness( wpSetId ) )
-                  return skope_model.id;
+                  return skope_id;
           }
 
           //do we have a db val stored ?
-          var _skope_db_val = self._getDBSettingVal( setId, skope_model );
+          var _skope_db_val = self._getDBSettingVal( setId, skope_id );
           if ( _skope_db_val != '_no_db_val' )
-            return skope_model.id;
+            return skope_id;
           //if we are already in the final 'global' skope, then let's return its value
           else if( 'global' == skope_model.skope ) {
             // if ( _.isNull(initial_val) ) {
             //   throw new Error('INITIAL VAL IS NULL FOR SETTING ' + setId + ' CHECK IF IT HAS BEEN DYNAMICALLY ADDED. IF SO, THERE SHOULD BE A DIRTY TO GRAB');
             // }
-            return skope_model.id;
+            return skope_id;
           }
           else
             //if not dirty and no db val, then let's recursively apply the inheritance
-            return '___' != val_candidate ? skope_model.id : self.getInheritedSkopeId( setId, self._getParentSkopeId( skope_model ) );
+            return '___' != val_candidate ?skope_id : self.getInheritedSkopeId( setId, self._getParentSkopeId( skope_model ) );
     },
 
 
@@ -126,6 +126,7 @@ $.extend( CZRSkopeBaseMths, {
               val_candidate = '___',
               skope_model = api.czr_skope( skope_id )(),
               initial_val;
+
           //initial val
           //some settings like widgets may be dynamically added. Therefore their initial val won't be stored in the api.settings.settings
           if ( _.has( api.settings.settings, wpSetId ) )
@@ -144,7 +145,7 @@ $.extend( CZRSkopeBaseMths, {
           }
 
           //do we have a db val stored ?
-          var _skope_db_val = self._getDBSettingVal( setId, skope_model );
+          var _skope_db_val = self._getDBSettingVal( setId, skope_id );
           if ( _skope_db_val != '_no_db_val' )
             return _skope_db_val;
           //if we are already in the final 'global' skope, then let's return its value

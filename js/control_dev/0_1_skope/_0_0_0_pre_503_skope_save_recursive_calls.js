@@ -45,8 +45,10 @@ $.extend( CZRSkopeSaveMths, {
             // recursive pushes for not global skopes
             var recursiveCall = function( _index ) {
                   _index = _index || 0;
-                  if ( _.isUndefined( skopesToSave[_index] ) )
-                    return;
+                  if ( _.isUndefined( skopesToSave[_index] ) ) {
+                        api.consoleLog( 'Undefined Skope in Save recursive call ', _index, _skopesToUpdate, _skopesToUpdate[_index] );
+                        _recursiveCallDeferred.resolve( _responses_ );
+                  }
 
                   //_promises.push( self.getSubmitPromise( skopesToSave[ _index ] ) );
                   self.getSubmitPromise( skopesToSave[ _index ] )

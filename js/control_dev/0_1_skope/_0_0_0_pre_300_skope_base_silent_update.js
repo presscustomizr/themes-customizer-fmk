@@ -142,7 +142,6 @@ $.extend( CZRSkopeBaseMths, {
                 });
                 //always refresh by default
                 if ( refresh ) {
-                      console.log('OUI LA REFRESH');
                       api.previewer.refresh().done( function() {
                             dfd.resolve();
                       });
@@ -170,7 +169,10 @@ $.extend( CZRSkopeBaseMths, {
           if ( _.isUndefined( setId ) ) {
               throw new Error('getSettingUpdatePromise : the provided setId is not defined');
           }
-          console.log( 'GET SETTING PROMISE : ', setId, api.CZR_Helpers.build_setId( setId ) );
+          if ( ! api.has( api.CZR_Helpers.build_setId( setId ) ) ) {
+              throw new Error('getSettingUpdatePromise : the provided wpSetId is not registered : ' + api.CZR_Helpers.build_setId( setId ) );
+          }
+
           var self = this,
               wpSetId = api.CZR_Helpers.build_setId( setId ),
               current_setting_val = api( wpSetId )(),//typically the previous skope val
@@ -179,10 +181,6 @@ $.extend( CZRSkopeBaseMths, {
               skope_id = api.czr_activeSkopeId(),
               val = api.czr_skopeBase.getSkopeSettingVal( setId, skope_id );
 
-          //if a setId is provided, then let's update it
-          if ( ! api.has( wpSetId ) ) {
-              throw new Error('getSettingUpdatePromise : the provided setId is not registered in the api.');
-          }
 
           //resolve here if the setting val was unchanged
           if ( _.isEqual( current_setting_val, val ) ) {
@@ -252,6 +250,41 @@ $.extend( CZRSkopeBaseMths, {
           }
 
           return dfd.promise();
-    }//getSettingUpdatePromise()
+    },//getSettingUpdatePromise()
+
+
+
+
+    /*****************************************************************************
+    * GET SILENT UPDATE CANDIDATE FROM A SECTION. FALLS BACK ON THE CURRENT ONE
+    *****************************************************************************/
+    _getSilentUpdateCandidates : function( section_id ) {
+          var self = this,
+              SilentUpdateCands = [];
+          section_id = ( _.isUndefined( section_id ) || _.isNull( section_id ) ) ? api.czr_activeSectionId() : section_id;
+
+          if ( _.isUndefined( section_id ) ) {
+            api.consoleLog( '_getSilentUpdateCandidates : No active section provided');
+            return;
+          }
+          if ( ! api.section.has( section_id ) ) {
+              throw new Error( '_getSilentUpdateCandidates : The section ' + section_id + ' is not registered in the API.');
+          }
+
+          //GET THE CURRENT EXPANDED SECTION SET IDS
+          var section_settings = api.CZR_Helpers.getSectionSettingIds( section_id );
+
+          //keep only the skope eligible setIds
+          section_settings = _.filter( section_settings, function(setId) {
+              return self.isSettingSkopeEligible( setId );
+          });
+
+          //Populates the silent update candidates array
+          _.each( section_settings, function( setId ) {
+                SilentUpdateCands.push( setId );
+          });
+
+          return SilentUpdateCands;
+    }
 
 });//$.extend
