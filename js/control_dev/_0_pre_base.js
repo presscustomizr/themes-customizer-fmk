@@ -58,4 +58,13 @@ var api = api || wp.customize, $ = $ || jQuery;
           });
       });
 
+      //SET THE ACTIVE STATE OF THE THEMES SECTION BASED ON WHAT THE SERVER SENT
+      api.bind('ready', function() {
+            api.previewer.bind( 'synced', function() {
+                  if ( api.section.has('themes') )
+                    api.section('themes').active(  _.has( serverControlParams, 'isThemeSwitchOn' ) ? ! _.isEmpty( serverControlParams.isThemeSwitchOn ) : true );
+            });
+      });
+
+
 })( wp.customize , jQuery, _);

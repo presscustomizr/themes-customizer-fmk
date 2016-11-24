@@ -388,7 +388,8 @@ $.extend( CZRSkopeBaseMths, {
                     }
 
                     //Update the skope inehritance notice for the setting control
-                    self.renderControlSkopeNotice( setId );
+                    if ( self.isSettingSkopeEligible( setId ) )
+                      self.renderControlSkopeNotice( setId );
               };//bindListener()
 
 

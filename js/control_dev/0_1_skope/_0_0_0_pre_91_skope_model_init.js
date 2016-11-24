@@ -340,7 +340,7 @@ $.extend( CZRSkopeMths, {
               shortSetId = api.CZR_Helpers.getOptionName( setId );
 
           //for the settings that are excluded from skope, the skope is always the global one
-          if ( ! api.czr_skopeBase.isSettingSkopeEligible( setId ) )
+          if ( ! api.czr_skopeBase.isSettingSkopeEligible( setId ) && 'global' != skope().skope )
             return api.czr_skope( api.czr_skopeBase.getGlobalSkopeId() ).updateSkopeDirties( setId, new_val );
 
           var current_dirties = $.extend( true, {}, skope.dirtyValues() ),

@@ -19,7 +19,7 @@ $.extend( CZRSkopeBaseMths, {
                 //filter only eligible controlIds
                 controls = _.filter( controls, function( _id ) {
                     var setId = api.CZR_Helpers.getControlSettingId( _id );
-                    return self.isSettingSkopeEligible( setId );
+                    return setId && self.isSettingSkopeEligible( setId );
                 });
           }
 

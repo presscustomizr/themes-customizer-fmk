@@ -95,13 +95,16 @@ $.extend( CZRSkopeBaseMths, {
             api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE UNDEFINED OR NOT REGISTERED IN THE API.' );
             return false;
           }
-          //exclude widget controls and menu settings and sidebars
+          //exclude :
+          //widget controls
+          //sidebars
+          //menu settings
+          //active_theme
           if ( self.isExcludedWPBuiltinSetting( setId ) )
             return false;
           //skopeExcludedSettings look like ( short IDs ) :
           //{
           //   //short ids of theme settings
-          //   'dynamic-styles',
           //   'post-comments',
           //   'page-comments',
           //   'layout-home',
