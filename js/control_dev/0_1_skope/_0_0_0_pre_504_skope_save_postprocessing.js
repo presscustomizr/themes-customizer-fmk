@@ -9,18 +9,14 @@ $.extend( CZRSkopeSaveMths, {
       //        1 : { ... skope_model_1 ... },
       //        2 : { ... skope_model_2 ... }
       //    ],
-      //    skopeGlobalDBOpt : [
-      //        0 : "use-header-image"
-      //        1 : "footer-ads"
-      //    ]
+      //    isChangesetDirty : boolean
       //}
       reactWhenSaveDone : function( skopesServerData ) {
             var saved_dirties = {};
             skopesServerData = _.extend(
                 {
                       czr_skopes : [],
-                      isChangesetDirty : false,
-                      skopeGlobalDBOpt : []
+                      isChangesetDirty : false
                 },
                 skopesServerData
             );

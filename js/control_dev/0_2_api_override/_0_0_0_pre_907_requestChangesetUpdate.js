@@ -122,7 +122,7 @@
                   _index = _index || 0;
                   if ( _.isUndefined( _skopesToUpdate[_index] ) ) {
                         api.consoleLog( 'Undefined Skope in changeset recursive call ', _index, _skopesToUpdate, _skopesToUpdate[_index] );
-                        _recursiveCallDeferred.resolve( _all_skopes_data_ ).promise();
+                        return _recursiveCallDeferred.resolve( _all_skopes_data_ ).promise();
                   }
 
                   //_promises.push( self.getSubmitPromise( _skopesToUpdate[ _index ] ) );
@@ -175,6 +175,11 @@
                         //       dfd.resolve( wp_original_response );
                         // });
                         //Restore the _lastSavedRevision index to its previous state to not miss any setting that could have been updated by WP for global.
+
+                        //Bail if attempting to update the skope changesets before the initial collection has been populated
+                        if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
+                          dfd.resolve( wp_original_response );
+
                         api._lastSavedRevision = _lastSavedRevisionBefore;
                         recursiveCall()
                               .always( function() {

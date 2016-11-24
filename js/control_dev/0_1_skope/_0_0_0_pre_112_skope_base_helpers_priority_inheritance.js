@@ -127,6 +127,9 @@ $.extend( CZRSkopeBaseMths, {
               skope_model = api.czr_skope( skope_id )(),
               initial_val;
 
+
+
+
           //initial val
           //some settings like widgets may be dynamically added. Therefore their initial val won't be stored in the api.settings.settings
           if ( _.has( api.settings.settings, wpSetId ) )

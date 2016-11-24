@@ -181,7 +181,6 @@ $.extend( CZRSkopeBaseMths, {
               skope_id = api.czr_activeSkopeId(),
               val = api.czr_skopeBase.getSkopeSettingVal( setId, skope_id );
 
-
           //resolve here if the setting val was unchanged
           if ( _.isEqual( current_setting_val, val ) ) {
                 return dfd.resolve( val ).promise();

@@ -64,7 +64,8 @@ $.extend( CZRSkopeBaseMths, {
     *****************************************************************************/
     //@return promise
     _getCzrCroppedImagePromise : function( wpSetId, _control_data ) {
-          var _constructor = api.controlConstructor.czr_cropped_image, dfd = $.Deferred();
+          var _constructor = api.controlConstructor.czr_cropped_image, dfd = $.Deferred(),
+              val = api.has(wpSetId) ? api(wpSetId)() : null;
           //@make sure that the val is not null => won't be accepted in silent set
           val = null === val ? "" : val;
 

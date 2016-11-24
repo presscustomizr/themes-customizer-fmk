@@ -1212,7 +1212,8 @@ $.extend( CZRSkopeBaseMths, {
           }
     },
     _getCzrCroppedImagePromise : function( wpSetId, _control_data ) {
-          var _constructor = api.controlConstructor.czr_cropped_image, dfd = $.Deferred();
+          var _constructor = api.controlConstructor.czr_cropped_image, dfd = $.Deferred(),
+              val = api.has(wpSetId) ? api(wpSetId)() : null;
           val = null === val ? "" : val;
           wp.media.attachment( val ).fetch().done( function() {
                 api.control( wpSetId ).container.remove();
@@ -2032,8 +2033,7 @@ $.extend( CZRSkopeSaveMths, {
             skopesServerData = _.extend(
                 {
                       czr_skopes : [],
-                      isChangesetDirty : false,
-                      skopeGlobalDBOpt : []
+                      isChangesetDirty : false
                 },
                 skopesServerData
             );
@@ -3088,7 +3088,7 @@ $.extend( CZRSkopeMths, {
                   _index = _index || 0;
                   if ( _.isUndefined( _skopesToUpdate[_index] ) ) {
                         api.consoleLog( 'Undefined Skope in changeset recursive call ', _index, _skopesToUpdate, _skopesToUpdate[_index] );
-                        _recursiveCallDeferred.resolve( _all_skopes_data_ ).promise();
+                        return _recursiveCallDeferred.resolve( _all_skopes_data_ ).promise();
                   }
                   api._requestSkopeChangetsetUpdate( changes, _skopesToUpdate[_index] )
                         .always( function() { _promises.push( _index ); } )
@@ -3118,6 +3118,9 @@ $.extend( CZRSkopeMths, {
                         api.czr_serverNotification( { message: r, status : 'error' } );
                   })
                   .done( function( wp_original_response ) {
+                        if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
+                          dfd.resolve( wp_original_response );
+
                         api._lastSavedRevision = _lastSavedRevisionBefore;
                         recursiveCall()
                               .always( function() {
@@ -3257,7 +3260,6 @@ $.extend( CZRSkopeMths, {
         build_setId : function ( setId ) {
                 if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
                   return setId;
-                var _pattern;
                 var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css' ],
                     _isExcld = false;
                 _.each( _patterns, function( _ptrn ) {

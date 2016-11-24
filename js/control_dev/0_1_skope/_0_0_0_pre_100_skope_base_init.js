@@ -190,7 +190,6 @@ $.extend( CZRSkopeBaseMths, {
           //{
           //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
           //  isChangesetDirty : boolean
-          //  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || []
           // }
           //
           api.previewer.bind( 'czr-skopes-synced', function( data ) {
@@ -413,7 +412,6 @@ $.extend( CZRSkopeBaseMths, {
     //{
     //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
     //  isChangesetDirty : boolean,
-    //  skopeGlobalDBOpt : _wpCustomizeSettings.skopeGlobalDBOpt || []
     // }
     reactWhenSkopeSyncedDone : function( server_params ) {
           var self = this, dfd = $.Deferred();
