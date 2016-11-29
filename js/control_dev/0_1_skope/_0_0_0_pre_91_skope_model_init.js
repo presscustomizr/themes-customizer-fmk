@@ -131,6 +131,8 @@ $.extend( CZRSkopeMths, {
           //EMBED THE SKOPE VIEW : EMBED AND STORE THE CONTAINER
           $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
               if ( false !== $_container.length ) {
+                  //paint it
+                  $_container.css('background-color', skope.color );
                   skope.container = $_container;
                   skope.embedded.resolve( $_container );
               } else {
@@ -162,18 +164,33 @@ $.extend( CZRSkopeMths, {
           });
 
           //SET THE ACTIVE SKOPE CONTROLS DIRTYNESSES
+          //The ctrl.czr_state value looks like :
+          //{
+          // hasDBVal : false,
+          // isDirty : false,
+          // noticeVisible : false,
+          // resetVisible : false
+          //}
           if ( skope().id == api.czr_activeSkopeId() ) {
                 //RESET DIRTYNESS FOR THE CLEAN SETTINGS CONTROLS IN THE ACTIVE SKOPE
                 _.each( ctrlIdDirtynessToClean , function( setId ) {
-                      if ( _.has( api.control( setId ), 'czr_isDirty') ) {
-                            api.control( setId ).czr_isDirty( false );
-                      }
+                      if ( ! _.has( api.control( setId ), 'czr_state') )
+                        return;
+
+                      var _current_state  = $.extend( true, {}, api.control( setId ).czr_state() ),
+                          _new_state      = _.extend( _current_state, { isDirty : false} );
+
+                      api.control( setId ).czr_state( _new_state );
                 });
                 //Set control dirtyness for dirty settings
                 _.each( to, function( _val, _setId ) {
-                      if ( _.has( api.control( _setId ), 'czr_isDirty') ) {
-                            api.control( _setId ).czr_isDirty( true );
-                      }
+                      if ( ! _.has( api.control( _setId ), 'czr_state') )
+                        return;
+
+                      var _current_state  = $.extend( true, {}, api.control( _setId ).czr_state() ),
+                          _new_state      = _.extend( _current_state, { isDirty : true } );
+                      console.log('JOIE ? dirtyValuesReact : ', _setId, api.control( _setId ).czr_state() );
+                      api.control( _setId ).czr_state( _new_state );
                 });
           }
     },
@@ -206,18 +223,30 @@ $.extend( CZRSkopeMths, {
                 return;
               ctrlIdDbToReset.push( _id );
           });
-
+          //The ctrl.czr_state value looks like :
+          //{
+          // hasDBVal : false,
+          // isDirty : false,
+          // noticeVisible : false,
+          // resetVisible : false
+          //}
           if ( skope().id == api.czr_activeSkopeId() ) {
                 _.each( ctrlIdDbToReset , function( setId ) {
-                      if ( _.has( api.control( setId ), 'czr_hasDBVal') ) {
-                            api.control(setId).czr_hasDBVal ( false );
-                      }
+                      if ( ! _.has( api.control( setId ), 'czr_state') )
+                        return;
+                      var _current_state = $.extend( true, {}, api.control( setId ).czr_state() ),
+                          _new_state = _.extend( _current_state, { hasDBVal : false } );
+
+                      api.control( setId ).czr_state( _new_state );
                 });
                 //Set control db dirtyness for settings with a db value
                 _.each( to, function( _val, _setId ) {
-                      if ( _.has( api.control( _setId ), 'czr_hasDBVal') ) {
-                            api.control( _setId ).czr_hasDBVal( true );
-                      }
+                      if ( ! _.has( api.control( _setId ), 'czr_state') )
+                        return;
+                      var _current_state = $.extend( true, {}, api.control( _setId ).czr_state() ),
+                          _new_state = _.extend( _current_state, { hasDBVal : true } );
+
+                      api.control( _setId ).czr_state( _new_state );
                 });
           }
     },

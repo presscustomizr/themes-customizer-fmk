@@ -16,6 +16,7 @@ $.extend( CZRSkopeBaseMths, {
                         })
                         .on( 'click.customize-controls-home', function() {
                               event.preventDefault();
+                              //close everything
                               if ( api.section.has( api.czr_activeSectionId() ) ) {
                                     api.section( api.czr_activeSectionId() ).expanded( false );
                               } else {

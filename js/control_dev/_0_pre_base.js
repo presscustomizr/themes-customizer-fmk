@@ -45,17 +45,30 @@ var api = api || wp.customize, $ = $ || jQuery;
       //PARTIAL REFRESHS => stores and observes the partials sent by the preview
       api.czr_partials = new api.Value();
 
-      //STORE THE CURRENTLY ACTIVE SECTION IN AN OBSERVABLE VALUE
-      api.czr_activeSectionId = new api.Value();
+      //STORE THE CURRENTLY ACTIVE SECTION AND PANELS IN AN OBSERVABLE VALUE
+      //BIND EXISTING AND FUTURE SECTIONS
+      api.czr_activeSectionId = new api.Value('');
+      api.czr_activePanelId = new api.Value('');
       api.bind('ready', function() {
           if ( 'function' != typeof api.Section ) {
             throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
           }
+          var _bindSectionExpanded = function( expanded, section_id ) {
+              api.czr_activeSectionId( expanded ? section_id : '' );
+          };
           api.section.each( function( _sec ) {
-                _sec.expanded.bind( function( expanded ) {
-                      api.czr_activeSectionId( expanded ? _sec.id : api.czr_activeSectionId() );
+                _sec.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, _sec.id ); } );
+          });
+          api.section.bind( 'add', function( section_instance ) {
+              section_instance.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, section_instance.id ); } );
+          });
+
+          api.panel.each( function( _panel ) {
+                _panel.expanded.bind( function( expanded ) {
+                      api.czr_activePanelId( expanded ? _panel.id : '' );
                 });
           });
+
       });
 
       //SET THE ACTIVE STATE OF THE THEMES SECTION BASED ON WHAT THE SERVER SENT
@@ -66,5 +79,60 @@ var api = api || wp.customize, $ = $ || jQuery;
             });
       });
 
+      //FIRE SKOPE ON READY
+      //this promise will be resolved when
+      //1) the initial skopes collection has been populated
+      //2) the initial skope has been switched to
+      api.czr_skopeReady = $.Deferred();
+      api.bind( 'ready' , function() {
+            if ( serverControlParams.isSkopOn ) {
+                  api.czr_skopeBase = new api.CZR_skopeBase();
+                  api.czr_skopeSave = new api.CZR_skopeSave();
+                  api.trigger('czr-skope-started');
+                  api.czr_skopeReady.done( function() {
+                        api.trigger('czr-skope-ready');
+                  });
+            }
+
+            //in dev mode, let's set a lower autosave interval ( default is 60000 ms )
+            if ( serverControlParams.isChangedSetOn ) {
+              api.settings.timeouts.changesetAutoSave = 10000;
+            }
+      } );
+
+      //INCLUDE THE REVISION COUNT IF WP < 4.7
+      if ( ! _.has( api, '_latestRevision') ) {
+            /**
+             * Current change count.
+             */
+            api._latestRevision = 0;
+
+
+
+            /**
+             * Latest revisions associated with the updated setting.
+             */
+            api._latestSettingRevisions = {};
+
+            /*
+             * Keep track of the revision associated with each updated setting so that
+             * requestChangesetUpdate knows which dirty settings to include. Also, once
+             * ready is triggered and all initial settings have been added, increment
+             * revision for each newly-created initially-dirty setting so that it will
+             * also be included in changeset update requests.
+             */
+            api.bind( 'change', function incrementChangedSettingRevision( setting ) {
+                  api._latestRevision += 1;
+                  api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+            } );
+            api.bind( 'ready', function() {
+                  api.bind( 'add', function incrementCreatedSettingRevision( setting ) {
+                        if ( setting._dirty ) {
+                              api._latestRevision += 1;
+                              api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+                        }
+                  } );
+            } );
+      }
 
 })( wp.customize , jQuery, _);

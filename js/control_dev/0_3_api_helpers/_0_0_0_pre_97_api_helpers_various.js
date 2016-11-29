@@ -17,7 +17,10 @@
                 if ( ! api.control.has( control_id ) ) {
                       throw new Error( 'The requested control_id is not registered in the api yet : ' + control_id );
                 }
-                if ( ! _.has( api.control( control_id ), 'settings' ) || ! _.has( api.control( control_id ).settings, setting_type ) ) {
+                if ( ! _.has( api.control( control_id ), 'settings' ) || _.isEmpty( api.control( control_id ).settings ) )
+                  return;
+
+                if ( ! _.has( api.control( control_id ).settings, setting_type ) ) {
                       throw new Error( 'The requested control_id does not have the requested setting type : ' + control_id + ' , ' + setting_type );
                 }
                 if ( _.isUndefined( api.control( control_id ).settings[setting_type].id ) ) {
@@ -53,14 +56,16 @@
                 // var _pattern;
 
                 //exclude the WP built-in settings like sidebars_widgets*, nav_menu_*, widget_*, custom_css
-                var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css' ],
-                    _isExcld = false;
-                _.each( _patterns, function( _ptrn ) {
-                      if ( _isExcld )
-                        return;
-                      _isExcld = _ptrn == setId.substring( 0, _ptrn.length );
-                });
-                if ( _isExcld )
+                // var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css' ],
+                //     _isExcld = false;
+                // _.each( _patterns, function( _ptrn ) {
+                //       if ( _isExcld )
+                //         return;
+                //       _isExcld = _ptrn == setId.substring( 0, _ptrn.length );
+                // });
+                // if ( _isExcld )
+                // return setId;
+                if ( ! _.contains( serverControlParams.themeSettingList, setId ) )
                   return setId;
 
                 return -1 == setId.indexOf( serverControlParams.themeOptions ) ? [ serverControlParams.themeOptions +'[' , setId  , ']' ].join('') : setId;

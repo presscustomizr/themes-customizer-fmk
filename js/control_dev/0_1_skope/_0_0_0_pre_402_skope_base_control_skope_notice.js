@@ -97,8 +97,8 @@ $.extend( CZRSkopeBaseMths, {
                       var ctrl = api.control( _id ),
                           setId = api.CZR_Helpers.getControlSettingId( _id );//get the relevant setting_id for this control
 
-                      //bail here if the setId is not eligible to skope
-                      if ( ! self.isSettingSkopeEligible( setId ) )
+                      //bail here if the control has no valid setting associated or if the setId is not eligible to skope
+                      if ( ! setId || ! self.isSettingSkopeEligible( setId ) )
                         return;
 
                       ctrl.deferred.embedded.then( function() {

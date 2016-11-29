@@ -110,6 +110,13 @@ $.extend( CZRSkopeMths, {
 
 
     //fired in doResetSkopeValues
+    //The ctrl.czr_state value looks like :
+    //{
+    // hasDBVal : false,
+    // isDirty : false,
+    // noticeVisible : false,
+    // resetVisible : false
+    //}
     _resetSkopeDirties : function() {
           var skope = this;
           //Clean the dirtyness state of dirty controls
@@ -120,8 +127,12 @@ $.extend( CZRSkopeMths, {
           //}
           if ( api.czr_activeSkopeId() == skope().id ) {
               _.each( skope.dirtyValues(), function( _v, setId ) {
-                    if ( _.has(api.control(setId), 'czr_isDirty') )
-                      api.control(setId).czr_isDirty(false);
+                    if (  ! _.has( api.control( setId ), 'czr_state' ) )
+                      return;
+                    var _current_state  = $.extend( true, {}, api.control( setId ).czr_state() ),
+                        _new_state      = _.extend( _current_state, { isDirty : false} );
+
+                    api.control( setId ).czr_state( _new_state );
               });
           }
           skope.dirtyValues({});
@@ -130,14 +141,24 @@ $.extend( CZRSkopeMths, {
     },
 
     //fired in doResetSkopeValues
+    //The ctrl.czr_state value looks like :
+    //{
+    // hasDBVal : false,
+    // isDirty : false,
+    // noticeVisible : false,
+    // resetVisible : false
+    //}
     _resetSkopeAPIValues : function() {
           var skope = this,
               current_model = $.extend( true, {}, skope() ),
               reset_control_db_state = function( shortSetId ) {
-                    var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
-                    if ( _.has(api.control(wpSetId), 'czr_hasDBVal') ) {
-                          api.control(wpSetId).czr_hasDBVal(false);
-                    }
+                    var wpSetId         = api.CZR_Helpers.build_setId( shortSetId );
+                    if (  ! _.has( api.control( wpSetId ), 'czr_state' ) )
+                      return;
+                    var _current_state  = $.extend( true, {}, api.control( wpSetId ).czr_state() ),
+                        _new_state      = _.extend( _current_state, { hasDBVal : false} );
+
+                    api.control( wpSetId ).czr_state( _new_state );
               };
 
           //set the db state of each control

@@ -1,9 +1,6 @@
 
 (function (api, $, _) {
-      api.bind( 'czr-skope-ready', function() {
-            if ( ! serverControlParams.isSkopOn )
-              return;
-
+      api.bind( 'czr-skope-started', function() {
             //the 'saving' state was introduced in 4.7
             //For prior versions, let's declare it and add its callback that we need in the api.previewer.save() method
             if ( ! api.state.has('saving') ) {

@@ -45,7 +45,9 @@
                     throw new Error('Visibilities : the dominos dependency array is not an array.');
                 }
                 api.czr_activeSectionId.bind( function( section_id ) {
-                    self.setServiDependencies( section_id );
+                      if ( ! _.isEmpty( section_id ) && api.section.has( section_id ) ) {
+                            self.setServiDependencies( section_id );
+                      }
                 });
 
 
@@ -83,7 +85,7 @@
                 var self = this, params, dfd = $.Deferred();
 
                 if ( _.isUndefined( targetSectionId ) || ! api.section.has( targetSectionId ) ) {
-                  throw new Error( 'Visibilities : the targetSectionId is missing or not registered : ' + targetSectionId );
+                  throw new Error( 'Control Dependencies : the targetSectionId is missing or not registered : ' + targetSectionId );
                 }
 
                 //Assign a visibility state deferred to the target section
