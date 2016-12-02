@@ -152,10 +152,10 @@ $.extend( CZRSkopeBaseMths, {
           var self = this;
           ///////////////////// DEFINITIONS /////////////////////
           self.skope_colors = {
-                global : 'rgba(172, 240, 242, 0.35)',
-                special_group : 'rgba(22, 149, 163, 0.35)',
-                group  : 'rgba(22, 149, 163, 0.35)',
-                local  : 'rgba(34, 83, 120, 0.35)'
+                global : 'rgb(255, 255, 255)',
+                special_group : 'rgba(173, 213, 247, 0.55)',
+                group  : 'rgba(173, 213, 247, 0.55)',
+                local  : 'rgba(78, 122, 199, 0.55)'
           };
           //Deferred used to make sure the overriden api.previewer.query method has been taken into account
           api.czr_isPreviewerSkopeAware   = $.Deferred();
@@ -346,6 +346,16 @@ $.extend( CZRSkopeBaseMths, {
           //When an option is reset on the global skope,
           //we need to update it in the initially sent _wpCustomizeSettings.settings
           //api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
+
+
+          ///////////////////// LISTEN TO PAINT EVENT /////////////////////
+          //The paint event occurs :
+          //1) on skope switch
+          //2) on sektion expansion
+          //3) on panel expansion
+          api.bind( 'czr-paint', function( params ) {
+                self.wash( params ).paint( params );
+          });
     },//initialize
 
 
@@ -542,6 +552,9 @@ $.extend( CZRSkopeBaseMths, {
     //cb of api.czr_activeSectionId()
     activeSectionReact : function( active_sec_id , previous_sec_id ) {
           console.log('ACTIVE SECTION REACT', active_sec_id );
+          //PAINT
+          api.trigger('czr-paint', { active_section_id : active_sec_id } );
+
           //bail here if we just went out of a section
           if ( _.isEmpty( active_sec_id ) )
             return;
@@ -551,12 +564,8 @@ $.extend( CZRSkopeBaseMths, {
           //defer the callback execution when the first skope collection has been populated
           //=> otherwise it might be to early. For example in autofocus request cases.
           api.czr_initialSkopeCollectionPopulated.then( function() {
-                var _color = api.czr_skope( api.czr_activeSkopeId() ).color;
                 api.section.when( active_sec_id , function( active_section ) {
                       active_section.deferred.embedded.then( function() {
-                            //PAINT
-                            active_section.container.css('background', _color );
-                            active_section.container.find( '.customize-section-title, .customize-panel-back, .customize-section-back').css('background', _color );
 
                             //PROCESS SILENT UPDATES
                             self.processSilentUpdates( { section_id : active_sec_id  } )
@@ -615,32 +624,108 @@ $.extend( CZRSkopeBaseMths, {
     //cb of api.czr_activeSectionId()
     activePanelReact : function( active_panel_id , previous_panel_id ) {
           api.czr_initialSkopeCollectionPopulated.then( function() {
-                var _color = 'inherit';
-                if ( _.isEmpty( active_panel_id ) ) {
-                      if ( ! _.isUndefined( api.czr_activeSkopeId() ) && api.czr_skope.has( api.czr_activeSkopeId() ) ) {
-                            _color = api.czr_skope( api.czr_activeSkopeId() ).color;
-                      }
-                      $( '#customize-info' ).find('.accordion-section-title').first().css('background', _color );
-                      api.panel.each( function( _panel ) {
-                            //_panel.container.css('background', _color );
-                            _panel.container.find( '.accordion-section-title').first().css('background', _color );
-                      });
-                } else {
-                      api.panel.when( active_panel_id , function( active_panel ) {
-                            active_panel.deferred.embedded.then( function() {
-                                  //paint
-                                  var _color = api.czr_skope( api.czr_activeSkopeId() ).color;
-                                  //active_panel.container.css('background', _color );
-                                  active_panel.container.find( '.accordion-section-title, .customize-panel-back').css('background', _color );
-                            });
-                      });
-                }
-                if ( ! _.isEmpty( previous_panel_id ) ) {
-                      api.panel( previous_panel_id ).container.find( '.accordion-section-title, .customize-panel-back').css('background', _color );
-                }
+                api.trigger('czr-paint', { active_panel_id : active_panel_id } );
           });
     },
 
+
+    /*****************************************************************************
+    * PAINT AND WASH
+    *****************************************************************************/
+    //fired on 'czr-paint'
+    //params = {
+    //  active_panel_id : '',
+    //  active_section_id : '',
+    //}
+    wash : function( params ) {
+          var self = this,
+              //@param element = { el : ${}, color : string }
+              _do_wash = function( element ) {
+                     if ( ! _.has( element, 'el') || ! element.el.length )
+                      return;
+                    element.el.css( 'background', '' );
+              };
+          if ( api.czr_skopeBase.paintedElements ) {
+                _.each( api.czr_skopeBase.paintedElements(), function( _el ) { _do_wash( _el ); } );
+                api.czr_skopeBase.paintedElements( [] );
+          }
+          return this;
+    },
+
+    //fired on 'czr-paint'
+    //params = {
+    //  active_panel_id : '',
+    //  active_section_id : '',
+    //}
+    paint : function( params ) {
+          var _color = 'inherit',
+              defaults = {
+                    active_panel_id : api.czr_activePanelId(),
+                    active_section_id : api.czr_activeSectionId()
+              },
+              _paint_candidates = [];
+          params = _.extend( params, defaults );
+
+          if ( ! _.isUndefined( api.czr_activeSkopeId() ) && api.czr_skope.has( api.czr_activeSkopeId() ) ) {
+                  _color = api.czr_skope( api.czr_activeSkopeId() ).color;
+          }
+
+          //@param element = { el : ${}, color : string }
+          var _do_paint = function( element ) {
+                if ( ! _.has( element, 'el') || ! element.el.length )
+                  return;
+                element.el.css( 'background', element.color || _color );
+          };
+
+          api.czr_skopeBase.paintedElements = api.czr_skopeBase.paintedElements || new api.Value( [] );
+
+          //CASE 1 : NO ACTIVE PANEL, NO ACTIVE SECTION => WE ARE ON ROOT
+          if ( _.isEmpty( params.active_panel_id ) && _.isEmpty( params.active_section_id ) ) {
+                _paint_candidates.push( {
+                      el : $( '#customize-info' ).find('.accordion-section-title').first()
+                });
+                api.panel.each( function( _panel ) {
+                      // _panel.container.css('background', _color );
+                      _paint_candidates.push( {
+                            el : _panel.container.find( '.accordion-section-title').first()
+                      });
+                });
+          }
+
+          //CASE 2 : ACTIVE PANEL, NO ACTIVE SECTION => WE ARE IN A PANEL ROOT
+          if ( ! _.isEmpty( params.active_panel_id ) && _.isEmpty( params.active_section_id ) ) {
+                api.panel.when( params.active_panel_id , function( active_panel ) {
+                      active_panel.deferred.embedded.then( function() {
+                            //active_panel.container.css('background', _color );
+                            _paint_candidates.push( {
+                                  el : active_panel.container.find( '.accordion-section-title, .customize-panel-back' )
+                            });
+                      });
+                });
+          }
+
+          //CASE 3 : ACTIVE SECTION
+          if ( ! _.isEmpty( params.active_section_id ) ) {
+                api.section.when( params.active_section_id , function( active_section ) {
+                      active_section.deferred.embedded.then( function() {
+                            _paint_candidates.push(
+                                  {
+                                        el : active_section.container.find( '.customize-section-title, .customize-section-back' ),
+                                        color : 'inherit'
+                                  },
+                                  {
+                                        el : active_section.container
+                                  }
+                            );
+                      });
+                });
+          }
+
+          //PROCESS PAINT AND POPULATE THE VALUE
+          _.each( _paint_candidates, function( _el ) { _do_paint( _el ); } );
+          api.czr_skopeBase.paintedElements( _paint_candidates );
+          return this;
+    },
 
 
     /*****************************************************************************

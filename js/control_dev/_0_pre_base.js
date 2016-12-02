@@ -46,7 +46,7 @@ var api = api || wp.customize, $ = $ || jQuery;
       api.czr_partials = new api.Value();
 
       //STORE THE CURRENTLY ACTIVE SECTION AND PANELS IN AN OBSERVABLE VALUE
-      //BIND EXISTING AND FUTURE SECTIONS
+      //BIND EXISTING AND FUTURE SECTIONS AND PANELS
       api.czr_activeSectionId = new api.Value('');
       api.czr_activePanelId = new api.Value('');
       api.bind('ready', function() {
@@ -63,10 +63,14 @@ var api = api || wp.customize, $ = $ || jQuery;
               section_instance.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, section_instance.id ); } );
           });
 
+          var _bindPanelExpanded = function( expanded, panel_id ) {
+              api.czr_activePanelId( expanded ? panel_id : '' );
+          };
           api.panel.each( function( _panel ) {
-                _panel.expanded.bind( function( expanded ) {
-                      api.czr_activePanelId( expanded ? _panel.id : '' );
-                });
+                _panel.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, _panel.id ); } );
+          });
+          api.panel.bind( 'add', function( panel_instance ) {
+              panel_instance.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, panel_instance.id ); } );
           });
 
       });

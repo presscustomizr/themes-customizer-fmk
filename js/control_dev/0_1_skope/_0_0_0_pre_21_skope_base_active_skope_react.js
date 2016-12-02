@@ -21,9 +21,10 @@ $.extend( CZRSkopeBaseMths, {
             throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
 
           //write the current skope title
-          //paint skope color
           self._writeCurrentSkopeTitle( to );
-          self._paintSkopeColor( to );
+
+          //paint skope color
+          api.trigger( 'czr-paint', {} );
 
           //CURRENT EXPANDED SECTION DEPENDANT ACTIONS
           //stop here if the active section is not set yet
@@ -113,26 +114,5 @@ $.extend( CZRSkopeBaseMths, {
                 );
           });
 
-    },
-
-    //@return void()
-    //Fired in activeSkopeReact()
-    _paintSkopeColor : function( skope_id ) {
-          //paint
-          var _color = api.czr_skope( skope_id ).color;
-          if ( api.section.has( api.czr_activeSectionId() ) ) {
-                api.section( api.czr_activeSectionId() ).container.css('background', _color );
-                api.section( api.czr_activeSectionId() ).container.find( '.customize-section-title, .customize-panel-back, .customize-section-back').css('background', _color );
-          }
-          if ( api.panel.has( api.czr_activePanelId() ) ) {
-                // api.panel( api.czr_activePanelId() ).container.css('background', _color );
-                api.panel( api.czr_activePanelId() ).container.find( '.accordion-section-title, .customize-panel-back').css('background', _color );
-          } else {
-                $( '#customize-info' ).find('.accordion-section-title').first().css('background', _color );
-                api.panel.each( function( _panel ) {
-                      // _panel.container.css('background', _color );
-                      _panel.container.find( '.accordion-section-title').first().css('background', _color );
-                });
-          }
     }
 });//$.extend

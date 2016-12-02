@@ -60,10 +60,14 @@ var api = api || wp.customize, $ = $ || jQuery;
               section_instance.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, section_instance.id ); } );
           });
 
+          var _bindPanelExpanded = function( expanded, panel_id ) {
+              api.czr_activePanelId( expanded ? panel_id : '' );
+          };
           api.panel.each( function( _panel ) {
-                _panel.expanded.bind( function( expanded ) {
-                      api.czr_activePanelId( expanded ? _panel.id : '' );
-                });
+                _panel.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, _panel.id ); } );
+          });
+          api.panel.bind( 'add', function( panel_instance ) {
+              panel_instance.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, panel_instance.id ); } );
           });
 
       });
@@ -113,10 +117,10 @@ $.extend( CZRSkopeBaseMths, {
     initialize: function() {
           var self = this;
           self.skope_colors = {
-                global : 'rgba(172, 240, 242, 0.35)',
-                special_group : 'rgba(22, 149, 163, 0.35)',
-                group  : 'rgba(22, 149, 163, 0.35)',
-                local  : 'rgba(34, 83, 120, 0.35)'
+                global : 'rgb(255, 255, 255)',
+                special_group : 'rgba(173, 213, 247, 0.55)',
+                group  : 'rgba(173, 213, 247, 0.55)',
+                local  : 'rgba(78, 122, 199, 0.55)'
           };
           api.czr_isPreviewerSkopeAware   = $.Deferred();
           api.czr_initialSkopeCollectionPopulated = $.Deferred();
@@ -198,6 +202,9 @@ $.extend( CZRSkopeBaseMths, {
           api.CZR_Helpers.setupDOMListeners( self.notificationsEventMap , { dom_el : $('.czr-scope-switcher') }, self );
           self.refreshedControls = [ 'czr_cropped_image'];// [ 'czr_cropped_image', 'czr_multi_module', 'czr_module' ];
           self.initWidgetSidebarSpecifics();
+          api.bind( 'czr-paint', function( params ) {
+                self.wash( params ).paint( params );
+          });
     },//initialize
     embedSkopeWrapper : function() {
           var self = this;
@@ -302,16 +309,14 @@ $.extend( CZRSkopeBaseMths, {
     },
     activeSectionReact : function( active_sec_id , previous_sec_id ) {
           console.log('ACTIVE SECTION REACT', active_sec_id );
+          api.trigger('czr-paint', { active_section_id : active_sec_id } );
           if ( _.isEmpty( active_sec_id ) )
             return;
 
           var self = this;
           api.czr_initialSkopeCollectionPopulated.then( function() {
-                var _color = api.czr_skope( api.czr_activeSkopeId() ).color;
                 api.section.when( active_sec_id , function( active_section ) {
                       active_section.deferred.embedded.then( function() {
-                            active_section.container.css('background', _color );
-                            active_section.container.find( '.customize-section-title, .customize-panel-back, .customize-section-back').css('background', _color );
                             self.processSilentUpdates( { section_id : active_sec_id  } )
                                   .fail( function() {
                                         throw new Error( 'Fail to process silent updates after initial skope collection has been populated' );
@@ -345,27 +350,78 @@ $.extend( CZRSkopeBaseMths, {
     },
     activePanelReact : function( active_panel_id , previous_panel_id ) {
           api.czr_initialSkopeCollectionPopulated.then( function() {
-                var _color = 'inherit';
-                if ( _.isEmpty( active_panel_id ) ) {
-                      if ( ! _.isUndefined( api.czr_activeSkopeId() ) && api.czr_skope.has( api.czr_activeSkopeId() ) ) {
-                            _color = api.czr_skope( api.czr_activeSkopeId() ).color;
-                      }
-                      $( '#customize-info' ).find('.accordion-section-title').first().css('background', _color );
-                      api.panel.each( function( _panel ) {
-                            _panel.container.find( '.accordion-section-title').first().css('background', _color );
+                api.trigger('czr-paint', { active_panel_id : active_panel_id } );
+          });
+    },
+    wash : function( params ) {
+          var self = this,
+              _do_wash = function( element ) {
+                     if ( ! _.has( element, 'el') || ! element.el.length )
+                      return;
+                    element.el.css( 'background', '' );
+              };
+          if ( api.czr_skopeBase.paintedElements ) {
+                _.each( api.czr_skopeBase.paintedElements(), function( _el ) { _do_wash( _el ); } );
+                api.czr_skopeBase.paintedElements( [] );
+          }
+          return this;
+    },
+    paint : function( params ) {
+          var _color = 'inherit',
+              defaults = {
+                    active_panel_id : api.czr_activePanelId(),
+                    active_section_id : api.czr_activeSectionId()
+              },
+              _paint_candidates = [];
+          params = _.extend( params, defaults );
+
+          if ( ! _.isUndefined( api.czr_activeSkopeId() ) && api.czr_skope.has( api.czr_activeSkopeId() ) ) {
+                  _color = api.czr_skope( api.czr_activeSkopeId() ).color;
+          }
+          var _do_paint = function( element ) {
+                if ( ! _.has( element, 'el') || ! element.el.length )
+                  return;
+                element.el.css( 'background', element.color || _color );
+          };
+
+          api.czr_skopeBase.paintedElements = api.czr_skopeBase.paintedElements || new api.Value( [] );
+          if ( _.isEmpty( params.active_panel_id ) && _.isEmpty( params.active_section_id ) ) {
+                _paint_candidates.push( {
+                      el : $( '#customize-info' ).find('.accordion-section-title').first()
+                });
+                api.panel.each( function( _panel ) {
+                      _paint_candidates.push( {
+                            el : _panel.container.find( '.accordion-section-title').first()
                       });
-                } else {
-                      api.panel.when( active_panel_id , function( active_panel ) {
-                            active_panel.deferred.embedded.then( function() {
-                                  var _color = api.czr_skope( api.czr_activeSkopeId() ).color;
-                                  active_panel.container.find( '.accordion-section-title, .customize-panel-back').css('background', _color );
+                });
+          }
+          if ( ! _.isEmpty( params.active_panel_id ) && _.isEmpty( params.active_section_id ) ) {
+                api.panel.when( params.active_panel_id , function( active_panel ) {
+                      active_panel.deferred.embedded.then( function() {
+                            _paint_candidates.push( {
+                                  el : active_panel.container.find( '.accordion-section-title, .customize-panel-back' )
                             });
                       });
-                }
-                if ( ! _.isEmpty( previous_panel_id ) ) {
-                      api.panel( previous_panel_id ).container.find( '.accordion-section-title, .customize-panel-back').css('background', _color );
-                }
-          });
+                });
+          }
+          if ( ! _.isEmpty( params.active_section_id ) ) {
+                api.section.when( params.active_section_id , function( active_section ) {
+                      active_section.deferred.embedded.then( function() {
+                            _paint_candidates.push(
+                                  {
+                                        el : active_section.container.find( '.customize-section-title, .customize-section-back' ),
+                                        color : 'inherit'
+                                  },
+                                  {
+                                        el : active_section.container
+                                  }
+                            );
+                      });
+                });
+          }
+          _.each( _paint_candidates, function( _el ) { _do_paint( _el ); } );
+          api.czr_skopeBase.paintedElements( _paint_candidates );
+          return this;
     },
     apiDirtynessReact : function( is_dirty ) {
           $('body').toggleClass('czr-api-dirty', is_dirty );
@@ -1011,7 +1067,7 @@ $.extend( CZRSkopeBaseMths, {
                       break;
                 }//switch
           });
-          api_ready_skope.color = self.skope_colors[ api_ready_skope.skope ] || 'rgba(0, 0, 0, 0)';
+          api_ready_skope.color = self.skope_colors[ api_ready_skope.skope ] || 'rgb(255, 255, 255)';
           api_ready_skope.id = api_ready_skope.skope + '_' + api_ready_skope.level;
           if ( ! _.isString( api_ready_skope.id ) || _.isEmpty( api_ready_skope.id ) ) {
                 throw new Error('prepareSkopeForAPI : a skope id must a string not empty');
@@ -1103,7 +1159,7 @@ $.extend( CZRSkopeBaseMths, {
           else
             throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
           self._writeCurrentSkopeTitle( to );
-          self._paintSkopeColor( to );
+          api.trigger( 'czr-paint', {} );
           if ( _.isUndefined( api.czr_activeSectionId() ) ) {
                 api.previewer.refresh();
                 return dfd.resolve().promise();
@@ -1165,21 +1221,6 @@ $.extend( CZRSkopeBaseMths, {
                 );
           });
 
-    },
-    _paintSkopeColor : function( skope_id ) {
-          var _color = api.czr_skope( skope_id ).color;
-          if ( api.section.has( api.czr_activeSectionId() ) ) {
-                api.section( api.czr_activeSectionId() ).container.css('background', _color );
-                api.section( api.czr_activeSectionId() ).container.find( '.customize-section-title, .customize-panel-back, .customize-section-back').css('background', _color );
-          }
-          if ( api.panel.has( api.czr_activePanelId() ) ) {
-                api.panel( api.czr_activePanelId() ).container.find( '.accordion-section-title, .customize-panel-back').css('background', _color );
-          } else {
-                $( '#customize-info' ).find('.accordion-section-title').first().css('background', _color );
-                api.panel.each( function( _panel ) {
-                      _panel.container.find( '.accordion-section-title').first().css('background', _color );
-                });
-          }
     }
 });//$.extend
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
