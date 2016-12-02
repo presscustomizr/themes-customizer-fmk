@@ -177,7 +177,7 @@
                         }
                   )
             );
-            api.preview.send( 'czr-partial-refresh', ! _.isUndefined(_customizePartialRefreshExports) ? _customizePartialRefreshExports.partials : {} );
+            api.preview.send( 'czr-partial-refresh', typeof undefined === typeof _customizePartialRefreshExports ? {} : _customizePartialRefreshExports.partials );
 
             //TEST
             //console.log('_wpCustomizeSettings', _wpCustomizeSettings, _wpCustomizeSettings.activeSections );
