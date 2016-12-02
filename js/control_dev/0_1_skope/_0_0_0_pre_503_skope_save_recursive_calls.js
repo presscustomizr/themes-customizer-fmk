@@ -32,7 +32,7 @@ $.extend( CZRSkopeSaveMths, {
                         var _buildResponse = function() {
                                   var _failedResponse = [];
                                   _.each( failedPromises, function( _r ) {
-                                        _failedResponse.push( self.buildServerResponse( _r ) );
+                                        _failedResponse.push( api.czr_skopeBase.buildServerResponse( _r ) );
                                   } );
                                   return $.trim( _failedResponse.join( ' | ') );
                         };

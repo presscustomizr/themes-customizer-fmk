@@ -137,6 +137,9 @@ $.extend( CZRSkopeBaseMths, {
                 }//switch
           });
 
+          //Assign a color based on the hiearchy level
+          api_ready_skope.color = self.skope_colors[ api_ready_skope.skope ] || 'rgba(0, 0, 0, 0)';
+
           //Finally, generate the id and the title
           api_ready_skope.id = api_ready_skope.skope + '_' + api_ready_skope.level;
           if ( ! _.isString( api_ready_skope.id ) || _.isEmpty( api_ready_skope.id ) ) {

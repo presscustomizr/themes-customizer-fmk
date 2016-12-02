@@ -125,10 +125,8 @@ $.extend( CZRSkopeSaveMths, {
                                               );
 
                                               //POST PROCESS AFTER SAVE
-                                              //- Clean dirtyness
-                                              //Reset api values
-                                              //=> api.control(setId).czr_isDirty
-                                              //=> api.control(setId).czr_hasDBVal
+                                              //Reset dirtyness
+                                              //check if synchronized with server
                                               self.reactWhenSaveDone( refresh_data.skopesServerData );
 
                                               //Resolve the general globalSaveDeferred

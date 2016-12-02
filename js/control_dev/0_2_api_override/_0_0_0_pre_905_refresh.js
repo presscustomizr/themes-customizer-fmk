@@ -1,9 +1,9 @@
 
 (function (api, $, _) {
 
-    //'czr-skope-ready' is fired after the skopeBase has been initialized.
+    //'czr-skope-started' is fired after the skopeBase has been initialized.
     //the api is 'ready' at this point
-    api.bind( 'czr-skope-ready' , function() {
+    api.bind( 'czr-skope-started' , function() {
           //post process after refresh
           //@param param = { previewer : previewer, skopesServerData : skopesServerData || {} }
           // api.bind( 'pre_refresh_done', function( params ) {
@@ -27,7 +27,7 @@
     };
 
 
-    //fired on 'czr-skope-ready', after the skopeBase has been initialized
+    //fired on 'czr-skope-started', after the skopeBase has been initialized
     czr_override_refresh_for_skope = function() {
           if ( ! serverControlParams.isSkopOn )
             return;
@@ -140,6 +140,7 @@
                       if ( 'cheatin' === reason ) {
                             previewer.cheatin();
                       }
+                      dfd.reject( reason );
                 });
 
                 return dfd.promise();

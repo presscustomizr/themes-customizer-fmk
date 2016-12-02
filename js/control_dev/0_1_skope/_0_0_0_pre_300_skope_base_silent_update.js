@@ -38,6 +38,9 @@ $.extend( CZRSkopeBaseMths, {
           }
 
           //api.consoleLog('silentUpdateCands ============>>> ', api.czr_activeSkopeId(), params, silentUpdateCands );
+          //bail now if we still don't have candidates to update
+          if ( _.isEmpty( params.candidates ) )
+            return dfd.resolve().promise();
 
           //silently update the settings of a the currently active section() to the values of the current skope
           //silentlyUpdateSettings returns a promise.
@@ -46,8 +49,8 @@ $.extend( CZRSkopeBaseMths, {
                       dfd.reject();
                 })
                 .done( function() {
-                      self.setupCurrentControls( {
-                          section_id : params.section_id
+                      self.setupActiveSkopedControls( {
+                            section_id : params.section_id
                       });
                       dfd.resolve();
                 });
@@ -142,9 +145,10 @@ $.extend( CZRSkopeBaseMths, {
                 });
                 //always refresh by default
                 if ( refresh ) {
-                      api.previewer.refresh().done( function() {
-                            dfd.resolve();
-                      });
+                      api.previewer.refresh()
+                          .always( function() {
+                                dfd.resolve();
+                          });
                 } else {
                       dfd.resolve();
                 }
@@ -261,13 +265,17 @@ $.extend( CZRSkopeBaseMths, {
           var self = this,
               SilentUpdateCands = [];
           section_id = ( _.isUndefined( section_id ) || _.isNull( section_id ) ) ? api.czr_activeSectionId() : section_id;
-
+          //skope switch when no section expanded
+          if ( _.isEmpty( api.czr_activeSectionId() ) ) {
+                return [];
+          }
+          //error cases
           if ( _.isUndefined( section_id ) ) {
-            api.consoleLog( '_getSilentUpdateCandidates : No active section provided');
-            return;
+                api.consoleLog( '_getSilentUpdateCandidates : No active section provided');
+                return [];
           }
           if ( ! api.section.has( section_id ) ) {
-              throw new Error( '_getSilentUpdateCandidates : The section ' + section_id + ' is not registered in the API.');
+                throw new Error( '_getSilentUpdateCandidates : The section ' + section_id + ' is not registered in the API.');
           }
 
           //GET THE CURRENT EXPANDED SECTION SET IDS

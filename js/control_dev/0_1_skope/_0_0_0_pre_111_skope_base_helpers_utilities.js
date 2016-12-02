@@ -159,8 +159,15 @@ $.extend( CZRSkopeBaseMths, {
           if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
             return false;
 
-          //exclude the WP built-in settings like sidebars_widgets*, nav_menu_*, widget_*, custom_css
-          var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css' ],
+          //exclude the WP built-in settings like sidebars_widgets*, widget_*, custom_css
+          //specifics for nav_menus:
+          //1) exclude always :
+          //nav_menu[* => each menu created
+          //nav_menu_item => the items of the menus
+          //nav_menus_created_posts
+          //2) exclude maybe :
+          //nav_menu_locations
+          var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css', 'nav_menu[', 'nav_menu_item', 'nav_menus_created_posts' ],
               _isExcld = false;
           _.each( _patterns, function( _ptrn ) {
                 switch( _ptrn ) {
@@ -170,11 +177,21 @@ $.extend( CZRSkopeBaseMths, {
                                   _isExcld = self.isExcludedSidebarsWidgets();
                             }
                       break;
-                      case 'nav_menu' :
+
+                      case 'nav_menu[' :
+                      case 'nav_menu_item' :
+                      case 'nav_menus_created_posts' :
                             if ( _ptrn == setId.substring( 0, _ptrn.length ) ) {
-                                  _isExcld = self.isExcludedNavMenu();
+                                  _isExcld = true;
                             }
                       break;
+
+                      case 'nav_menu_locations' :
+                            if ( _ptrn == setId.substring( 0, _ptrn.length ) ) {
+                                  _isExcld = self.isExcludedNavMenuLocations();
+                            }
+                      break;
+
                       case 'custom_css' :
                             if ( _ptrn == setId.substring( 0, _ptrn.length ) ) {
                                   _isExcld = self.isExcludedWPCustomCss();
@@ -194,8 +211,8 @@ $.extend( CZRSkopeBaseMths, {
     },
 
     //@return bool
-    isExcludedNavMenu : function() {
-          var _servParam = serverControlParams.isNavMenuSkoped;//can be a boolean or a string "" for false, "1" for true
+    isExcludedNavMenuLocations : function() {
+          var _servParam = serverControlParams.isNavMenuLocationsSkoped;//can be a boolean or a string "" for false, "1" for true
           return ! ( ! _.isUndefined( _servParam ) && ! _.isEmpty( _servParam ) && false !== _servParam );
     },
 

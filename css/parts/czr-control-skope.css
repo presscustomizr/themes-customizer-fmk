@@ -33,7 +33,9 @@
 
 
 
-
+.wp-customizer #customize-header-actions {
+  border-bottom: 0px;
+}
 .czr-scope-switcher {
   width: 100%;
   float: right;
@@ -71,7 +73,7 @@ span.czr-skope-title {
 }
 .czr-scope-switcher .active, .czr-scope-switcher .czr-scope:hover {
   opacity: 1;
-  border-bottom: 2px solid #82b965;
+  /*border-bottom: 2px solid #82b965;*/
 }
 
 .czr-scope {
@@ -79,7 +81,7 @@ span.czr-skope-title {
     width: 30.5%;
     /*margin-left: 1.5%;*/
     background: #fff;
-    border-bottom: 2px solid #cccccc;
+    /*border-bottom: 2px solid #cccccc;*/
     border-top: 1px solid #cccccc;
     /*-webkit-border-radius: 3px;
     border-radius: 3px;*/
@@ -296,6 +298,7 @@ body.czr-resetting-skope #czr-reset-skope-pane .czr-resetting {
 #customize-header-actions .customize-controls-close {
   left:45px;
 }
+
 .customize-controls-home {
     display: block;
     position: absolute;

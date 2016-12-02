@@ -4,20 +4,6 @@
   /*****************************************************************************
   * A SKOPE AWARE PREVIEWER QUERY
   *****************************************************************************/
-  //PREPARE THE SKOPE AWARE PREVIEWER
-  if ( serverControlParams.isSkopOn ) {
-        var _old_preview = api.Setting.prototype.preview;
-        api.Setting.prototype.preview = function( to, from , o) {
-            if ( 'pending' == api.czr_isPreviewerSkopeAware.state() )
-              return this.previewer.refresh();
-            //as soon as the previewer is setup, let's behave as usual
-            //=> but don't refresh when silently updating
-            if ( ! _.has(o, 'silent') || false === o.silent ) {
-                _old_preview.call(this);
-            }
-        };
-  }
-
 
   api.bind('ready', function() {
         if ( ! serverControlParams.isSkopOn )
@@ -236,7 +222,10 @@
                     dyn_type:         queryVars.dyn_type,
                     opt_name:         ! _.isNull( queryVars.opt_name ) ? queryVars.opt_name : api.czr_skope( queryVars.skope_id )().opt_name,
                     obj_id:           api.czr_skope( queryVars.skope_id )().obj_id,
-                    current_skopes:   JSON.stringify( _current_skopes ) || {}
+                    current_skopes:   JSON.stringify( _current_skopes ) || {},
+                    channel:          this.channel(),
+                    revisionIndex:    api._latestRevision
+
               };
 
               //since 4.7
