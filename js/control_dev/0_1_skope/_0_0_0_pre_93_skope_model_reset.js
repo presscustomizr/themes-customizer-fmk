@@ -128,7 +128,7 @@ $.extend( CZRSkopeMths, {
           }
           skope.dirtyValues({});
           //inform the api about the new dirtyness state
-          api.state('saved')( ! api.czr_dirtyness() );
+          //api.state('saved')( ! api.czr_dirtyness() );
     },
 
     //fired in doResetSkopeValues

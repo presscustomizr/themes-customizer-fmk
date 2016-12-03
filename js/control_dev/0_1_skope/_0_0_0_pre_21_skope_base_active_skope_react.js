@@ -67,7 +67,7 @@ $.extend( CZRSkopeBaseMths, {
             } );
           }
 
-          console.log('ACTIVE SKOPE REACT', to, from, _silentUpdateCands );
+          //api.consoleLog('ACTIVE SKOPE REACT', to, from, _silentUpdateCands );
 
           //Process Silent Updates and
           //make sure that the visibility is processed after the silent updates

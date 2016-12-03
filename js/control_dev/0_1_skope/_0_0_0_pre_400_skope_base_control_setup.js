@@ -51,7 +51,7 @@ $.extend( CZRSkopeBaseMths, {
             return;
 
           $.when( self.renderControlsSingleReset( controls ) ).done( function() {
-                console.log('RENDER CONTROL SINGLE RESET DONE', controls );
+                //api.consoleLog('RENDER CONTROL SINGLE RESET DONE', controls );
                 //add observable Value(s) to the section control
                 self.listenSkopedControls( controls );
           });
@@ -86,7 +86,6 @@ $.extend( CZRSkopeBaseMths, {
                             ctrl.czr_states.create( _state_name );
                       });
 
-                      console.log('CTRL BOUND : ', ctrl.id );
                       self.bindControlStates( ctrl );
 
                 }
@@ -107,6 +106,7 @@ $.extend( CZRSkopeBaseMths, {
 
                 if ( ! _.has( ctrl, 'userEventMap' ) ) {
                       ctrl.userEventMap = [
+                            //toggle reset dialog
                             {
                                   trigger   : 'click keydown',
                                   selector  : '.czr-setting-reset, .czr-cancel-button',
@@ -133,6 +133,7 @@ $.extend( CZRSkopeBaseMths, {
                                         self.doResetSetting( ctrlId );
                                   }
                             },
+                            //skope switch
                             {
                                   trigger   : 'click keydown',
                                   selector  : '.czr-skope-switch',
@@ -198,8 +199,6 @@ $.extend( CZRSkopeBaseMths, {
                       }
                 }
           });
-
-
 
           //RESET VISIBILITY
           ctrl.czr_states('resetVisible').bind( function( visible ) {

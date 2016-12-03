@@ -297,7 +297,7 @@ $.extend( CZRSkopeBaseMths, {
           //1) reset visibilities
           //2) update control skope notices
           api.bind( 'skope-switched', function( skope_id ) {
-                console.log('SKOPE SWITCHED TO', skope_id, api.czr_activeSectionId() );
+                //api.consoleLog('SKOPE SWITCHED TO', skope_id, api.czr_activeSectionId() );
                 //Skope is ready when :
                 //1) the initial skopes collection has been populated
                 //2) the initial skope has been switched to
@@ -454,8 +454,9 @@ $.extend( CZRSkopeBaseMths, {
                 throw new Error( 'Missing skope data after refresh', server_params );
           }
           //API DIRTYNESS UPDATE
-          if ( ! api.czr_dirtyness() )
-            api.czr_dirtyness( _.isBoolean( server_params.isChangesetDirty ) ? server_params.isChangesetDirty : false );
+          if ( ! api.czr_dirtyness() ) {
+                api.czr_dirtyness( _.isBoolean( server_params.isChangesetDirty ) ? server_params.isChangesetDirty : false );
+          }
 
           var _sentSkopeCollection = server_params.czr_skopes;
           //CHANGESET UPDATE

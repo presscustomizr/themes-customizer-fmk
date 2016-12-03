@@ -51,7 +51,7 @@ $.extend( CZRSkopeBaseMths, {
               };
 
           //debounce because some control like media upload are re-rendered on section expansion
-          render_reset_icons = _.debounce( render_reset_icons , 500 );
+          render_reset_icons = _.debounce( render_reset_icons , 200 );
           render_reset_icons( controlIds );
           return dfd.promise();
     },
@@ -69,23 +69,22 @@ $.extend( CZRSkopeBaseMths, {
               success_message;
 
           if ( ctrl.czr_states( 'isDirty' )() ) {
-              warning_message = 'Are you sure you want to reset your current customizations for this control?';
-              success_message = 'Your customizations have been reset.';
+                warning_message = 'Are you sure you want to reset your current customizations for this control?';
+                success_message = 'Your customizations have been reset.';
           } else {
-              warning_message = 'Are you sure you want to reset this option to default?';
-              success_message = 'The options have been reset to defaults.';
+                warning_message = 'Are you sure you want to reset this option to default?';
+                success_message = 'The options have been reset to defaults.';
           }
 
           try {
-            _tmpl =  wp.template('czr-reset-control')(
-                {
-                  warning_message : warning_message,
-                  success_message : success_message
-                }
-            );
-          }
-          catch(e) {
-            throw new Error('Error when parsing the the reset control template : ' + e );
+                _tmpl =  wp.template('czr-reset-control')(
+                    {
+                          warning_message : warning_message,
+                          success_message : success_message
+                    }
+                );
+          } catch(e) {
+                throw new Error('Error when parsing the the reset control template : ' + e );
           }
 
           $('.customize-control-title', ctrl.container).first().after( $( _tmpl ) );
@@ -93,79 +92,99 @@ $.extend( CZRSkopeBaseMths, {
           return $( '.czr-ctrl-reset-warning', ctrl.container );
     },
 
+
     //Fired on user click
     //Defined in the ctrl user event map
     //@uses The ctrl.czr_states values
+    //Will fire a different callback, whether the setting is dirty or has db val
     doResetSetting : function( ctrlId ) {
           var self = this,
-              ctrl = api.control(ctrlId),
+              setId = api.CZR_Helpers.getControlSettingId( ctrlId ),
+              ctrl = api.control( ctrlId ),
               skope_id = api.czr_activeSkopeId(),
               reset_method = ctrl.czr_states( 'isDirty' )() ? '_resetControlDirtyness' : '_resetControlAPIVal',
-              setResetVisibility = function( ctrl, val ) {
+              _setResetVisibility = function( ctrl, val ) {
                     val = _.isUndefined( val ) ? false : val;//@todo why this ?
                     ctrl.czr_states( 'resetVisible' )( false );
               },
               _do_reset = function( ctrlId ) {
-
-                    self[reset_method](ctrlId);
-
-                    $api.czr_skopeBase.processSilentUpdates( { candidates : ctrlId } ).done( function() {
-                          $('.czr-reset-success', ctrl.container ).fadeIn( '300' );
-                          ctrl.container.removeClass('czr-resetting-control');//hides the spinner
-                          setResetVisibility( ctrl );
-                          self.setupActiveSkopedControls( { controls : [ ctrlId ] } );
+                    self[reset_method](ctrlId).done( function() {
+                          api.czr_skopeBase.processSilentUpdates( { candidates : ctrlId } )
+                                .always( function() {
+                                      ctrl.container.removeClass('czr-resetting-control');//hides the spinner
+                                })
+                                .fail( function() { api.consoleLog( 'Silent update failed after resetting control : ' + ctrlId ); } )
+                                .done( function() {
+                                      $.when( $('.czr-reset-success', ctrl.container ).fadeIn( '300' ) ).done( function() {
+                                            _setResetVisibility( ctrl );
+                                            self.setupActiveSkopedControls( { controls : [ ctrlId ] } );
+                                      });
+                                });
                     });
-
               };
 
           ctrl.container.addClass('czr-resetting-control');
+
           api.consoleLog('DO RESET SETTING', ctrlId );
 
           if ( ctrl.czr_states( 'isDirty' )() ) {
-                _do_reset( ctrlId );
-          } else {
-                api.previewer.czr_reset( skope_id, ctrlId )
+                api.czr_skopeReset.reset_changeset( { skope_id : skope_id, setId : setId, is_setting : true } )
+                      .always( function() {
+                            ctrl.container.removeClass('czr-resetting-control');
+                            _setResetVisibility( ctrl );
+                      })
                       .done( function( r ) {
                             _do_reset( ctrlId );
                       })
                       .fail( function( r ) {
                               $('.czr-reset-fail', ctrl.container ).fadeIn('300');
-                              $('.czr-reset-fail', ctrl.container ).append('<p>' + response + '</p>');
-                              setResetVisibility( ctrl );
+                              $('.czr-reset-fail', ctrl.container ).append('<p>' + r + '</p>');
                       });
+          } else {
+                // api.czr_skopeReset.reset_published( skope_id, ctrlId )
+                //       .done( function( r ) {
+                //             _do_reset( ctrlId );
+                //       })
+                //       .fail( function( r ) {
+                //               $('.czr-reset-fail', ctrl.container ).fadeIn('300');
+                //               $('.czr-reset-fail', ctrl.container ).append('<p>' + response + '</p>');
+                //               _setResetVisibility( ctrl );
+                //       });
           }
 
     },
 
+    //updates the current skope dirties
     _resetControlDirtyness : function( ctrlId ) {
-          var skope_instance = api.czr_skope( api.czr_activeSkopeId() ),
+          var setId = api.CZR_Helpers.getControlSettingId( ctrlId ),
+              skope_instance = api.czr_skope( api.czr_activeSkopeId() ),
               current_dirties = skope_instance.dirtyValues(),
-              new_dirties = $.extend( true, {}, current_dirties );
+              new_dirties = $.extend( true, {}, current_dirties ),
+              dfd = $.Deferred();
 
-          new_dirties = _.omit( new_dirties, ctrlId );
+          new_dirties = _.omit( new_dirties, setId );
           skope_instance.dirtyValues( new_dirties );
-          //inform the api about the new dirtyness state
-          api.state('saved')( ! api.czr_dirtyness() );
+          return dfd.resolve().promise();
     },
 
 
     //@uses The ctrl.czr_states values
+    //updates the current skope dbValues
+    //update the ctrl state
     _resetControlAPIVal : function( ctrlId ) {
-          var current_skope_db  = api.czr_skope( api.czr_activeSkopeId() ).dbValues(),
+          var setId = api.CZR_Helpers.getControlSettingId( ctrlId ),
+              current_skope_db  = api.czr_skope( api.czr_activeSkopeId() ).dbValues(),
               new_skope_db      = $.extend( true, {}, current_skope_db ),
-              reset_control_db_state = function( ctrlId ) {
-                    if ( ! _.has( api.control( ctrlId ), 'czr_states') )
-                      return;
+              dfd = $.Deferred();
 
-                    api.control(ctrlId).czr_states( 'hasDBVal' )( false );
-              };
+          if ( ! _.has( api.control( ctrlId ), 'czr_states') )
+            return;
 
-          reset_control_db_state( ctrlId );
-
+          api.control(ctrlId).czr_states( 'hasDBVal' )( false );
           api.consoleLog('SKOPE DB VAL AFTER RESET?', new_skope_db );
-
           //update the skope db property and say it
-          api.czr_skope( api.czr_activeSkopeId() ).dbValues( _.omit( new_skope_db, ctrlId ) );
+          api.czr_skope( api.czr_activeSkopeId() ).dbValues( _.omit( new_skope_db, setId ) );
+          return dfd.resolve().promise();
     }
 
 });//$.extend()

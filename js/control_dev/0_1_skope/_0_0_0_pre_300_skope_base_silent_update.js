@@ -8,7 +8,7 @@ $.extend( CZRSkopeBaseMths, {
     //   refresh : true
     // }
     processSilentUpdates : function( params ) {
-          console.log('PROCESS SILENT UPDATES', params );
+          //api.consoleLog('PROCESS SILENT UPDATES', params );
           //a setting id can be passed as param instead of an object
           if ( _.isString( params ) )
             params = { candidates : [ params ] };
@@ -69,7 +69,7 @@ $.extend( CZRSkopeBaseMths, {
     //2) When all asynchronous promises are done(). Refresh()
     //@return an array of promises. Typically if a setting update has to re-render an image related control, the promise is the ajax request object
     silentlyUpdateSettings : function( _silentUpdateCands, refresh ) {
-          console.log('silentlyUpdateSettings', _silentUpdateCands, refresh );
+          //api.consoleLog('silentlyUpdateSettings', _silentUpdateCands, refresh );
           var self = this,
               _silentUpdatePromises = {},
               dfd = $.Deferred();

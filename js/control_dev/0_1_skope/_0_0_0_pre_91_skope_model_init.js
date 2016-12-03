@@ -148,6 +148,7 @@ $.extend( CZRSkopeMths, {
     * SKOPE API DIRTIES REACTIONS
     *****************************************************************************/
     dirtyValuesReact : function( to, from ) {
+          //api.consoleLog('IN DIRTY VALUES REACT', this.id, to, from );
           var skope = this;
           //set the model dirtyness boolean state value
           skope.dirtyness( ! _.isEmpty(to) );
@@ -182,7 +183,6 @@ $.extend( CZRSkopeMths, {
                 _.each( to, function( _val, _setId ) {
                       if ( ! _.has( api.control( _setId ), 'czr_states') )
                         return;
-                      console.log('JOIE ? dirtyValuesReact : ', _setId, api.control( _setId ).czr_states( 'isDirty' ) );
                       api.control( _setId ).czr_states( 'isDirty' )( true );
                 });
           }

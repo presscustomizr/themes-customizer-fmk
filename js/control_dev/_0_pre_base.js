@@ -1,8 +1,8 @@
 var czr_debug = {
-  log: function(o) {debug.queue.push(['log', arguments, debug.stack.slice(0)]); if (window.console && typeof window.console.log == 'function') {window.console.log(o);}},
-  error: function(o) {debug.queue.push(['error', arguments, debug.stack.slice(0)]); if (window.console && typeof window.console.error == 'function') {window.console.error(o);}},
-  queue: [],
-  stack: []
+      log: function(o) {debug.queue.push(['log', arguments, debug.stack.slice(0)]); if (window.console && typeof window.console.log == 'function') {window.console.log(o);}},
+      error: function(o) {debug.queue.push(['error', arguments, debug.stack.slice(0)]); if (window.console && typeof window.console.error == 'function') {window.console.error(o);}},
+      queue: [],
+      stack: []
 };
 
 var api = api || wp.customize, $ = $ || jQuery;
@@ -16,11 +16,11 @@ var api = api || wp.customize, $ = $ || jQuery;
       };
 
       api.czr_isSkopOn = function() {
-          return serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
+            return serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
       };
 
       api.czr_isChangedSetOn = function() {
-          return serverControlParams.isChangedSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
+            return serverControlParams.isChangedSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
       };
 
       /*****************************************************************************
@@ -50,28 +50,28 @@ var api = api || wp.customize, $ = $ || jQuery;
       api.czr_activeSectionId = new api.Value('');
       api.czr_activePanelId = new api.Value('');
       api.bind('ready', function() {
-          if ( 'function' != typeof api.Section ) {
-            throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
-          }
-          var _bindSectionExpanded = function( expanded, section_id ) {
-              api.czr_activeSectionId( expanded ? section_id : '' );
-          };
-          api.section.each( function( _sec ) {
-                _sec.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, _sec.id ); } );
-          });
-          api.section.bind( 'add', function( section_instance ) {
-              section_instance.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, section_instance.id ); } );
-          });
+            if ( 'function' != typeof api.Section ) {
+              throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
+            }
+            var _bindSectionExpanded = function( expanded, section_id ) {
+                  api.czr_activeSectionId( expanded ? section_id : '' );
+            };
+            api.section.each( function( _sec ) {
+                  _sec.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, _sec.id ); } );
+            });
+            api.section.bind( 'add', function( section_instance ) {
+                  section_instance.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, section_instance.id ); } );
+            });
 
-          var _bindPanelExpanded = function( expanded, panel_id ) {
-              api.czr_activePanelId( expanded ? panel_id : '' );
-          };
-          api.panel.each( function( _panel ) {
-                _panel.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, _panel.id ); } );
-          });
-          api.panel.bind( 'add', function( panel_instance ) {
-              panel_instance.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, panel_instance.id ); } );
-          });
+            var _bindPanelExpanded = function( expanded, panel_id ) {
+                  api.czr_activePanelId( expanded ? panel_id : '' );
+            };
+            api.panel.each( function( _panel ) {
+                  _panel.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, _panel.id ); } );
+            });
+            api.panel.bind( 'add', function( panel_instance ) {
+                  panel_instance.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, panel_instance.id ); } );
+            });
 
       });
 
@@ -90,8 +90,9 @@ var api = api || wp.customize, $ = $ || jQuery;
       api.czr_skopeReady = $.Deferred();
       api.bind( 'ready' , function() {
             if ( serverControlParams.isSkopOn ) {
-                  api.czr_skopeBase = new api.CZR_skopeBase();
-                  api.czr_skopeSave = new api.CZR_skopeSave();
+                  api.czr_skopeBase   = new api.CZR_skopeBase();
+                  api.czr_skopeSave   = new api.CZR_skopeSave();
+                  api.czr_skopeReset  = new api.CZR_skopeReset();
                   api.trigger('czr-skope-started');
                   api.czr_skopeReady.done( function() {
                         api.trigger('czr-skope-ready');
@@ -100,7 +101,7 @@ var api = api || wp.customize, $ = $ || jQuery;
 
             //in dev mode, let's set a lower autosave interval ( default is 60000 ms )
             if ( serverControlParams.isChangedSetOn ) {
-              api.settings.timeouts.changesetAutoSave = 10000;
+                  api.settings.timeouts.changesetAutoSave = 10000;
             }
       } );
 
@@ -110,8 +111,6 @@ var api = api || wp.customize, $ = $ || jQuery;
              * Current change count.
              */
             api._latestRevision = 0;
-
-
 
             /**
              * Latest revisions associated with the updated setting.

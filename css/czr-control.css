@@ -1971,6 +1971,7 @@ span.czr-skope-title {
 .czr-scope-switcher .czr-scope:last-child:after {
     -webkit-box-shadow :none;
     box-shadow: none;
+    right: 0;
 }
 .czr-scope-switcher .czr-scope:first-child:after {
     left: 0;
@@ -2084,9 +2085,9 @@ span.czr-skope-title {
 /**************************************
 ******* RESET */
 /* RESET COMMONS */
-.czr-resetting {
+/*.czr-resetting {
   visibility: hidden;
-}
+}*/
 .czr-reset-success, .czr-reset-fail {
   display: none;
 }

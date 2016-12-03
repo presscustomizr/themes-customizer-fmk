@@ -59,7 +59,7 @@ $.extend( CZRSkopeBaseMths, {
                             $notif_wrap.toggleClass( 'czr-server-error', 'error' == notice.status );
                             if ( 'error' == notice.status ) {
                                   $('.czr-server-message', $notif_wrap )
-                                        .html( _.isEmpty( notice.message ) ? 'A problem occured.' : [ 'Error :' , notice.message ].join(' ') );
+                                        .html( _.isEmpty( notice.message ) ? 'Server Problem.' : [ 'Error :' , notice.message ].join(' ') );
                             } else {
                                   $('.czr-server-message', $notif_wrap )
                                         .html( _.isEmpty( notice.message ) ? 'Success.' : [ 'Success :' , notice.message ].join(' ') );
@@ -103,16 +103,30 @@ $.extend( CZRSkopeBaseMths, {
       //utility : build a server response as a string
       //ready to be displayed in the notifications
       buildServerResponse : function( _r ) {
-            var resp = '';
+            var resp = false;
             //server error
             if ( _.isObject( _r ) ) {
-                  if ( _.has( _r, 'responseText') && ! _.isEmpty( _r.responseText ) )
-                    resp = _r.responseText;
-                  else if ( _.has( _r , 'statusText' ) && ! _.isEmpty( _r.statusText ) )
-                    resp = _r.statusText;
-            } else if ( _.isObject( _r ) ) {
-                  resp = JSON.stringify( _r );
-            } else {
+                  if ( _.has( _r, 'responseJSON') && ! _.isUndefined( _r.responseJSON.data ) && ! _.isEmpty( _r.responseJSON.data ) ) {
+                        resp = _r.responseJSON.data;
+                  }
+                  // else if ( _.has( _r, 'responseText') && ! _.isEmpty( _r.responseText ) ) {
+                  //       try {
+                  //             resp = JSON.parse( _r.responseText );
+                  //       } catch( e ) {
+                  //             resp = 'Server Error';
+                  //       }
+                  // }
+                  else if ( _.has( _r , 'statusText' ) && ! _.isEmpty( _r.statusText ) ) {
+                        resp = _r.statusText;
+                  }
+            }
+            if ( _.isObject( _r ) && ! resp ) {
+                  try {
+                        JSON.stringify( _r );
+                  } catch( e ) {
+                        resp = 'Server Error';
+                  }
+            } else if ( ! resp ) {
                   resp = _r;
             }
             return resp;
