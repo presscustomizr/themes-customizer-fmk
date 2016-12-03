@@ -120,7 +120,7 @@ $.extend( CZRSkopeBaseMths, {
                 global : 'rgb(255, 255, 255)',
                 special_group : 'rgba(173, 213, 247, 0.55)',
                 group  : 'rgba(173, 213, 247, 0.55)',
-                local  : 'rgba(78, 122, 199, 0.55)'
+                local  : 'rgba(78, 122, 199, 0.35)'
           };
           api.czr_isPreviewerSkopeAware   = $.Deferred();
           api.czr_initialSkopeCollectionPopulated = $.Deferred();
@@ -131,6 +131,7 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_activeSkopeId           = new api.Value();
           api.czr_dirtyness               = new api.Value( false );
           api.czr_isResettingSkope        = new api.Value( false );
+          api.state.create('switching-skope')(false);
           $( function($) {
                 self.fireHeaderButtons();
           } );
@@ -208,7 +209,7 @@ $.extend( CZRSkopeBaseMths, {
     },//initialize
     embedSkopeWrapper : function() {
           var self = this;
-          $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher'}) );
+          $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher', html:'<div class="czr-skopes-wrapper"></div>'}) );
           $('body').addClass('czr-skop-on');
     },
     bindAPISettings : function( requestedSetId ) {
@@ -339,13 +340,6 @@ $.extend( CZRSkopeBaseMths, {
                             api.trigger('active-section-setup', active_section );
                       });
                 });
-                if ( ! _.isEmpty( previous_sec_id ) ) {
-                      api.section( previous_sec_id ).container.find( '.customize-section-title, .customize-panel-back, .customize-section-back').css('background', _color );
-                }
-                if ( _.isEmpty( active_sec_id ) ) {
-                      if ( ! _.isEmpty( api.panel( api.czr_activePanelId() ) ) )
-                            api.panel( api.czr_activePanelId() ).container.find( '.accordion-section .accordion-section-title').css('background', _color );
-                }
           });
     },
     activePanelReact : function( active_panel_id , previous_panel_id ) {
@@ -356,9 +350,11 @@ $.extend( CZRSkopeBaseMths, {
     wash : function( params ) {
           var self = this,
               _do_wash = function( element ) {
-                     if ( ! _.has( element, 'el') || ! element.el.length )
+                    if ( ! _.has( element, 'el') || ! element.el.length )
                       return;
-                    element.el.css( 'background', '' );
+                    $.when( element.el.removeClass('czr-painted') ).done( function() {
+                          $(this).css( 'background', '' );
+                    });
               };
           if ( api.czr_skopeBase.paintedElements ) {
                 _.each( api.czr_skopeBase.paintedElements(), function( _el ) { _do_wash( _el ); } );
@@ -370,10 +366,11 @@ $.extend( CZRSkopeBaseMths, {
           var _color = 'inherit',
               defaults = {
                     active_panel_id : api.czr_activePanelId(),
-                    active_section_id : api.czr_activeSectionId()
+                    active_section_id : api.czr_activeSectionId(),
+                    is_skope_switch : false
               },
               _paint_candidates = [];
-          params = _.extend( params, defaults );
+          params = $.extend( defaults, params );
 
           if ( ! _.isUndefined( api.czr_activeSkopeId() ) && api.czr_skope.has( api.czr_activeSkopeId() ) ) {
                   _color = api.czr_skope( api.czr_activeSkopeId() ).color;
@@ -381,7 +378,14 @@ $.extend( CZRSkopeBaseMths, {
           var _do_paint = function( element ) {
                 if ( ! _.has( element, 'el') || ! element.el.length )
                   return;
-                element.el.css( 'background', element.color || _color );
+                if ( params.is_skope_switch ) {
+                      $.when( element.el.addClass('czr-painted') ).done( function() {
+                            $(this).css( 'background', element.color || _color );
+                      });
+                } else {
+                      element.el.css( 'background', element.color || _color );
+                }
+
           };
 
           api.czr_skopeBase.paintedElements = api.czr_skopeBase.paintedElements || new api.Value( [] );
@@ -1158,8 +1162,9 @@ $.extend( CZRSkopeBaseMths, {
             api.czr_skope(to).active(true);
           else
             throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
+          api.state('switching-skope')( true );
           self._writeCurrentSkopeTitle( to );
-          api.trigger( 'czr-paint', {} );
+          api.trigger( 'czr-paint', { is_skope_switch : true } );
           if ( _.isUndefined( api.czr_activeSectionId() ) ) {
                 api.previewer.refresh();
                 return dfd.resolve().promise();
@@ -1189,6 +1194,7 @@ $.extend( CZRSkopeBaseMths, {
                       })
                       .fail( function() {
                             dfd.reject();
+                            api.state('switching-skope')( false );
                             throw new Error( 'Fail to process silent updates in _debouncedProcessSilentUpdates');
                       })
                       .done( function() {
@@ -1196,6 +1202,7 @@ $.extend( CZRSkopeBaseMths, {
                                   .always( function() {
                                         api.trigger( 'skope-switched', to );
                                         dfd.resolve();
+                                        api.state('switching-skope')( false );
                                   });
                       });
           };
@@ -1211,14 +1218,33 @@ $.extend( CZRSkopeBaseMths, {
     },
     _writeCurrentSkopeTitle : function( skope_id ) {
           var self = this,
-              current_title = api.czr_skope( skope_id|| api.czr_activeSkopeId() ).long_title;
+              current_title = api.czr_skope( skope_id|| api.czr_activeSkopeId() ).long_title,
+              _toggle_spinner = function( visible ) {
+                    if ( visible ) {
+                          $('.czr-scope-switcher').find('.spinner').fadeIn();
+                    } else {
+                          $('.czr-scope-switcher').find('.spinner').fadeOut();
+                    }
+              };
 
           self.skopeWrapperEmbedded.then( function() {
-                if ( ! $('.czr-scope-switcher').find('.czr-current-skope-title').length )
-                  $('.czr-scope-switcher').prepend( $( '<h2/>', { class : 'czr-current-skope-title'} ) );
-                $('.czr-scope-switcher').find('.czr-current-skope-title').html(
-                    '<strong>Current Options Scope : </strong></br>' + '<span class="czr-skope-title">' + current_title + '</span>'
-                );
+                if ( ! $('.czr-scope-switcher').find('.czr-current-skope-title').length ) {
+                      $('.czr-scope-switcher').prepend(
+                        $( '<h2/>', {
+                              class : 'czr-current-skope-title',
+                              html : '<span class="czr-skp-permanent-title"><span class="spinner"></span>CURRENT CUSTOMIZATION SCOPE</span></br><span class="czr-skope-title">' + current_title + '</span>'
+                        })
+                      );
+                } else {
+                      $.when( $('.czr-scope-switcher').find('.czr-skope-title').fadeOut(200) ).done( function() {
+                            $(this).html( current_title ).fadeIn(200);
+                      });
+                }
+
+                if ( _.isUndefined( api.state( 'switching-skope' ).isBound ) ) {
+                      api.state('switching-skope').bind( _toggle_spinner );
+                      api.state( 'switching-skope' ).isBound = true;
+                }
           });
 
     }
@@ -2551,7 +2577,7 @@ $.extend( CZRSkopeMths, {
     },
     activeStateReact : function(to, from){
           var skope = this;
-          skope.container.toggleClass('active', to);
+          skope.container.toggleClass('inactive').toggleClass('active', to);
           $('.czr-scope-switch', skope.container).toggleClass('fa-toggle-on', to).toggleClass('fa-toggle-off', !to);
     },
     dirtynessReact : function(to, from) {
@@ -2636,8 +2662,8 @@ $.extend( CZRSkopeMths, {
             throw new Error('Error when parsing the template of a skope' + e );
           }
 
-          $('.czr-scope-switcher', '#customize-header-actions').append( $( _tmpl ) );
-          return $( '.' + skope.el , '.czr-scope-switcher' );
+          $('.czr-skopes-wrapper', '#customize-header-actions').append( $( _tmpl ) );
+          return $( '.' + skope.el , '.czr-skopes-wrapper' );
     },
     renderResetWarningTmpl : function() {
           var skope = this,

@@ -296,7 +296,7 @@ $.extend( CZRSkopeMths, {
     //cb of skope.active.callbacks
     activeStateReact : function(to, from){
           var skope = this;
-          skope.container.toggleClass('active', to);
+          skope.container.toggleClass('inactive').toggleClass('active', to);
           //api.consoleLog('in the view : listen for scope state change', this.name, to, from );
           $('.czr-scope-switch', skope.container).toggleClass('fa-toggle-on', to).toggleClass('fa-toggle-off', !to);
     },

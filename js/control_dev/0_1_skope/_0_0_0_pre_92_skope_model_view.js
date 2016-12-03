@@ -17,8 +17,8 @@ $.extend( CZRSkopeMths, {
             throw new Error('Error when parsing the template of a skope' + e );
           }
 
-          $('.czr-scope-switcher', '#customize-header-actions').append( $( _tmpl ) );
-          return $( '.' + skope.el , '.czr-scope-switcher' );
+          $('.czr-skopes-wrapper', '#customize-header-actions').append( $( _tmpl ) );
+          return $( '.' + skope.el , '.czr-skopes-wrapper' );
     },
 
 

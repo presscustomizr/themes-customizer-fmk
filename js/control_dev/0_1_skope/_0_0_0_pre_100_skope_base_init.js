@@ -155,7 +155,7 @@ $.extend( CZRSkopeBaseMths, {
                 global : 'rgb(255, 255, 255)',
                 special_group : 'rgba(173, 213, 247, 0.55)',
                 group  : 'rgba(173, 213, 247, 0.55)',
-                local  : 'rgba(78, 122, 199, 0.55)'
+                local  : 'rgba(78, 122, 199, 0.35)'
           };
           //Deferred used to make sure the overriden api.previewer.query method has been taken into account
           api.czr_isPreviewerSkopeAware   = $.Deferred();
@@ -182,7 +182,8 @@ $.extend( CZRSkopeBaseMths, {
           //store the resetting state
           api.czr_isResettingSkope        = new api.Value( false );
 
-
+          //Add a new state to the api
+          api.state.create('switching-skope')(false);
 
           ///////////////////// SKOPIFY THE API AND THE PANEL /////////////////////
           //ON DOM READY : RENDER AND BIND HEADER BUTTONS : HOME, GENERAL RESET
@@ -371,7 +372,7 @@ $.extend( CZRSkopeBaseMths, {
     //=> add a specific class to the body czr-skop-on
     embedSkopeWrapper : function() {
           var self = this;
-          $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher'}) );
+          $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher', html:'<div class="czr-skopes-wrapper"></div>'}) );
           $('body').addClass('czr-skop-on');
     },
 
@@ -602,18 +603,6 @@ $.extend( CZRSkopeBaseMths, {
                             api.trigger('active-section-setup', active_section );
                       });
                 });
-
-
-
-
-                //finish painting : @todo @toimprove
-                if ( ! _.isEmpty( previous_sec_id ) ) {
-                      api.section( previous_sec_id ).container.find( '.customize-section-title, .customize-panel-back, .customize-section-back').css('background', _color );
-                }
-                if ( _.isEmpty( active_sec_id ) ) {
-                      if ( ! _.isEmpty( api.panel( api.czr_activePanelId() ) ) )
-                            api.panel( api.czr_activePanelId() ).container.find( '.accordion-section .accordion-section-title').css('background', _color );
-                }
           });
     },
 
@@ -636,14 +625,17 @@ $.extend( CZRSkopeBaseMths, {
     //params = {
     //  active_panel_id : '',
     //  active_section_id : '',
+    //  is_skope_switch : false
     //}
     wash : function( params ) {
           var self = this,
               //@param element = { el : ${}, color : string }
               _do_wash = function( element ) {
-                     if ( ! _.has( element, 'el') || ! element.el.length )
+                    if ( ! _.has( element, 'el') || ! element.el.length )
                       return;
-                    element.el.css( 'background', '' );
+                    $.when( element.el.removeClass('czr-painted') ).done( function() {
+                          $(this).css( 'background', '' );
+                    });
               };
           if ( api.czr_skopeBase.paintedElements ) {
                 _.each( api.czr_skopeBase.paintedElements(), function( _el ) { _do_wash( _el ); } );
@@ -656,15 +648,17 @@ $.extend( CZRSkopeBaseMths, {
     //params = {
     //  active_panel_id : '',
     //  active_section_id : '',
+    //  is_skope_switch : false
     //}
     paint : function( params ) {
           var _color = 'inherit',
               defaults = {
                     active_panel_id : api.czr_activePanelId(),
-                    active_section_id : api.czr_activeSectionId()
+                    active_section_id : api.czr_activeSectionId(),
+                    is_skope_switch : false
               },
               _paint_candidates = [];
-          params = _.extend( params, defaults );
+          params = $.extend( defaults, params );
 
           if ( ! _.isUndefined( api.czr_activeSkopeId() ) && api.czr_skope.has( api.czr_activeSkopeId() ) ) {
                   _color = api.czr_skope( api.czr_activeSkopeId() ).color;
@@ -674,7 +668,15 @@ $.extend( CZRSkopeBaseMths, {
           var _do_paint = function( element ) {
                 if ( ! _.has( element, 'el') || ! element.el.length )
                   return;
-                element.el.css( 'background', element.color || _color );
+                //If is skope switch, add a css class to handle a smoother background color transition
+                if ( params.is_skope_switch ) {
+                      $.when( element.el.addClass('czr-painted') ).done( function() {
+                            $(this).css( 'background', element.color || _color );
+                      });
+                } else {
+                      element.el.css( 'background', element.color || _color );
+                }
+
           };
 
           api.czr_skopeBase.paintedElements = api.czr_skopeBase.paintedElements || new api.Value( [] );
