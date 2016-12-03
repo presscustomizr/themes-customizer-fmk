@@ -174,23 +174,16 @@ $.extend( CZRSkopeMths, {
           if ( skope().id == api.czr_activeSkopeId() ) {
                 //RESET DIRTYNESS FOR THE CLEAN SETTINGS CONTROLS IN THE ACTIVE SKOPE
                 _.each( ctrlIdDirtynessToClean , function( setId ) {
-                      if ( ! _.has( api.control( setId ), 'czr_state') )
+                      if ( ! _.has( api.control( setId ), 'czr_states') )
                         return;
-
-                      var _current_state  = $.extend( true, {}, api.control( setId ).czr_state() ),
-                          _new_state      = _.extend( _current_state, { isDirty : false} );
-
-                      api.control( setId ).czr_state( _new_state );
+                      api.control( setId ).czr_states( 'isDirty' )( false );
                 });
                 //Set control dirtyness for dirty settings
                 _.each( to, function( _val, _setId ) {
-                      if ( ! _.has( api.control( _setId ), 'czr_state') )
+                      if ( ! _.has( api.control( _setId ), 'czr_states') )
                         return;
-
-                      var _current_state  = $.extend( true, {}, api.control( _setId ).czr_state() ),
-                          _new_state      = _.extend( _current_state, { isDirty : true } );
-                      console.log('JOIE ? dirtyValuesReact : ', _setId, api.control( _setId ).czr_state() );
-                      api.control( _setId ).czr_state( _new_state );
+                      console.log('JOIE ? dirtyValuesReact : ', _setId, api.control( _setId ).czr_states( 'isDirty' ) );
+                      api.control( _setId ).czr_states( 'isDirty' )( true );
                 });
           }
     },
@@ -232,21 +225,16 @@ $.extend( CZRSkopeMths, {
           //}
           if ( skope().id == api.czr_activeSkopeId() ) {
                 _.each( ctrlIdDbToReset , function( setId ) {
-                      if ( ! _.has( api.control( setId ), 'czr_state') )
+                      if ( ! _.has( api.control( setId ), 'czr_states') )
                         return;
-                      var _current_state = $.extend( true, {}, api.control( setId ).czr_state() ),
-                          _new_state = _.extend( _current_state, { hasDBVal : false } );
-
-                      api.control( setId ).czr_state( _new_state );
+                      api.control( setId ).czr_states( 'hasDBVal' )( false );
                 });
                 //Set control db dirtyness for settings with a db value
                 _.each( to, function( _val, _setId ) {
-                      if ( ! _.has( api.control( _setId ), 'czr_state') )
+                      if ( ! _.has( api.control( _setId ), 'czr_states') )
                         return;
-                      var _current_state = $.extend( true, {}, api.control( _setId ).czr_state() ),
-                          _new_state = _.extend( _current_state, { hasDBVal : true } );
 
-                      api.control( _setId ).czr_state( _new_state );
+                      api.control( _setId ).czr_states( 'hasDBVal' )( true );
                 });
           }
     },

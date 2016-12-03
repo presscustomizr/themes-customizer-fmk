@@ -58,15 +58,9 @@ $.extend( CZRSkopeBaseMths, {
 
 
 
-    //Fired in self.controlStateReact()
+    //Fired in self.bindControlStates()
     //
-    //The ctrl.czr_state value looks like :
-    //{
-    // hasDBVal : false,
-    // isDirty : false,
-    // noticeVisible : false,
-    // resetVisible : false
-    //}
+    //@uses The ctrl.czr_states('isDirty') value
     renderControlResetWarningTmpl : function( ctrlId ) {
           var self = this,
               ctrl = api.control( ctrlId ),
@@ -74,7 +68,7 @@ $.extend( CZRSkopeBaseMths, {
               warning_message,
               success_message;
 
-          if ( ctrl.czr_state().isDirty ) {
+          if ( ctrl.czr_states( 'isDirty' )() ) {
               warning_message = 'Are you sure you want to reset your current customizations for this control?';
               success_message = 'Your customizations have been reset.';
           } else {
@@ -101,24 +95,15 @@ $.extend( CZRSkopeBaseMths, {
 
     //Fired on user click
     //Defined in the ctrl user event map
-    //The ctrl.czr_state value looks like :
-    //{
-    // hasDBVal : false,
-    // isDirty : false,
-    // noticeVisible : false,
-    // resetVisible : false
-    //}
+    //@uses The ctrl.czr_states values
     doResetSetting : function( ctrlId ) {
           var self = this,
               ctrl = api.control(ctrlId),
               skope_id = api.czr_activeSkopeId(),
-              reset_method = ctrl.czr_state().isDirty ? '_resetControlDirtyness' : '_resetControlAPIVal',
+              reset_method = ctrl.czr_states( 'isDirty' )() ? '_resetControlDirtyness' : '_resetControlAPIVal',
               setResetVisibility = function( ctrl, val ) {
-                    val = _.isUndefined( val ) ? false : val;
-
-                    var _current_state  = $.extend( true, {}, ctrl.czr_state() ),
-                        _new_state      = _.extend( _current_state, { resetVisible : false} );
-                    ctrl.czr_state( _new_state );
+                    val = _.isUndefined( val ) ? false : val;//@todo why this ?
+                    ctrl.czr_states( 'resetVisible' )( false );
               },
               _do_reset = function( ctrlId ) {
 
@@ -136,7 +121,7 @@ $.extend( CZRSkopeBaseMths, {
           ctrl.container.addClass('czr-resetting-control');
           api.consoleLog('DO RESET SETTING', ctrlId );
 
-          if ( ctrl.czr_state().isDirty ) {
+          if ( ctrl.czr_states( 'isDirty' )() ) {
                 _do_reset( ctrlId );
           } else {
                 api.previewer.czr_reset( skope_id, ctrlId )
@@ -164,24 +149,15 @@ $.extend( CZRSkopeBaseMths, {
     },
 
 
-    //The control czr_state Value looks like :
-    //{
-    // hasDBVal : false,
-    // isDirty : false,
-    // noticeVisible : false,
-    // resetVisible : false
-    //}
+    //@uses The ctrl.czr_states values
     _resetControlAPIVal : function( ctrlId ) {
           var current_skope_db  = api.czr_skope( api.czr_activeSkopeId() ).dbValues(),
               new_skope_db      = $.extend( true, {}, current_skope_db ),
               reset_control_db_state = function( ctrlId ) {
-                    if ( ! _.has( api.control( ctrlId ), 'czr_state') )
+                    if ( ! _.has( api.control( ctrlId ), 'czr_states') )
                       return;
 
-                    var _current_state = $.extend( true, {}, api.control(ctrlId).czr_state() ),
-                        _new_state = _.extend( _current_state, { hasDBVal : false } );
-
-                    api.control(ctrlId).czr_state( _new_state );
+                    api.control(ctrlId).czr_states( 'hasDBVal' )( false );
               };
 
           reset_control_db_state( ctrlId );

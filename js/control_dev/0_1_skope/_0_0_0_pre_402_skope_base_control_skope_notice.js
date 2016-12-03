@@ -85,7 +85,8 @@ $.extend( CZRSkopeBaseMths, {
                                 ! _isCustomized ? 'The value currently published for' : 'The value that will be published for',
                                 api.czr_skope( _localSkopeId )().title,
                                 ! _isCustomized ? 'is set in scope :' : 'is customized in scope :',
-                                _buildSkopeLink( _overridedBySkopeId )
+                                _buildSkopeLink( _overridedBySkopeId ),
+                                ! _isCustomized ? ', because it has a higher priority than this one.' : ', and will override this one once published because it has a higher priority.',
                           ].join(' ') );
                     }
 

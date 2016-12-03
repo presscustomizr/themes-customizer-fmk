@@ -78,27 +78,29 @@ $.extend( CZRSkopeBaseMths, {
                     },
                     initial_states = {};
 
-                //Declare an observable Value
-                //Bind it
-                //Set it
-                if ( ! _.has( ctrl, 'czr_state' ) ) {
-                      ctrl.czr_state = new api.Value( defaults );
-                      console.log('CTRL BOUND : ', ctrl.id );
-                      ctrl.czr_state.bind( function( to, from ) {
-                            self.controlStateReact( ctrl, to, from );
+                //Declare observable Values
+                // + Bind them
+                if ( ! _.has( ctrl, 'czr_states' ) ) {
+                      ctrl.czr_states = new api.Values();
+                      _.each( defaults, function( _state_val, _state_name ) {
+                            ctrl.czr_states.create( _state_name );
                       });
+
+                      console.log('CTRL BOUND : ', ctrl.id );
+                      self.bindControlStates( ctrl );
+
                 }
 
-                //Set it
-                initial_states = _.extend(
-                      defaults,
-                      {
-                            hasDBVal : api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( ctrlId ),
-                            isDirty : api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( ctrlId )
-                      }
-                );
-                ctrl.czr_state( initial_states );
-
+                //Set them
+                // initial_states = _.extend(
+                //       defaults,
+                //       {
+                //             hasDBVal : api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( ctrlId ),
+                //             isDirty : api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( ctrlId )
+                //       }
+                // );
+                ctrl.czr_states( 'hasDBVal' )( api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( ctrlId ) );
+                ctrl.czr_states( 'isDirty' )( api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( ctrlId ) );
 
                 //api.consoleLog( 'SETUP CONTROL VALUES ?', ctrlId, api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( ctrlId ) );
 
@@ -110,20 +112,16 @@ $.extend( CZRSkopeBaseMths, {
                                   selector  : '.czr-setting-reset, .czr-cancel-button',
                                   name      : 'control_reset_warning',
                                   actions   : function() {
-                                        if ( ! ctrl.czr_state().isDirty && ! ctrl.czr_state().hasDBVal )
+                                        if ( ! ctrl.czr_states('isDirty')() && ! ctrl.czr_states( 'hasDBVal' )() )
                                           return;
                                         //close all other warnings expanded in the section
                                         _.each( _.without( api.CZR_Helpers.getSectionControlIds( ctrl.section() ), ctrlId ) , function( _id ) {
-                                              if ( _.has( api.control(_id), 'czr_state') ) {
-                                                    var _current_state = $.extend( true, {}, api.control(_id).czr_state() ),
-                                                        _new_state = _.extend( _current_state, { resetVisible : false } );
-                                                    api.control(_id).czr_state( _new_state );
+                                              if ( _.has( api.control(_id), 'czr_states') ) {
+                                                    api.control(_id).czr_states( 'resetVisible' )( false );
                                               }
                                         });
-                                        var _current_ctrl_state = $.extend( true, {}, ctrl.czr_state() ),
-                                            _new_ctrl_state = _.extend( _current_ctrl_state, { resetVisible : ! ctrl.czr_state().resetVisible } );
 
-                                        ctrl.czr_state( _new_ctrl_state );
+                                        ctrl.czr_states( 'resetVisible' )( ! ctrl.czr_states( 'resetVisible' )() );
                                   }
                             },
                             //skope reset : do reset
@@ -151,10 +149,7 @@ $.extend( CZRSkopeBaseMths, {
                                   selector  : '.czr-toggle-notice',
                                   name      : 'control_toggle_notice',
                                   actions   : function( params ) {
-                                        var _current_state = $.extend( true, {}, ctrl.czr_state() ),
-                                            _new_state = _.extend( _current_state, { noticeVisible : ! ctrl.czr_state().noticeVisible } );
-
-                                        ctrl.czr_state( _new_state );
+                                        ctrl.czr_states( 'noticeVisible' )( ! ctrl.czr_states( 'noticeVisible' )() );
                                   }
                             }
                       ];
@@ -163,72 +158,63 @@ $.extend( CZRSkopeBaseMths, {
           });
     },
 
-
-    //@param ctrl = control instance
-    //@param to = new state
-    //@param from = previous state
-    //callback of ctrl.czr_state
-    //The ctrl.czr_state value looks like :
-    //{
-    // hasDBVal : false,
-    // isDirty : false,
-    // noticeVisible : false,
-    // resetVisible : false
-    //}
-    controlStateReact : function( ctrl, to, from ) {
-          console.log(' IN CONTROL STATE REACT ', ctrl.id, to, from);
-          var self = this,
-              defaults = {
-                    hasDBVal : false,
-                    isDirty : false,
-                    noticeVisible : false,
-                    resetVisible : false
-              };
+    //The ctrl.czr_states registered api.Values are :
+    //hasDBVal : false,
+    //isDirty : false,
+    //noticeVisible : false,
+    //resetVisible : false
+    bindControlStates : function( ctrl ) {
           if ( ! api.control.has( ctrl.id ) ) {
-                throw new Error( 'in controlStateReact, the provided ctrl id is not registered in the api : ' + ctrl.id );
+                throw new Error( 'in bindControlStates, the provided ctrl id is not registered in the api : ' + ctrl.id );
           }
-          //normalize
-          to    = _.extend( defaults, to );
-          from  = _.extend( defaults, from );
-
-          //init observ. values + react to changes
+          var self = this;
           //DB VALS
-          ctrl.container.toggleClass( 'has-db-val', to.hasDBval );
+          ctrl.czr_states('hasDBVal').bind( function( bool ) {
+                ctrl.container.toggleClass( 'has-db-val', bool );
+          });
 
           //API DIRTYNESS
-          ctrl.container.toggleClass( 'is-dirty', to.isDirty );
+          ctrl.czr_states('isDirty').bind( function( bool ) {
+                ctrl.container.toggleClass( 'is-dirty', bool );
+          });
 
           //NOTICE VISIBILITY
-          ctrl.container.toggleClass( 'czr-notice-visible', to.noticeVisible );
-          var $noticeContainer = ctrl.getNotificationsContainerElement();
-          if ( false !== $noticeContainer && false !== $noticeContainer.length ) {
-                if ( ! to.noticeVisible ) {
-                      $noticeContainer
-                            .stop()
-                            .slideUp( 'fast', null, function() {
-                                  $( this ).css( 'height', 'auto' );
-                            } );
-                } else {
-                      $noticeContainer
-                            .stop()
-                            .slideDown( 'fast', null, function() {
-                                  $( this ).css( 'height', 'auto' );
-                            } );
+          ctrl.czr_states('noticeVisible').bind( function( visible ) {
+                ctrl.container.toggleClass( 'czr-notice-visible', visible );
+                var $noticeContainer = ctrl.getNotificationsContainerElement();
+                if ( false !== $noticeContainer && false !== $noticeContainer.length ) {
+                      if ( ! visible ) {
+                            $noticeContainer
+                                  .stop()
+                                  .slideUp( 'fast', null, function() {
+                                        $( this ).css( 'height', 'auto' );
+                                  } );
+                      } else {
+                            $noticeContainer
+                                  .stop()
+                                  .slideDown( 'fast', null, function() {
+                                        $( this ).css( 'height', 'auto' );
+                                  } );
+                      }
                 }
-          }
+          });
+
+
 
           //RESET VISIBILITY
-          var section_id = ctrl.section() || api.czr_activeSectionId();
-          if ( to.resetVisible ) {
-                $.when( self.renderControlResetWarningTmpl( ctrl.id ) ).done( function( $_resetWarning ) {
-                      ctrl.czr_resetWarning = $_resetWarning;
-                      $_resetWarning.slideToggle('fast');
-                });
-          } else {
-                if ( _.has( ctrl, 'czr_resetWarning' ) && ctrl.czr_resetWarning.length )
-                      $.when( ctrl.czr_resetWarning.slideToggle('fast') ).done( function() {
-                            ctrl.czr_resetWarning.remove();
+          ctrl.czr_states('resetVisible').bind( function( visible ) {
+                var section_id = ctrl.section() || api.czr_activeSectionId();
+                if ( visible ) {
+                      $.when( self.renderControlResetWarningTmpl( ctrl.id ) ).done( function( $_resetWarning ) {
+                            ctrl.czr_resetWarning = $_resetWarning;
+                            $_resetWarning.slideToggle('fast');
                       });
-          }
+                } else {
+                      if ( _.has( ctrl, 'czr_resetWarning' ) && ctrl.czr_resetWarning.length )
+                            $.when( ctrl.czr_resetWarning.slideToggle('fast') ).done( function() {
+                                  ctrl.czr_resetWarning.remove();
+                            });
+                }
+          });
     }
 });//$.extend()
