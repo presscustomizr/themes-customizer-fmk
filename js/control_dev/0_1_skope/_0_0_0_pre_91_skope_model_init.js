@@ -49,26 +49,27 @@ $.extend( CZRSkopeMths, {
           skope.userEventMap = new api.Value( [
                 //skope switch
                 {
-                  trigger   : 'click keydown',
-                  selector  : '.czr-scope-switch',
-                  name      : 'skope_switch',
-                  actions   : function() {
-                      api.czr_activeSkopeId( skope_id );
-                  }
+                      trigger   : 'click keydown',
+                      selector  : '.czr-scope-switch',
+                      name      : 'skope_switch',
+                      actions   : function() {
+                            api.czr_activeSkopeId( skope().id );
+                      }
                 },
                 //skope reset : display warning
                 {
-                  trigger   : 'click keydown',
-                  selector  : '.czr-scope-reset',
-                  name      : 'skope_reset_warning',
-                  actions   : function() {
-                      skope.resetWarningVisible( ! skope.resetWarningVisible() );
-                  }
+                      trigger   : 'click keydown',
+                      selector  : '.czr-scope-reset',
+                      name      : 'skope_reset_warning',
+                      actions   : 'reactOnSkopeResetUserRequest'
                 }
           ]);//module.userEventMap
 
-          //Reset actions
-          skope.resetWarningVisible.callbacks.add(function() { return skope.resetReact.apply(skope, arguments ); } );
+          //Reset actions ( deferred cb )
+          skope.resetWarningVisible.bind( function( to, from ) {
+                return skope.resetReact( to );
+          }, { deferred : true } );
+
 
           //LISTEN TO API DIRTYNESS
           //@to is {setId1 : val1, setId2 : val2, ...}

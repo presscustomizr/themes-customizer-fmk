@@ -130,7 +130,7 @@ $.extend( CZRSkopeBaseMths, {
           api.consoleLog('DO RESET SETTING', ctrlId );
 
           if ( ctrl.czr_states( 'isDirty' )() ) {
-                api.czr_skopeReset.reset_changeset( { skope_id : skope_id, setId : setId, is_setting : true } )
+                api.czr_skopeReset.resetChangeset( { skope_id : skope_id, setId : setId, is_setting : true } )
                       .always( function() {
                             ctrl.container.removeClass('czr-resetting-control');
                             _setResetVisibility( ctrl );

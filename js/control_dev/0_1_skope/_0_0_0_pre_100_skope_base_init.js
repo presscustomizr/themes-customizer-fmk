@@ -182,7 +182,7 @@ $.extend( CZRSkopeBaseMths, {
           //store the resetting state
           api.czr_isResettingSkope        = new api.Value( false );
 
-          //Add a new state to the api
+          //Add new state to the api
           api.state.create('switching-skope')(false);
 
           ///////////////////// SKOPIFY THE API AND THE PANEL /////////////////////

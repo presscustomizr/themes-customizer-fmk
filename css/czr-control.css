@@ -2298,18 +2298,21 @@ body.czr-resetting-skope #czr-reset-skope-pane .czr-resetting {
     transition: height, top, .4s ease-in-out;
 }
 .czr-server-notice {
-    width: calc(100% - 2px);
+    width: calc(96% - 2px);
     top: 0;
     text-align: center;
-    background: white;
-    border:1px solid green;
-    color: green;
+    background: rgba(0, 156, 0, 0.18);
+    border: 1px solid green;
+    color: #000;
     display: none;
     position: relative;
+    line-height: 21px;
+    padding: 2%;
 }
 .czr-server-notice.czr-server-error {
-    color: red;
+    color: #000;
     border-color: red;
+    background: rgba(255, 0, 0, 0.24);
 }
 
 .czr-dismiss-notification {

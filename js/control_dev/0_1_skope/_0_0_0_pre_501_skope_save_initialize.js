@@ -27,17 +27,14 @@ $.extend( CZRSkopeSaveMths, {
                   self.changesetStatus = args.status;
             }
 
-            if ( api.state( 'saving' ).get() ) {
+            if ( api.state( 'saving' )() ) {
                   self.globalSaveDeferred.reject( 'already_saving' );//@to_translate
             }
 
-            // set saving state.
-            // => will be set to false when all saved promises resolved
-            api.state( 'saving' ).set( true );
             //api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
             var alwaysAfterSubmission = function( response, state ) {
                       //WP default treatments
-                      api.state( 'saving' ).set( false );
+                      api.state( 'saving' )( false );
                       //api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
                       self.saveBtn.prop( 'disabled', false );
                       if ( ! _.isUndefined( response ) && response.setting_validities ) {
@@ -53,6 +50,9 @@ $.extend( CZRSkopeSaveMths, {
                       }
                 },
                 resolveSave = function() {
+                      // set saving state.
+                      // => will be set to false when all saved promises resolved
+                      api.state( 'saving' )( true );
                       self.fireAllSubmission()
                             .always( function( response ) {
                                   alwaysAfterSubmission( response , this.state() );

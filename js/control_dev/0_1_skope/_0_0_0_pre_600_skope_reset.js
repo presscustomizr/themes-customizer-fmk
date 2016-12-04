@@ -4,6 +4,10 @@ $.extend( CZRSkopeResetMths, {
       initialize: function() {
             var self = this;
             self.previewer = api.previewer;
+            api.state.create('czr-resetting')(false);
+            api.state('czr-resetting').bind( function( state ) {
+                  $( document.body ).toggleClass( 'czr-resetting', false !== state );
+            });
       },
 
       //args : {
@@ -12,13 +16,14 @@ $.extend( CZRSkopeResetMths, {
       //  skope_id : '',
       //  setId : ''
       //}
-      reset_changeset : function( args ) {
+      resetChangeset : function( args ) {
             var dfd = $.Deferred(),
                 self = this,
                 processing = api.state( 'processing' ),
-                submitWhenDoneProcessing,
+                submitWhenPossible,
                 submit_reset,
                 request,
+                requestAjaxAction,
                 query_params,
                 query,
                 defaults = {
@@ -32,14 +37,13 @@ $.extend( CZRSkopeResetMths, {
             var skope_id = args.skope_id,
                 setId = args.setId;
 
-            $( document.body ).addClass( 'czr-resetting' );
-
+            // => will be set to false always after asynchronous request
             //skope dependant submit()
             submit_reset = function( skope_id, setId ) {
                   if ( _.isUndefined( skope_id ) ) {
                       throw new Error( 'RESET: MISSING skope_id');
                   }
-
+                  api.state( 'czr-resetting' )( true );
                   //the skope reset query takes parameters
                   query_params = {
                         skope_id : skope_id,
@@ -54,61 +58,69 @@ $.extend( CZRSkopeResetMths, {
                   //1) single setting reset
                   //2) entire skope reset
                   if ( args.is_setting ) {
-                      $.extend( query , { setting_id : setId } );
-                      request = wp.ajax.post( 'czr_changeset_setting_reset', query );
+                        $.extend( query , { setting_id : setId } );
+                        requestAjaxAction = 'czr_changeset_setting_reset';
+                  } else if ( args.is_skope ) {
+                        requestAjaxAction = 'czr_changeset_skope_reset';
                   } else {
-                      request = wp.ajax.post( 'czr_changeset_skope_reset', query );
+                        return dfd.reject( 'reset_ajax_action_not_specified' ).promise();
                   }
 
-                  api.consoleLog('in czr_reset submit : ', skope_id, query );
+                  api.consoleLog('in resetChangeset submit : ', skope_id, query );
 
-                  request.fail( function ( response ) {
-                        if ( '0' === response ) {
-                            response = 'not_logged_in';
-                        } else if ( '-1' === response ) {
-                          // Back-compat in case any other check_ajax_referer() call is dying
-                            response = 'invalid_nonce';
-                        }
+                  wp.ajax.post( requestAjaxAction , query )
+                        .always( function () {
+                              api.state( 'czr-resetting' )( false );
+                        })
+                        .fail( function ( response ) {
+                              if ( '0' === response ) {
+                                  response = 'not_logged_in';
+                              } else if ( '-1' === response ) {
+                                // Back-compat in case any other check_ajax_referer() call is dying
+                                  response = 'invalid_nonce';
+                              }
 
-                        if ( 'invalid_nonce' === response ) {
-                            self.previewer.cheatin();
-                        } else if ( 'not_logged_in' === response ) {
-                              self.previewer.preview.iframe.hide();
-                              self.previewer.login().done( function() {
-                                    self.reset_changeset( skope_id, setId );
-                                    self.previewer.preview.iframe.show();
-                              } );
-                        }
-                        response = api.czr_skopeBase.buildServerResponse( response );
-                        api.trigger( 'error', response );
-                        api.czr_serverNotification( { message: response, status : 'error' } );
-                        dfd.reject( response );
-                  } );
-
-                  request.done( function( response ) {
-                        dfd.resolve( response );
-                  } );
-
-                  request.always( function () {
-                      $( document.body ).removeClass( 'czr-resetting' );
-                  } );
-
+                              if ( 'invalid_nonce' === response ) {
+                                  self.previewer.cheatin();
+                              } else if ( 'not_logged_in' === response ) {
+                                    self.previewer.preview.iframe.hide();
+                                    self.previewer.login().done( function() {
+                                          self.resetChangeset( args );
+                                          self.previewer.preview.iframe.show();
+                                    } );
+                              }
+                              response = api.czr_skopeBase.buildServerResponse( response );
+                              api.trigger( 'error', response );
+                              api.czr_serverNotification( { message: response, status : 'error' } );
+                              dfd.reject( response );
+                        })
+                        .done( function( response ) {
+                              dfd.resolve( response );
+                        });
             };//submit_reset()
 
-            if ( 0 === processing() ) {
+            if ( 0 === processing() && false === api.state( 'czr-resetting' ) ) {
                   submit_reset( skope_id, setId );
             } else {
-                  submitWhenDoneProcessing = function () {
-                        if ( 0 === processing() ) {
-                              api.state.unbind( 'change', submitWhenDoneProcessing );
+                  submitWhenPossible = function () {
+                        if ( 0 === processing() && false === api.state( 'czr-resetting' ) ) {
+                              api.state.unbind( 'change', submitWhenPossible );
                               submit_reset( skope_id, setId );
                         }
                   };
-                  api.state.bind( 'change', submitWhenDoneProcessing );
+                  api.state.bind( 'change', submitWhenPossible );
             }
 
             return dfd.promise();
       },
+
+
+
+
+
+
+
+
 
 
 

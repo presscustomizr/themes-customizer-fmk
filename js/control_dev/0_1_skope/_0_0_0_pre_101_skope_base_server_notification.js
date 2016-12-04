@@ -8,14 +8,16 @@ $.extend( CZRSkopeBaseMths, {
       //  {
       //    status : 'success',
       //    expanded : true,
-      //    message : ''
+      //    message : '',
+      //    auto_collapse : false
       //  }
       toggleServerNotice : function( notice ) {
             notice = _.isObject( notice ) ? notice : {};
             notice = _.extend( {
                   status : 'success',
                   expanded : true,
-                  message : ''
+                  message : '',
+                  auto_collapse : false
             }, notice );
 
             this.serverNoticeEmbedded = this.serverNoticeEmbedded || $.Deferred();
@@ -59,10 +61,10 @@ $.extend( CZRSkopeBaseMths, {
                             $notif_wrap.toggleClass( 'czr-server-error', 'error' == notice.status );
                             if ( 'error' == notice.status ) {
                                   $('.czr-server-message', $notif_wrap )
-                                        .html( _.isEmpty( notice.message ) ? 'Server Problem.' : [ 'Error :' , notice.message ].join(' ') );
+                                        .html( _.isEmpty( notice.message ) ? 'Server Problem.' : notice.message );
                             } else {
                                   $('.czr-server-message', $notif_wrap )
-                                        .html( _.isEmpty( notice.message ) ? 'Success.' : [ 'Success :' , notice.message ].join(' ') );
+                                        .html( _.isEmpty( notice.message ) ? 'Success.' : notice.message );
                             }
                             _notif_wrap_height  = $( '.czr-server-notice', '.czr-scope-switcher' ).outerHeight();
                             _header_height  = $header.outerHeight() + _notif_wrap_height;
@@ -91,11 +93,11 @@ $.extend( CZRSkopeBaseMths, {
             } else {
                   _toggleNotice();
             }
-            if ( 'success' == notice.status ) {
+            if ( 'success' == notice.status || false !== notice.auto_collapse ) {
                   setTimeout( function() {
                               api.czr_serverNotification( { expanded : false } );
                         },
-                        3000
+                        2500
                   );
             }
       },
