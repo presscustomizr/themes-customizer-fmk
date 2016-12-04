@@ -28,7 +28,7 @@ $.extend( CZRSkopeSaveMths, {
             }
 
             if ( api.state( 'saving' ).get() ) {
-                  self.globalSaveDeferred.reject( 'already_saving' );
+                  self.globalSaveDeferred.reject( 'already_saving' );//@to_translate
             }
 
             // set saving state.
@@ -49,7 +49,7 @@ $.extend( CZRSkopeSaveMths, {
                       if ( 'pending' == state ) {
                             api.czr_serverNotification( { message: response, status : 'error' } );
                       } else {
-                            api.czr_serverNotification( { message: 'Successfully published !' } );
+                            api.czr_serverNotification( { message: 'Successfully published !' } );//@to_translate
                       }
                 },
                 resolveSave = function() {

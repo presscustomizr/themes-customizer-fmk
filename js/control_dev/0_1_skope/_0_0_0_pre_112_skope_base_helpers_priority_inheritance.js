@@ -108,6 +108,41 @@ $.extend( CZRSkopeBaseMths, {
     },
 
 
+    //@return the skope title from which a setting id inherits its current value
+    getInheritedSkopeTitles : function( skope_id, skope_ids ) {
+          skope_id = skope_id || api.czr_activeSkopeId();
+          if ( ! api.czr_skope.has( skope_id ) ) {
+                throw new Error('getInheritedSkopeTitles : the requested skope id is not registered : ' + skope_id );
+          }
+          skope_ids = skope_ids || [];
+          var self = this,
+              skope_model = api.czr_skope( skope_id )();
+
+          if ( skope_id !== api.czr_activeSkopeId() )
+              skope_ids.unshift( skope_id );
+
+          if ( 'global' !== skope_model.skope )
+              return self.getInheritedSkopeTitles( self._getParentSkopeId( skope_model ), skope_ids );
+
+          return _.map( skope_ids, function( id ) {
+                return self.buildSkopeLink( id );
+          }).join(' and ');//@to_translate
+    },
+
+
+    buildSkopeLink : function( skope_id ) {
+          if ( ! api.czr_skope.has( skope_id ) ) {
+                throw new Error('buildSkopeLink : the requested skope id is not registered : ' + skope_id );
+          }
+          var _link_title = "Switch to scope : " + api.czr_skope( skope_id )().title;//@to_translate
+          return [
+                '<span class="czr-skope-switch" title=" ' + _link_title + '" data-skope-id="' + skope_id + '">',
+                api.czr_skope( skope_id )().title,
+                '</span>'
+          ].join( '' );
+    },
+
+
     //@return boolean
     //isAllowedWPBuiltinSetting :
 
@@ -126,9 +161,6 @@ $.extend( CZRSkopeBaseMths, {
               val_candidate = '___',
               skope_model = api.czr_skope( skope_id )(),
               initial_val;
-
-
-
 
           //initial val
           //some settings like widgets may be dynamically added. Therefore their initial val won't be stored in the api.settings.settings

@@ -194,8 +194,8 @@ $.extend( CZRSkopeMths, {
     *****************************************************************************/
     changesetValuesReact : function( to, from ) {
           var skope = this,
-              _currentDbDirties = $.extend( true, {}, skope.dirtyValues() );
-          skope.dirtyValues( $.extend( _currentDbDirties, to ) );
+              _currentServerDirties = $.extend( true, {}, skope.dirtyValues() );
+          skope.dirtyValues( $.extend( _currentServerDirties, to ) );
     },
 
 

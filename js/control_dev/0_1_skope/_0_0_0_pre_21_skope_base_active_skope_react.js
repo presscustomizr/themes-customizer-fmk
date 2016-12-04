@@ -105,11 +105,23 @@ $.extend( CZRSkopeBaseMths, {
           return dfd.promise();
     },
 
+
+
     //@return void()
     //Fired in activeSkopeReact()
     _writeCurrentSkopeTitle : function( skope_id ) {
           var self = this,
-              current_title = api.czr_skope( skope_id|| api.czr_activeSkopeId() ).long_title,
+              current_title = api.czr_skope( skope_id || api.czr_activeSkopeId() ).long_title,
+              _buildTitleHtml = function() {
+                    var _inheritedFrom = self.getInheritedSkopeTitles();
+                    return [
+                          current_title,
+                          '<span class="czr-skope-inherits-from">',
+                          _.isEmpty( _inheritedFrom ) ? ' ' : 'Inherits from',//@to_translate
+                          self.getInheritedSkopeTitles(),
+                          '</span>'
+                    ].join(' ');
+              },
               _toggle_spinner = function( visible ) {
                     if ( visible ) {
                           $('.czr-scope-switcher').find('.spinner').fadeIn();
@@ -118,25 +130,33 @@ $.extend( CZRSkopeBaseMths, {
                     }
               };
 
-          self.skopeWrapperEmbedded.then( function() {
-                if ( ! $('.czr-scope-switcher').find('.czr-current-skope-title').length ) {
-                      $('.czr-scope-switcher').prepend(
-                        $( '<h2/>', {
-                              class : 'czr-current-skope-title',
-                              html : '<span class="czr-skp-permanent-title"><span class="spinner"></span>CURRENT CUSTOMIZATION SCOPE</span></br><span class="czr-skope-title">' + current_title + '</span>'
-                        })
-                      );
-                } else {
-                      $.when( $('.czr-scope-switcher').find('.czr-skope-title').fadeOut(200) ).done( function() {
-                            $(this).html( current_title ).fadeIn(200);
-                      });
-                }
+          //render / update the title
+          self.skopeWrapperEmbedded
+                .then( function() {
+                      if ( ! $('.czr-scope-switcher').find('.czr-current-skope-title').length ) {
+                            $('.czr-scope-switcher').prepend(
+                                  $( '<h2/>', {
+                                        class : 'czr-current-skope-title',
+                                        html : [
+                                              '<span class="czr-skp-permanent-title"><span class="spinner"></span>CURRENT CUSTOMIZATION SCOPE</span>',//@to_translate
+                                              '<span class="czr-skope-title">',
+                                              _buildTitleHtml(),
+                                              '</span>'
+                                        ].join('')
+                                  })
+                            );
+                      } else {
+                            $.when( $('.czr-scope-switcher').find('.czr-skope-title').fadeOut(200) ).done( function() {
+                                  $(this)
+                                        .html( _buildTitleHtml() )
+                                        .fadeIn(200);
+                            });
+                      }
 
-                if ( _.isUndefined( api.state( 'switching-skope' ).isBound ) ) {
-                      api.state('switching-skope').bind( _toggle_spinner );
-                      api.state( 'switching-skope' ).isBound = true;
-                }
+                      if ( _.isUndefined( api.state( 'switching-skope' ).isBound ) ) {
+                            api.state('switching-skope').bind( _toggle_spinner );
+                            api.state( 'switching-skope' ).isBound = true;
+                      }
           });
-
     }
 });//$.extend

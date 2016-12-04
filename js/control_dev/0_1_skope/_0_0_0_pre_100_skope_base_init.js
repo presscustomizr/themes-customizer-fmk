@@ -206,9 +206,9 @@ $.extend( CZRSkopeBaseMths, {
 
           //EMBED THE SKOPE WRAPPER
           if ( 'pending' == self.skopeWrapperEmbedded.state() ) {
-              $.when( self.embedSkopeWrapper() ).done( function() {
-                  self.skopeWrapperEmbedded.resolve();
-              });
+                $.when( self.embedSkopeWrapper() ).done( function() {
+                      self.skopeWrapperEmbedded.resolve();
+                });
           }
 
 
@@ -370,10 +370,25 @@ $.extend( CZRSkopeBaseMths, {
     //fired in initialize
     //=> embed the wrapper for all skope boxes
     //=> add a specific class to the body czr-skop-on
+    //=> Listen to skope switch in main title
     embedSkopeWrapper : function() {
           var self = this;
           $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher', html:'<div class="czr-skopes-wrapper"></div>'}) );
           $('body').addClass('czr-skop-on');
+          var _eventMap = [
+              //skope reset : do reset
+              {
+                    trigger   : 'click keydown',
+                    selector  : '.czr-skope-switch',
+                    name      : 'control_skope_switch',
+                    actions   : function( params ) {
+                          var _skopeIdToSwithTo = $( params.dom_event.currentTarget, params.dom_el ).attr('data-skope-id');
+                          if ( ! _.isEmpty( _skopeIdToSwithTo ) && api.czr_skope.has( _skopeIdToSwithTo ) )
+                            api.czr_activeSkopeId( _skopeIdToSwithTo );
+                    }
+              }
+          ];
+          api.CZR_Helpers.setupDOMListeners( _eventMap , { dom_el : $('.czr-scope-switcher') }, self );
     },
 
 
@@ -392,15 +407,14 @@ $.extend( CZRSkopeBaseMths, {
     bindAPISettings : function( requestedSetId ) {
           var self = this,
               _settingChangeReact = function( new_val, old_val, o ) {
-                    //this is the setting instance
-                    var setId = this.id;
+                    //"this" is the setting instance
+                    var setId = this.id,
+                        skope_id;
 
                     if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
                       api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.previewer._new_refresh() method.');
                       //return;
                     }
-
-                    var skope_id;
 
                     //For skope eligible settings : Update the skope dirties with the new val of this setId
                     //=> not eligibile skope will update the global skope dirties
@@ -410,9 +424,15 @@ $.extend( CZRSkopeBaseMths, {
                           api.czr_skope( skope_id ).updateSkopeDirties( setId, new_val );
                     }
 
-                    //Update the skope inehritance notice for the setting control
-                    if ( self.isSettingSkopeEligible( setId ) )
-                      self.renderControlSkopeNotice( setId );
+                    //collapse any expanded reset modifications
+                    if ( _.has( api.control(setId), 'czr_states' ) ) {
+                          api.control(setId).czr_states( 'resetVisible' )( false );
+                    }
+
+                    //Update the skope inheritance notice for the setting control
+                    if ( self.isSettingSkopeEligible( setId ) ) {
+                          self.renderControlSkopeNotice( setId );
+                    }
               };//bindListener()
 
           //if a setting Id is requested

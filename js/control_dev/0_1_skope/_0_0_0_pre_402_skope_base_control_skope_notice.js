@@ -11,9 +11,6 @@ $.extend( CZRSkopeBaseMths, {
     renderControlSkopeNotice : function( controls ) {
           var self = this,
               controlIds = _.isArray(controls) ? controls : [controls],
-              _buildSkopeLink = function( skope_id ) {
-                    return [ '<span class="czr-skope-switch" data-skope-id="' + skope_id + '">', api.czr_skope( skope_id )().title, '</span>' ].join( '' );
-              },
               _generateControlNotice = function( setId, _localSkopeId ) {
                     var _currentSkopeId         = api.czr_activeSkopeId(),
                         _inheritedFromSkopeId   = self.getInheritedSkopeId( setId, _currentSkopeId ),
@@ -32,11 +29,11 @@ $.extend( CZRSkopeBaseMths, {
                           if ( _isCustomized ) {
                                 if ( 'global' == api.czr_skope( _inheritedFromSkopeId )().skope ) {
                                       _html.push( [
-                                            'Customized. Will be published site wide.',
+                                            'Customized. Will be published site wide.',//@to_translate
                                       ].join(' ') );
                                 } else {
                                     _html.push( [
-                                          'Customized. Will be published for :',
+                                          'Customized. Will be published for :',//@to_translate
                                           api.czr_skope( _inheritedFromSkopeId )().title
                                     ].join(' ') );
                                 }
@@ -44,16 +41,16 @@ $.extend( CZRSkopeBaseMths, {
                                 if ( _hasDBVal ) {
                                       if ( 'global' == api.czr_skope( _inheritedFromSkopeId )().skope ) {
                                             _html.push( [
-                                                  'Customized and published site wide.',
+                                                  'Customized and published site wide.',//@to_translate
                                             ].join(' ') );
                                       } else {
                                             _html.push( [
-                                                  'Customized and published for :',
+                                                  'Customized and published for :',//@to_translate
                                                   api.czr_skope( _inheritedFromSkopeId )().title
                                             ].join(' ') );
                                       }
                                 } else {
-                                      _html.push( 'Default website value published site wide.' );
+                                      _html.push( 'Default website value published site wide.' );//@to_translate
                                 }
                           }
                     }
@@ -66,9 +63,9 @@ $.extend( CZRSkopeBaseMths, {
                           _isCustomized = ! _.isUndefined( api.czr_skope( _inheritedFromSkopeId ).dirtyValues()[setId] );
                           _hasDBVal     = ! _.isUndefined( api.czr_skope( _inheritedFromSkopeId ).dbValues()[setId] );
                           if ( ! _isCustomized && ! _hasDBVal ) {
-                                _html.push( 'Default website value' );
+                                _html.push( 'Default website value' );//@to_translate
                           } else {
-                                _html.push( 'Inherited from : ' + _buildSkopeLink( _inheritedFromSkopeId ) );
+                                _html.push( 'Inherited from : ' + self.buildSkopeLink( _inheritedFromSkopeId ) );//@to_translate
                           }
                     }
 
@@ -82,11 +79,11 @@ $.extend( CZRSkopeBaseMths, {
                           _isCustomized = ! _.isUndefined( api.czr_skope( _overridedBySkopeId ).dirtyValues()[setId] );
 
                           _html.push( [
-                                ! _isCustomized ? 'The value currently published for' : 'The value that will be published for',
+                                ! _isCustomized ? 'The value currently published for' : 'The value that will be published for',//@to_translate
                                 api.czr_skope( _localSkopeId )().title,
-                                ! _isCustomized ? 'is set in scope :' : 'is customized in scope :',
-                                _buildSkopeLink( _overridedBySkopeId ),
-                                ! _isCustomized ? ', because it has a higher priority than this one.' : ', and will override this one once published because it has a higher priority.',
+                                ! _isCustomized ? 'is set in scope :' : 'is customized in scope :',//@to_translate
+                                self.buildSkopeLink( _overridedBySkopeId ),
+                                ! _isCustomized ? ', because it has a higher priority than this one.' : ', and will override this one once published because it has a higher priority.',//@to_translate
                           ].join(' ') );
                     }
 
@@ -141,7 +138,7 @@ $.extend( CZRSkopeBaseMths, {
                                   .find('.customize-control-title').first()//was.find('.customize-control-title')
                                   .append( $( '<span/>', {
                                         class : 'czr-toggle-notice fa fa-info-circle',
-                                        title : 'Display informations about the scope of this option.'
+                                        title : 'Display informations about the scope of this option.'//@to_translate
                                   } ) ) )
                             .done( function(){
                                   $('.czr-toggle-notice', ctrl.container).fadeIn( 400 );

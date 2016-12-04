@@ -59,5 +59,8 @@ $.extend( CZRSkopeSaveMths, {
             //SYNCHRONIZE THE API.SETTINGS.SETTINGS WITH THE SAVED VALUE FOR GLOBAL SKOPE
             //finally make sure the api.settings.settings values are always synchronized with the global skope instance
             api.czr_skopeBase.maybeSynchronizeGlobalSkope();
+
+            //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
+            api.czr_skopeBase.renderControlSkopeNotice( api.CZR_Helpers.getSectionControlIds() );
       }
 });//$.extend

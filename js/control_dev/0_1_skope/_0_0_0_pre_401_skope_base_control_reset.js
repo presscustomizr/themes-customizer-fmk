@@ -18,8 +18,8 @@ $.extend( CZRSkopeBaseMths, {
                 controls = api.CZR_Helpers.getSectionControlIds( api.czr_activeSectionId() );
                 //filter only eligible controlIds
                 controls = _.filter( controls, function( _id ) {
-                    var setId = api.CZR_Helpers.getControlSettingId( _id );
-                    return setId && self.isSettingSkopeEligible( setId );
+                      var setId = api.CZR_Helpers.getControlSettingId( _id );
+                      return setId && self.isSettingSkopeEligible( setId );
                 });
           }
 
@@ -35,13 +35,15 @@ $.extend( CZRSkopeBaseMths, {
                                 }
 
                                 ctrl.deferred.embedded.then( function() {
-                                      $.when( ctrl.container
-                                            .find('.customize-control-title').first()//was.find('.customize-control-title')
-                                            .prepend( $( '<span/>', {
-                                                  class : 'czr-setting-reset fa fa-refresh',
-                                                  title : 'Reset'
-                                            } ) ) )
+                                      $.when(
+                                            ctrl.container
+                                                  .find('.customize-control-title').first()//was.find('.customize-control-title')
+                                                  .prepend( $( '<span/>', {
+                                                        class : 'czr-setting-reset fa fa-refresh',
+                                                        title : 'Reset'
+                                                  } ) ) )
                                       .done( function(){
+                                            ctrl.container.addClass('czr-skoped');
                                             $('.czr-setting-reset', ctrl.container).fadeIn( 400 );
                                             dfd.resolve();
                                       });
@@ -154,16 +156,21 @@ $.extend( CZRSkopeBaseMths, {
 
     },
 
-    //updates the current skope dirties
+    //updates the current skope dirties and the changeset dirties
     _resetControlDirtyness : function( ctrlId ) {
-          var setId = api.CZR_Helpers.getControlSettingId( ctrlId ),
-              skope_instance = api.czr_skope( api.czr_activeSkopeId() ),
-              current_dirties = skope_instance.dirtyValues(),
-              new_dirties = $.extend( true, {}, current_dirties ),
-              dfd = $.Deferred();
+          var setId           = api.CZR_Helpers.getControlSettingId( ctrlId ),
+              skope_instance  = api.czr_skope( api.czr_activeSkopeId() ),
+              current_dirties = $.extend( true, {}, skope_instance.dirtyValues() ),
+              new_dirties     = {},
+              current_changeset = $.extend( true, {}, skope_instance.changesetValues() ),
+              new_changeset     = {},
+              dfd             = $.Deferred();
 
-          new_dirties = _.omit( new_dirties, setId );
+          new_dirties   = _.omit( current_dirties, setId );
+          new_changeset = _.omit( current_changeset, setId );
           skope_instance.dirtyValues( new_dirties );
+          skope_instance.changesetValues( new_dirties );
+
           return dfd.resolve().promise();
     },
 

@@ -7,28 +7,27 @@ $.extend( CZRSkopeBaseMths, {
             $.when( $('#customize-header-actions').append( $home_button ) )
                   .done( function() {
                         $home_button
-                        .keydown( function( event ) {
-                              if ( 9 === event.which ) // tab
-                                return;
-                              if ( 13 === event.which ) // enter
-                                this.click();
-                              event.preventDefault();
-                        })
-                        .on( 'click.customize-controls-home', function() {
-                              event.preventDefault();
-                              //close everything
-                              if ( api.section.has( api.czr_activeSectionId() ) ) {
-                                    api.section( api.czr_activeSectionId() ).expanded( false );
-                              } else {
-                                    api.section.each( function( _s ) {
-                                        _s.expanded( false );
+                              .keydown( function( event ) {
+                                    if ( 9 === event.which ) // tab
+                                      return;
+                                    if ( 13 === event.which ) // enter
+                                      this.click();
+                                    event.preventDefault();
+                              })
+                              .on( 'click.customize-controls-home', function() {
+                                    //event.preventDefault();
+                                    //close everything
+                                    if ( api.section.has( api.czr_activeSectionId() ) ) {
+                                          api.section( api.czr_activeSectionId() ).expanded( false );
+                                    } else {
+                                          api.section.each( function( _s ) {
+                                              _s.expanded( false );
+                                          });
+                                    }
+                                    api.panel.each( function( _p ) {
+                                          _p.expanded( false );
                                     });
-                              }
-                              api.panel.each( function( _p ) {
-                                  _p.expanded( false );
                               });
-                        });
                   });
-
       }
 } );//$.extend(

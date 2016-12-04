@@ -42,7 +42,9 @@ $.extend( CZRSkopeBaseMths, {
 
           //filter only eligible ctrlIds
           controls = _.filter( controls, function( ctrlId ) {
-              return true;
+              var setId = api.CZR_Helpers.getControlSettingId( ctrlId );
+              return setId && self.isSettingSkopeEligible( setId );
+              //return true;
               //return self.isSettingSkopeEligible( ctrlId );
               //return self.isSettingResetEligible( ctrlId );
           });
@@ -120,8 +122,11 @@ $.extend( CZRSkopeBaseMths, {
                                                     api.control(_id).czr_states( 'resetVisible' )( false );
                                               }
                                         });
-
                                         ctrl.czr_states( 'resetVisible' )( ! ctrl.czr_states( 'resetVisible' )() );
+                                        //collapse the control notice expanded if resetting requested
+                                        if ( ctrl.czr_states( 'resetVisible' )() ) {
+                                              ctrl.czr_states( 'noticeVisible' )( false );
+                                        }
                                   }
                             },
                             //skope reset : do reset
@@ -151,6 +156,10 @@ $.extend( CZRSkopeBaseMths, {
                                   name      : 'control_toggle_notice',
                                   actions   : function( params ) {
                                         ctrl.czr_states( 'noticeVisible' )( ! ctrl.czr_states( 'noticeVisible' )() );
+                                        //collapse the control reset dialog expanded
+                                        if ( ctrl.czr_states( 'noticeVisible' )() ) {
+                                              ctrl.czr_states( 'resetVisible' )( false );
+                                        }
                                   }
                             }
                       ];
