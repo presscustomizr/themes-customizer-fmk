@@ -83,7 +83,6 @@ $.extend( CZRSkopeSaveMths, {
                         dfd.reject( r );
                   })
                   .done( function( r ) {
-                        //console.log('RECURSIVE PUSH DONE', r );
                         self.getSubmitPromise( self.globalSkopeId )
                               .fail( function( r ) {
                                     api.consoleLog('GLOBAL SAVE SUBMIT FAIL', r );
@@ -91,15 +90,12 @@ $.extend( CZRSkopeSaveMths, {
                                     dfd.reject( r );
                               })
                               .done( function( r ) {
-                                    //console.log('GLOBAL SUBMIT DONE', r );
                                     //WE NEED TO BUILD A PROPER RESPONSE HERE
                                     if ( _.isEmpty( _responses_ ) ) {
                                           _responses_ = r || {};
                                     } else {
                                           _responses_ = $.extend( _responses_ , r );
                                     }
-                                    //console.log('CONCATENATED RESPONSES : ', _responses_ );
-
                                     dfd.resolve( _responses_ );
                               });
                   });
@@ -120,7 +116,6 @@ $.extend( CZRSkopeSaveMths, {
 //       _.each( skopeObjectToSubmit, function( _skop ) {
 //             if ( _skop.id == globalSkopeId )
 //               return;
-//             console.log('>>>>>>>>>>>>>>>>>>> submit request for missing widgets globally', widget_dirties );
 //             var widget_dirties = {};
 //             var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
 
@@ -160,7 +155,6 @@ $.extend( CZRSkopeSaveMths, {
   //////////////////////////////////SUBMIT EXCLUDED SETTINGS ////////////////////////////
   ///@to do : do we need to check if we are not already in the global skope ?
   // if ( ! _.isEmpty( _skopeExcludedDirties ) ) {
-  //       console.log('>>>>>>>>>>>>>>>>>>> submit request for _skopeExcludedDirties', _skopeExcludedDirties );
   //       //each promise is a submit ajax query
   //       promises.push( submit( {
   //             skope_id : globalSkopeId,

@@ -95,11 +95,19 @@
                 if ( 'resolved' == api.section( targetSectionId ).czr_ctrlDependenciesReady.state() )
                   return dfd.resolve().promise();
 
+                //FIND DOMINI IN THE TARGET SECTION
+                //=> setup their callbacks
                 _.each( self.dominiDeps , function( params ) {
-                      params = self._prepareDominusParams( params );
+                      if ( ! _.has( params, 'dominus' ) || ! _.isString( params.dominus ) || _.isEmpty( params.dominus ) ) {
+                            throw new Error( 'Control Dependencies : a dominus control id must be a not empty string.');
+                      }
+
                       var wpDominusId = api.CZR_Helpers.build_setId( params.dominus );
                       if ( api.control( wpDominusId ).section() != targetSectionId )
                         return;
+
+                      params = self._prepareDominusParams( params );
+
                       self._processDominusCallbacks( params.dominus, params )
                             .fail( function() {
                                   api.consoleLog( 'self._processDominusCallbacks fail for section ' + targetSectionId );
@@ -117,9 +125,13 @@
                     _getServusDomini = function( shortServudId ) {
                           var _dominiIds = [];
                           _.each( self.dominiDeps , function( params ) {
-                                params = self._prepareDominusParams( params );
-                                if ( _.contains( params.servi , shortServudId ) &&  ! _.contains( _dominiIds , params.dominus ) ) {
-                                    _dominiIds.push( params.dominus );
+                                if ( ! _.has( params, 'servi' ) || ! _.isArray( params.servi ) || ! _.has( params, 'dominus' ) || _.isEmpty( params.dominus ) ) {
+                                      throw new Error( 'Control Dependencies : wrong params in _getServusDomini.');
+                                }
+
+                                if ( _.contains( params.servi , shortServudId ) && ! _.contains( _dominiIds , params.dominus ) ) {
+                                      params = self._prepareDominusParams( params );
+                                      _dominiIds.push( params.dominus );
                                 }
                           });
                           return ! _.isArray( _dominiIds ) ? [] : _dominiIds;
@@ -136,6 +148,7 @@
 
                 //let's loop on the domini ids and check if we need to "awake" an external section
                 _.each( _servusDominiIds, function( shortDominusId ){
+
                       var wpDominusId = api.CZR_Helpers.build_setId( shortDominusId );
                       //This dominus must be located in another section
                       if ( api.control( wpDominusId ).section() == targetSectionId )
@@ -143,13 +156,12 @@
                       //The dominus section can't be the current source if set. => otherwise potential infinite loop scenario.
                       if ( sourceSectionId == api.control( wpDominusId ).section() )
                           return;
-
                       //inform the api that a section has to be awaken
                       //=> first silently update the section controls if skope on
                       //=> then fire the visibilities
                       api.trigger( 'awaken-section', {
-                          target : api.control( wpDominusId ).section(),
-                          source : targetSectionId
+                            target : api.control( wpDominusId ).section(),
+                            source : targetSectionId
                       } );
                 } );
 

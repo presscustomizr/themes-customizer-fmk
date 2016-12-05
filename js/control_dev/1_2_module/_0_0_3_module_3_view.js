@@ -142,15 +142,20 @@ $.extend( CZRModuleMths, {
           $( '.' + module.control.css_attr.items_wrapper, module.container ).sortable( {
                 handle: '.' + module.control.css_attr.item_sort_handle,
                 start: function() {
-                    //close the module panel if needed
-                    if ( _.has(api, 'czrModulePanelState' ) )
-                      api.czrModulePanelState.set(false);
-                    //close the sektion settings panel if needed
-                    if ( _.has(api, 'czrSekSettingsPanelState' ) )
-                      api.czrSekSettingsPanelState.set(false);
+                      //close the module panel if needed
+                      if ( _.has(api, 'czrModulePanelState' ) )
+                        api.czrModulePanelState.set(false);
+                      //close the sektion settings panel if needed
+                      if ( _.has(api, 'czrSekSettingsPanelState' ) )
+                        api.czrSekSettingsPanelState.set(false);
                 },
                 update: function( event, ui ) {
-                    module.itemCollection.set( module._getSortedDOMItemCollection(), { item_collection_sorted : true } );
+                      module.itemCollection.set( module._getSortedDOMItemCollection(), { item_collection_sorted : true } );
+
+                      //refreshes the preview frame, only if the associated setting is a postMessage transport one, with no partial refresh
+                      if ( 'postMessage' == api( module.control.id ).transport && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+                              _.delay( function() { api.previewer.refresh(); }, 100 );
+                      }
                 }
               }
           );

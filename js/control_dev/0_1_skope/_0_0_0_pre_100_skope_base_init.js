@@ -546,7 +546,6 @@ $.extend( CZRSkopeBaseMths, {
     // fired on 'active-section-setup'
     // params looks like : { controls : controls, section_id : section_id }
     _maybeSetupAssignedMenuLocations : function( active_section ) {
-          console.log('in _maybeSetupAssignedMenuLocations', active_section );
           if ( _.isUndefined( active_section ) || _.isEmpty( active_section ) || ! api.section.has( active_section.id ) ) {
                 api.consoleLog( 'In _maybeSetupAssignedMenuLocations : no valid section_id provided.');
           }
@@ -554,7 +553,6 @@ $.extend( CZRSkopeBaseMths, {
           //is this a menu section ? and does it have assigned locations ?
           if ( ! active_section.assignedLocations )
             return;
-          console.log('in _maybeSetupAssignedMenuLocations, section.assignedLocations() ', active_section.assignedLocations() );
 
           //locations is an array of locations for a menu
           //=> we want to synchronize the reset button of this menu location in this section, with the one of the nav_menu_location setting
@@ -573,7 +571,6 @@ $.extend( CZRSkopeBaseMths, {
     *****************************************************************************/
     //cb of api.czr_activeSectionId()
     activeSectionReact : function( active_sec_id , previous_sec_id ) {
-          console.log('ACTIVE SECTION REACT', active_sec_id );
           //PAINT
           api.trigger('czr-paint', { active_section_id : active_sec_id } );
 

@@ -137,20 +137,12 @@ $.extend( CZRBaseModuleControlMths, {
         //If we are in a single module control (not a sektion, multimodule)
         //AND that the module is being added to the collection for the first time,
         //We don't want to say it to the setting, because it might alter the setting dirtyness for nothing on init.
-        if ( ! control.isMultiModuleControl() && is_module_added )
-          return;
-        else
-          api(this.id).set( control.filterModuleCollectionBeforeAjax(to), data );
-
-        //refreshes the preview frame  :
-        //1) only needed if transport is postMessage, because is triggered by wp otherwise
-        //2) only needed when : add, remove, sort item(s)
-        //module update case
-        // if ( 'postMessage' == api(control.id).transport && ! api.CZR_Helpers.has_part_refresh( control.id ) ) {
-        //     api.consoleLog('WE DONT KNOW IF THE COLLECTION IS SORTED HERE ! FIX!', to, from, data );
-        //     if ( is_collection_sorted )
-        //         control.previewer.refresh();
-        // }
+        if ( ! control.isMultiModuleControl() && is_module_added ) {
+              return;
+        }
+        else {
+              api(this.id).set( control.filterModuleCollectionBeforeAjax(to), data );
+        }
   },
 
 

@@ -31,11 +31,12 @@ $.extend( CZRSkopeSaveMths, {
             //a submit call returns a promise resolved when the db ajax query is done().
             //api.consoleLog('submit request for skope : id, object, dirties : ', skope_id, skopeObjectToSubmit , api.czr_skopeBase.getSkopeDirties( skope_id ) );
 
-            this.submit( {
+            this.submit(
+                  {
                         skope_id : skope_id,
                         customize_changeset_data : submittedChanges,//{}
                         dyn_type : skopeObjectToSubmit.dyn_type
-                  } )
+                  })
                   .done( function(_resp) {
                         //api.consoleLog('GETSUBMIT DONE PROMISE FOR SKOPE : ', skope_id, _resp );
                         dfd.resolve( _resp );
@@ -44,10 +45,6 @@ $.extend( CZRSkopeSaveMths, {
                         api.consoleLog('GETSUBMIT FAILED PROMISE FOR SKOPE : ', skope_id, _resp );
                         dfd.reject( _resp );
                   } );
-                  // .then( function( _resp ) {
-                  //       console.log('GETSUBMIT THEN ', _resp );
-                  //       dfd.resolve( _resp );
-                  // });
 
             return dfd.promise();
       },//getSubmitPromise

@@ -202,7 +202,6 @@ $.extend( CZRSkopeBaseMths, {
 
                 //////////EXPERIMENT
                 // if ( 'widget_form' == control_type ) {
-                //   console.log('################# ALORS ? ############### ', control_type );
                 //   api.control( wpSetId ).container.remove();
                 //   api.control.remove( wpSetId );
                 // }

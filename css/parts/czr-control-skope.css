@@ -388,51 +388,6 @@ body.czr-resetting-skope #czr-reset-skope-pane .czr-resetting {
 }
 
 
-/* HOME BUTTON */
-#customize-header-actions .customize-controls-close {
-  left:45px;
-}
-
-.customize-controls-home {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 45px;
-    height: 41px;
-    padding: 0 2px 0 0;
-    background: #eee;
-    border: none;
-    border-top: 4px solid #eee;
-    border-right: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
-    color: #444;
-    text-align: left;
-    cursor: pointer;
-    text-decoration: none;
-    -webkit-transition: color .15s ease-in-out, border-color .15s ease-in-out, background .15s ease-in-out;
-    transition: color .1s ease-in-out, border-color .15s ease-in-out, background .15s ease-in-out;
-    -webkit-box-sizing: content-box;
-    -moz-box-sizing: content-box;
-    box-sizing: content-box;
-}
-
-.customize-controls-home:before {
-    font-size: 17px;
-    line-height:45px;
-    position: relative;
-    top: -4px;
-    left: 14px;
-}
-.customize-controls-home:hover {
-    background: #fff;
-    color: #0073aa;
-    border-top-color: #0073aa;
-    outline: none;
-    -webkit-box-shadow: none;
-    box-shadow: none;
-}
-
 
 /* Error Notification */
 .wp-full-overlay-header, .wp-full-overlay-sidebar .wp-full-overlay-sidebar-content {

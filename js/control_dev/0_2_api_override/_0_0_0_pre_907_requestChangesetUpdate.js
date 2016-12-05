@@ -62,7 +62,6 @@
                 _recursiveCallDeferred = $.Deferred();
                 // _original = function( changes ) {
                 //     _original_requestChangesetUpdate(changes).then( function( data ) {
-                //         console.log('WP DEFERRED THEN', data );
                 //         dfd.resolve( data );
                 //     });
                 // };
@@ -135,7 +134,6 @@
                                 recursiveCall( _index + 1 );
                         } )
                         .done( function( _skope_data_ ) {
-                              //console.log('CHANGESET RECURSIVE CALL DONE FOR SKOPE : ', _skopesToUpdate[_index] );
                               _all_skopes_data_.push( _skope_data_ );
                               if (  ! _mayBeresolve( _index ) )
                                 recursiveCall( _index + 1 );
@@ -168,10 +166,7 @@
                         api.czr_serverNotification( { message: r, status : 'error' } );
                   })
                   .done( function( wp_original_response ) {
-                        //console.log('GLOBAL SKOPE CHANGESET UPDATE PROCESSED BY WP : ', _global_skope_changes, wp_original_response );
-                        //console.log('WP DEFERRED THEN', wp_original_response );
                         // $.when.apply( null, _promises ).then( function() {
-                        //       //console.log('OUR DEFERRED THEN => resolve WP');
                         //       dfd.resolve( wp_original_response );
                         // });
                         //Restore the _lastSavedRevision index to its previous state to not miss any setting that could have been updated by WP for global.
@@ -197,7 +192,6 @@
                                     api.czr_serverNotification( { message: r, status : 'error' } );
                               } )
                               .done( function() {
-                                    //console.log('ALL RECURSIVE PUSHES ARE DONE NOW', _all_skopes_data_ );
                                     dfd.resolve( wp_original_response );
                               });
                   });
@@ -209,7 +203,6 @@
 
       //@update the changeset meta for a given skope
       api._requestSkopeChangetsetUpdate = function( changes, skope_id ) {
-            //console.log( 'IN REQUEST SKOPE CHANGESET UPDATE', changes, skope_id );
             if ( _.isUndefined( skope_id ) || ! api.czr_skope.has( skope_id ) ) {
                   throw new Error( 'In api._requestSkopeChangetsetUpdate() : a valid and registered skope_id must be provided' );
             }
@@ -239,21 +232,17 @@
 
             // Short-circuit when there are no pending changes.
             if ( _.isEmpty( submittedChanges ) ) {
-                  //console.log( 'NO CHANGES TO SUBMIT FOR SKOPE : ' + skope_id );
                   deferred.resolve( {} );
                   return deferred.promise();
             }
 
             if ( api._latestRevision <= api._lastSavedRevision ) {
-                  console.log( 'SAVED REVISION IS OLDER OR == THAN THE LAST REVISION FOR SKOPE : ' + skope_id );
                   deferred.resolve( {} );
                   return deferred.promise();
             }
 
             // Allow plugins to attach additional params to the settings.
             api.trigger( 'skope-changeset-save', submittedChanges );
-
-            //console.log('CHANGESET UPDATE FOR SKOPE : ', skope_id, submittedChanges );
 
             var queryVars = {
                   skope_id : skope_id,
@@ -269,14 +258,9 @@
                   customize_changeset_data: JSON.stringify( submittedChanges )
             } );
 
-
-
-            //console.log('DATA in SKOPE CHANGESET UPDATE FOR SKOPE ' + skope_id, data);
-
             // var _dumby_request = function( _data ) {
             //     var dfd = $.Deferred();
             //     setTimeout( function() {
-            //         console.log('DUMBY REQUEST DONE FOR SKOPE : ', data.skope_id );
             //         dfd.resolve( _data );
             //     }, 5000 );
             //     return dfd.promise();

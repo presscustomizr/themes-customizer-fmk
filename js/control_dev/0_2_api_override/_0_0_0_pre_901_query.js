@@ -92,9 +92,6 @@
                     throw new Error( 'A REQUESTED QUERY HAS NO AUTHORIZED ACTION. Requested action : ' + queryVars.action );
               }
 
-
-              //console.log('IN QUERY!', queryVars, queryVars.action );
-
               //@return an object of customized values for each of the current skopes :
               //{
               //  'skope_id_1' = { ... },

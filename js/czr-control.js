@@ -72,9 +72,11 @@ var api = api || wp.customize, $ = $ || jQuery;
 
       });
       api.bind('ready', function() {
-            api.previewer.bind( 'synced', function() {
-                  if ( api.section.has('themes') )
-                    api.section('themes').active(  _.has( serverControlParams, 'isThemeSwitchOn' ) ? ! _.isEmpty( serverControlParams.isThemeSwitchOn ) : true );
+            api.section('themes').active.bind( function( active ) {
+                  if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
+                    return;
+                  api.section('themes').active(false);
+                  api.section('themes').active.callbacks = $.Callbacks();
             });
       });
       api.czr_skopeReady = $.Deferred();
@@ -310,14 +312,12 @@ $.extend( CZRSkopeBaseMths, {
           return dfd.promise();
     },
     _maybeSetupAssignedMenuLocations : function( active_section ) {
-          console.log('in _maybeSetupAssignedMenuLocations', active_section );
           if ( _.isUndefined( active_section ) || _.isEmpty( active_section ) || ! api.section.has( active_section.id ) ) {
                 api.consoleLog( 'In _maybeSetupAssignedMenuLocations : no valid section_id provided.');
           }
           var self = this;
           if ( ! active_section.assignedLocations )
             return;
-          console.log('in _maybeSetupAssignedMenuLocations, section.assignedLocations() ', active_section.assignedLocations() );
           var _assignedLocReact = function( locations ) {
 
           };
@@ -326,7 +326,6 @@ $.extend( CZRSkopeBaseMths, {
           }
     },
     activeSectionReact : function( active_sec_id , previous_sec_id ) {
-          console.log('ACTIVE SECTION REACT', active_sec_id );
           api.trigger('czr-paint', { active_section_id : active_sec_id } );
           if ( _.isEmpty( active_sec_id ) )
             return;
@@ -2076,7 +2075,6 @@ $.extend( CZRSkopeSaveMths, {
                                               api.consoleLog('SAVE REFRESH FAIL', refresh_data );
                                         })
                                         .done( function( refresh_data ) {
-
                                               api.previewer.send( 'saved', response );
                                               response = _.extend( { changeset_status : 'publish' },  response || {} );
                                               if ( api.czr_isChangedSetOn() ) {
@@ -2148,11 +2146,12 @@ $.extend( CZRSkopeSaveMths, {
                   );
             } );
 
-            this.submit( {
+            this.submit(
+                  {
                         skope_id : skope_id,
                         customize_changeset_data : submittedChanges,//{}
                         dyn_type : skopeObjectToSubmit.dyn_type
-                  } )
+                  })
                   .done( function(_resp) {
                         dfd.resolve( _resp );
                   } )
@@ -2350,7 +2349,6 @@ $.extend( CZRSkopeSaveMths, {
                                     } else {
                                           _responses_ = $.extend( _responses_ , r );
                                     }
-
                                     dfd.resolve( _responses_ );
                               });
                   });
@@ -2641,36 +2639,6 @@ $.extend( CZRSkopeBaseMths, {
             };
             _debounced = _.debounce( _debounced, 500 );
             _debounced();
-      }
-} );//$.extend(
-
-var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
-$.extend( CZRSkopeBaseMths, {
-      fireHeaderButtons : function() {
-            var $home_button = $('<span/>', { class:'customize-controls-home fa fa-home', html:'<span class="screen-reader-text">Home</span>' } );
-            $.when( $('#customize-header-actions').append( $home_button ) )
-                  .done( function() {
-                        $home_button
-                              .keydown( function( event ) {
-                                    if ( 9 === event.which ) // tab
-                                      return;
-                                    if ( 13 === event.which ) // enter
-                                      this.click();
-                                    event.preventDefault();
-                              })
-                              .on( 'click.customize-controls-home', function() {
-                                    if ( api.section.has( api.czr_activeSectionId() ) ) {
-                                          api.section( api.czr_activeSectionId() ).expanded( false );
-                                    } else {
-                                          api.section.each( function( _s ) {
-                                              _s.expanded( false );
-                                          });
-                                    }
-                                    api.panel.each( function( _p ) {
-                                          _p.expanded( false );
-                                    });
-                              });
-                  });
       }
 } );//$.extend(
 
@@ -3648,7 +3616,6 @@ $.extend( CZRSkopeMths, {
             }
 
             if ( api._latestRevision <= api._lastSavedRevision ) {
-                  console.log( 'SAVED REVISION IS OLDER OR == THAN THE LAST REVISION FOR SKOPE : ' + skope_id );
                   deferred.resolve( {} );
                   return deferred.promise();
             }
@@ -5342,13 +5309,16 @@ $.extend( CZRModuleMths, {
           $( '.' + module.control.css_attr.items_wrapper, module.container ).sortable( {
                 handle: '.' + module.control.css_attr.item_sort_handle,
                 start: function() {
-                    if ( _.has(api, 'czrModulePanelState' ) )
-                      api.czrModulePanelState.set(false);
-                    if ( _.has(api, 'czrSekSettingsPanelState' ) )
-                      api.czrSekSettingsPanelState.set(false);
+                      if ( _.has(api, 'czrModulePanelState' ) )
+                        api.czrModulePanelState.set(false);
+                      if ( _.has(api, 'czrSekSettingsPanelState' ) )
+                        api.czrSekSettingsPanelState.set(false);
                 },
                 update: function( event, ui ) {
-                    module.itemCollection.set( module._getSortedDOMItemCollection(), { item_collection_sorted : true } );
+                      module.itemCollection.set( module._getSortedDOMItemCollection(), { item_collection_sorted : true } );
+                      if ( 'postMessage' == api( module.control.id ).transport && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+                              _.delay( function() { api.previewer.refresh(); }, 100 );
+                      }
                 }
               }
           );
@@ -6408,7 +6378,7 @@ $.extend( CZRSocialModuleMths, {
 
 
           this.social_icons = [
-            '500px','adn','amazon','android','angellist','apple','behance','behance-square','bitbucket','bitbucket-square','black-tie','btc','buysellads','chrome','codepen','codiepie','connectdevelop','contao','dashcube','delicious','delicious','deviantart','digg','dribbble','dropbox','drupal','edge','empire','expeditedssl','facebook','facebook','facebook-f (alias)','facebook-official','facebook-square','firefox','flickr','fonticons','fort-awesome','forumbee','foursquare','get-pocket','gg','gg-circle','git','github','github','github-alt','github-square','git-square','google','google','google-plus','google-plus-circle','google-plus-official','google-plus-square', 'google-wallet','gratipay','hacker-news','houzz','instagram','internet-explorer','ioxhost','joomla','jsfiddle','lastfm','lastfm-square','leanpub','linkedin','linkedin','linkedin-square','linux','maxcdn','meanpath','medium','mixcloud','modx','odnoklassniki','odnoklassniki-square','opencart','openid','opera','optin-monster','pagelines','paypal','pied-piper','pied-piper-alt','pinterest','pinterest-p','pinterest-square','product-hunt','qq','rebel','reddit','reddit-alien','reddit-square','renren','rss','rss-square','safari','scribd','sellsy','share-alt','share-alt-square','shirtsinbulk','simplybuilt','skyatlas','skype','slack','slideshare','snapchat', 'soundcloud','spotify','stack-exchange','stack-overflow','steam','steam-square','stumbleupon','stumbleupon','stumbleupon-circle','tencent-weibo','trello','tripadvisor','tumblr','tumblr-square','twitch','twitter','twitter','twitter-square','usb','viacoin','vimeo','vimeo-square','vine','vk','weibo','weixin','whatsapp','wikipedia-w','windows','wordpress','xing','xing-square','yahoo','yahoo','y-combinator','yelp','youtube','youtube-play','youtube-square'
+            '500px','adn','amazon','android','angellist','apple','behance','behance-square','bitbucket','bitbucket-square','black-tie','btc','buysellads','chrome','codepen','codiepie','connectdevelop','contao','dashcube','delicious','delicious','deviantart','digg','dribbble','dropbox','drupal','edge','empire','expeditedssl','facebook','facebook','facebook-f (alias)','facebook-official','facebook-square','firefox','flickr','fonticons','fort-awesome','forumbee','foursquare','get-pocket','gg','gg-circle','git','github','github','github-alt','github-square','git-square','google','google','google-plus','google-plus-circle','google-plus-official','google-plus-square', 'google-wallet','gratipay','hacker-news','houzz','instagram','internet-explorer','ioxhost','joomla','jsfiddle','lastfm','lastfm-square','leanpub','linkedin','linkedin','linkedin-square','linux','maxcdn','meanpath','medium','mixcloud','modx','odnoklassniki','odnoklassniki-square','opencart','openid','opera','optin-monster','pagelines','paypal','pied-piper','pied-piper-alt','pinterest','pinterest-p','pinterest-square','product-hunt','qq','rebel','reddit','reddit-alien','reddit-square','renren','rss','rss-square','safari','scribd','sellsy','share-alt','share-alt-square','shirtsinbulk','simplybuilt','skyatlas','skype','slack','slideshare','snapchat', 'soundcloud','spotify','stack-exchange','stack-overflow','steam','steam-square','stumbleupon','stumbleupon','stumbleupon-circle', 'telegram', 'tencent-weibo','trello','tripadvisor','tumblr','tumblr-square','twitch','twitter','twitter','twitter-square','usb','viacoin','vimeo','vimeo-square','vine','vk','weibo','weixin','whatsapp','wikipedia-w','windows','wordpress','xing','xing-square','yahoo','yahoo','y-combinator','yelp','youtube','youtube-play','youtube-square'
           ];
           module.inputConstructor = api.CZRInput.extend( module.CZRSocialsInputMths || {} );
           module.itemConstructor = api.CZRItem.extend( module.CZRSocialsItem || {} );
@@ -6651,7 +6621,6 @@ $.extend( CZRWidgetAreaModuleMths, {
 
           api.section(module.serverParams.dynWidgetSection).fixTopMargin = fixTopMargin;
           api.section(module.serverParams.dynWidgetSection).fixTopMargin('fixed_for_current_session').set(false);
-          api.section(module.serverParams.dynWidgetSection).expanded.callbacks.add( function() { return module.widgetSectionReact.apply(module, arguments ); } );
           api.panel('widgets').expanded.callbacks.add( function(to, from) {
                 module.widgetPanelReact();//setup some visual adjustments, must be ran each time panel is closed or expanded
                 if ( 'resolved' == module.isReady.state() )
@@ -7990,10 +7959,12 @@ $.extend( CZRBaseModuleControlMths, {
         if ( _.isObject( data  ) && _.has(data, 'module') ) {
             data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
         }
-        if ( ! control.isMultiModuleControl() && is_module_added )
-          return;
-        else
-          api(this.id).set( control.filterModuleCollectionBeforeAjax(to), data );
+        if ( ! control.isMultiModuleControl() && is_module_added ) {
+              return;
+        }
+        else {
+              api(this.id).set( control.filterModuleCollectionBeforeAjax(to), data );
+        }
   },
   filterModuleCollectionBeforeAjax : function( collection ) {
           var control = this,
@@ -8775,12 +8746,17 @@ $.extend( CZRLayoutSelectMths , {
                 api.section( targetSectionId ).czr_ctrlDependenciesReady = api.section( targetSectionId ).czr_ctrlDependenciesReady || $.Deferred();
                 if ( 'resolved' == api.section( targetSectionId ).czr_ctrlDependenciesReady.state() )
                   return dfd.resolve().promise();
-
                 _.each( self.dominiDeps , function( params ) {
-                      params = self._prepareDominusParams( params );
+                      if ( ! _.has( params, 'dominus' ) || ! _.isString( params.dominus ) || _.isEmpty( params.dominus ) ) {
+                            throw new Error( 'Control Dependencies : a dominus control id must be a not empty string.');
+                      }
+
                       var wpDominusId = api.CZR_Helpers.build_setId( params.dominus );
                       if ( api.control( wpDominusId ).section() != targetSectionId )
                         return;
+
+                      params = self._prepareDominusParams( params );
+
                       self._processDominusCallbacks( params.dominus, params )
                             .fail( function() {
                                   api.consoleLog( 'self._processDominusCallbacks fail for section ' + targetSectionId );
@@ -8794,9 +8770,13 @@ $.extend( CZRLayoutSelectMths , {
                     _getServusDomini = function( shortServudId ) {
                           var _dominiIds = [];
                           _.each( self.dominiDeps , function( params ) {
-                                params = self._prepareDominusParams( params );
-                                if ( _.contains( params.servi , shortServudId ) &&  ! _.contains( _dominiIds , params.dominus ) ) {
-                                    _dominiIds.push( params.dominus );
+                                if ( ! _.has( params, 'servi' ) || ! _.isArray( params.servi ) || ! _.has( params, 'dominus' ) || _.isEmpty( params.dominus ) ) {
+                                      throw new Error( 'Control Dependencies : wrong params in _getServusDomini.');
+                                }
+
+                                if ( _.contains( params.servi , shortServudId ) && ! _.contains( _dominiIds , params.dominus ) ) {
+                                      params = self._prepareDominusParams( params );
+                                      _dominiIds.push( params.dominus );
                                 }
                           });
                           return ! _.isArray( _dominiIds ) ? [] : _dominiIds;
@@ -8809,14 +8789,15 @@ $.extend( CZRLayoutSelectMths , {
                       _servusDominiIds = _.union( _servusDominiIds, _getServusDomini( servusCandidateId ) );
                 });
                 _.each( _servusDominiIds, function( shortDominusId ){
+
                       var wpDominusId = api.CZR_Helpers.build_setId( shortDominusId );
                       if ( api.control( wpDominusId ).section() == targetSectionId )
                           return;
                       if ( sourceSectionId == api.control( wpDominusId ).section() )
                           return;
                       api.trigger( 'awaken-section', {
-                          target : api.control( wpDominusId ).section(),
-                          source : targetSectionId
+                            target : api.control( wpDominusId ).section(),
+                            source : targetSectionId
                       } );
                 } );
                 dfd.always( function() {
@@ -9067,6 +9048,35 @@ $.extend( CZRLayoutSelectMths , {
         $('<span/>', {class:'fa fa-magic'} )
       );
     }
+
+
+    var fireHeaderButtons = function() {
+          var $home_button = $('<span/>', { class:'customize-controls-home fa fa-home', html:'<span class="screen-reader-text">Home</span>' } );
+          $.when( $('#customize-header-actions').append( $home_button ) )
+                .done( function() {
+                      $home_button
+                            .keydown( function( event ) {
+                                  if ( 9 === event.which ) // tab
+                                    return;
+                                  if ( 13 === event.which ) // enter
+                                    this.click();
+                                  event.preventDefault();
+                            })
+                            .on( 'click.customize-controls-home', function() {
+                                  if ( api.section.has( api.czr_activeSectionId() ) ) {
+                                        api.section( api.czr_activeSectionId() ).expanded( false );
+                                  } else {
+                                        api.section.each( function( _s ) {
+                                            _s.expanded( false );
+                                        });
+                                  }
+                                  api.panel.each( function( _p ) {
+                                        _p.expanded( false );
+                                  });
+                            });
+                });
+      };
+      fireHeaderButtons();
   });//end of $( function($) ) dom ready
 
 })( wp, jQuery);

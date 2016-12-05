@@ -70,7 +70,6 @@ $.extend( CZRBaseModuleControlMths, {
                 });
           } else {
                 var single_module = {};
-                //console.log('control.getSavedModules()', control.getSavedModules() );
                 //inits the collection with the saved module => there's only one module to instantiate in this case.
                 //populates the collection with the saved module
                 _.each( control.getSavedModules() , function( _mod, _key ) {

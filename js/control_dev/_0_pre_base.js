@@ -77,9 +77,12 @@ var api = api || wp.customize, $ = $ || jQuery;
 
       //SET THE ACTIVE STATE OF THE THEMES SECTION BASED ON WHAT THE SERVER SENT
       api.bind('ready', function() {
-            api.previewer.bind( 'synced', function() {
-                  if ( api.section.has('themes') )
-                    api.section('themes').active(  _.has( serverControlParams, 'isThemeSwitchOn' ) ? ! _.isEmpty( serverControlParams.isThemeSwitchOn ) : true );
+            api.section('themes').active.bind( function( active ) {
+                  if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
+                    return;
+                  api.section('themes').active(false);
+                  //reset the callbacks
+                  api.section('themes').active.callbacks = $.Callbacks();
             });
       });
 
@@ -99,7 +102,7 @@ var api = api || wp.customize, $ = $ || jQuery;
                   });
             }
 
-            //in dev mode, let's set a lower autosave interval ( default is 60000 ms )
+            //let's set a lower autosave interval ( default is 60000 ms )
             if ( serverControlParams.isChangedSetOn ) {
                   api.settings.timeouts.changesetAutoSave = 10000;
             }

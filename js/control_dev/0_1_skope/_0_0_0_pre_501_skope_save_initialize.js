@@ -63,8 +63,6 @@ $.extend( CZRSkopeSaveMths, {
                                   api.trigger( 'error', response );
                             })
                             .done( function( response ) {
-                                  //console.log('ALL SUBMISSIONS DONE', response );
-
                                   //api.previewer.refresh() method is resolved with an object looking like :
                                   //{
                                   //    previewer : api.previewer,
@@ -79,8 +77,6 @@ $.extend( CZRSkopeSaveMths, {
                                               api.consoleLog('SAVE REFRESH FAIL', refresh_data );
                                         })
                                         .done( function( refresh_data ) {
-                                              //console.log('SAVE REFRESH DONE', refresh_data);
-
                                               api.previewer.send( 'saved', response );
 
                                               //response can be undefined, always set them as an object with 'publish' changet_setstatus by default
