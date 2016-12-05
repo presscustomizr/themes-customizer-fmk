@@ -104,8 +104,8 @@ $.extend( CZRSektionMths, {
 
 
           api.consoleLog('SEKTION MODULE INIT', module.control.params.czr_skope );
-          if ( _.has( api, 'czr_activeSkope' ) )
-            api.consoleLog('SEKTION MODULE INIT', api.czr_activeSkope() );
+          if ( _.has( api, 'czr_activeSkopeId' ) )
+            api.consoleLog('SEKTION MODULE INIT', api.czr_activeSkopeId() );
 
           //api.czrModulePanelEmbedded.done( function() {
 
@@ -137,7 +137,6 @@ $.extend( CZRSektionMths, {
 
                             // sek_module.modulePanelDragulized = sek_module.modulePanelDragulized || $.Deferred();
                             // if ( expanded && 'pending' == sek_module.modulePanelDragulized.state() ) {
-                            //       api.consoleLog('JOIE ?');
                             //       sek_module.modsDragInstance.containers.push( $('#czr-available-modules-list')[0]);
                             //       sek_module.modulePanelDragulized.resolve();
                             // }

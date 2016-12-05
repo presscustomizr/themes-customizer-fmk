@@ -22,7 +22,7 @@ $.extend( CZRBaseModuleControlMths, {
           //and listen to changes when it's ready
           control.moduleCollectionReady.done( function( obj ) {
                 if ( ! control.isMultiModuleControl( options.params ) ) {
-                  api.consoleLog('MODULE COLLECTION READY IN CONTROL : ', control.id , obj.id, control.isModuleRegistered( obj.id ) );
+                  //api.consoleLog('MODULE COLLECTION READY IN CONTROL : ', control.id , obj.id, control.isModuleRegistered( obj.id ) );
                 }
                 //if the module is not registered yet for a single module control
                 //=> push it to the collection now, before listening to the module collection changes
@@ -70,7 +70,6 @@ $.extend( CZRBaseModuleControlMths, {
                 });
           } else {
                 var single_module = {};
-                console.log('control.getSavedModules()', control.getSavedModules() );
                 //inits the collection with the saved module => there's only one module to instantiate in this case.
                 //populates the collection with the saved module
                 _.each( control.getSavedModules() , function( _mod, _key ) {

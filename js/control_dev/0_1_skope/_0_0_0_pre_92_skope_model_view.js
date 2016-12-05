@@ -5,6 +5,7 @@ $.extend( CZRSkopeMths, {
           var skope = this,
               skope_model = $.extend( true, {}, skope() ),
               _tmpl = '';
+
           //@todo will need to be refreshed on scopes change in the future
           if ( ! $('#customize-header-actions').find('.czr-scope-switcher').length ) {
               throw new Error('The skope switcher wrapper is not printed, the skope can not be embedded.');
@@ -16,8 +17,8 @@ $.extend( CZRSkopeMths, {
             throw new Error('Error when parsing the template of a skope' + e );
           }
 
-          $('.czr-scope-switcher', '#customize-header-actions').append( $( _tmpl ) );
-          return $( '.' + skope.el , '.czr-scope-switcher' );
+          $('.czr-skopes-wrapper', '#customize-header-actions').append( $( _tmpl ) );
+          return $( '.' + skope.el , '.czr-skopes-wrapper' );
     },
 
 

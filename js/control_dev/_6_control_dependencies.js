@@ -3,13 +3,30 @@
   var $_nav_section_container,
       translatedStrings = serverControlParams.translatedStrings || {};
 
+  api.czr_CrtlDependenciesReady = $.Deferred();
+
   api.bind( 'ready' , function() {
-    if ( ! _.has( api, 'czr_visibilities') )
-      api.czr_visibilities = new api.CZR_visibilities();
+        if ( _.has( api, 'czr_ctrlDependencies') )
+          return;
+        if ( serverControlParams.isSkopOn ) {
+              // If skope is on, we need to wait for the initial setup to be finished
+              // otherwise, we might refer to not instantiated skopes when processing silent updates further in the code
+              //Skope is ready when :
+              //1) the initial skopes collection has been populated
+              //2) the initial skope has been switched to
+              api.czr_skopeReady.done( function() {
+                    api.czr_ctrlDependencies = new api.CZR_ctrlDependencies();
+                    api.czr_CrtlDependenciesReady.resolve();
+              });
+        } else {
+              api.czr_ctrlDependencies = new api.CZR_ctrlDependencies();
+              api.czr_CrtlDependenciesReady.resolve();
+        }
+
   } );
 
 
-  api.CZR_visibilities = api.Class.extend( {
+  api.CZR_ctrlDependencies = api.Class.extend( {
           dominiDeps : [],
           initialize: function() {
                 var self = this;
@@ -28,7 +45,9 @@
                     throw new Error('Visibilities : the dominos dependency array is not an array.');
                 }
                 api.czr_activeSectionId.bind( function( section_id ) {
-                    self.setServiVisibility( section_id );
+                      if ( ! _.isEmpty( section_id ) && api.section.has( section_id ) ) {
+                            self.setServiDependencies( section_id );
+                      }
                 });
 
 
@@ -39,17 +58,16 @@
                 // }
                 api.bind( 'awaken-section', function( target_source ) {
                       //if skope on ( serverControlParams.isSkopOn ), then defer the visibility awakening after the silent updates
-                      if ( _.has( api ,'czr_skopeBase' ) ) {
-                            var _promises = api.czr_skopeBase.processSilentUpdates( {
-                                  silent_update_candidates : {},
-                                  section_id : target_source.target
-                            } );
-                            $.when.apply( null, _promises )
-                                  .then( function() {
-                                        self.setServiVisibility( target_source.target, target_source.source );
-                                  });
+                      if ( serverControlParams.isSkopOn && _.has( api ,'czr_skopeBase' ) ) {
+                            api.czr_skopeBase.processSilentUpdates( {
+                                  candidates : {},
+                                  section_id : target_source.target,
+                                  refresh : false
+                            } ).then( function() {
+                                  self.setServiDependencies( target_source.target, target_source.source );
+                            });
                       } else {
-                            self.setServiVisibility( target_source.target, target_source.source );
+                            self.setServiDependencies( target_source.target, target_source.source );
                       }
                 });
 
@@ -63,17 +81,41 @@
           //Process the visibility callbacks for the controls of a target targetSectionId
           //@param targetSectionId : string
           //@param sourceSectionId : string, the section from which the request has been done
-          setServiVisibility : function( targetSectionId, sourceSectionId ) {
-                var self = this, params;
+          setServiDependencies : function( targetSectionId, sourceSectionId ) {
+                var self = this, params, dfd = $.Deferred();
+
                 if ( _.isUndefined( targetSectionId ) || ! api.section.has( targetSectionId ) ) {
-                  throw new Error( 'Visibilities : the targetSectionId is missing or not registered : ' + targetSectionId );
+                  throw new Error( 'Control Dependencies : the targetSectionId is missing or not registered : ' + targetSectionId );
                 }
+
+                //Assign a visibility state deferred to the target section
+                api.section( targetSectionId ).czr_ctrlDependenciesReady = api.section( targetSectionId ).czr_ctrlDependenciesReady || $.Deferred();
+
+                //Bail here if this section has already been setup for ctrl dependencies
+                if ( 'resolved' == api.section( targetSectionId ).czr_ctrlDependenciesReady.state() )
+                  return dfd.resolve().promise();
+
+                //FIND DOMINI IN THE TARGET SECTION
+                //=> setup their callbacks
                 _.each( self.dominiDeps , function( params ) {
-                      params = self._prepareDominusParams( params );
+                      if ( ! _.has( params, 'dominus' ) || ! _.isString( params.dominus ) || _.isEmpty( params.dominus ) ) {
+                            throw new Error( 'Control Dependencies : a dominus control id must be a not empty string.');
+                      }
+
                       var wpDominusId = api.CZR_Helpers.build_setId( params.dominus );
                       if ( api.control( wpDominusId ).section() != targetSectionId )
                         return;
-                      self._processDominusCallbacks( params.dominus, params );
+
+                      params = self._prepareDominusParams( params );
+
+                      self._processDominusCallbacks( params.dominus, params )
+                            .fail( function() {
+                                  api.consoleLog( 'self._processDominusCallbacks fail for section ' + targetSectionId );
+                                  dfd.reject();
+                            })
+                            .done( function() {
+                                  dfd.resolve();
+                            });
                 });
 
 
@@ -83,9 +125,13 @@
                     _getServusDomini = function( shortServudId ) {
                           var _dominiIds = [];
                           _.each( self.dominiDeps , function( params ) {
-                                params = self._prepareDominusParams( params );
-                                if ( _.contains( params.servi , shortServudId ) &&  ! _.contains( _dominiIds , params.dominus ) ) {
-                                    _dominiIds.push( params.dominus );
+                                if ( ! _.has( params, 'servi' ) || ! _.isArray( params.servi ) || ! _.has( params, 'dominus' ) || _.isEmpty( params.dominus ) ) {
+                                      throw new Error( 'Control Dependencies : wrong params in _getServusDomini.');
+                                }
+
+                                if ( _.contains( params.servi , shortServudId ) && ! _.contains( _dominiIds , params.dominus ) ) {
+                                      params = self._prepareDominusParams( params );
+                                      _dominiIds.push( params.dominus );
                                 }
                           });
                           return ! _.isArray( _dominiIds ) ? [] : _dominiIds;
@@ -102,6 +148,7 @@
 
                 //let's loop on the domini ids and check if we need to "awake" an external section
                 _.each( _servusDominiIds, function( shortDominusId ){
+
                       var wpDominusId = api.CZR_Helpers.build_setId( shortDominusId );
                       //This dominus must be located in another section
                       if ( api.control( wpDominusId ).section() == targetSectionId )
@@ -109,16 +156,20 @@
                       //The dominus section can't be the current source if set. => otherwise potential infinite loop scenario.
                       if ( sourceSectionId == api.control( wpDominusId ).section() )
                           return;
-
                       //inform the api that a section has to be awaken
                       //=> first silently update the section controls if skope on
                       //=> then fire the visibilities
                       api.trigger( 'awaken-section', {
-                          target : api.control( wpDominusId ).section(),
-                          source : targetSectionId
+                            target : api.control( wpDominusId ).section(),
+                            source : targetSectionId
                       } );
                 } );
 
+                //This section has been setup for ctrl dependencies
+                dfd.always( function() {
+                      api.section( targetSectionId ).czr_ctrlDependenciesReady.resolve();
+                });
+                return dfd.promise();
           },
 
 
@@ -131,6 +182,7 @@
           //@param callback : fn callback to fire
           //@param args : [] or callback arguments
           _deferCallbackForControl : function( wpCrtlId, callback, args ) {
+                var dfd = $.Deferred();
                 if ( _.isEmpty(wpCrtlId) || ! _.isString(wpCrtlId) ) {
                     throw new Error( '_deferCallbackForControl : the control id is missing.' );
                 }
@@ -141,19 +193,26 @@
 
                 if ( api.control.has( wpCrtlId ) ) {
                       if ( 'resolved' == api.control(wpCrtlId ).deferred.embedded.state() ) {
-                            callback.apply( null, args );
+                            $.when( callback.apply( null, args ) )
+                                  .fail( function() { dfd.reject(); })
+                                  .done( function() { dfd.resolve(); });
                       } else {
-                            api.control( wpCrtlId ).deferred.embedded.then( function(){
-                                  callback.apply( null, args );
+                            api.control( wpCrtlId ).deferred.embedded.then( function() {
+                                  $.when( callback.apply( null, args ) )
+                                        .fail( function() { dfd.reject(); })
+                                        .done( function() { dfd.resolve(); });
                             });
                       }
                 } else {
                       api.control.when( wpCrtlId, function() {
-                            api.control( wpCrtlId ).deferred.embedded.then( function(){
-                                  callback.apply( null, args );
+                            api.control( wpCrtlId ).deferred.embedded.then( function() {
+                                  $.when( callback.apply( null, args ) )
+                                        .fail( function() { dfd.reject(); })
+                                        .done( function() { dfd.resolve(); });
                             });
                       });
                 }
+                return dfd.promise();
           },
 
 
@@ -166,7 +225,9 @@
           _processDominusCallbacks : function( shortDominusId, dominusParams ) {
                 var self = this,
                     wpDominusId = api.CZR_Helpers.build_setId( shortDominusId ),
-                    dominusSetInst = api( wpDominusId );
+                    dominusSetInst = api( wpDominusId ),
+                    dfd = $.Deferred(),
+                    hasProcessed = false;
 
                 //loop on the dominus servi and apply + bind the visibility cb
                 _.each( dominusParams.servi , function( servusShortSetId ) {
@@ -195,10 +256,13 @@
                                   dominusSetVal = dominusSetVal  || dominusSetInst();
                                   var wpServusSetId = api.CZR_Helpers.build_setId( servusShortSetId );
                                   self._deferCallbackForControl(
-                                        wpServusSetId,
-                                        _fireDominusCallbacks,
-                                        [ dominusSetVal, servusShortSetId, dominusParams ]
-                                  );
+                                              wpServusSetId,
+                                              _fireDominusCallbacks,
+                                              [ dominusSetVal, servusShortSetId, dominusParams ]
+                                        )
+                                        .always( function() { hasProcessed = true; })
+                                        .fail( function() { dfd.reject(); })
+                                        .done( function() { dfd.resolve(); });
                             };
 
 
@@ -220,6 +284,9 @@
                               dominusSetInst.czr_visibilityServi( _.union( _currentDependantBound, [ servusShortSetId ] ) );
                         }
                 } );//_.each
+                if ( ! hasProcessed )
+                  return dfd.resolve().promise();
+                return dfd.promise();
           },
 
 
@@ -249,6 +316,13 @@
                       _controlInst.onChangeActive( visibility , _controlInst.defaultActiveArguments );
                 });
           },
+
+
+
+
+
+
+
 
 
 
@@ -368,6 +442,6 @@
                 api.control('site_icon').container.find('.description').html(_newDes);
           }
     }
-  );//api.Class.extend() //api.CZR_visibilities
+  );//api.Class.extend() //api.CZR_ctrlDependencies
 
 })( wp.customize, jQuery, _);

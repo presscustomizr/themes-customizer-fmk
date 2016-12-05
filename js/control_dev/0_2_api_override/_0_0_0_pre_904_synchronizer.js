@@ -23,19 +23,32 @@
         this.element.iCheck('update');
   };
 
+  var _original = api.Element.synchronizer.val.update;
   api.Element.synchronizer.val.update = function(to) {
-        //SELECT CASE
-        if ( this.element.is('select') ) {
-              //SELECT2 OR SELECTER
-              //select2.val() documented https://select2.github.io/announcements-4.0.html
-              this.element.val(to).trigger('change');
-        } else if ( this.element.hasClass('wp-color-picker') ) {
-              //COLOR PICKER CASE
-              this.element.val(to).trigger('change');
-        }
-        else {
-              //falls back to the parent behaviour
-              this.element.val( to );
+        var self = this,
+            _modifySynchronizer = function() {
+                  //SELECT CASE
+                  if ( self.element.is('select') ) {
+                        //SELECT2 OR SELECTER
+                        //select2.val() documented https://select2.github.io/announcements-4.0.html
+                        self.element.val(to).trigger('change');
+                  } else if ( self.element.hasClass('wp-color-picker') ) {
+                        //COLOR PICKER CASE
+                        self.element.val(to).trigger('change');
+                  }
+                  else {
+                        //falls back to the parent behaviour
+                        self.element.val( to );
+                  }
+            };
+        //if skope on,
+        //wait for skope to be fully loaded to alter this
+        if ( serverControlParams.isSkopOn ) {
+              api.czr_skopeReady.then( function () {
+                    _modifySynchronizer();
+              });
+        } else {
+              _modifySynchronizer();
         }
   };
 

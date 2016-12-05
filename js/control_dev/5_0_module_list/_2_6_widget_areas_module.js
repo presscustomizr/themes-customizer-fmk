@@ -101,7 +101,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
           //setup reactions on widget section expansion
           //change the expanded behaviour for the widget zone section
-          api.section(module.serverParams.dynWidgetSection).expanded.callbacks.add( function() { return module.widgetSectionReact.apply(module, arguments ); } );
+          //api.section(module.serverParams.dynWidgetSection).expanded.callbacks.add( function() { return module.widgetSectionReact.apply(module, arguments ); } );
 
           //bind actions on widget panel expansion and widget zone section expansion
           //Fire the module
