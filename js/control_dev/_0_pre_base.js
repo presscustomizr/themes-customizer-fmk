@@ -77,13 +77,21 @@ var api = api || wp.customize, $ = $ || jQuery;
 
       //SET THE ACTIVE STATE OF THE THEMES SECTION BASED ON WHAT THE SERVER SENT
       api.bind('ready', function() {
-            api.section('themes').active.bind( function( active ) {
-                  if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
-                    return;
-                  api.section('themes').active(false);
-                  //reset the callbacks
-                  api.section('themes').active.callbacks = $.Callbacks();
-            });
+            var _do = function() {
+                  api.section('themes').active.bind( function( active ) {
+                        if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
+                          return;
+                        api.section('themes').active(false);
+                        //reset the callbacks
+                        api.section('themes').active.callbacks = $.Callbacks();
+                  });
+            };
+            if ( api.section.has( 'themes') )
+                _do();
+            else
+                api.section.when( 'themes', function( _s ) {
+                      _do();
+                });
       });
 
       //FIRE SKOPE ON READY
