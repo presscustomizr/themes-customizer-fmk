@@ -72,12 +72,20 @@ var api = api || wp.customize, $ = $ || jQuery;
 
       });
       api.bind('ready', function() {
-            api.section('themes').active.bind( function( active ) {
-                  if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
-                    return;
-                  api.section('themes').active(false);
-                  api.section('themes').active.callbacks = $.Callbacks();
-            });
+            var _do = function() {
+                  api.section('themes').active.bind( function( active ) {
+                        if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
+                          return;
+                        api.section('themes').active(false);
+                        api.section('themes').active.callbacks = $.Callbacks();
+                  });
+            };
+            if ( api.section.has( 'themes') )
+                _do();
+            else
+                api.section.when( 'themes', function( _s ) {
+                      _do();
+                });
       });
       api.czr_skopeReady = $.Deferred();
       api.bind( 'ready' , function() {
@@ -135,9 +143,6 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_dirtyness               = new api.Value( false );
           api.czr_isResettingSkope        = new api.Value( false );
           api.state.create('switching-skope')(false);
-          $( function($) {
-                self.fireHeaderButtons();
-          } );
           api.czr_dirtyness.callbacks.add( function() { return self.apiDirtynessReact.apply(self, arguments ); } );
           self.bindAPISettings();
           api.state.bind( 'change', function() {

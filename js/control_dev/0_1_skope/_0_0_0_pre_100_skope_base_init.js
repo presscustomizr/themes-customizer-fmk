@@ -186,10 +186,6 @@ $.extend( CZRSkopeBaseMths, {
           api.state.create('switching-skope')(false);
 
           ///////////////////// SKOPIFY THE API AND THE PANEL /////////////////////
-          //ON DOM READY : RENDER AND BIND HEADER BUTTONS : HOME, GENERAL RESET
-          $( function($) {
-                self.fireHeaderButtons();
-          } );
           //REACT TO API DIRTYNESS
           api.czr_dirtyness.callbacks.add( function() { return self.apiDirtynessReact.apply(self, arguments ); } );
 
