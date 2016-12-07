@@ -86,7 +86,7 @@ $.extend( CZRSkopeSaveMths, {
                         self.getSubmitPromise( self.globalSkopeId )
                               .fail( function( r ) {
                                     api.consoleLog('GLOBAL SAVE SUBMIT FAIL', r );
-                                    r = api.czr_skopeBase.buildServerResponse( _r );
+                                    r = api.czr_skopeBase.buildServerResponse( r );
                                     dfd.reject( r );
                               })
                               .done( function( r ) {

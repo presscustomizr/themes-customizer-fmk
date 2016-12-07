@@ -76,7 +76,8 @@ $.extend( CZRSkopeBaseMths, {
                           hasDBVal : false,
                           isDirty : false,
                           noticeVisible : false,
-                          resetVisible : false
+                          resetVisible : false,
+                          isResetting : false
                     },
                     initial_states = {};
 
@@ -213,14 +214,30 @@ $.extend( CZRSkopeBaseMths, {
           ctrl.czr_states('resetVisible').bind( function( visible ) {
                 var section_id = ctrl.section() || api.czr_activeSectionId();
                 if ( visible ) {
-                      $.when( self.renderControlResetWarningTmpl( ctrl.id ) ).done( function( $_resetWarning ) {
-                            ctrl.czr_resetWarning = $_resetWarning;
-                            $_resetWarning.slideToggle('fast');
+                      //self.renderControlResetWarningTmpl
+                      //returns an object : { container : $(el), is_authorized : is_authorized }
+                      $.when( self.renderControlResetWarningTmpl( ctrl.id ) ).done( function( _params ) {
+                            if ( _.isEmpty( _params ) )
+                              return;
+                            ctrl.czr_resetDialogContainer = _params.container;
+                            _params.container.slideToggle('fast');
+                            //Close and remove automatically if the user attempted to reset a non authorized setting
+                            //The setting can not be reset if :
+                            //1) WP setting
+                            //2) global skope
+                            //3) setting not dirty => db reset
+                            if ( ! _params.is_authorized ) {
+                                  _.delay( function() {
+                                        $.when( ctrl.czr_resetDialogContainer.slideToggle('fast') ).done( function() {
+                                              ctrl.czr_resetDialogContainer.remove();
+                                        });
+                                  }, 3000 );
+                            }
                       });
                 } else {
-                      if ( _.has( ctrl, 'czr_resetWarning' ) && ctrl.czr_resetWarning.length )
-                            $.when( ctrl.czr_resetWarning.slideToggle('fast') ).done( function() {
-                                  ctrl.czr_resetWarning.remove();
+                      if ( _.has( ctrl, 'czr_resetDialogContainer' ) && ctrl.czr_resetDialogContainer.length )
+                            $.when( ctrl.czr_resetDialogContainer.slideToggle('fast') ).done( function() {
+                                  ctrl.czr_resetDialogContainer.remove();
                             });
                 }
           });

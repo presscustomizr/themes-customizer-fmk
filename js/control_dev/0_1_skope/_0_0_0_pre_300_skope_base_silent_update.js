@@ -49,9 +49,11 @@ $.extend( CZRSkopeBaseMths, {
                       dfd.reject();
                 })
                 .done( function() {
-                      self.setupActiveSkopedControls( {
-                            section_id : params.section_id
-                      });
+                      _.delay( function() {
+                            self.setupActiveSkopedControls( {
+                                  section_id : params.section_id
+                            });
+                      }, 1000 );
                       dfd.resolve();
                 });
 

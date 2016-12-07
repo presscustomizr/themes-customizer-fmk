@@ -43,11 +43,27 @@ $.extend( CZRSkopeMths, {
               success_message;
 
           if ( skope.dirtyness() ) {
-              warning_message = 'Are you sure you want to reset your current customizations for skope : ' + skope().id + '?';
-              success_message = 'Your customizations have been reset for skope ' + skope().id + '.';
+              warning_message = [
+                    'Please confirm that you want to reset your current customizations for : ',//@to_translate
+                    skope().title,
+                    '.'
+              ].join('');
+              success_message = [
+                    'Your customizations have been reset for ',//@to_translate
+                    skope().title,
+                    '.'
+              ].join('');
           } else {
-              warning_message = 'Are you sure you want to reset the options to defaults for skope : ' + skope().id + '?';
-              success_message = 'The options have been reset to defaults for skope ' + skope().id + '.';
+              warning_message = [
+                    'Please confirm that you want to reset the options to defaults for : ',//@to_translate
+                    skope().title,
+                    '.'
+              ].join('');
+              success_message = [
+                    'The options have been reset to defaults for ',//@to_translate
+                    skope().title,
+                    '.'
+              ].join('');
           }
 
           try {
@@ -60,7 +76,7 @@ $.extend( CZRSkopeMths, {
             );
           }
           catch(e) {
-            throw new Error('Error when parsing the the reset skope template : ' + e );
+            throw new Error('Error when parsing the the reset skope template : ' + e );//@to_translate
           }
 
           $('#customize-preview').after( $( _tmpl ) );

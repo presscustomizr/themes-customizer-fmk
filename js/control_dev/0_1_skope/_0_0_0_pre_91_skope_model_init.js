@@ -35,7 +35,7 @@ $.extend( CZRSkopeMths, {
           skope.priority    = new api.Value(); //shall this skope always win or respect the default skopes priority
           skope.active      = new api.Value( false ); //active, inactive. Are we currently customizing this skope ?
           skope.dirtyness   = new api.Value( false ); //true or false : has this skope been customized ?
-          skope.resetWarningVisible = new api.Value(false);
+          skope.skopeResetDialogVisibility = new api.Value(false);
 
           //setting values are stored in :
           skope.hasDBValues = new api.Value( false );
@@ -66,8 +66,8 @@ $.extend( CZRSkopeMths, {
           ]);//module.userEventMap
 
           //Reset actions ( deferred cb )
-          skope.resetWarningVisible.bind( function( to, from ) {
-                return skope.resetReact( to );
+          skope.skopeResetDialogVisibility.bind( function( to, from ) {
+                return skope.skopeResetDialogReact( to );
           }, { deferred : true } );
 
 

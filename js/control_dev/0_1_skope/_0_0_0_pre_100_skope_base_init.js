@@ -211,6 +211,7 @@ $.extend( CZRSkopeBaseMths, {
 
           ///////////////////// SKOPE COLLECTIONS SYNCHRONISATION AND LISTNENERS /////////////////////
           //LISTEN TO SKOPE SYNC => UPDATE SKOPE COLLECTION ON START AND ON EACH REFRESH
+          //Will make sure server DB values are always synchronized with the instantiated skopes
           //the sent data look like :
           //{
           //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
@@ -420,8 +421,8 @@ $.extend( CZRSkopeBaseMths, {
                           api.czr_skope( skope_id ).updateSkopeDirties( setId, new_val );
                     }
 
-                    //collapse any expanded reset modifications
-                    if ( _.has( api.control(setId), 'czr_states' ) ) {
+                    //collapse any expanded reset modifications if the control is not currently being reset.
+                    if ( _.has( api.control(setId), 'czr_states' ) && ! api.control(setId).czr_states( 'isResetting' )() ) {
                           api.control(setId).czr_states( 'resetVisible' )( false );
                     }
 

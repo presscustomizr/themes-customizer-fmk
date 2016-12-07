@@ -238,8 +238,31 @@ $.extend( CZRSkopeBaseMths, {
 
 
     //fired in updateSkopeCollection
-    maybeSynchronizeGlobalSkope : function() {
-          var self = this;
+    //args can be
+    //{
+    //  isGlobalReset : false
+    //  isSetting : false,
+    //  isSkope : false,
+    //  settingIdToReset : '',
+    //  skopeIdToReset : ''
+    //}
+    maybeSynchronizeGlobalSkope : function( args ) {
+          args = args || {};
+          if ( ! _.isObject( args ) ) {
+              throw new Error('maybeSynchronizeGlobalSkope : args must be an object');
+          }
+          var self = this,
+              dfd = $.Deferred(),
+              defaults = _.extend({
+                        isGlobalReset : false,
+                        isSetting : false,
+                        settingIdToReset : '',
+                        isSkope : false,
+                        skopeIdToReset : ''
+                    },
+                    args
+              );
+
           if ( self.isGlobalSkopeRegistered() ) {
                 var _global_skp_db_values = api.czr_skope( self.getGlobalSkopeId() ).dbValues();
                 _.each( _global_skp_db_values, function( _val, setId ){
@@ -247,7 +270,18 @@ $.extend( CZRSkopeBaseMths, {
                             api.settings.settings[setId].value = _val;
                       }
                 });
-                //api.consoleLog('GLOBAL SKOPE HAS BEEN SYNCHRONIZED WITH THE API.');
+                //check if there's theme option removed from the global skope db values that needs to be set to default
+                if ( args.isGlobalReset && args.isSetting ) {
+                      var _setIdToReset = args.settingIdToReset,
+                          shortSetId    = api.CZR_Helpers.getOptionName( _setIdToReset ),
+                          defaultVal    = serverControlParams.defaultOptionsValues[ shortSetId ];
+                      if ( _.isUndefined( api.settings.settings[ _setIdToReset ] ) || _.isUndefined( defaultVal ) )
+                        return;
+                      if ( defaultVal != api.settings.settings[ _setIdToReset ].value ) {
+                            api.settings.settings[ _setIdToReset ].value = defaultVal;
+                      }
+                }
           }
+          return dfd.resolve().promise();
     }
 });//$.extend

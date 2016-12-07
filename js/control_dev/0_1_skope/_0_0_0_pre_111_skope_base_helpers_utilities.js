@@ -119,7 +119,7 @@ $.extend( CZRSkopeBaseMths, {
           if ( _.contains( serverControlParams.skopeExcludedSettings, shortSetId ) ) {
             //api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE PART OF THE EXCLUDED LIST.' );
             return false;
-          } else if ( -1 != setId.indexOf( serverControlParams.themeOptions ) ) {
+          } else if ( self.isThemeSetting( setId ) ) {
             return true;
             //api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE NOT PART OF THE THEME OPTIONS AND NOT WP AUTHORIZED BUILT IN OPTIONS' );
           } else
@@ -140,13 +140,16 @@ $.extend( CZRSkopeBaseMths, {
           //exclude widget controls and menu settings and sidebars
           if ( self.isExcludedWPBuiltinSetting( setId ) )
             return;
-          if ( -1 == setId.indexOf( serverControlParams.themeOptions ) && ! _.contains( serverControlParams.wpBuiltinSettings, setId ) ) {
+          if ( ! self.isThemeSetting && ! _.contains( serverControlParams.wpBuiltinSettings, setId ) ) {
             api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO RESET BECAUSE NOT PART OF THE THEME OPTIONS AND NOT WP AUTHORIZED BUILT IN OPTIONS' );
           } else
            return true;
     },
 
-
+    //@return bool
+    isThemeSetting : function( setId ) {
+          return -1 !== setId.indexOf( serverControlParams.themeOptions );
+    },
 
     //@return boolean
     isExcludedWPBuiltinSetting : function( setId ) {

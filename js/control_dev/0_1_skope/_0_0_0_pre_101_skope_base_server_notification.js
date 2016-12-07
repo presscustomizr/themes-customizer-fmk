@@ -3,7 +3,7 @@
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 $.extend( CZRSkopeBaseMths, {
 
-    //callback of api.czr_serverNotification
+      //callback of api.czr_serverNotification
       //notice is an object :
       //  {
       //    status : 'success',
@@ -93,13 +93,13 @@ $.extend( CZRSkopeBaseMths, {
             } else {
                   _toggleNotice();
             }
-            if ( 'success' == notice.status || false !== notice.auto_collapse ) {
-                  setTimeout( function() {
-                              api.czr_serverNotification( { expanded : false } );
-                        },
-                        2500
-                  );
-            }
+
+            //Always auto-collapse the notification after a custom delay
+            _.delay( function() {
+                        api.czr_serverNotification( { expanded : false } );
+                  },
+                  ( 'success' == notice.status || false !== notice.auto_collapse ) ? 2500 : 4000
+            );
       },
 
       //utility : build a server response as a string

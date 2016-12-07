@@ -46,7 +46,7 @@ $.extend( CZRSkopeSaveMths, {
                       if ( 'pending' == state ) {
                             api.czr_serverNotification( { message: response, status : 'error' } );
                       } else {
-                            api.czr_serverNotification( { message: 'Successfully published !' } );//@to_translate
+                            //api.czr_serverNotification( { message: 'Successfully published !' } );//@to_translate
                       }
                 },
                 resolveSave = function() {
