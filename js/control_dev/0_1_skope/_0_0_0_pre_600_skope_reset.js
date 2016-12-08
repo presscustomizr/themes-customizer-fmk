@@ -140,7 +140,7 @@ $.extend( CZRSkopeResetMths, {
       //  skope_id : '',
       //  setId : ''
       //}
-      reset_published : function( args ) {
+      resetPublished : function( args ) {
             var dfd = $.Deferred(),
                 self = this,
                 processing = api.state( 'processing' ),

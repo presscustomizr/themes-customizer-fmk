@@ -15,7 +15,7 @@ $.extend( CZRSkopeBaseMths, {
     //  section_id : string
     //}
     setupActiveSkopedControls : function( obj ) {
-          var self = this, section_id, controls, setupParams,
+          var self = this, section_id, controls, setupParams, eligibleCtrls;
               defaultSetupParams = {
                     controls : [],
                     section_id : api.czr_activeSectionId()
@@ -28,8 +28,9 @@ $.extend( CZRSkopeBaseMths, {
                 throw new Error( 'SetupControlsReset : the setupParams param must be an object with properties controls and section_id.');
           }
 
-          section_id = setupParams.section_id;
-          controls = setupParams.controls;
+          section_id  = setupParams.section_id;
+          controls    = setupParams.controls;
+          eligibleCtrls = [];
 
           if ( _.isEmpty( section_id ) || ! _.isString( section_id ) ) {
                 section_id = api.czr_activeSectionId();
@@ -41,30 +42,33 @@ $.extend( CZRSkopeBaseMths, {
           controls = _.isString( controls ) ? [controls] : controls;
 
           //filter only eligible ctrlIds
-          controls = _.filter( controls, function( ctrlId ) {
+          eligibleCtrls = _.filter( controls, function( ctrlId ) {
               var setId = api.CZR_Helpers.getControlSettingId( ctrlId );
+              if ( setId && ! self.isSettingSkopeEligible( setId ) ) {
+                    api.control( ctrlId ).container.addClass('czr-not-skoped');
+              }
               return setId && self.isSettingSkopeEligible( setId );
               //return true;
               //return self.isSettingSkopeEligible( ctrlId );
               //return self.isSettingResetEligible( ctrlId );
           });
 
-          if ( _.isEmpty(controls) )
-            return;
+          //Render the reset icon and setup reset dialog only for eligible controls
+          if ( ! _.isEmpty( eligibleCtrls ) ) {
+                $.when( self.renderControlsSingleReset( eligibleCtrls ) ).done( function() {
+                      //api.consoleLog('RENDER CONTROL SINGLE RESET DONE', controls );
+                      //add observable Value(s) to the section control
+                      self.listenSkopedControls( controls );
+                });
+          }
 
-          $.when( self.renderControlsSingleReset( controls ) ).done( function() {
-                //api.consoleLog('RENDER CONTROL SINGLE RESET DONE', controls );
-                //add observable Value(s) to the section control
-                self.listenSkopedControls( controls );
-          });
-
-          self.renderControlSkopeNotice( controls );
+          //Prepare skope control notice for all controls, even the non eligible ones
+          self.renderCtrlSkpNotIcon( controls );
     },
 
 
 
     //@params controls = array of control ids candidate to setup
-    //Only the Settings eligible to skope
     listenSkopedControls : function( controls ) {
           var self = this;
           _.each( controls, function( ctrlId ) {
@@ -195,12 +199,15 @@ $.extend( CZRSkopeBaseMths, {
                 var $noticeContainer = ctrl.getNotificationsContainerElement();
                 if ( false !== $noticeContainer && false !== $noticeContainer.length ) {
                       if ( ! visible ) {
-                            $noticeContainer
+                            $.when( $noticeContainer
                                   .stop()
                                   .slideUp( 'fast', null, function() {
                                         $( this ).css( 'height', 'auto' );
-                                  } );
+                                  } ) ).done( function() {
+                                        self.removeCtrlSkpNot( ctrl.id );
+                                  });
                       } else {
+                            self.updateCtrlSkpNot( ctrl.id );
                             $noticeContainer
                                   .stop()
                                   .slideDown( 'fast', null, function() {

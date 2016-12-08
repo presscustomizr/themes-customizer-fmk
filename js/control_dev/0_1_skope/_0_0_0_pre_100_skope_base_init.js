@@ -222,7 +222,8 @@ $.extend( CZRSkopeBaseMths, {
                 if ( ! serverControlParams.isSkopOn )
                   return;
                 //api.consoleLog('czr-skopes-ready DATA', data );
-                var preview = this;
+                var preview = this,
+                    previousSkopeCollection = api.czr_currentSkopesCollection();
                 //initialize skopes with the server sent data
                 if ( ! _.has( data, 'czr_skopes') ) {
                       throw new Error('Missing skopes in the server data');
@@ -231,17 +232,28 @@ $.extend( CZRSkopeBaseMths, {
 
                 //always wait for the initial collection to be populated
                 api.czr_initialSkopeCollectionPopulated.then( function() {
+                      var refreshActiveSkope = _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) );
                       api.czr_skopeBase.reactWhenSkopeSyncedDone( data ).done( function() {
-                            //if the current acive skope has been removed from the current skopes collection
+                            //if the current active skope has been removed from the current skopes collection
                             //=> set relevant scope as active. Falls back on 'global'
-                            if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) ) ) {
+                            if ( refreshActiveSkope ) {
                                   api.czr_activeSkopeId( self.getActiveSkopeId() )
                                         .done( function() {
                                               api.consoleLog('INITIAL ACTIVE SKOPE SET : ' + arguments[1] + ' => ' + arguments[0] );
                                               if ( 'pending' == api.czr_skopeReady.state() ) {
                                                     api.czr_skopeReady.resolve( self.getActiveSkopeId() );
                                               }
+                                              //write the current skope title
+                                              self._writeCurrentSkopeTitle();
                                         });
+                            } else if ( ! _.isEmpty( previousSkopeCollection ) ) { //Rewrite the title when the local skope has changed
+                                  var _prevLoc = _.findWhere( previousSkopeCollection , { skope : 'local' } ).opt_name,
+                                      _newLoc  =_.findWhere( data.czr_skopes, { skope : 'local' } ).opt_name;
+
+                                  if ( _newLoc !== _prevLoc && 'resolved' == api.czr_skopeReady.state() ) {
+                                        //write the current skope title
+                                        self._writeCurrentSkopeTitle();
+                                  }
                             }
                       });
                 });
@@ -253,7 +265,9 @@ $.extend( CZRSkopeBaseMths, {
           //setup the callbacks of the skope collection update
           //on init and on preview change : the collection of skopes is populated with new skopes
           //=> instanciate the relevant skope object + render them
-          api.czr_currentSkopesCollection.callbacks.add( function() { return self.currentSkopesCollectionReact.apply(self, arguments ); } );
+          api.czr_currentSkopesCollection.bind( function( to, from ) {
+                return self.currentSkopesCollectionReact( to, from );
+          }, { deferred : true });
 
 
           //WHEN THE INITIAL SKOPE COLLECTION HAS BEEN POPULATED ( in currentSkopesCollectionReact )
@@ -306,7 +320,7 @@ $.extend( CZRSkopeBaseMths, {
                             }
                       });
                       //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
-                      self.renderControlSkopeNotice( api.CZR_Helpers.getSectionControlIds() );
+                      self.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
                 });
           });
 
@@ -428,7 +442,7 @@ $.extend( CZRSkopeBaseMths, {
 
                     //Update the skope inheritance notice for the setting control
                     if ( self.isSettingSkopeEligible( setId ) ) {
-                          self.renderControlSkopeNotice( setId );
+                          self.updateCtrlSkpNot( setId );
                     }
               };//bindListener()
 
@@ -571,53 +585,74 @@ $.extend( CZRSkopeBaseMths, {
           //PAINT
           api.trigger('czr-paint', { active_section_id : active_sec_id } );
 
-          //bail here if we just went out of a section
-          if ( _.isEmpty( active_sec_id ) )
-            return;
+          var self = this,
+              _doReactPrevious = function( previous_sec_id ) {
+                    //COLLAPSE ANY RESET DIALOG OR CTRL NOTICE PREVIOUSLY EXPANDED
+                    var controls = api.CZR_Helpers.getSectionControlIds( previous_sec_id  );
+                    _.each( controls, function( ctrlId ) {
+                          if ( ! api.has( ctrlId ) || _.isUndefined( api.control( ctrlId ) ) )
+                            return;
+                          var ctrl = api.control( ctrlId );
+                          if ( ! _.has( ctrl, 'czr_states' ) )
+                            return;
+                          ctrl.czr_states( 'noticeVisible' )( false );
+                          ctrl.czr_states( 'resetVisible' )( false );
+                    });
+              },
+              _doReactActive = function( active_section, active_sec_id ) {
+                    //PRE RENDER THE CONTROL RESET ICONS + NOTICE
+                    self.setupActiveSkopedControls( {
+                          section_id : active_sec_id
+                    });
 
-          var self = this;
+                    //PROCESS SILENT UPDATES
+                    self.processSilentUpdates( { section_id : active_sec_id  } )
+                          .fail( function() {
+                                throw new Error( 'Fail to process silent updates after initial skope collection has been populated' );
+                          })
+                          .done( function() {
+                                // var _update_candidates = self._getSilentUpdateCandidates( active_sec_id  );
+                                // self.processSilentUpdates( { candidates : _update_candidates } );
+                                // //add control single reset + observable values
+                                // self.setupActiveSkopedControls();
+
+                                //Sidebar Widget specific
+                                if ( ! self.isExcludedSidebarsWidgets() ) {
+                                      self.forceSidebarDirtyRefresh( active_sec_id , api.czr_activeSkopeId() );
+                                }
+                          });
+
+                    //TRIGGER AN OBJECT RICH EVENT
+                    //LISTEN TO ACTIVE SECTION SETUP : RESET ICONS + CONTROL NOTICES ARE WRITEEN
+                    //=> handles the synchronized assigned locations for menus
+                    // 'skoped-controls-setup' is triggered when self.setupActiveSkopedControls()
+                    // params looks like : { controls : controls, section_id : section_id }
+                    if ( ! _.has( api.topics, 'active-section-setup' ) ) {
+                          api.bind( 'active-section-setup', function( params ) {
+                                var defaults = {
+                                      controls : [],
+                                      section_id : ''
+                                };
+                                params = _.extend( defaults, params );
+                                self._maybeSetupAssignedMenuLocations( params );
+                          });
+                    }
+                    api.trigger('active-section-setup', active_section );
+              };
+
+
 
           //defer the callback execution when the first skope collection has been populated
           //=> otherwise it might be to early. For example in autofocus request cases.
           api.czr_initialSkopeCollectionPopulated.then( function() {
                 api.section.when( active_sec_id , function( active_section ) {
                       active_section.deferred.embedded.then( function() {
-
-                            //PROCESS SILENT UPDATES
-                            self.processSilentUpdates( { section_id : active_sec_id  } )
-                                  .fail( function() {
-                                        throw new Error( 'Fail to process silent updates after initial skope collection has been populated' );
-                                  })
-                                  .done( function() {
-                                        // var _update_candidates = self._getSilentUpdateCandidates( active_sec_id  );
-                                        // self.processSilentUpdates( { candidates : _update_candidates } );
-                                        // //add control single reset + observable values
-                                        // self.setupActiveSkopedControls();
-
-                                        //Sidebar Widget specific
-                                        if ( ! self.isExcludedSidebarsWidgets() ) {
-                                              self.forceSidebarDirtyRefresh( active_sec_id , api.czr_activeSkopeId() );
-                                        }
-                                  });
-
-                            //TRIGGER AN OBJECT RICH EVENT
-                            //LISTEN TO ACTIVE SECTION SETUP : RESET ICONS + CONTROL NOTICES ARE WRITEEN
-                            //=> handles the synchronized assigned locations for menus
-                            // 'skoped-controls-setup' is triggered when self.setupActiveSkopedControls()
-                            // params looks like : { controls : controls, section_id : section_id }
-                            if ( ! _.has( api.topics, 'active-section-setup' ) ) {
-                                  api.bind( 'active-section-setup', function( params ) {
-                                        var defaults = {
-                                              controls : [],
-                                              section_id : ''
-                                        };
-                                        params = _.extend( defaults, params );
-                                        self._maybeSetupAssignedMenuLocations( params );
-                                  });
-                            }
-                            api.trigger('active-section-setup', active_section );
+                            _doReactActive( active_section, active_sec_id );
                       });
                 });
+                if ( ! _.isEmpty( previous_sec_id ) && api.section.has( previous_sec_id ) ) {
+                      _doReactPrevious( previous_sec_id );
+                }
           });
     },
 

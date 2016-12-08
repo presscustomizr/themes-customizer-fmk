@@ -13,7 +13,6 @@ $.extend( CZRSkopeMths, {
   // 'level'       => '_all_',
   // 'dyn_type'    => 'option',
   // 'opt_name'    => HU_THEME_OPTIONS,
-  // 'is_default'  => true,
   // 'is_winner'   => false,
   // 'db'    => array(),
   // 'has_db_val'  => false
@@ -30,12 +29,12 @@ $.extend( CZRSkopeMths, {
           $.extend( skope, constructor_options || {} );
 
           //Make it alive with various Values
-          skope.visible     = new api.Value(true);
-          skope.winner      = new api.Value(false); //is this skope the one that will be applied on front end in the current context?
+          skope.visible     = new api.Value( true );
+          skope.winner      = new api.Value( false ); //is this skope the one that will be applied on front end in the current context?
           skope.priority    = new api.Value(); //shall this skope always win or respect the default skopes priority
           skope.active      = new api.Value( false ); //active, inactive. Are we currently customizing this skope ?
           skope.dirtyness   = new api.Value( false ); //true or false : has this skope been customized ?
-          skope.skopeResetDialogVisibility = new api.Value(false);
+          skope.skopeResetDialogVisibility = new api.Value( false );
 
           //setting values are stored in :
           skope.hasDBValues = new api.Value( false );
@@ -104,7 +103,7 @@ $.extend( CZRSkopeMths, {
                       skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
                       //hide when this skope is not in the current skopes list
                       skope.visible.bind( function( is_visible ){
-                          skope.container.toggle( is_visible );
+                            skope.container.toggle( is_visible );
                       });
 
                       //How does the view react to model changes ?

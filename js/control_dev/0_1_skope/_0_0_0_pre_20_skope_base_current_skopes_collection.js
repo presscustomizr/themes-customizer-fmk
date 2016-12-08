@@ -92,12 +92,6 @@ $.extend( CZRSkopeBaseMths, {
                             }
                             api_ready_skope[_key] = _candidate_val;
                       break;
-                      case  'is_default' :
-                            if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                throw new Error('prepareSkopeForAPI : skope property "is_default" must be a boolean');
-                            }
-                            api_ready_skope[_key] = _candidate_val;
-                      break;
                       case  'is_winner' :
                             if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
                                 throw new Error('prepareSkopeForAPI : skope property "is_winner" must be a boolean');
@@ -155,10 +149,11 @@ $.extend( CZRSkopeBaseMths, {
 
     //cb of api.czr_currentSkopesCollection.callbacks
     //fired in initialize
-    currentSkopesCollectionReact : function(to, from) {
+    currentSkopesCollectionReact : function( to, from ) {
           var self = this,
               _new_collection = $.extend( true, [], to ) || [],
-              _old_collection = $.extend( true, [], from ) || [];
+              _old_collection = $.extend( true, [], from ) || [],
+              dfd = $.Deferred();
 
           //what are the skope to instantiate ?
           //=>on init, instantiate them all
@@ -212,16 +207,23 @@ $.extend( CZRSkopeBaseMths, {
               };
           api.czr_skope.each( function( _skp_instance ){
                 if ( _.isUndefined( _.findWhere( _new_collection, { id : _skp_instance().id } ) ) ) {
-                      _skp_instance.visible(false);
+                      _skp_instance.visible( false );
+                      _skp_instance.isReady.then( function() {
+                            _skp_instance.container.toggleClass( 'active-collection', false );
+                      });
                 }
                 else {
-                      _skp_instance.visible(true);
+                      _skp_instance.visible( true );
+                      var _activeSkpDomPostProcess = function() {
+                            _setLayoutClass( _skp_instance );
+                            _skp_instance.container.toggleClass( 'active-collection', true );
+                      };
                       if ( 'pending' == _skp_instance.isReady.state() ) {
                             _skp_instance.isReady.then( function() {
-                                  _setLayoutClass( _skp_instance );
+                                  _activeSkpDomPostProcess();
                             });
                       } else {
-                            _setLayoutClass( _skp_instance );
+                            _activeSkpDomPostProcess();
                       }
                 }
           } );
@@ -234,6 +236,8 @@ $.extend( CZRSkopeBaseMths, {
 
           //MAKE SURE TO SYNCHRONIZE api.settings.settings with the current global skope updated db values
           self.maybeSynchronizeGlobalSkope();
+
+          return dfd.resolve( 'changed' ).promise();
     },//listenToSkopeCollection()
 
 
@@ -270,6 +274,7 @@ $.extend( CZRSkopeBaseMths, {
                             api.settings.settings[setId].value = _val;
                       }
                 });
+
                 //check if there's theme option removed from the global skope db values that needs to be set to default
                 if ( args.isGlobalReset && args.isSetting ) {
                       var _setIdToReset = args.settingIdToReset,

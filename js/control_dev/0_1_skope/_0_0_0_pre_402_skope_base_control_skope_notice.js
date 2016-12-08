@@ -8,9 +8,42 @@ $.extend( CZRSkopeBaseMths, {
 
     //fired when a section is expanded
     //fired when a setting value is changed
-    renderControlSkopeNotice : function( controls ) {
+    renderCtrlSkpNotIcon : function( controlIdCandidates ) {
           var self = this,
-              controlIds = _.isArray(controls) ? controls : [controls],
+              controlIds = _.isArray(controlIdCandidates) ? controlIdCandidates : [controlIdCandidates];
+
+          _.each( controlIds, function( _id ) {
+                api.control.when( _id, function() {
+                      var ctrl = api.control( _id );
+                      ctrl.deferred.embedded.then( function() {
+                            //RENDER TOGGLE ICON
+                            if( $('.czr-toggle-notice', ctrl.container ).length )
+                              return;
+
+                            $.when( ctrl.container
+                                  .find('.customize-control-title').first()//was.find('.customize-control-title')
+                                  .append( $( '<span/>', {
+                                        class : 'czr-toggle-notice fa fa-info-circle',
+                                        title : 'Display informations about the scope of this option.'//@to_translate
+                                  } ) ) )
+                            .done( function(){
+                                  $('.czr-toggle-notice', ctrl.container).fadeIn( 400 );
+                            });
+                      });
+
+                });
+
+          });
+    },
+
+
+    //fired when a control notice is expanded
+    updateCtrlSkpNot : function( controlIdCandidates ) {
+           var self = this,
+              controlIds = _.isArray(controlIdCandidates) ? controlIdCandidates : [controlIdCandidates],
+              _isSkoped = function( setId ) {
+                    return setId && self.isSettingSkopeEligible( setId );
+              },//filter only eligible ctrlIds
               _generateControlNotice = function( setId, _localSkopeId ) {
                     var _currentSkopeId         = api.czr_activeSkopeId(),
                         _inheritedFromSkopeId   = self.getInheritedSkopeId( setId, _currentSkopeId ),
@@ -18,6 +51,15 @@ $.extend( CZRSkopeBaseMths, {
                         _html = [],
                         _isCustomized,
                         _hasDBVal;
+
+                    //////////////////////
+                    /// CASE 0 : not skoped
+                    if ( ! _isSkoped( setId ) ) {
+                          _html.push( [
+                                "This option is always customized site wide and can't be reset.",//@to_translate
+                          ].join(' ') );
+                          return _html.join(' | ');
+                    }
 
                     //////////////////////
                     /// CASE 1
@@ -95,8 +137,8 @@ $.extend( CZRSkopeBaseMths, {
                       var ctrl = api.control( _id ),
                           setId = api.CZR_Helpers.getControlSettingId( _id );//get the relevant setting_id for this control
 
-                      //bail here if the control has no valid setting associated or if the setId is not eligible to skope
-                      if ( ! setId || ! self.isSettingSkopeEligible( setId ) )
+                      //Bail here if the ctrl notice is not set to visible
+                      if ( ! _.has( ctrl, 'czr_states' ) || ! ctrl.czr_states('noticeVisible')() )
                         return;
 
                       ctrl.deferred.embedded.then( function() {
@@ -108,45 +150,39 @@ $.extend( CZRSkopeBaseMths, {
 
                             _html = _generateControlNotice( setId, _localSkopeId );
 
-                            // if ( _.isEmpty( _html ) ) {
-                            //       $noticeContainer
-                            //             .stop()
-                            //             .slideUp( 'fast', null, function() {
-                            //                   $( this ).css( 'height', 'auto' );
-                            //             } );
-                            // } else {
-                            //       $noticeContainer
-                            //             .stop()
-                            //             .slideDown( 'fast', null, function() {
-                            //                   $( this ).css( 'height', 'auto' );
-                            //             } );
-                            // }
-
-                            if ( $( '.czr-skope-notice', $noticeContainer ).length ) {
-                                  $( '.czr-skope-notice', $noticeContainer ).html( _html );
+                            var $skopeNoticeEl = $( '.czr-skope-notice', $noticeContainer );
+                            if ( $skopeNoticeEl.length ) {
+                                  $skopeNoticeEl.html( _html );
                             } else {
                                   $noticeContainer.append(
                                         [ '<span class="czr-notice czr-skope-notice">', _html ,'</span>' ].join('')
                                   );
                             }
+                      });
+                });
+          });
+    },
 
-                            //RENDER TOGGLE ICON
-                            if( $('.czr-toggle-notice', ctrl.container ).length )
+    //@return void()
+    removeCtrlSkpNot : function( controlIdCandidates ) {
+          var self = this,
+              controlIds = _.isArray(controlIdCandidates) ? controlIdCandidates : [controlIdCandidates];
+
+          _.each( controlIds, function( _id ) {
+                api.control.when( _id, function() {
+                      var ctrl = api.control( _id );
+
+                      ctrl.deferred.embedded.then( function() {
+                            var $noticeContainer = ctrl.getNotificationsContainerElement();
+
+                            if ( ! $noticeContainer || ! $noticeContainer.length )
                               return;
 
-                            $.when( ctrl.container
-                                  .find('.customize-control-title').first()//was.find('.customize-control-title')
-                                  .append( $( '<span/>', {
-                                        class : 'czr-toggle-notice fa fa-info-circle',
-                                        title : 'Display informations about the scope of this option.'//@to_translate
-                                  } ) ) )
-                            .done( function(){
-                                  $('.czr-toggle-notice', ctrl.container).fadeIn( 400 );
-                            });
+                            var $skopeNoticeEl = $( '.czr-skope-notice', $noticeContainer );
+                            if ( $skopeNoticeEl.length )
+                                  $skopeNoticeEl.remove();
                       });
-
                 });
-
           });
     }
 });//$.extend()

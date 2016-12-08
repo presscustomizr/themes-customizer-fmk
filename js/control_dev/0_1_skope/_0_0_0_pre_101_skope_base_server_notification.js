@@ -20,6 +20,10 @@ $.extend( CZRSkopeBaseMths, {
                   auto_collapse : false
             }, notice );
 
+            //bail for changeset_already_published
+            if ( 'changeset_already_published' == notice.message )
+              return;
+
             this.serverNoticeEmbedded = this.serverNoticeEmbedded || $.Deferred();
 
             var self = this,

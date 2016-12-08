@@ -106,6 +106,8 @@ $.extend( CZRSkopeMths, {
                 //render reset warning template
                 $.when( skope.renderResetWarningTmpl() ).done( function( $_container ) {
                       skope.resetPanel = $_container;
+                      //add the reset type class
+                      skope.resetPanel.addClass( skope.dirtyness() ? 'dirty-reset' : 'db-reset' );
                       skope.setupDOMListeners( skope.userResetEventMap() , { dom_el : skope.resetPanel } );
                       //$('body').addClass('czr-reset-skope-pane-open');
                 }).then( function() {
@@ -142,10 +144,12 @@ $.extend( CZRSkopeMths, {
     //Is used for both resetting customized and db values, depending on the skope customization state
     doResetSkopeValues : function() {
           var skope = this,
+              skope_id = skope().id,
               reset_method = skope.dirtyness() ? '_resetSkopeDirties' : '_resetSkopeAPIValues',
               _updateAPI = function() {
-                    skope[reset_method]().done( function() {
-                          api.czr_skopeBase.processSilentUpdates()
+                    var _silentUpdate = function() {
+                          api.czr_skopeBase.processSilentUpdates( { refresh : false } )
+                                .fail( function() { api.consoleLog( 'Silent update failed after resetting skope : ' + skope_id ); } )
                                 .done( function() {
                                       $.when( $('.czr-reset-warning', skope.resetPanel ).fadeOut('300') ).done( function() {
                                             $.when( $('.czr-reset-success', skope.resetPanel ).fadeIn('300') ).done( function() {
@@ -156,17 +160,53 @@ $.extend( CZRSkopeMths, {
                                             });
                                       });
                                 });
-                    });
+                    };
 
+                    skope[reset_method]()
+                          .done( function() {
+                                console.log('REFRESH AFTER A SKOPE RESET');
+                                //api.previewer.refresh() method is resolved with an object looking like :
+                                //{
+                                //    previewer : api.previewer,
+                                //    skopesServerData : {
+                                //        czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+                                //        isChangesetDirty : boolean
+                                //    },
+                                // }
+                                api.previewer.refresh()
+                                      .fail( function( refresh_data ) {
+                                            api.consoleLog('SKOPE RESET REFRESH FAILED', refresh_data );
+                                      })
+                                      .done( function( refresh_data ) {
+                                            if ( 'global' == api.czr_skope( skope_id )().skope && '_resetSkopeAPIValues' == reset_method ) {
+                                                  var _sentSkopeCollection,
+                                                      _serverGlobalDbValues = {},
+                                                      _skope_opt_name = api.czr_skope( skope_id )().opt_name;
 
-              };
+                                                  if ( ! _.isUndefined( refresh_data.skopesServerData ) && _.has( refresh_data.skopesServerData, 'czr_skopes' ) ) {
+                                                        _sentSkopeCollection = refresh_data.skopesServerData.czr_skopes;
+                                                        if ( _.isUndefined( _.findWhere( _sentSkopeCollection, { opt_name : _skope_opt_name } ) ) ) {
+                                                              _serverGlobalDbValues = _.findWhere( _sentSkopeCollection, { opt_name : _skope_opt_name } ).db || {};
+                                                        }
+                                                  }
+                                                  api.czr_skopeBase.maybeSynchronizeGlobalSkope( { isGlobalReset : true, isSkope : true, skopeIdToReset : skope_id } )
+                                                        .done( function() {
+                                                              _silentUpdate();
+                                                        });
+                                            } else {
+                                                  _silentUpdate();
+                                            }
+                                      });
+
+                          });
+              };//_updateAPI
 
           $('body').addClass('czr-resetting-skope');
           //$('.czr-reset-warning', skope.resetPanel ).hide();
 
           //When resetting the db value, wait for the ajax promise to be done before reseting the api values.
-          if ( skope.dirtyness() ) {
-                api.czr_skopeReset.resetChangeset( { skope_id : skope().id, is_skope : true } )
+          api.czr_skopeReset[ skope.dirtyness() ? 'resetChangeset' : 'resetPublished' ](
+                      { skope_id : skope().id, is_skope : true } )
                       .always( function() {
                             $('body').removeClass('czr-resetting-skope');//hides the spinner
                       })
@@ -177,17 +217,6 @@ $.extend( CZRSkopeMths, {
                               skope.skopeResetDialogVisibility( false );
                               api.consoleLog('Skope reset failed', r );
                       });
-          } else {
-                // api.previewer.czr_reset( skope().id )
-                //       .done( function( r ) {
-                //             _updateAPI();
-                //       } )
-                //       .fail( function( r ) {
-                //             $('.czr-reset-fail', skope.resetPanel ).fadeIn('300');
-                //             api.czr_isResettingSkope( false );
-                //             skope.skopeResetDialogVisibility(false);
-                //       });
-          }
     },
 
 
@@ -195,47 +224,15 @@ $.extend( CZRSkopeMths, {
     //@uses The ctrl.czr_states values
     _resetSkopeDirties : function() {
           var skope = this, dfd = $.Deferred();
-          //Clean the dirtyness state of dirty controls
-          //skope.dirtyValues() is an object :
-          //{
-          //  skope_id2 : { setId1 : val 1, setId2, val2, ... }
-          //  ...
-          //}
-          // if ( api.czr_activeSkopeId() == skope().id ) {
-          //       _.each( skope.dirtyValues(), function( _v, setId ) {
-          //             if (  ! _.has( api.control( setId ), 'czr_states' ) )
-          //               return;
-          //             api.control( setId ).czr_states( 'isDirty' )( false );
-          //       });
-          // }
           skope.dirtyValues({});
           skope.changesetValues({});
           return dfd.resolve().promise();
-          //inform the api about the new dirtyness state
-          //api.state('saved')( ! api.czr_dirtyness() );
     },
 
     //fired in doResetSkopeValues
     //@uses The ctrl.czr_states values
     _resetSkopeAPIValues : function() {
           var skope = this, dfd = $.Deferred();
-              // current_model = $.extend( true, {}, skope() ),
-              // reset_control_db_state = function( shortSetId ) {
-              //       var wpSetId         = api.CZR_Helpers.build_setId( shortSetId );
-              //       if (  ! _.has( api.control( wpSetId ), 'czr_states' ) )
-              //         return;
-              //       api.control( setId ).czr_states( 'hasDBVal' )( false );
-              // },
-
-
-          //set the db state of each control
-          //Avoid cross skope actions
-          // if ( api.czr_activeSkopeId() == skope().id ) {
-          //       _.each( skope.dbValues(), function( _v, _setId ) {
-          //             reset_control_db_state( _setId );
-          //       });
-          // }
-
           //update the skope model db property
           skope.dbValues( {} );
           return dfd.resolve().promise();

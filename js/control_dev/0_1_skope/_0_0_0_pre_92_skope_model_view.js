@@ -55,7 +55,7 @@ $.extend( CZRSkopeMths, {
               ].join('');
           } else {
               warning_message = [
-                    'Please confirm that you want to reset the options to defaults for : ',//@to_translate
+                    'Please confirm that you want to reset your published customizations to defaults for : ',//@to_translate
                     skope().title,
                     '.'
               ].join('');
@@ -67,11 +67,11 @@ $.extend( CZRSkopeMths, {
           }
 
           try {
-            _tmpl =  wp.template('czr-reset-skope')(
+            _tmpl =  wp.template( 'czr-reset-skope' )(
                 _.extend( skope_model, {
-                  el : skope.el,
-                  warning_message : warning_message,
-                  success_message : success_message
+                      el : skope.el,
+                      warning_message : warning_message,
+                      success_message : success_message
                 } )
             );
           }

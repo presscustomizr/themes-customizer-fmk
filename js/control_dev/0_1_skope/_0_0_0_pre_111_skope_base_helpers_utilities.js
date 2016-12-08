@@ -56,25 +56,32 @@ $.extend( CZRSkopeBaseMths, {
 
 
     //@return the current active skope id
-    //If a skope different than global has saved db values, let's set it as active
+    //If server send isLocalSkope = true, then try to activate the local skope
+    //Fallbacks on global
     getActiveSkopeId : function( _current_skope_collection ) {
           _current_skope_collection = _current_skope_collection || api.czr_currentSkopesCollection();
-          var _active_candidates = {},
-              _def = _.findWhere( _current_skope_collection, {is_default : true } ).id;
-          _def = ! _.isUndefined(_def) ? _def : _.findWhere( _current_skope_collection, { skope : 'global' } ).id;
 
-          _.each( _current_skope_collection, function( _skop ) {
-                _active_candidates[_skop.skope] = _skop.id;
-          });
+          var _currentSkopeLevel = ( ! _.isEmpty( api.czr_activeSkopeId() ) && api.czr_skope.has( api.czr_activeSkopeId() ) ) ? api.czr_skope( api.czr_activeSkopeId() )().skope : serverControlParams.isLocalSkope ? 'local' : 'global',
+              _newSkopeCandidate = _.findWhere( _current_skope_collection, { skope : _currentSkopeLevel } );
 
-          //Apply a basic skope priority. => @todo refine this treatment
-          if ( _.has( _active_candidates, 'local' ) )
-            return _active_candidates.local;
-          if ( _.has( _active_candidates, 'group' ) )
-            return _active_candidates.group;
-          if ( _.has( _active_candidates, 'special_group' ) )
-            return active_candidates.special_group;
-          return _def;
+          _skpId = ! _.isUndefined( _newSkopeCandidate ) ? _newSkopeCandidate.id : _.findWhere( _current_skope_collection, { skope : 'global' } ).id;
+
+          if ( _.isUndefined( _skpId ) ) {
+            throw new Error( 'No default skope was found in getActiveSkopeId ', _current_skope_collection );
+          }
+
+          // _.each( _current_skope_collection, function( _skop ) {
+          //       _active_candidates[ _skop.skope ] = _skop.id;
+          // });
+
+          // //Apply a basic skope priority. => @todo refine this treatment
+          // if ( _.has( _active_candidates, 'local' ) )
+          //   return _active_candidates.local;
+          // if ( _.has( _active_candidates, 'group' ) )
+          //   return _active_candidates.group;
+          // if ( _.has( _active_candidates, 'special_group' ) )
+          //   return active_candidates.special_group;
+          return _skpId;
     },
 
     //@return a skope name string : local, group, special_group, global
@@ -140,7 +147,7 @@ $.extend( CZRSkopeBaseMths, {
           //exclude widget controls and menu settings and sidebars
           if ( self.isExcludedWPBuiltinSetting( setId ) )
             return;
-          if ( ! self.isThemeSetting && ! _.contains( serverControlParams.wpBuiltinSettings, setId ) ) {
+          if ( ! self.isThemeSetting( setId ) && ! _.contains( serverControlParams.wpBuiltinSettings, setId ) ) {
             api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO RESET BECAUSE NOT PART OF THE THEME OPTIONS AND NOT WP AUTHORIZED BUILT IN OPTIONS' );
           } else
            return true;

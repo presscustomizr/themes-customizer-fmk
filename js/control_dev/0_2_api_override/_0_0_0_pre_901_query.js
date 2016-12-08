@@ -14,7 +14,7 @@
         *
         * @return {object}
         */
-        var _old_previewer_query = api.previewer.query;
+        var _coreQuery = api.previewer.query;
 
 
         //@todo : turn those arguments into an object ?
@@ -31,24 +31,25 @@
               //falls back to WP core treatment if skope is not on or if the requested skope is not registered
               if ( ! _.has( api, 'czr_skope') ) {
                     api.consoleLog('QUERY : SKOPE IS NOT ON. FALLING BACK ON CORE QUERY');
-                    return _old_previewer_query.apply( this );
+                    return _coreQuery.apply( this );
               }
 
               //HAS THE FIRST SKOPE COLLECTION BEEN POPULATED ?
               if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() ) {
                     api.consoleLog('QUERY : INITIAL SKOPE COLLECTION NOT POPULATED YET. FALLING BACK ON CORE QUERY');
-                    return _old_previewer_query.apply( this );
+                    return _coreQuery.apply( this );
               }
 
               //the previewer is now skope aware
               if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
                     api.czr_isPreviewerSkopeAware.resolve();
-                    //return _old_previewer_query.apply( this );
+                    //return _coreQuery.apply( this );
               }
 
-              if ( ! _.isObject( queryVars ) ) {
-                    api.consoleLog('QUERY VARS : ', queryVars );
-                    throw new Error( 'QUERY VARS MUST BE AN OBJECT.' );
+              //Skope is fully ready but the query is accessed from core (widgets) or a plugin
+              //=> fallback on the core method
+              if ( ! _.isObject( queryVars ) && 'resolved' == api.czr_initialSkopeCollectionPopulated.state() && 'resolved' == api.czr_initialSkopeCollectionPopulated.state() ) {
+                    return _coreQuery.apply( this );
               }
 
               //IS THE SKOPE ID PROVIDED ?
@@ -83,7 +84,7 @@
                     api.consoleLog('QUERY PARAMS : ', queryVars );
                     //api.consoleLog( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY.' );
                     throw new Error( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY. Requested action : ' + queryVars.action );
-                    //return _old_previewer_query.apply( this );
+                    //return _coreQuery.apply( this );
               }
 
               //IS THE REQUESTED ACTION AUTHORIZED ?

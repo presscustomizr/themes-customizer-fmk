@@ -169,6 +169,7 @@ $.extend( CZRSkopeBaseMths, {
                     //we need to re-synchronize the api.settings.settings with the default theme options values
                     self[reset_method](ctrlId)
                           .done( function() {
+                                console.log('REFRESH AFTER A SETTING RESET');
                                 //api.previewer.refresh() method is resolved with an object looking like :
                                 //{
                                 //    previewer : api.previewer,
@@ -202,7 +203,7 @@ $.extend( CZRSkopeBaseMths, {
                                             }
                                       });
                           });
-              };
+              };//_updateAPI
 
 
           ctrl.czr_states( 'isResetting' )( true );
@@ -210,8 +211,8 @@ $.extend( CZRSkopeBaseMths, {
 
           //api.consoleLog('DO RESET SETTING', ctrlId, ctrl.czr_states( 'isDirty' )() );
 
-          if ( ctrl.czr_states( 'isDirty' )() ) {
-                api.czr_skopeReset.resetChangeset( { skope_id : skope_id, setId : setId, is_setting : true } )
+          api.czr_skopeReset[ ctrl.czr_states( 'isDirty' )() ? 'resetChangeset' : 'resetPublished' ](
+                      { skope_id : skope_id, setId : setId, is_setting : true } )
                       .done( function( r ) {
                             _updateAPI( ctrlId );
                       })
@@ -226,23 +227,6 @@ $.extend( CZRSkopeBaseMths, {
                                     });
                               });
                       });
-          } else {
-                api.czr_skopeReset.reset_published( { skope_id : skope_id, setId : setId, is_setting : true } )
-                      .done( function( r ) {
-                            _updateAPI( ctrlId );
-                      })
-                      .fail( function( r ) {
-                              $.when( $('.czr-crtl-reset-dialog', ctrl.container ).fadeOut('300') ).done( function() {
-                                    $.when( $('.czr-reset-fail', ctrl.container ).fadeIn('300') ).done( function() {
-                                          $('.czr-reset-fail', ctrl.container ).append('<p>' + r + '</p>');
-                                          _.delay( function() {
-                                                _setResetDialogVisibility( ctrl );
-                                                self.setupActiveSkopedControls( { controls : [ ctrlId ] } );
-                                          }, 2000 );
-                                    });
-                              });
-                      });
-          }
 
     },
 

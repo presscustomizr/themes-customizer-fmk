@@ -59,6 +59,35 @@ $.extend( CZRSkopeBaseMths, {
           return _salmonToMatch( _local_skope_id );
     },
 
+    //@return the skope title from which a setting id inherits its current value
+    getOverridenSkopeTitles : function() {
+          var skope_id = skope_id || api.czr_activeSkopeId();
+          if ( ! api.czr_skope.has( skope_id ) ) {
+                throw new Error('getInheritedSkopeTitles : the requested skope id is not registered : ' + skope_id );
+          }
+           //Are we already in the 'local' skope ?
+          var self = this,
+              _local_skope_id = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
+
+          if ( _.isUndefined( _local_skope_id ) || skope_id == _local_skope_id )
+            return;
+
+          //start from local and do the salmon
+          var _salmonToMatch = function( _skp_id, _skp_ids ) {
+                _skp_ids = _skp_ids || [];
+                var skope_model = api.czr_skope( _skp_id )();
+
+                if ( _skp_id == skope_id )
+                  return _skp_ids;
+                _skp_ids.unshift( _skp_id );
+                return _salmonToMatch( self._getParentSkopeId( skope_model ), _skp_ids );
+          };
+
+          return _.map( _salmonToMatch( _local_skope_id ), function( id ) {
+                return self.buildSkopeLink( id );
+          }).join(' and ');//@to_translate
+    },
+
 
     //@return the skope title from which a setting id inherits its current value
     getInheritedSkopeId : function( setId, skope_id ) {

@@ -37,18 +37,30 @@ $.extend( CZRSkopeSaveMths, {
             var _notSyncedSettings    = [],
                 _sentSkopeCollection  = skopesServerData.czr_skopes;
 
+            console.log('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
+
             _.each( saved_dirties, function( skp_data, _saved_opt_name ) {
                   _.each( skp_data, function( _val, _setId ) {
                         //first, let's check if the sent skopes have not changed ( typically, if a user has opened another page in the preview )
                         if ( _.isUndefined( _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ) ) )
                           return;
+                        //exclude sExcludedWPBuiltinSetting from this check
+                        if ( api.czr_skopeBase.isExcludedWPBuiltinSetting( _setId ) )
+                          return;
 
-                        var sent_skope_db_values = _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ).db,
-                            shortSetId = api.CZR_Helpers.build_setId( _setId ),
-                            sent_set_val = sent_skope_db_values[shortSetId];
+                        var sent_skope_db_values  = _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ).db,
+                            sent_skope_level      = _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ).skope,
+                            wpSetId               = api.CZR_Helpers.build_setId( _setId ),
+                            shortSetId            = api.CZR_Helpers.getOptionName( _setId ),
+                            sent_set_val          = sent_skope_db_values[wpSetId];
 
-                        if ( _.isUndefined( sent_set_val ) || ! _.isEqual(sent_set_val, _val ) ) {
-                              _notSyncedSettings.push( { opt_name : _saved_opt_name, setId : shortSetId, server_val : sent_set_val, api_val : _val } );
+                        //for the global skope, the server won't send the settings for which the value has been reset to default
+                        //skip this case too
+                        if ( _.isUndefined( sent_set_val ) && 'global' == sent_skope_level && _val === serverControlParams.defaultOptionsValues[shortSetId] )
+                          return;
+
+                        if ( _.isUndefined( sent_set_val ) || ! _.isEqual( sent_set_val, _val ) ) {
+                              _notSyncedSettings.push( { opt_name : _saved_opt_name, setId : wpSetId, server_val : sent_set_val, api_val : _val } );
                         }
                   });
             });
@@ -64,6 +76,6 @@ $.extend( CZRSkopeSaveMths, {
             api.czr_skopeBase.maybeSynchronizeGlobalSkope();
 
             //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
-            api.czr_skopeBase.renderControlSkopeNotice( api.CZR_Helpers.getSectionControlIds() );
+            api.czr_skopeBase.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
       }
 });//$.extend

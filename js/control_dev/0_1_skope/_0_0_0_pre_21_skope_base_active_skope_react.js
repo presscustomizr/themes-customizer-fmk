@@ -22,10 +22,8 @@ $.extend( CZRSkopeBaseMths, {
 
           //Set state
           api.state('switching-skope')( true );
-
           //write the current skope title
           self._writeCurrentSkopeTitle( to );
-
           //paint skope color
           api.trigger( 'czr-paint', { is_skope_switch : true } );
 
@@ -111,16 +109,25 @@ $.extend( CZRSkopeBaseMths, {
     //Fired in activeSkopeReact()
     _writeCurrentSkopeTitle : function( skope_id ) {
           var self = this,
-              current_title = api.czr_skope( skope_id || api.czr_activeSkopeId() ).long_title,
+              current_title = api.czr_skope( skope_id || api.czr_activeSkopeId() )().long_title,
               _buildTitleHtml = function() {
-                    var _inheritedFrom = self.getInheritedSkopeTitles();
-                    return [
-                          current_title,
+                    var _inheritedFrom = self.getInheritedSkopeTitles(),
+                        _overrides = self.getOverridenSkopeTitles();
+
+                    return $.trim( [
+                          '<span class="czr-main-title">',
+                          'global' == api.czr_skope( skope_id || api.czr_activeSkopeId() )().skope ? current_title : ['Customizing', current_title ].join(' '),
+                          '</span>',
                           '<span class="czr-skope-inherits-from">',
-                          _.isEmpty( _inheritedFrom ) ? ' ' : 'Inherits from',//@to_translate
-                          self.getInheritedSkopeTitles(),
+                          'In this context :',//@to_translate
+                          _.isEmpty( _inheritedFrom ) ? ' ' : 'inherits from',//@to_translate
+                          _inheritedFrom,
+                          _.isEmpty( _inheritedFrom ) ? '' : _.isEmpty( _overrides ) ? '.' : ', and',//@to_translate
+                          _.isEmpty( _overrides ) ? ' ' : 'overriden by',//@to_translate
+                          _overrides,
+                          _.isEmpty( _overrides ) ? '' : '.',
                           '</span>'
-                    ].join(' ');
+                    ].join(' ') );
               },
               _toggle_spinner = function( visible ) {
                     if ( visible ) {
@@ -138,9 +145,10 @@ $.extend( CZRSkopeBaseMths, {
                                   $( '<h2/>', {
                                         class : 'czr-current-skope-title',
                                         html : [
-                                              '<span class="czr-skp-permanent-title"><span class="spinner"></span>CURRENT CUSTOMIZATION SCOPE</span>',//@to_translate
                                               '<span class="czr-skope-title">',
+                                              '<span class="spinner">',
                                               _buildTitleHtml(),
+                                              '</span>',
                                               '</span>'
                                         ].join('')
                                   })
