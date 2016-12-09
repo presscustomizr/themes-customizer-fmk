@@ -150,8 +150,17 @@ $.extend( CZRSkopeMths, {
     dirtyValuesReact : function( to, from ) {
           //api.consoleLog('IN DIRTY VALUES REACT', this.id, to, from );
           var skope = this;
-          //set the model dirtyness boolean state value
-          skope.dirtyness( ! _.isEmpty(to) );
+
+          //set the skope() dirtyness boolean state value
+          skope.dirtyness(
+                ! _.isEmpty(
+                      'global' != skope().skope ?
+                      to :
+                      _.omit( to, function( _val, _id ) {
+                            return ! api.czr_skopeBase.isThemeSetting( _id );
+                      })
+                )
+          );
 
           //set the API global dirtyness
           api.czr_dirtyness( ! _.isEmpty(to) );
@@ -205,8 +214,16 @@ $.extend( CZRSkopeMths, {
     dbValuesReact : function( to, from ) {
           var skope = this;
 
-          //set the model dirtyness boolean state value
-          skope.hasDBValues( ! _.isEmpty(to) );
+          //set the skope() db dirtyness boolean state value
+          skope.hasDBValues(
+                ! _.isEmpty(
+                      'global' != skope().skope ?
+                      to :
+                      _.omit( to, function( _val, _id ) {
+                            return ! api.czr_skopeBase.isThemeSetting( _id );
+                      })
+                )
+          );
 
           //RESET DIRTYNESS FOR THE CONTROLS IN THE ACTIVE SKOPE
           //=> make sure this is set for the active skopes only
@@ -294,20 +311,27 @@ $.extend( CZRSkopeMths, {
           var skope = this;
           $.when( this.container.toggleClass( 'dirty', to) ).done( function() {
               if ( to )
-                $( '.czr-scope-reset', skope.container).fadeIn('slow').attr('title', 'Reset the currently customized values');
+                $( '.czr-scope-reset', skope.container).fadeIn('slow').attr('title', [ 'Reset the current customizations for', skope().title ].join(' ') );//@to_translate
               else if ( ! skope.hasDBValues() )
                 $( '.czr-scope-reset', skope.container).fadeOut('fast');
           });
     },
 
     //cb of skope.hasDBValues.callbacks
-    hasDBValuesReact : function(to, from) {
+    hasDBValuesReact : function( to, from ) {
           var skope = this;
           $.when( skope.container.toggleClass('has-db-val', to ) ).done( function() {
-              if ( to )
-                $( '.czr-scope-reset', skope.container).fadeIn('slow').attr('title', 'Reset the saved values');
-              else if ( ! skope.dirtyness() )
-                $( '.czr-scope-reset', skope.container).fadeOut('fast');
+              if ( to ) {
+                    $( '.czr-scope-reset', skope.container)
+                          .fadeIn( 'slow')
+                          .attr( 'title', [
+                                'global' == skope().skope ? 'Reset the theme options published site wide' : 'Reset your website published options for',//@to_translate
+                                'global' == skope().skope ? '' : skope().title
+                          ].join(' ') );//@to_translate
+              }
+              else if ( ! skope.dirtyness() ) {
+                    $( '.czr-scope-reset', skope.container).fadeOut('fast');
+              }
           });
     },
 
@@ -334,21 +358,6 @@ $.extend( CZRSkopeMths, {
     /*****************************************************************************
     * HELPERS
     *****************************************************************************/
-    //get the current skope dirty values
-    //DEPRECATED
-    // getDirties : function() {
-    //       var skope = this,
-    //           _dirtyCustomized = {};
-    //       //populate with the current skope settings dirtyValues
-    //       api.each( function ( value, setId ) {
-    //           if ( value._dirty ) {
-    //             //var _k = key.replace(serverControlParams.themeOptions, '').replace(/[|]/gi, '' );
-    //             _dirtyCustomized[ setId ] = value();
-    //           }
-    //       } );
-    //       return _dirtyCustomized;
-    // },
-
     //this method updates a given skope instance dirty values
     //and returns the dirty values object
     //fired on api setting change and in the ajax query
@@ -385,7 +394,7 @@ $.extend( CZRSkopeMths, {
     //Has this skope already be customized in the API ?
     getSkopeSettingChangesetDirtyness : function( setId ) {
           var skope = this;
-          if ( ! api.czr_isChangedSetOn() )
+          if ( ! api.czr_isChangeSetOn() )
             return skope.getSkopeSettingAPIDirtyness( setId );
           return _.has( skope.changesetValues(), api.CZR_Helpers.build_setId( setId ) );
     },

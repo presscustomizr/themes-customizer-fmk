@@ -190,7 +190,7 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_dirtyness.callbacks.add( function() { return self.apiDirtynessReact.apply(self, arguments ); } );
 
           //LISTEN TO EACH API SETTING CHANGES
-          //=>POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
+          // => POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
           self.bindAPISettings();
 
           //LISTEN TO THE API STATES => SET SAVE BUTTON STATE
@@ -277,17 +277,6 @@ $.extend( CZRSkopeBaseMths, {
                 //api.czr_activeSkopeId.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
                 api.czr_activeSkopeId.bind( function( to, from ) {
                         return self.activeSkopeReact( to, from );
-                        // var dfd = $.Deferred();
-                        // self.activeSkopeReact( to, from )
-                        //       .done( function() {
-                        //             api.trigger( 'skope-switched', to );
-                        //             dfd.resolve();
-                        //       })
-                        //       .fail( function() {
-                        //             dfd.reject();
-                        //             throw new Error( 'activeSkopeReact failed');
-                        //       });
-                        // return dfd.promise();
                 }, { deferred : true } );
 
                 //REACT TO EXPANDED ACTIVE SECTION
@@ -429,6 +418,10 @@ $.extend( CZRSkopeBaseMths, {
 
                     //For skope eligible settings : Update the skope dirties with the new val of this setId
                     //=> not eligibile skope will update the global skope dirties
+                    //=> this has to be kept like this because the global dirties aare being populated with :
+                    // api.dirtyValues = function dirtyValues( options ) {
+                    //       return api.czr_skopeBase.getSkopeDirties( api.czr_skopeBase.getGlobalSkopeId(), options );
+                    // };
                     if ( api( setId )._dirty ) {
                           //api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, old_val + ' => ' +  new_val, o );
                           skope_id = self.isSettingSkopeEligible( setId ) ? api.czr_activeSkopeId() : self.getGlobalSkopeId();
@@ -551,6 +544,7 @@ $.extend( CZRSkopeBaseMths, {
     },
 
 
+
     /*****************************************************************************
     * REACT ON ACTIVE SECTION SETUP DONE
     *****************************************************************************/
@@ -568,6 +562,7 @@ $.extend( CZRSkopeBaseMths, {
           //locations is an array of locations for a menu
           //=> we want to synchronize the reset button of this menu location in this section, with the one of the nav_menu_location setting
           var _assignedLocReact = function( locations ) {
+            console.log('ASSIGNED LOCATIONS REACT', locations );
 
           };
           if ( ! active_section.assignedLocations.callbacks.has( _assignedLocReact ) ) {

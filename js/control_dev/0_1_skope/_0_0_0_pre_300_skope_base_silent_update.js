@@ -40,22 +40,35 @@ $.extend( CZRSkopeBaseMths, {
           //api.consoleLog('silentUpdateCands ============>>> ', api.czr_activeSkopeId(), params, silentUpdateCands );
           //bail now if we still don't have candidates to update
           if ( _.isEmpty( params.candidates ) )
-            return dfd.resolve().promise();
+            return dfd.resolve( [] ).promise();
+
+
+          var _enjoyTheSilence = function() {
+                self.silentlyUpdateSettings( params.candidates, params.refresh )
+                      .fail( function() {
+                            dfd.reject();
+                      })
+                      .done( function( updated_settings ) {
+                            _.delay( function() {
+                                  self.setupActiveSkopedControls( {
+                                        section_id : params.section_id
+                                  });
+                            }, 1000 );
+                            dfd.resolve( updated_settings );
+                      });
+          };
 
           //silently update the settings of a the currently active section() to the values of the current skope
           //silentlyUpdateSettings returns a promise.
-          self.silentlyUpdateSettings( params.candidates, params.refresh )
-                .fail( function() {
-                      dfd.reject();
-                })
-                .done( function() {
-                      _.delay( function() {
-                            self.setupActiveSkopedControls( {
-                                  section_id : params.section_id
-                            });
-                      }, 1000 );
-                      dfd.resolve();
+          if ( 'pending' == api.czr_skopeReady.state() ) {
+                dfd.resolve( [] );
+                api.czr_skopeReady.done( function() {
+                      console.log('IN PROCESS SILENT UPDATES, SKOPE IS READY');
+                      _enjoyTheSilence();
                 });
+          } else {
+                _enjoyTheSilence();
+          }
 
           return dfd.promise();
     },
@@ -96,7 +109,8 @@ $.extend( CZRSkopeBaseMths, {
           });
 
 
-          var _deferred = [];
+          var _deferred = [],
+              _updatedSetIds = [];
               // _silently_update = function( _silentUpdatePromises ) {
               //        _.each( _silentUpdatePromises, function( _promise_ , setId ) {
               //               //Silently set
@@ -113,6 +127,9 @@ $.extend( CZRSkopeBaseMths, {
                       //Silently set
                       var wpSetId = api.CZR_Helpers.build_setId( setId ),
                           _skopeDirtyness = api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( setId );
+                      if ( ! _.isEqual( api( wpSetId )(), _new_setting_val_ ) ) {
+                            _updatedSetIds.push( setId );
+                      }
                       api( wpSetId ).silent_set( _new_setting_val_ , _skopeDirtyness );
                 });
 
@@ -146,13 +163,13 @@ $.extend( CZRSkopeBaseMths, {
                       }
                 });
                 //always refresh by default
-                if ( refresh ) {
+                if ( refresh && ! _.isEmpty( _updatedSetIds ) ) {
                       api.previewer.refresh()
-                          .always( function() {
-                                dfd.resolve();
-                          });
+                            .always( function() {
+                                  dfd.resolve( _updatedSetIds );
+                            });
                 } else {
-                      dfd.resolve();
+                      dfd.resolve( _updatedSetIds );
                 }
           });
 

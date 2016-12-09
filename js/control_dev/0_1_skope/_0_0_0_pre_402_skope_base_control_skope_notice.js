@@ -150,6 +150,7 @@ $.extend( CZRSkopeBaseMths, {
 
                             _html = _generateControlNotice( setId, _localSkopeId );
 
+                            //console.log('Generate control notice', setId, _html );
                             var $skopeNoticeEl = $( '.czr-skope-notice', $noticeContainer );
                             if ( $skopeNoticeEl.length ) {
                                   $skopeNoticeEl.html( _html );

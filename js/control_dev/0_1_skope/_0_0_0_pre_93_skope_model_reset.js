@@ -164,7 +164,6 @@ $.extend( CZRSkopeMths, {
 
                     skope[reset_method]()
                           .done( function() {
-                                console.log('REFRESH AFTER A SKOPE RESET');
                                 //api.previewer.refresh() method is resolved with an object looking like :
                                 //{
                                 //    previewer : api.previewer,

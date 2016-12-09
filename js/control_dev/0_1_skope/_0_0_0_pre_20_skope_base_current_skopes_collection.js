@@ -265,7 +265,10 @@ $.extend( CZRSkopeBaseMths, {
                         skopeIdToReset : ''
                     },
                     args
-              );
+              ),
+              _setIdToReset,
+              shortSetId,
+              defaultVal;
 
           if ( self.isGlobalSkopeRegistered() ) {
                 var _global_skp_db_values = api.czr_skope( self.getGlobalSkopeId() ).dbValues();
@@ -277,14 +280,28 @@ $.extend( CZRSkopeBaseMths, {
 
                 //check if there's theme option removed from the global skope db values that needs to be set to default
                 if ( args.isGlobalReset && args.isSetting ) {
-                      var _setIdToReset = args.settingIdToReset,
-                          shortSetId    = api.CZR_Helpers.getOptionName( _setIdToReset ),
-                          defaultVal    = serverControlParams.defaultOptionsValues[ shortSetId ];
+                      _setIdToReset = args.settingIdToReset;
+                      shortSetId    = api.CZR_Helpers.getOptionName( _setIdToReset );
+                      defaultVal    = serverControlParams.defaultOptionsValues[ shortSetId ];
+
                       if ( _.isUndefined( api.settings.settings[ _setIdToReset ] ) || _.isUndefined( defaultVal ) )
                         return;
                       if ( defaultVal != api.settings.settings[ _setIdToReset ].value ) {
                             api.settings.settings[ _setIdToReset ].value = defaultVal;
                       }
+                }
+
+                //check if there's theme option removed from the global skope db values that needs to be set to default
+                if ( args.isGlobalReset && args.isSkope ) {
+                      _.each( api.settings.settings, function( _params, _setId ) {
+                            if ( ! self.isThemeSetting( _setId ) )
+                              return;
+
+                            shortSetId = api.CZR_Helpers.getOptionName( _setId );
+                            if ( ! _.has( serverControlParams.defaultOptionsValues, shortSetId ) )
+                              return;
+                            api.settings.settings[_setId].value = serverControlParams.defaultOptionsValues[ shortSetId ];
+                      });
                 }
           }
           return dfd.resolve().promise();

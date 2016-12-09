@@ -34,7 +34,7 @@ $.extend( CZRSkopeBaseMths, {
                   return skope_model.id;
 
                 //is the setting CHANGESET dirty ?
-                if ( api.czr_isChangedSetOn() ) {
+                if ( api.czr_isChangeSetOn() ) {
                       if ( api.czr_skope( _skp_id ).getSkopeSettingChangesetDirtyness( wpSetId ) )
                         return skope_model.id;
                 }
@@ -115,7 +115,7 @@ $.extend( CZRSkopeBaseMths, {
             return skope_id;
 
           //is the setting CHANGESET dirty ?
-          if ( api.czr_isChangedSetOn() ) {
+          if ( api.czr_isChangeSetOn() ) {
                 if ( api.czr_skope( skope_id ).getSkopeSettingChangesetDirtyness( wpSetId ) )
                   return skope_id;
           }
@@ -203,7 +203,7 @@ $.extend( CZRSkopeBaseMths, {
             return api.czr_skope( skope_id ).dirtyValues()[ wpSetId ];
 
           //is the setting CHANGESET dirty ?
-          if ( api.czr_isChangedSetOn() ) {
+          if ( api.czr_isChangeSetOn() ) {
                 if ( api.czr_skope( skope_id ).getSkopeSettingChangesetDirtyness( wpSetId ) )
                   return api.czr_skope( skope_id ).changesetValues()[ wpSetId ];
           }

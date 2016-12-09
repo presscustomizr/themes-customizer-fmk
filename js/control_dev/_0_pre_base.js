@@ -19,8 +19,8 @@ var api = api || wp.customize, $ = $ || jQuery;
             return serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
       };
 
-      api.czr_isChangedSetOn = function() {
-            return serverControlParams.isChangedSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
+      api.czr_isChangeSetOn = function() {
+            return serverControlParams.isChangeSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
       };
 
       /*****************************************************************************
@@ -111,7 +111,7 @@ var api = api || wp.customize, $ = $ || jQuery;
             }
 
             //let's set a lower autosave interval ( default is 60000 ms )
-            if ( serverControlParams.isChangedSetOn ) {
+            if ( serverControlParams.isChangeSetOn ) {
                   api.settings.timeouts.changesetAutoSave = 10000;
             }
       } );

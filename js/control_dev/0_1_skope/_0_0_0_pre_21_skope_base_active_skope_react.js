@@ -80,7 +80,7 @@ $.extend( CZRSkopeBaseMths, {
                             api.state('switching-skope')( false );
                             throw new Error( 'Fail to process silent updates in _debouncedProcessSilentUpdates');
                       })
-                      .done( function() {
+                      .done( function( _updatedSetIds ) {
                             api.previewer.refresh()
                                   .always( function() {
                                         api.trigger( 'skope-switched', to );

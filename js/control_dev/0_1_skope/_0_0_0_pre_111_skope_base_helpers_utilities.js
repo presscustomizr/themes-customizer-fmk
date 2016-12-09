@@ -82,6 +82,7 @@ $.extend( CZRSkopeBaseMths, {
           // if ( _.has( _active_candidates, 'special_group' ) )
           //   return active_candidates.special_group;
           return _skpId;
+          //return _.findWhere( _current_skope_collection, { skope : 'global' } ).id;
     },
 
     //@return a skope name string : local, group, special_group, global
@@ -268,7 +269,7 @@ $.extend( CZRSkopeBaseMths, {
           _.each( api.czr_skope( skope_id ).dirtyValues(), function( _val, _setId ) {
                 var settingRevision;
                 //since 4.7 and the changeset, only the settings not yet saved in the db changeset are returned
-                if ( api.czr_isChangedSetOn() ) {
+                if ( api.czr_isChangeSetOn() ) {
                       settingRevision = api._latestSettingRevisions[ _setId ];
                       // Skip including settings that have already been included in the changeset, if only requesting unsaved.
                       if ( api.state( 'changesetStatus' ).get() && ( options && options.unsaved ) && ( _.isUndefined( settingRevision ) || settingRevision <= api._lastSavedRevision ) ) {
@@ -276,7 +277,6 @@ $.extend( CZRSkopeBaseMths, {
                             return;
                       }
                 }
-
                 values[ _setId ] = _val;
           } );
           return values;

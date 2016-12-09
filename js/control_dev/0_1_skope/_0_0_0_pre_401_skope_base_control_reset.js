@@ -28,7 +28,9 @@ $.extend( CZRSkopeBaseMths, {
                     //api.consoleLog('IN RENDER RESET ICONS', ctrlIds );
                     _.each( controlIds, function( _id ) {
                           api.control.when( _id, function() {
-                                var ctrl = api.control( _id );
+                                var ctrl  = api.control( _id ),
+                                    setId = api.CZR_Helpers.getControlSettingId( _id );
+
                                 if( $('.czr-setting-reset', ctrl.container ).length ) {
                                       dfd.resolve();
                                       return;
@@ -40,7 +42,7 @@ $.extend( CZRSkopeBaseMths, {
                                                   .find('.customize-control-title').first()//was.find('.customize-control-title')
                                                   .prepend( $( '<span/>', {
                                                         class : 'czr-setting-reset fa fa-refresh',
-                                                        title : 'Reset'
+                                                        title : ''
                                                   } ) ) )
                                       .done( function(){
                                             ctrl.container.addClass('czr-skoped');

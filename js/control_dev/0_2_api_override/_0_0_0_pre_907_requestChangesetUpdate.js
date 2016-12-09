@@ -1,6 +1,6 @@
 
 (function (api, $, _) {
-      if ( ! serverControlParams.isSkopOn || ! api.czr_isChangedSetOn() )
+      if ( ! serverControlParams.isSkopOn || ! api.czr_isChangeSetOn() )
         return;
 
       //WP Changeset is requested for an update with an ajax query in the following situation :

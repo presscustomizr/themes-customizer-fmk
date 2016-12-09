@@ -74,9 +74,10 @@ $.extend( CZRSkopeBaseMths, {
           _.each( controls, function( ctrlId ) {
                 if ( ! api.has( ctrlId ) || _.isUndefined( api.control( ctrlId ) ) )
                   return;
-                var ctrl = api.control( ctrlId ),
-                    shortSetId = api.CZR_Helpers.getOptionName( ctrlId ),
-                    defaults = {
+                var ctrl        = api.control( ctrlId ),
+                    setId       = api.CZR_Helpers.getControlSettingId( ctrlId ),
+                    shortSetId  = api.CZR_Helpers.getOptionName( setId ),
+                    defaults    = {
                           hasDBVal : false,
                           isDirty : false,
                           noticeVisible : false,
@@ -105,8 +106,8 @@ $.extend( CZRSkopeBaseMths, {
                 //             isDirty : api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( ctrlId )
                 //       }
                 // );
-                ctrl.czr_states( 'hasDBVal' )( api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( ctrlId ) );
-                ctrl.czr_states( 'isDirty' )( api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( ctrlId ) );
+                ctrl.czr_states( 'hasDBVal' )( api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( setId ) );
+                ctrl.czr_states( 'isDirty' )( api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( setId ) );
 
                 //api.consoleLog( 'SETUP CONTROL VALUES ?', ctrlId, api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( ctrlId ) );
 
@@ -183,14 +184,32 @@ $.extend( CZRSkopeBaseMths, {
                 throw new Error( 'in bindControlStates, the provided ctrl id is not registered in the api : ' + ctrl.id );
           }
           var self = this;
+
           //DB VALS
           ctrl.czr_states('hasDBVal').bind( function( bool ) {
                 ctrl.container.toggleClass( 'has-db-val', bool );
+                if ( bool ) {
+                      _title = 'Reset your customized ( and published ) value';//@to_translate
+                } else if ( ctrl.czr_states('isDirty')() ) {
+                      _title = 'Reset your customized ( but not yet published ) value';//@to_translate
+                } else {
+                      _title = 'Not customized yet, nothing to reset';//@to_translate;
+                }
+                ctrl.container.find('.czr-setting-reset').attr( 'title', _title );
           });
 
           //API DIRTYNESS
           ctrl.czr_states('isDirty').bind( function( bool ) {
                 ctrl.container.toggleClass( 'is-dirty', bool );
+                var _title;
+                if ( bool ) {
+                      _title = 'Reset your customized ( but not yet published ) value';//@to_translate
+                } else if ( ctrl.czr_states('hasDBVal')() ) {
+                      _title = 'Reset your customized ( and published ) value';//@to_translate
+                } else {
+                      _title = 'Not customized yet, nothing to reset';//@to_translate;
+                }
+                ctrl.container.find('.czr-setting-reset').attr( 'title', _title );
           });
 
           //NOTICE VISIBILITY

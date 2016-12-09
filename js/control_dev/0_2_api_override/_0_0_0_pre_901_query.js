@@ -27,6 +27,9 @@
         //    opt_name : string
         // }
         api.previewer.query =  function( queryVars ) {
+
+              //console.log('IN QUERY VARS', queryVars );
+
               //IS SKOP ON
               //falls back to WP core treatment if skope is not on or if the requested skope is not registered
               if ( ! _.has( api, 'czr_skope') ) {
@@ -185,7 +188,7 @@
               //BUILD THE CURRENT SKOPES ARRAY
               var _current_skopes = {};
               _.each( api.czr_currentSkopesCollection(), function( _skp ) {
-                  _current_skopes[_skp.skope] = { id : _skp.id, opt_name : _skp.opt_name };
+                    _current_skopes[_skp.skope] = { id : _skp.id, opt_name : _skp.opt_name };
               });
 
 
@@ -216,6 +219,7 @@
                     skopeCustomized:  JSON.stringify( skopeCustomized ),
                     nonce:            this.nonce.preview,
                     skope:            api.czr_skope( queryVars.skope_id )().skope,
+                    level_id:          api.czr_skope( queryVars.skope_id )().level,
                     skope_id:         queryVars.skope_id,
                     dyn_type:         queryVars.dyn_type,
                     opt_name:         ! _.isNull( queryVars.opt_name ) ? queryVars.opt_name : api.czr_skope( queryVars.skope_id )().opt_name,
@@ -223,11 +227,10 @@
                     current_skopes:   JSON.stringify( _current_skopes ) || {},
                     channel:          this.channel(),
                     revisionIndex:    api._latestRevision
-
               };
 
               //since 4.7
-              if ( api.czr_isChangedSetOn() ) {
+              if ( api.czr_isChangeSetOn() ) {
                     _to_return = $.extend( _to_return , {
                           customize_theme: api.settings.theme.stylesheet,
                           customize_changeset_uuid: api.settings.changeset.uuid
@@ -240,7 +243,7 @@
                     });
               }
               // api.consoleLog('DIRTY VALUES TO SUBMIT ? ', globalCustomized, api.czr_skopeBase.getSkopeDirties(skope_id) );
-              //api.consoleLog('QUERY VARS ?', _to_return );
+              //api.consoleLog('QUERY VARS TO RETURN', $.extend( true, {}, _to_return ) );
               return _to_return;
 
         };//api.previewer.query

@@ -84,7 +84,7 @@ $.extend( CZRSkopeSaveMths, {
                                               response = _.extend( { changeset_status : 'publish' },  response || {} );
 
                                               //since 4.7 : if changeset is on, let's add stuff to the query object
-                                              if ( api.czr_isChangedSetOn() ) {
+                                              if ( api.czr_isChangeSetOn() ) {
                                                     var latestRevision = api._latestRevision;
                                                     api.state( 'changesetStatus' ).set( response.changeset_status );
                                                     if ( 'publish' === response.changeset_status ) {

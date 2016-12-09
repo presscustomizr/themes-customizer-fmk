@@ -14,8 +14,8 @@
     //since 4.7 (when changeset has been introduced ), the core query takes parameter
     //Typically an object looking like { excludeCustomizedSaved: true }
     api.czr_getSkopeQueryParams = function( params ) {
-          if ( ! api.czr_isChangedSetOn() )
-                return params;
+          if ( ! api.czr_isChangeSetOn() )
+            return params;
           params = ! _.isObject(params) ? {} : params;
           var _action = params.action || 'refresh';
           switch( _action ) {

@@ -37,6 +37,9 @@ $.extend( CZRSkopeResetMths, {
             var skope_id = args.skope_id,
                 setId = args.setId;
 
+            if( ! api.czr_isChangeSetOn() )
+              return dfd.resolve().promise();
+
             // => will be set to false always after asynchronous request
             //skope dependant submit()
             submit_reset = function( skope_id, setId ) {

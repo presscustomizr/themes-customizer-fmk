@@ -249,8 +249,17 @@ h2.czr-current-skope-title {
 .dirty .czr-scope-reset {
   color: #FFBD2E!important;
 }
+
 .is_winner .czr-scope-winner {
   color: #52ff3f;
+  font-size: 14px;
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+}
+
+.czr-scope-force {
+  display: none;
 }
 
 /* Underline skope switch text in control notices and in the main skope switcher title */

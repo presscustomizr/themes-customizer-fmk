@@ -117,7 +117,7 @@ $.extend( CZRSkopeSaveMths, {
             };
 
             //since 4.7 : if changeset is on, let's add stuff to the query params
-            if ( api.czr_isChangedSetOn() ) {
+            if ( api.czr_isChangeSetOn() ) {
                   $.extend( query_params, { excludeCustomizedSaved: false } );
             }
 
@@ -132,7 +132,7 @@ $.extend( CZRSkopeSaveMths, {
             } );
 
             //since 4.7 : if changeset is on, let's add stuff to the query object
-            if ( api.czr_isChangedSetOn() ) {
+            if ( api.czr_isChangeSetOn() ) {
                   if ( self.saveArgs && self.saveArgs.date ) {
                     query.customize_changeset_date = self.saveArgs.date;
                   }
