@@ -63,7 +63,6 @@ $.extend( CZRSkopeBaseMths, {
           if ( 'pending' == api.czr_skopeReady.state() ) {
                 dfd.resolve( [] );
                 api.czr_skopeReady.done( function() {
-                      console.log('IN PROCESS SILENT UPDATES, SKOPE IS READY');
                       _enjoyTheSilence();
                 });
           } else {
@@ -84,6 +83,12 @@ $.extend( CZRSkopeBaseMths, {
     //2) When all asynchronous promises are done(). Refresh()
     //@return an array of promises. Typically if a setting update has to re-render an image related control, the promise is the ajax request object
     silentlyUpdateSettings : function( _silentUpdateCands, refresh ) {
+          //Declare a new api state
+          if ( ! api.state.has( 'silent-update-processing') )
+            api.state.create( 'silent-update-processing' )( false );
+
+          api.state( 'silent-update-processing' )(true);
+
           //api.consoleLog('silentlyUpdateSettings', _silentUpdateCands, refresh );
           var self = this,
               _silentUpdatePromises = {},
@@ -155,7 +160,9 @@ $.extend( CZRSkopeBaseMths, {
                 dfd.reject();
                 throw new Error( 'silentlyUpdateSettings FAILED. Candidates : ' + _silentUpdateCands );
           })
-          .always( function() {})
+          .always( function() {
+                api.state( 'silent-update-processing' )( false );
+          })
           .then( function() {
                 _.each( _deferred, function( prom ){
                       if ( _.isObject( prom ) && 'resolved' !== prom.state() ) {

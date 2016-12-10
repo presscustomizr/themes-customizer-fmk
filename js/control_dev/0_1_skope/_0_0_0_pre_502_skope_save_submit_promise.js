@@ -106,6 +106,8 @@ $.extend( CZRSkopeSaveMths, {
                   }
             }
 
+
+
             //BUILD THE QUERY OBJECT
             //the skope save query takes parameters
             var query_params = {
@@ -130,6 +132,8 @@ $.extend( CZRSkopeSaveMths, {
                   customize_changeset_status: self.changesetStatus,
                   customize_changeset_data : JSON.stringify( params.customize_changeset_data )
             } );
+
+             console.log( 'in submit, query params before save', query );
 
             //since 4.7 : if changeset is on, let's add stuff to the query object
             if ( api.czr_isChangeSetOn() ) {

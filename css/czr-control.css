@@ -2123,6 +2123,7 @@ h2.czr-current-skope-title {
     font-size: 14px;
     line-height: 18px;
     font-weight: normal;
+    text-shadow: 1px 1px 0px #dedede;
 }
 .czr-scope .fa {
     font-size: 10px;
@@ -2302,7 +2303,8 @@ h2.czr-current-skope-title {
 .czr-reset-content {
     display: inline-block;
     line-height: 20px;
-    width: 90%;
+    width: 80%;
+    padding: 5%;
     background: rgba(0, 0, 0, 0.63);
 }
 

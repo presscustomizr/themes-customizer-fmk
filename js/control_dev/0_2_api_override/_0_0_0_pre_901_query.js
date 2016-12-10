@@ -27,9 +27,6 @@
         //    opt_name : string
         // }
         api.previewer.query =  function( queryVars ) {
-
-              //console.log('IN QUERY VARS', queryVars );
-
               //IS SKOP ON
               //falls back to WP core treatment if skope is not on or if the requested skope is not registered
               if ( ! _.has( api, 'czr_skope') ) {
@@ -148,7 +145,7 @@
                           // } );
                           // skopeCustomized = _inheritanceReadyCustomized;
 
-                          globalCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( globalCustomized, api.czr_skopeBase.getGlobalSkopeId() );
+                          //globalCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( globalCustomized, api.czr_skopeBase.getGlobalSkopeId() );
                     break;
 
                     case 'changeset_update' :
@@ -171,7 +168,7 @@
                                 throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A VALID DYN TYPE.' + queryVars.skope_id );
                           }
                           //Set the dirties  || api.czr_skopeBase.getSkopeDirties(skope_id) ?
-                          globalCustomized = queryVars.the_dirties; //was : api.czr_skope( skope_id ).dirtyValues();
+                          //globalCustomized = queryVars.the_dirties; //was : api.czr_skope( skope_id ).dirtyValues();
                     break;
 
                     case 'reset' :
@@ -243,7 +240,6 @@
                     });
               }
               // api.consoleLog('DIRTY VALUES TO SUBMIT ? ', globalCustomized, api.czr_skopeBase.getSkopeDirties(skope_id) );
-              //api.consoleLog('QUERY VARS TO RETURN', $.extend( true, {}, _to_return ) );
               return _to_return;
 
         };//api.previewer.query

@@ -81,8 +81,10 @@
           //Process the visibility callbacks for the controls of a target targetSectionId
           //@param targetSectionId : string
           //@param sourceSectionId : string, the section from which the request has been done
-          setServiDependencies : function( targetSectionId, sourceSectionId ) {
+          setServiDependencies : function( targetSectionId, sourceSectionId, refresh ) {
                 var self = this, params, dfd = $.Deferred();
+
+                refresh = refresh || false;
 
                 if ( _.isUndefined( targetSectionId ) || ! api.section.has( targetSectionId ) ) {
                   throw new Error( 'Control Dependencies : the targetSectionId is missing or not registered : ' + targetSectionId );
@@ -92,7 +94,7 @@
                 api.section( targetSectionId ).czr_ctrlDependenciesReady = api.section( targetSectionId ).czr_ctrlDependenciesReady || $.Deferred();
 
                 //Bail here if this section has already been setup for ctrl dependencies
-                if ( 'resolved' == api.section( targetSectionId ).czr_ctrlDependenciesReady.state() )
+                if ( ! refresh && 'resolved' == api.section( targetSectionId ).czr_ctrlDependenciesReady.state() )
                   return dfd.resolve().promise();
 
                 //FIND DOMINI IN THE TARGET SECTION
@@ -108,7 +110,7 @@
 
                       params = self._prepareDominusParams( params );
 
-                      self._processDominusCallbacks( params.dominus, params )
+                      self._processDominusCallbacks( params.dominus, params, refresh )
                             .fail( function() {
                                   api.consoleLog( 'self._processDominusCallbacks fail for section ' + targetSectionId );
                                   dfd.reject();
@@ -222,7 +224,7 @@
           * @params setId = the short setting id, whitout the theme option prefix OR the WP built-in setting
           * @params o = { controls [], callback fn, onSectionExpand bool }
           */
-          _processDominusCallbacks : function( shortDominusId, dominusParams ) {
+          _processDominusCallbacks : function( shortDominusId, dominusParams, refresh ) {
                 var self = this,
                     wpDominusId = api.CZR_Helpers.build_setId( shortDominusId ),
                     dominusSetInst = api( wpDominusId ),
@@ -237,7 +239,7 @@
                         //set visibility when control is embedded
                         //or when control is added to the api
                         //=> solves the problem of visibility callbacks lost when control are re-rendered
-                        var _fireDominusCallbacks = function( dominusSetVal, servusShortSetId, dominusParams ) {
+                        var _fireDominusCallbacks = function( dominusSetVal, servusShortSetId, dominusParams, refresh ) {
                                   var _toFire = [],
                                       _args = arguments;
                                   _.each( dominusParams, function( _item, _key ) {
@@ -266,7 +268,7 @@
                             };
 
 
-                        //APPLY THE VISIBILITY
+                        //APPLY THE DEPENDENCIES
                         _deferCallbacks();
 
                         //BIND THE DOMINUS SETTING INSTANCE
@@ -292,29 +294,43 @@
 
 
           //@return void()
-          _setVisibility : function ( dominusSetVal, servusShortSetId, dominusParams ) {
+          _setVisibility : function ( dominusSetVal, servusShortSetId, dominusParams, refresh ) {
                 var wpServusSetId = api.CZR_Helpers.build_setId( servusShortSetId ),
                     visibility = dominusParams.visibility( dominusSetVal, servusShortSetId, dominusParams.dominus );
 
+                refresh = refresh || false;
                 //Allows us to filter between visibility callbacks and other actions
                 //a non visibility callback shall return null
-                if ( ! _.isBoolean( visibility ) || 'unchanged' == visibility )
+                if ( ! _.isBoolean( visibility ) || ( 'unchanged' == visibility && ! refresh ) )
                   return;
-                api.control( wpServusSetId, function( _controlInst ) {
-                      var _args = {
-                            duration : 'fast',
-                            completeCallback : function() {},
-                            unchanged : false
-                      };
 
-                      if ( _.has( _controlInst, 'active' ) )
-                        visibility = visibility && _controlInst.active();
+                var _doVisibilitiesWhenPossible = function() {
+                      if ( api.state( 'silent-update-processing' )() )
+                        return;
+                      api.control( wpServusSetId, function( _controlInst ) {
+                          var _args = {
+                                duration : 'fast',
+                                completeCallback : function() {},
+                                unchanged : false
+                          };
 
-                      if ( _.has( _controlInst, 'defaultActiveArguments' ) )
-                        _args = control.defaultActiveArguments;
+                          if ( _.has( _controlInst, 'active' ) )
+                            visibility = visibility && _controlInst.active();
 
-                      _controlInst.onChangeActive( visibility , _controlInst.defaultActiveArguments );
-                });
+                          if ( _.has( _controlInst, 'defaultActiveArguments' ) )
+                            _args = control.defaultActiveArguments;
+
+                          _controlInst.onChangeActive( visibility , _controlInst.defaultActiveArguments );
+                      });
+                      api.state( 'silent-update-processing' ).unbind( _doVisibilitiesWhenPossible );
+                };
+
+                if ( api.state.has( 'silent-update-processing' ) && api.state( 'silent-update-processing' )() ) {
+                      api.state( 'silent-update-processing' ).bind( _doVisibilitiesWhenPossible );
+                } else {
+                      _doVisibilitiesWhenPossible();
+                }
+
           },
 
 

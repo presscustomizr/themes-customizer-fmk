@@ -55,10 +55,12 @@ $.extend( CZRSkopeBaseMths, {
 
           //Render the reset icon and setup reset dialog only for eligible controls
           if ( ! _.isEmpty( eligibleCtrls ) ) {
-                $.when( self.renderControlsSingleReset( eligibleCtrls ) ).done( function() {
-                      //api.consoleLog('RENDER CONTROL SINGLE RESET DONE', controls );
-                      //add observable Value(s) to the section control
-                      self.listenSkopedControls( controls );
+                api.czr_skopeReady.then( function() {
+                      $.when( self.renderControlsSingleReset( eligibleCtrls ) ).done( function() {
+                            //api.consoleLog('RENDER CONTROL SINGLE RESET DONE', controls );
+                            //add observable Value(s) to the section control
+                            self.listenSkopedControls( controls );
+                      });
                 });
           }
 

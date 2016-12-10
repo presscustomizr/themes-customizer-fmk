@@ -178,7 +178,7 @@ $.extend( CZRSkopeBaseMths, {
           //nav_menus_created_posts
           //2) exclude maybe :
           //nav_menu_locations
-          var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css', 'nav_menu[', 'nav_menu_item', 'nav_menus_created_posts' ],
+          var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css', 'nav_menu[', 'nav_menu_item', 'nav_menus_created_posts', 'nav_menu_locations' ],
               _isExcld = false;
           _.each( _patterns, function( _ptrn ) {
                 switch( _ptrn ) {
@@ -223,6 +223,9 @@ $.extend( CZRSkopeBaseMths, {
 
     //@return bool
     isExcludedNavMenuLocations : function() {
+          //Nav menu location are not well supported before 4.7 => potential infinite refresh
+          if ( ! api.czr_isChangeSetOn() )
+            return true;
           var _servParam = serverControlParams.isNavMenuLocationsSkoped;//can be a boolean or a string "" for false, "1" for true
           return ! ( ! _.isUndefined( _servParam ) && ! _.isEmpty( _servParam ) && false !== _servParam );
     },

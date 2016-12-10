@@ -305,7 +305,7 @@ $.extend( CZRSkopeBaseMths, {
                       api.czr_CrtlDependenciesReady.then( function() {
                             if ( ! _.isUndefined( api.czr_activeSectionId() ) && ! _.isEmpty( api.czr_activeSectionId() ) ) {
                                   //SET VISIBILITIES
-                                  api.czr_ctrlDependencies.setServiDependencies( api.czr_activeSectionId() );
+                                  api.czr_ctrlDependencies.setServiDependencies( api.czr_activeSectionId(), null, true );//target sec id, source sec id, refresh
                             }
                       });
                       //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
@@ -355,7 +355,9 @@ $.extend( CZRSkopeBaseMths, {
           //2) on sektion expansion
           //3) on panel expansion
           api.bind( 'czr-paint', function( params ) {
-                self.wash( params ).paint( params );
+                api.czr_skopeReady.then( function() {
+                      self.wash( params ).paint( params );
+                });
           });
     },//initialize
 
@@ -764,6 +766,14 @@ $.extend( CZRSkopeBaseMths, {
                                         el : active_section.container
                                   }
                             );
+                            //for WP < 4.7
+                            if ( ! api.czr_isChangeSetOn() ) {
+                                  _paint_candidates.push(
+                                        {
+                                              el : active_section.container.find('.accordion-section-content')
+                                        }
+                                  );
+                            }
                       });
                 });
           }
@@ -790,12 +800,20 @@ $.extend( CZRSkopeBaseMths, {
     *****************************************************************************/
     //@return void()
     setSaveButtonStates : function() {
+          //the 'saving' state was introduced in 4.7
+          //For prior versions, let's declare it and add its callback that we need in the api.previewer.save() method
+          if ( ! api.state.has('saving') ) {
+                api.state.create('saving');
+                api.state('saving').bind( function( isSaving ) {
+                      $( document.body ).toggleClass( 'saving', isSaving );
+                } );
+          }
           var saveBtn   = $( '#save' ),
               closeBtn  = $( '.customize-controls-close' ),
               saved     = api.state( 'saved'),
               saving    = api.state( 'saving'),
               activated = api.state( 'activated' ),
-              changesetStatus = api.state( 'changesetStatus' );
+              changesetStatus = api.state.has('changesetStatus' ) ? api.state( 'changesetStatus' )() : 'auto-draft';
 
           if ( api.czr_dirtyness() || ! saved() ) {
                 saveBtn.val( api.l10n.save );
@@ -804,7 +822,7 @@ $.extend( CZRSkopeBaseMths, {
                 saveBtn.val( api.l10n.saved );
                 closeBtn.find( '.screen-reader-text' ).text( api.l10n.close );
           }
-          var canSave = ! saving() && ( ! activated() || ! saved() ) && 'publish' !== changesetStatus();
+          var canSave = ! saving() && ( ! activated() || ! saved() ) && 'publish' !== changesetStatus;
           saveBtn.prop( 'disabled', ! canSave );
     }
 

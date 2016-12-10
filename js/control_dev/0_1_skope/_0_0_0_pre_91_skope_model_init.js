@@ -152,15 +152,16 @@ $.extend( CZRSkopeMths, {
           var skope = this;
 
           //set the skope() dirtyness boolean state value
-          skope.dirtyness(
-                ! _.isEmpty(
-                      'global' != skope().skope ?
-                      to :
-                      _.omit( to, function( _val, _id ) {
-                            return ! api.czr_skopeBase.isThemeSetting( _id );
-                      })
-                )
-          );
+          skope.dirtyness( ! _.isEmpty( to ) );
+          // skope.dirtyness(
+          //       ! _.isEmpty(
+          //             'global' != skope().skope ?
+          //             to :
+          //             _.omit( to, function( _val, _id ) {
+          //                   return ! api.czr_skopeBase.isThemeSetting( _id );
+          //             })
+          //       )
+          // );
 
           //set the API global dirtyness
           api.czr_dirtyness( ! _.isEmpty(to) );
