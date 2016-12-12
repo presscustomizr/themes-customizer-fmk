@@ -83,7 +83,6 @@ $.extend( CZRSkopeSaveMths, {
                         dfd.reject( r );
                   })
                   .done( function( r ) {
-                        console.log('START SAVING GLOBAL SKOPE', self.globalSkopeId );
                         self.getSubmitPromise( self.globalSkopeId )
                               .fail( function( r ) {
                                     api.consoleLog('GLOBAL SAVE SUBMIT FAIL', r );

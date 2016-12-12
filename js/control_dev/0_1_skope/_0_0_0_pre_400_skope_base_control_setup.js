@@ -53,8 +53,9 @@ $.extend( CZRSkopeBaseMths, {
               //return self.isSettingResetEligible( ctrlId );
           });
 
-          //Render the reset icon and setup reset dialog only for eligible controls
-          if ( ! _.isEmpty( eligibleCtrls ) ) {
+          //Render the reset icon ONLY for eligible controls
+          //Setup the state for all controls, even not eligible ones
+          if ( ! _.isEmpty( controls ) ) {
                 api.czr_skopeReady.then( function() {
                       $.when( self.renderControlsSingleReset( eligibleCtrls ) ).done( function() {
                             //api.consoleLog('RENDER CONTROL SINGLE RESET DONE', controls );
@@ -97,7 +98,6 @@ $.extend( CZRSkopeBaseMths, {
                       });
 
                       self.bindControlStates( ctrl );
-
                 }
 
                 //Set them

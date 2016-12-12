@@ -133,8 +133,6 @@ $.extend( CZRSkopeSaveMths, {
                   customize_changeset_data : JSON.stringify( params.customize_changeset_data )
             } );
 
-             console.log( 'in submit, query params before save', query );
-
             //since 4.7 : if changeset is on, let's add stuff to the query object
             if ( api.czr_isChangeSetOn() ) {
                   if ( self.saveArgs && self.saveArgs.date ) {
