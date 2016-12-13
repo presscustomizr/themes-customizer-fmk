@@ -105,7 +105,7 @@ $.extend( CZRSektionMths, {
           //React to a single item change
           //cb of module.czr_Item(item.id).callbacks
           // itemInternalReact : function( to, from ) {
-          //   api.consoleLog('in item internal React overriden', to, from );
+          //   api.consoleLog('in item internal React overridden', to, from );
           //       var sekItem = this,
           //           sektion_candidate = $.extend(true, {}, to);
           //       //we want to make sure that the item model is compliant with default model

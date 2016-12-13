@@ -123,7 +123,7 @@ $.extend( CZRSkopeBaseMths, {
                           _.isEmpty( _inheritedFrom ) ? ' ' : 'inherits from',//@to_translate
                           _inheritedFrom,
                           _.isEmpty( _inheritedFrom ) ? '' : _.isEmpty( _overrides ) ? '.' : ', and',//@to_translate
-                          _.isEmpty( _overrides ) ? ' ' : 'overriden by',//@to_translate
+                          _.isEmpty( _overrides ) ? ' ' : 'overridden by',//@to_translate
                           _overrides,
                           _.isEmpty( _overrides ) ? '' : '.',
                           '</span>'

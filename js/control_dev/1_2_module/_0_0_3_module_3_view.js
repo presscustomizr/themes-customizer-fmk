@@ -41,7 +41,7 @@ $.extend( CZRModuleMths, {
   },
 
   //called before rendering a view. Fired in module::renderItemWrapper()
-  //can be overriden to set a specific view template depending on the model properties
+  //can be overridden to set a specific view template depending on the model properties
   //@return string
   //@type can be
   //Read Update Delete (rud...)

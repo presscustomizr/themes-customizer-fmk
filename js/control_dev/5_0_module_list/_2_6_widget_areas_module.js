@@ -881,7 +881,7 @@ $.extend( CZRWidgetAreaModuleMths, {
   /// OVERRIDEN METHODS
   ////////////////////////////////////////
   //fired in toggleItemExpansion()
-  //has to be overriden for the widget zones control because this control is embedded directly in a panel and not in a section
+  //has to be overridden for the widget zones control because this control is embedded directly in a panel and not in a section
   //therefore the module to animate the scrollTop is not the section container but $('.wp-full-overlay-sidebar-content')
   _adjustScrollExpandedBlock : function( $_block_el, adjust ) {
           if ( ! $_block_el.length )
@@ -919,7 +919,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
   //overrides parent
   //called before rendering a view. Fired in module::renderItemWrapper()
-  //can be overriden to set a specific view template depending on the model properties
+  //can be overridden to set a specific view template depending on the model properties
   //@return string
   //@type can be
   //Read Update Delete (rud...)

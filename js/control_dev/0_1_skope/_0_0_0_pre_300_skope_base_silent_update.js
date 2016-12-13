@@ -220,7 +220,7 @@ $.extend( CZRSkopeBaseMths, {
           //header_image_data not concerned for example
           if ( api.control.has( wpSetId ) ) {
                 //The normal way to synchronize the setting api val and the html val is to use
-                //an overriden version of api.Element.synchronizer.val.update
+                //an overridden version of api.Element.synchronizer.val.update
                 //For some specific controls, we need to implement a different way to synchronize
                 var control_type = api.control( wpSetId ).params.type,
                     _control_data = api.settings.controls[wpSetId],

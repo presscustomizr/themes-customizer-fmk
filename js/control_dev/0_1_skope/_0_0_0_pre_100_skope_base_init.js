@@ -157,7 +157,7 @@ $.extend( CZRSkopeBaseMths, {
                 group  : 'rgba(173, 213, 247, 0.55)',
                 local  : 'rgba(78, 122, 199, 0.35)'
           };
-          //Deferred used to make sure the overriden api.previewer.query method has been taken into account
+          //Deferred used to make sure the overridden api.previewer.query method has been taken into account
           api.czr_isPreviewerSkopeAware   = $.Deferred();
           //Store the state of the first skope collection state
           api.czr_initialSkopeCollectionPopulated = $.Deferred();

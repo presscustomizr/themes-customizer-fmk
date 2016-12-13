@@ -79,7 +79,7 @@
   * => keep the dirtyness param unchanged
   * => stores the api state before callback calls, and reset it after
   * => add an object param to the callback to inform that this is a silent process
-  * , this is typically used in the overriden api.Setting.preview method
+  * , this is typically used in the overridden api.Setting.preview method
   *****************************************************************************/
   //@param to : the new value to set
   //@param dirtyness : the current dirtyness status of this setting in the skope
