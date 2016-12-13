@@ -37,15 +37,15 @@ $.extend( CZRSkopeSaveMths, {
             var _notSyncedSettings    = [],
                 _sentSkopeCollection  = skopesServerData.czr_skopes;
 
-            console.log('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
+            api.consoleLog('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
 
             _.each( saved_dirties, function( skp_data, _saved_opt_name ) {
                   _.each( skp_data, function( _val, _setId ) {
                         //first, let's check if the sent skopes have not changed ( typically, if a user has opened another page in the preview )
                         if ( _.isUndefined( _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ) ) )
                           return;
-                        //exclude sExcludedWPBuiltinSetting from this check
-                        if ( api.czr_skopeBase.isExcludedWPBuiltinSetting( _setId ) )
+                        //exclude ExcludedWPBuiltinSetting and not eligible theme settings from this check
+                        if ( ! api.czr_skopeBase.isSettingSkopeEligible( _setId ) )
                           return;
 
                         var sent_skope_db_values  = _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ).db,

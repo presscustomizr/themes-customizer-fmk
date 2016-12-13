@@ -189,6 +189,9 @@ $.extend( CZRSkopeBaseMths, {
           //REACT TO API DIRTYNESS
           api.czr_dirtyness.callbacks.add( function() { return self.apiDirtynessReact.apply(self, arguments ); } );
 
+          //LODING ICON DURING INITIAL SKOPE SETUP
+          self.toggleSkopeLoadPane();
+
           //LISTEN TO EACH API SETTING CHANGES
           // => POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
           self.bindAPISettings();
@@ -206,8 +209,6 @@ $.extend( CZRSkopeBaseMths, {
                       self.skopeWrapperEmbedded.resolve();
                 });
           }
-
-
 
           ///////////////////// SKOPE COLLECTIONS SYNCHRONISATION AND LISTNENERS /////////////////////
           //LISTEN TO SKOPE SYNC => UPDATE SKOPE COLLECTION ON START AND ON EACH REFRESH
@@ -362,7 +363,61 @@ $.extend( CZRSkopeBaseMths, {
     },//initialize
 
 
+    //@fired before skopeReady
+    toggleSkopeLoadPane : function() {
+          var self = this, $skopeLoadingPanel;
+              _render = function() {
+                    var dfd = $.Deferred();
+                    try {
+                        _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
+                    }
+                    catch(e) {
+                        throw new Error('Error when parsing the the reset skope template : ' + e );//@to_translate
+                    }
+                    $.when( $('#customize-preview').after( $( _tmpl ) ) )
+                          .always( function() {
+                                dfd.resolve( $( '#czr-skope-pane' ) );
+                          });
 
+                    return dfd.promise();
+              };
+
+
+          $('body').addClass('czr-skop-loading');
+          _render()
+                .done( function( $_el ) {
+                      $skopeLoadingPanel = $_el;
+                })
+                .then( function() {
+                      if ( ! $skopeLoadingPanel.length )
+                        return;
+
+                      _.delay( function() {
+                            //set height
+                            var _height = $('#customize-preview').height();
+                            $skopeLoadingPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
+                            //display
+                            $('body').addClass('czr-skope-pane-open');
+                      }, 50 );
+                });
+
+          api.czr_skopeReady.done( function() {
+                _.delay( function() {
+                      $.when( $('body').removeClass('czr-skope-pane-open') ).done( function() {
+                            _.delay( function() {
+                                  $.when( $('body').removeClass('czr-skop-loading') ).done( function() {
+                                        if ( false !== $skopeLoadingPanel.length ) {
+                                              setTimeout( function() {
+                                                    $skopeLoadingPanel.remove();
+                                              }, 400 );
+                                        }
+                                  });
+                            }, 200);
+                      });
+                }, 50);
+
+          });
+    },
 
 
 
@@ -563,10 +618,8 @@ $.extend( CZRSkopeBaseMths, {
 
           //locations is an array of locations for a menu
           //=> we want to synchronize the reset button of this menu location in this section, with the one of the nav_menu_location setting
-          var _assignedLocReact = function( locations ) {
-            console.log('ASSIGNED LOCATIONS REACT', locations );
+          var _assignedLocReact = function( locations ) {};
 
-          };
           if ( ! active_section.assignedLocations.callbacks.has( _assignedLocReact ) ) {
                 active_section.assignedLocations.bind( _assignedLocReact );
           }

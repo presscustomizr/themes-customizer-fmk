@@ -109,18 +109,18 @@ $.extend( CZRSkopeMths, {
                       //add the reset type class
                       skope.resetPanel.addClass( skope.dirtyness() ? 'dirty-reset' : 'db-reset' );
                       skope.setupDOMListeners( skope.userResetEventMap() , { dom_el : skope.resetPanel } );
-                      //$('body').addClass('czr-reset-skope-pane-open');
+                      //$('body').addClass('czr-skope-pane-open');
                 }).then( function() {
                       setTimeout( function() {
                             //set height
                             var _height = $('#customize-preview').height();
                             skope.resetPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
                             //display
-                            $('body').addClass('czr-reset-skope-pane-open');
+                            $('body').addClass('czr-skope-pane-open');
                       }, 50 );
                 });
           } else {
-                $.when( $('body').removeClass('czr-reset-skope-pane-open') ).done( function() {
+                $.when( $('body').removeClass('czr-skope-pane-open') ).done( function() {
                       if ( _.has( skope, 'resetPanel') && false !== skope.resetPanel.length ) {
                             setTimeout( function() {
                                   skope.resetPanel.remove();

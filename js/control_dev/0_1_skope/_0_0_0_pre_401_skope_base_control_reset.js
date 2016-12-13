@@ -25,8 +25,12 @@ $.extend( CZRSkopeBaseMths, {
 
           var controlIds = _.isArray(controls) ? controls : [controls],
               render_reset_icons = function( ctrlIds ) {
+                    if ( _.isEmpty( ctrlIds ) ) {
+                          dfd.resolve();
+                          return;
+                    }
                     //api.consoleLog('IN RENDER RESET ICONS', ctrlIds );
-                    _.each( controlIds, function( _id ) {
+                    _.each( ctrlIds, function( _id ) {
                           api.control.when( _id, function() {
                                 var ctrl  = api.control( _id ),
                                     setId = api.CZR_Helpers.getControlSettingId( _id );
@@ -171,7 +175,7 @@ $.extend( CZRSkopeBaseMths, {
                     //we need to re-synchronize the api.settings.settings with the default theme options values
                     self[reset_method](ctrlId)
                           .done( function() {
-                                console.log('REFRESH AFTER A SETTING RESET');
+                                api.consoleLog('REFRESH AFTER A SETTING RESET');
                                 //api.previewer.refresh() method is resolved with an object looking like :
                                 //{
                                 //    previewer : api.previewer,

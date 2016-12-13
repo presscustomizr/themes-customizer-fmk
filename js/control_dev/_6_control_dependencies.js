@@ -305,7 +305,7 @@
                   return;
 
                 var _doVisibilitiesWhenPossible = function() {
-                      if ( api.state( 'silent-update-processing' )() )
+                      if ( ! api.state.has( 'silent-update-processing' ) || api.state( 'silent-update-processing' )() )
                         return;
                       api.control( wpServusSetId, function( _controlInst ) {
                           var _args = {

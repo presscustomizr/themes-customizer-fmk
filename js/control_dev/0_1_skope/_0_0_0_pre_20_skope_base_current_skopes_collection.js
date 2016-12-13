@@ -273,7 +273,7 @@ $.extend( CZRSkopeBaseMths, {
           if ( self.isGlobalSkopeRegistered() ) {
                 var _global_skp_db_values = api.czr_skope( self.getGlobalSkopeId() ).dbValues();
                 _.each( _global_skp_db_values, function( _val, setId ){
-                      if ( ! _.isEqual( api.settings.settings[setId].value, _val ) ) {
+                      if ( api.has( setId ) && ! _.isEqual( api.settings.settings[setId].value, _val ) ) {
                             api.settings.settings[setId].value = _val;
                       }
                 });

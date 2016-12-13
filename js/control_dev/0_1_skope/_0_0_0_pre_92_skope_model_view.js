@@ -67,7 +67,7 @@ $.extend( CZRSkopeMths, {
           }
 
           try {
-            _tmpl =  wp.template( 'czr-reset-skope' )(
+            _tmpl =  wp.template( 'czr-skope-pane' )(
                 _.extend( skope_model, {
                       el : skope.el,
                       warning_message : warning_message,
@@ -81,7 +81,7 @@ $.extend( CZRSkopeMths, {
 
           $('#customize-preview').after( $( _tmpl ) );
 
-          return $( '#czr-reset-skope-pane' );
+          return $( '#czr-skope-pane' );
     },
 
 
