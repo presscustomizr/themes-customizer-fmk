@@ -24,6 +24,10 @@ $.extend( CZRSkopeBaseMths, {
             if ( 'changeset_already_published' == notice.message )
               return;
 
+            //bail if not dev mode
+            if ( ! serverControlParams.isDevMode )
+              return;
+
             this.serverNoticeEmbedded = this.serverNoticeEmbedded || $.Deferred();
 
             var self = this,

@@ -114,7 +114,7 @@ $.extend( CZRItemMths , {
         module.itemsWrapper.append( $_view_el );
 
         //if module is multi item, then render the item crud header part
-        //Note : for the widget module, the getTemplateEl method is overriden
+        //Note : for the widget module, the getTemplateEl method is overridden
         if ( module.isMultiItem() ) {
               var _template_selector = module.getTemplateEl( 'rudItemPart', item_model );
               //do we have view template script?

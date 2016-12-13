@@ -185,11 +185,15 @@ $.extend( CZRSkopeBaseMths, {
           if ( ! api.control.has( ctrl.id ) ) {
                 throw new Error( 'in bindControlStates, the provided ctrl id is not registered in the api : ' + ctrl.id );
           }
-          var self = this;
+          var self = this,
+              setId = api.CZR_Helpers.getControlSettingId( ctrl.id );
 
           //DB VALS
           ctrl.czr_states('hasDBVal').bind( function( bool ) {
-                ctrl.container.toggleClass( 'has-db-val', bool );
+                //If the active skope is global and the current setting is a WP built-in one, the db state should not be displayed
+                if ( 'global' == api.czr_skope( api.czr_activeSkopeId() )().skope && self.isWPAuthorizedSetting( setId ) ) {
+                      ctrl.container.toggleClass( 'has-db-val', false );
+                }
                 if ( bool ) {
                       _title = 'Reset your customized ( and published ) value';//@to_translate
                 } else if ( ctrl.czr_states('isDirty')() ) {

@@ -108,7 +108,7 @@ $.extend( CZRModuleMths, {
                     //listen to item Collection changes
                     module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply(module, arguments ); } );
 
-                    //it can be overriden by a module in its initialize method
+                    //it can be overridden by a module in its initialize method
                     if ( module.isMultiItem() )
                       module._makeItemsSortable();
 
@@ -140,7 +140,7 @@ $.extend( CZRModuleMths, {
 
 
   //fired when module is initialized, on module.isReady.done()
-  //designed to be extended or overriden to add specific items or properties
+  //designed to be extended or overridden to add specific items or properties
   initializeModuleModel : function( constructorOptions ) {
         var module = this;
         if ( ! module.isMultiItem() && ! module.isCrud() ) {

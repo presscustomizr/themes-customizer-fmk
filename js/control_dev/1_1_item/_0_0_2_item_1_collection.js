@@ -17,7 +17,7 @@ $.extend( CZRItemMths , {
         //the item is a collection of inputs, each one has its own view module.
         item.czr_Input = new api.Values();
 
-        //this can be overriden by extended classes to add and overrides methods
+        //this can be overridden by extended classes to add and overrides methods
         item.inputConstructor = module.inputConstructor;
 
         if ( _.isEmpty(item.defaultItemModel) || _.isUndefined(item.defaultItemModel) ) {

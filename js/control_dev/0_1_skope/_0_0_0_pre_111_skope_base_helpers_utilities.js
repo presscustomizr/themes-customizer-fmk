@@ -148,7 +148,7 @@ $.extend( CZRSkopeBaseMths, {
           //exclude widget controls and menu settings and sidebars
           if ( self.isExcludedWPBuiltinSetting( setId ) )
             return;
-          if ( ! self.isThemeSetting( setId ) && ! _.contains( serverControlParams.wpBuiltinSettings, setId ) ) {
+          if ( ! self.isThemeSetting( setId ) && ! self.isWPAuthorizedSetting( setId ) ) {
             api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO RESET BECAUSE NOT PART OF THE THEME OPTIONS AND NOT WP AUTHORIZED BUILT IN OPTIONS' );
           } else
            return true;
@@ -156,7 +156,12 @@ $.extend( CZRSkopeBaseMths, {
 
     //@return bool
     isThemeSetting : function( setId ) {
-          return -1 !== setId.indexOf( serverControlParams.themeOptions );
+          return _.isString( setId ) && -1 !== setId.indexOf( serverControlParams.themeOptions );
+    },
+
+    //@return bool
+    isWPAuthorizedSetting : function( setId ) {
+          return _.isString( setId ) && _.contains( serverControlParams.wpBuiltinSettings, setId );
     },
 
     //@return boolean
