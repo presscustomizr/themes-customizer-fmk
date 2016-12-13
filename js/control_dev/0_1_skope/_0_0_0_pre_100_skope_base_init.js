@@ -297,7 +297,7 @@ $.extend( CZRSkopeBaseMths, {
           //LISTEN TO SKOPE SWITCH EVENT :
           //1) reset visibilities
           //2) update control skope notices
-          api.bind( 'skope-switched', function( skope_id ) {
+          api.bind( 'skope-switched', function( skope_id, previous_id ) {
                 //api.consoleLog('SKOPE SWITCHED TO', skope_id, api.czr_activeSectionId() );
                 //Skope is ready when :
                 //1) the initial skopes collection has been populated
@@ -311,6 +311,14 @@ $.extend( CZRSkopeBaseMths, {
                       });
                       //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
                       self.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
+
+                      //ADD A SKOPE LEVEL CSS CLASS TO THE #customize-controls wrapper
+                      if ( api.czr_skope.has( previous_id ) ) {
+                            $('#customize-controls').removeClass( [ 'czr-', api.czr_skope( previous_id )().skope, '-skope-level'].join('') );
+                      }
+                      if ( api.czr_skope.has( skope_id ) ) {
+                            $('#customize-controls').addClass( [ 'czr-', api.czr_skope( skope_id )().skope, '-skope-level'].join('') );
+                      }
                 });
           });
 

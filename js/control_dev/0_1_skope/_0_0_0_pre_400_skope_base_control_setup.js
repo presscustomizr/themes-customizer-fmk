@@ -43,14 +43,17 @@ $.extend( CZRSkopeBaseMths, {
 
           //filter only eligible ctrlIds
           eligibleCtrls = _.filter( controls, function( ctrlId ) {
-              var setId = api.CZR_Helpers.getControlSettingId( ctrlId );
-              if ( setId && ! self.isSettingSkopeEligible( setId ) ) {
-                    api.control( ctrlId ).container.addClass('czr-not-skoped');
-              }
-              return setId && self.isSettingSkopeEligible( setId );
-              //return true;
-              //return self.isSettingSkopeEligible( ctrlId );
-              //return self.isSettingResetEligible( ctrlId );
+                var setId = api.CZR_Helpers.getControlSettingId( ctrlId );
+                if ( setId && ! self.isSettingSkopeEligible( setId ) ) {
+                      api.control( ctrlId ).container.addClass('czr-not-skoped');
+                }
+                if ( setId && self.isWPAuthorizedSetting( setId ) ) {
+                      api.control( ctrlId ).container.addClass('is-wp-authorized-setting');
+                }
+                return setId && self.isSettingSkopeEligible( setId );
+                //return true;
+                //return self.isSettingSkopeEligible( ctrlId );
+                //return self.isSettingResetEligible( ctrlId );
           });
 
           //Render the reset icon ONLY for eligible controls
@@ -190,10 +193,7 @@ $.extend( CZRSkopeBaseMths, {
 
           //DB VALS
           ctrl.czr_states('hasDBVal').bind( function( bool ) {
-                //If the active skope is global and the current setting is a WP built-in one, the db state should not be displayed
-                if ( 'global' == api.czr_skope( api.czr_activeSkopeId() )().skope && self.isWPAuthorizedSetting( setId ) ) {
-                      ctrl.container.toggleClass( 'has-db-val', false );
-                }
+                ctrl.container.toggleClass( 'has-db-val', bool );
                 if ( bool ) {
                       _title = 'Reset your customized ( and published ) value';//@to_translate
                 } else if ( ctrl.czr_states('isDirty')() ) {
