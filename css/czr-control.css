@@ -540,16 +540,24 @@ li#customize-control-tc_theme_options-tc_custom_css textarea {
 
 
 
-/* WIDGET PANEL MARGIN */
-#customize-theme-controls #accordion-panel-nav_menus, #customize-theme-controls #accordion-panel-czr-footer-panel {
+/* SPECIFIC PANELS MARGIN */
+#customize-theme-controls #accordion-panel-czr-footer-panel {
   border-bottom: 1px solid #ddd;
 }
-#customize-theme-controls .control-panel-widgets, #customize-theme-controls #accordion-panel-nav_menus{
-  margin-top: 14px;
-  border-bottom: 1px solid #ddd;
+#customize-theme-controls .control-panel-widgets,
+#customize-theme-controls #accordion-panel-nav_menus,
+#customize-theme-controls #accordion-panel-hu-advanced-panel {
+  margin-top: 10px;
 }
-
-
+#customize-theme-controls #accordion-panel-hu-header-panel,
+#customize-theme-controls .control-panel-widgets,
+#customize-theme-controls #accordion-panel-nav_menus,
+#customize-theme-controls #accordion-panel-hu-advanced-panel {
+  border-top: 1px solid #ddd;
+}
+#customize-theme-controls #accordion-panel-hu-general-panel {
+  margin-bottom: 10px;
+}
 
 /* HOME BUTTON */
 #customize-header-actions .customize-controls-close {
@@ -1994,7 +2002,7 @@ h2.czr-current-skope-title {
   display: inline-block;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 90%;
+  width: 95%;
 }
 .czr-skope-title {
   display: block;
@@ -2002,14 +2010,28 @@ h2.czr-current-skope-title {
   font-style: italic;
   line-height: 25px;
 }
+.czr-toggle-title-notice {
+  cursor: pointer;
+  font-size: 14px;
+  color: #777;
+}
 .czr-skope-inherits-from {
+    display: inline-block;
+    opacity: 0;
     width: 90%;
     font-size: 12px;
     line-height: 18px;
-    display: inline-block;
     color: #5f5f5f;
     top: -6px;
     position: relative;
+}
+.czr-skope-inherits-from.visible {
+  opacity: 1;
+  -webkit-transition: opacity .3s ease-in-out;
+  -moz-transition: opacity .3s ease-in-out;
+  -ms-transition: opacity .3s ease-in-out;
+  -o-transition: opacity .3s ease-in-out;
+  transition: opacity .3s ease-in-out;
 }
 .czr-scope-switcher .button {
   float: left;
@@ -2108,8 +2130,8 @@ h2.czr-current-skope-title {
 }
 .czr-scope-content {
     height: 35px;
-    padding: 0 4%;
-    width: 92%;
+    padding: 0 3%;
+    width: 94%;
     line-height: 35px;
     text-align: center;
     clear: both;
@@ -2120,7 +2142,7 @@ h2.czr-current-skope-title {
     margin: 0;
     display: inline-block;
     text-align: center;
-    font-size: 14px;
+    font-size: 13px;
     line-height: 18px;
     font-weight: normal;
     text-shadow: 1px 1px 0px #dedede;
@@ -2144,7 +2166,12 @@ h2.czr-current-skope-title {
     padding: 0 2px 0 0;
     text-shadow: 1px 1px 2px white;
 }
-
+.czr-skp-switch-link {
+  cursor: pointer;
+}
+.czr-skp-switch-link:hover {
+  text-decoration: underline;
+}
 .czr-pull-left {
   float: left;
 }

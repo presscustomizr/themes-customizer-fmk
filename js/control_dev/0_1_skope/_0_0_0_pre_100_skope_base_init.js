@@ -330,7 +330,7 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_serverNotification.bind( function( to, from ) {
                   self.toggleServerNotice( to );
           });
-          self.notificationsEventMap = [
+          self.scopeSwitcherEventMap = [
                 //skope reset : do reset
                 {
                       trigger   : 'click keydown',
@@ -339,9 +339,19 @@ $.extend( CZRSkopeBaseMths, {
                       actions   : function() {
                             api.czr_serverNotification( { expanded : false } );
                       }
+                },
+                //toggle title notice
+                {
+                      trigger   : 'click keydown',
+                      selector  : '.czr-toggle-title-notice',
+                      name      : 'toggle-title-notice',
+                      actions   : function( params ) {
+                            params.dom_el.find( '.czr-skope-inherits-from')
+                                  .toggleClass('visible');
+                      }
                 }
           ];
-          api.CZR_Helpers.setupDOMListeners( self.notificationsEventMap , { dom_el : $('.czr-scope-switcher') }, self );
+          api.CZR_Helpers.setupDOMListeners( self.scopeSwitcherEventMap , { dom_el : $('.czr-scope-switcher') }, self );
 
 
 
@@ -695,6 +705,28 @@ $.extend( CZRSkopeBaseMths, {
                                 self._maybeSetupAssignedMenuLocations( params );
                           });
                     }
+
+                    //Switch to global skope for not skoped sections
+                    api.czr_skopeReady.then( function() {
+                          var _switchBack = function( _title ) {
+                                api.czr_serverNotification({
+                                      status:'success',
+                                      message : [ _title, 'can only be customized site wide.' ].join(' ')
+                                });
+                                api.czr_activeSkopeId( self.getGlobalSkopeId() );
+                          };
+                          //Switch to global skope for not skoped panels
+                          if ( 'global' != api.czr_skope( api.czr_activeSkopeId() )().skope ) {
+                                if ( self.isExcludedWPCustomCss() && 'custom_css' == active_sec_id ) {
+                                      _switchBack( api.section( active_sec_id ).params.title );
+                                }
+                                if ( 'nav_menu' == active_sec_id.substring( 0, 'nav_menu'.length ) ) {
+                                      _switchBack( api.section( active_sec_id ).params.title );
+                                }
+                          }
+                    });
+
+                    //SAY IT
                     api.trigger('active-section-setup', active_section );
               };
 
@@ -718,10 +750,27 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * REACT TO ACTIVE PANEL EXPANSION
     *****************************************************************************/
-    //cb of api.czr_activeSectionId()
+    //cb of api.czr_activePanelId()
     activePanelReact : function( active_panel_id , previous_panel_id ) {
+          var self = this;
           api.czr_initialSkopeCollectionPopulated.then( function() {
                 api.trigger('czr-paint', { active_panel_id : active_panel_id } );
+                var _switchBack = function( _title ) {
+                      api.czr_serverNotification({
+                            status:'success',
+                            message : [ _title, 'can only be customized site wide.' ].join(' ')
+                      });
+                      api.czr_activeSkopeId( self.getGlobalSkopeId() );
+                };
+
+                //Switch to global skope for not skoped panels
+                api.czr_skopeReady.then( function() {
+                      if ( 'global' != api.czr_skope( api.czr_activeSkopeId() )().skope ) {
+                            if ( self.isExcludedSidebarsWidgets() && 'widgets' == active_panel_id ) {
+                                  _switchBack( api.panel( active_panel_id ).params.title );
+                            }
+                      }
+                });
           });
     },
 

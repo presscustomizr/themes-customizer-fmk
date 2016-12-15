@@ -540,16 +540,24 @@ li#customize-control-tc_theme_options-tc_custom_css textarea {
 
 
 
-/* WIDGET PANEL MARGIN */
-#customize-theme-controls #accordion-panel-nav_menus, #customize-theme-controls #accordion-panel-czr-footer-panel {
+/* SPECIFIC PANELS MARGIN */
+#customize-theme-controls #accordion-panel-czr-footer-panel {
   border-bottom: 1px solid #ddd;
 }
-#customize-theme-controls .control-panel-widgets, #customize-theme-controls #accordion-panel-nav_menus{
-  margin-top: 14px;
-  border-bottom: 1px solid #ddd;
+#customize-theme-controls .control-panel-widgets,
+#customize-theme-controls #accordion-panel-nav_menus,
+#customize-theme-controls #accordion-panel-hu-advanced-panel {
+  margin-top: 10px;
 }
-
-
+#customize-theme-controls #accordion-panel-hu-header-panel,
+#customize-theme-controls .control-panel-widgets,
+#customize-theme-controls #accordion-panel-nav_menus,
+#customize-theme-controls #accordion-panel-hu-advanced-panel {
+  border-top: 1px solid #ddd;
+}
+#customize-theme-controls #accordion-panel-hu-general-panel {
+  margin-bottom: 10px;
+}
 
 /* HOME BUTTON */
 #customize-header-actions .customize-controls-close {

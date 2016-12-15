@@ -20,6 +20,29 @@ $.extend( CZRSkopeBaseMths, {
           else
             throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
 
+
+          //BAIL AND RETURN PROMISE HERE IF SWITCHING TO A PANEL OR SECTION WITH ONLY UNSKOPED SETTINGS
+          // => widgets and custom_css
+          //Switch to global skope for not skoped panels
+          var _switchBack = function( _title ) {
+                api.czr_activeSkopeId( self.getGlobalSkopeId() );
+                api.czr_serverNotification({
+                      status:'success',
+                      message : [ _title , 'can only be customized site wide.' ].join(' ')
+                });
+                return dfd.resolve().promise();
+          };
+          if ( self.isExcludedSidebarsWidgets() && 'widgets' == api.czr_activePanelId() && to != self.getGlobalSkopeId() ) {
+                return _switchBack( api.panel( api.czr_activePanelId() ).params.title );
+          }
+          if ( self.isExcludedWPCustomCss() && 'custom_css' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
+                return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
+          }
+          if ( 'nav_menu' == api.czr_activeSectionId().substring( 0, 'nav_menu'.length ) ) {
+                _switchBack( api.section( api.czr_activeSectionId() ).params.title );
+          }
+
+
           //Set state
           api.state('switching-skope')( true );
           //write the current skope title
@@ -116,7 +139,7 @@ $.extend( CZRSkopeBaseMths, {
                         _overrides = self.getOverridenSkopeTitles();
 
                     return $.trim( [
-                          '<span class="czr-main-title">',
+                          '<span class="czr-main-title"><span class="czr-toggle-title-notice fa fa-info-circle"></span>',
                           'global' == api.czr_skope( skope_id || api.czr_activeSkopeId() )().skope ? current_title : ['Customizing', current_title ].join(' '),
                           '</span>',
                           '<span class="czr-skope-inherits-from">',

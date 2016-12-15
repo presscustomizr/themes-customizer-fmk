@@ -49,7 +49,7 @@ $.extend( CZRSkopeMths, {
                 //skope switch
                 {
                       trigger   : 'click keydown',
-                      selector  : '.czr-scope-switch',
+                      selector  : '.czr-scope-switch, .czr-skp-switch-link',
                       name      : 'skope_switch',
                       actions   : function() {
                             api.czr_activeSkopeId( skope().id );
