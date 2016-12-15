@@ -91,11 +91,14 @@ h2.czr-current-skope-title {
     width: 90%;
     font-size: 12px;
     line-height: 18px;
-    color: #5f5f5f;
+    color: #357315;
     top: -6px;
     position: relative;
 }
-.czr-skope-inherits-from.visible {
+.notice-visible .czr-toggle-title-notice {
+  color: #357315;
+}
+.notice-visible .czr-skope-inherits-from {
   opacity: 1;
   -webkit-transition: opacity .3s ease-in-out;
   -moz-transition: opacity .3s ease-in-out;
@@ -212,7 +215,7 @@ h2.czr-current-skope-title {
     margin: 0;
     display: inline-block;
     text-align: center;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 18px;
     font-weight: normal;
     text-shadow: 1px 1px 0px #dedede;
@@ -556,14 +559,16 @@ body.czr-resetting-skope #czr-skope-pane .czr-spinner-wrapper {
 }
 .czr-server-notice {
     width: calc(96% - 2px);
-    top: 0;
+    bottom: 75px;
     text-align: center;
     background: rgba(0, 156, 0, 0.18);
     color: #000;
     display: none;
-    position: relative;
-    line-height: 21px;
+    position: absolute;
+    font-size: 12px;
+    line-height: 13px;
     padding: 2%;
+    overflow: hidden;
 }
 .czr-server-notice.czr-server-error {
     color: #000;

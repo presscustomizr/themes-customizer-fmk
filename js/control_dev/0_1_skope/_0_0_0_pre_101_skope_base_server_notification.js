@@ -46,20 +46,25 @@ $.extend( CZRSkopeBaseMths, {
                           _header_height,
                           _notif_wrap_height,
                           _set_height = function( _h ) {
-                                $header.css( 'height', '');
-                                $sidebar.css( 'top', '' );
-                                if ( _.isUndefined( _h ) )
-                                  return;
-                                $header.css( 'height', _h + 'px' );
-                                $sidebar.css( 'top', _h + 'px' );
+                                // $header.css( 'height', '');
+                                // $sidebar.css( 'top', '' );
+                                // if ( _.isUndefined( _h ) )
+                                //   return;
+                                // $header.css( 'height', _h + 'px' );
+                                // $sidebar.css( 'top', _h + 'px' );
+                                return true;
                           };
+
+                      //Close the main skope switcher title inheritance infos if exists and opened
+                      if ( self.skopeTitleNoticeVisible )
+                          self.skopeTitleNoticeVisible( false );
 
                       if ( ! notice.expanded ) {
                             $notif_wrap
                                   .fadeOut( {
                                         duration : 200,
                                         complete : function() {
-                                              $( this ).css( 'height', 'auto' );
+                                              //$( this ).css( 'height', 'auto' );
                                   } } );
                             setTimeout( function() {
                                   _set_height();
@@ -106,7 +111,7 @@ $.extend( CZRSkopeBaseMths, {
             _.delay( function() {
                         api.czr_serverNotification( { expanded : false } );
                   },
-                  ( 'success' == notice.status || false !== notice.auto_collapse ) ? 2500 : 4000
+                  ( 'success' == notice.status || false !== notice.auto_collapse ) ? 3000 : 4000
             );
       },
 
