@@ -326,10 +326,36 @@ $.extend( CZRSkopeBaseMths, {
 
           ///////////////////// LISTEN TO THE SERVER /////////////////////
           //SERVER NOTIFICATION SETUP
-          api.czr_serverNotification   = new api.Value({status : 'success', message : '', expanded : true} );
+          api.czr_serverNotification   = new api.Value( {status : 'success', message : '', expanded : true} );
           api.czr_serverNotification.bind( function( to, from ) {
                   self.toggleServerNotice( to );
           });
+
+
+          ///////////////////// TOP NOTE BLOCK /////////////////////
+          api.czr_topNoteVisible = new api.Value( false );
+          api.czr_skopeReady.then( function() {
+                api.czr_topNoteVisible.bind( function( visible ) {
+                        self.toggleTopNote( visible, serverControlParams.topNoteParams || {} );
+                        if ( ! visible ) {
+                              var _query = $.extend(
+                                    api.previewer.query(),
+                                    { nonce:  api.previewer.nonce.save }
+                              );
+                              wp.ajax.post( 'czr_dismiss_top_note' , _query )
+                                  .always( function () {})
+                                  .fail( function ( response ) { api.consoleLog( 'czr_dismiss_top_note failed', _query, response ); })
+                                  .done( function( response ) { api.consoleLog( 'czr_dismiss_top_note done', _query, response ); });
+                        }
+                });
+                //Togle the top note on initialization
+                _.delay( function() {
+                      api.czr_topNoteVisible( ! _.isEmpty( serverControlParams.isTopNoteOn ) || 1 == serverControlParams.isTopNoteOn );
+                }, 2000 );
+          });
+
+
+          ///////////////////// SKOPE SWITCHER EVENT MAP /////////////////
           self.scopeSwitcherEventMap = [
                 //skope reset : do reset
                 {
