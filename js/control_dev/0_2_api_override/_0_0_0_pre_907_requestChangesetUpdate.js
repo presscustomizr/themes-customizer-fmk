@@ -88,8 +88,6 @@
                   _skopesToUpdate.push( _skp.id );
             } );
 
-            //api.consoleLog('SKOPE CHANGESETS TO UPDATE', _skopesToUpdate );
-
             var _mayBeresolve = function( _index ) {
                   if ( ! _.isUndefined( _skopesToUpdate[ _index + 1 ] ) || _promises.length != _skopesToUpdate.length )
                     return;
@@ -115,7 +113,7 @@
                   //on first push run, set the api state to processing.
                   // Make sure that publishing a changeset waits for all changeset update requests to complete.
                   if ( _.isUndefined( _index ) || ( ( 0 * 0 ) == _index ) ) {
-                      api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
+                      api.state( 'processing' ).set( 1 );
                   }
 
                   _index = _index || 0;
@@ -159,7 +157,7 @@
                         api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
                         //api.state( 'changesetStatus' ).set( _data_.changeset_status );
                         // Make sure that publishing a changeset waits for all changeset update requests to complete.
-                        api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+                        api.state( 'processing' ).set( 0 );
 
                         dfd.reject( r );
                         r = api.czr_skopeBase.buildServerResponse(r);
@@ -183,7 +181,7 @@
 
                                     //api.state( 'changesetStatus' ).set( _data_.changeset_status );
                                     // Make sure that publishing a changeset waits for all changeset update requests to complete.
-                                    api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+                                    api.state( 'processing' ).set( 0 );
                               })
                               .fail( function( r ) {
                                     dfd.reject( r );
@@ -218,6 +216,7 @@
             if ( changes ) {
                   _.extend( submittedChanges, changes );
             }
+
 
             //Ensure all revised settings (changes pending save) are also included, but not if marked for deletion in changes.
             _.each( api.czr_skopeBase.getSkopeDirties( skope_id ) , function( dirtyValue, settingId ) {

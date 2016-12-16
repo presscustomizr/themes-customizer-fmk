@@ -41,6 +41,9 @@ $.extend( CZRSkopeBaseMths, {
           if ( self.isExcludedWPCustomCss() && 'admin_sec' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
                 return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
           }
+          if ( self.isExcludedWPCustomCss() && 'add_menu' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
+                return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
+          }
           if ( 'nav_menu' == api.czr_activeSectionId().substring( 0, 'nav_menu'.length ) ) {
                 _switchBack( api.section( api.czr_activeSectionId() ).params.title );
           }

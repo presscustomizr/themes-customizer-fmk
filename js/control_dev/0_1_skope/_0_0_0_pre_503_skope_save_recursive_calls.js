@@ -6,14 +6,20 @@ $.extend( CZRSkopeSaveMths, {
       //=> BECAUSE WHEN SAVING THE GLOBAL SKOPE, THE CHANGESET POST STATUS WILL BE CHANGED TO 'publish' AND THEREFORE NOT ACCESSIBLE ANYMORE
       //1) first all skopes but global, recursively
       //2) then global => will publish the changeset. Server side, the changeset post will be trashed and the next uuid will be returned to the API
-      fireAllSubmission : function() {
+      //@param params : { saveGlobal : true, saveSkopes : true }
+      fireAllSubmission : function( params ) {
             var self = this,
                 dfd = $.Deferred(),
                 skopesToSave = [],
                 _recursiveCallDeferred = $.Deferred(),
                 _responses_ = {},
                 _promises  = [],
-                failedPromises = [];
+                failedPromises = [],
+                _defaultParams = {
+                    saveGlobal : true,
+                    saveSkopes : true
+                };
+            params = $.extend( _defaultParams, params );
 
             // build the skope ids array to submit recursively
             _.each( api.czr_skopeCollection(), function( _skp_ ) {
@@ -76,29 +82,66 @@ $.extend( CZRSkopeSaveMths, {
                   return _recursiveCallDeferred.promise();
             };
 
-            // Unleash hell
-            recursiveCall()
-                  .fail( function( r ) {
-                        api.consoleLog('RECURSIVE SAVE CALL FAIL', r );
-                        dfd.reject( r );
-                  })
-                  .done( function( r ) {
-                        self.getSubmitPromise( self.globalSkopeId )
+
+            //What do we have in the global dirties ?
+            var _globalHasNewMenu = false;
+            _.each( api.czr_skope('global__all_').dirtyValues(), function( _setDirtVal , _setId ) {
+                  if ( 'nav_menu[' != _setId.substring( 0, 'nav_menu['.length ) )
+                    return;
+                  _globalHasNewMenu = true;
+            } );
+
+            var _submitGlobal = function() {
+                  self.getSubmitPromise( self.globalSkopeId )
+                        .fail( function( r ) {
+                              api.consoleLog('GLOBAL SAVE SUBMIT FAIL', r );
+                              r = api.czr_skopeBase.buildServerResponse( r );
+                              dfd.reject( r );
+                        })
+                        .done( function( r ) {
+                              //WE NEED TO BUILD A PROPER RESPONSE HERE
+                              if ( _.isEmpty( _responses_ ) ) {
+                                    _responses_ = r || {};
+                              } else {
+                                    _responses_ = $.extend( _responses_ , r );
+                              }
+                              dfd.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
+                        });
+            };
+
+
+            if ( _globalHasNewMenu && params.saveGlobal ) {
+                  _submitGlobal();
+            } else {
+                  if ( params.saveGlobal && params.saveSkopes ) {
+                        // Unleash hell
+                        recursiveCall()
                               .fail( function( r ) {
-                                    api.consoleLog('GLOBAL SAVE SUBMIT FAIL', r );
-                                    r = api.czr_skopeBase.buildServerResponse( r );
+                                    api.consoleLog('RECURSIVE SAVE CALL FAIL', r );
                                     dfd.reject( r );
                               })
                               .done( function( r ) {
-                                    //WE NEED TO BUILD A PROPER RESPONSE HERE
+                                    _submitGlobal();
+                              });
+                  } else if ( params.saveGlobal && ! params.saveSkopes ) {
+                          _submitGlobal();
+                  } else if ( ! params.saveGlobal && params.saveSkopes ) {
+                          recursiveCall()
+                              .fail( function( r ) {
+                                    api.consoleLog('RECURSIVE SAVE CALL FAIL', r );
+                                    dfd.reject( r );
+                              })
+                              .done( function( r ) {
+                                   //WE NEED TO BUILD A PROPER RESPONSE HERE
                                     if ( _.isEmpty( _responses_ ) ) {
                                           _responses_ = r || {};
                                     } else {
                                           _responses_ = $.extend( _responses_ , r );
                                     }
-                                    dfd.resolve( _responses_ );
+                                    dfd.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
                               });
-                  });
+                  }
+            }//else
 
             return dfd.promise();
       }//fireAllSubmissions

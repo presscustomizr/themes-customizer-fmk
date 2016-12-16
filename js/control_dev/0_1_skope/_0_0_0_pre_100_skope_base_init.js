@@ -750,12 +750,13 @@ $.extend( CZRSkopeBaseMths, {
                           };
                           //Switch to global skope for not skoped sections
                           if ( 'global' != api.czr_skope( api.czr_activeSkopeId() )().skope ) {
-                                if ( self.isExcludedWPCustomCss() && 'custom_css' == active_sec_id ) {
+                                if (
+                                  self.isExcludedWPCustomCss() &&
+                                  ( 'custom_css' == active_sec_id || 'admin_sec' == active_sec_id || 'add_menu' == active_sec_id )
+                                ) {
                                       _switchBack( api.section( active_sec_id ).params.title );
                                 }
-                                if ( self.isExcludedWPCustomCss() && 'admin_sec' == active_sec_id ) {
-                                      _switchBack( api.section( active_sec_id ).params.title );
-                                }
+
                                 if ( 'nav_menu' == active_sec_id.substring( 0, 'nav_menu'.length ) ) {
                                       _switchBack( api.section( active_sec_id ).params.title );
                                 }

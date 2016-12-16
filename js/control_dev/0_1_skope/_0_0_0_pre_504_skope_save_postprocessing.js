@@ -28,6 +28,7 @@ $.extend( CZRSkopeSaveMths, {
             _.each( api.czr_skopeCollection(), function( _skp_ ) {
                   saved_dirties[ _skp_.opt_name ] = api.czr_skopeBase.getSkopeDirties( _skp_.id );
                   api.czr_skope( _skp_.id ).dirtyValues( {} );
+                  api.czr_skope( _skp_.id ).changesetValues( {} );
             });
 
 

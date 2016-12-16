@@ -64,43 +64,46 @@
     /* SELECT INPUT */
     api.czrSetupSelect = function(controlId, refresh) {
       //Exclude no-selecter-js
-      $('select[data-customize-setting-link]', api.control(controlId).container ).not('.no-selecter-js')
-        .each( function() {
-          $(this).selecter({
-          //triggers a change event on the view, passing the newly selected value + index as parameters.
-          // callback : function(value, index) {
-          //   self.triggerSettingChange( window.event || {} , value, index); // first param is a null event.
-          // }
-          });
-      });
+      $('select[data-customize-setting-link]', api.control(controlId).container )
+            .not('.no-selecter-js')
+            .each( function() {
+                  $(this).selecter({
+                  //triggers a change event on the view, passing the newly selected value + index as parameters.
+                  // callback : function(value, index) {
+                  //   self.triggerSettingChange( window.event || {} , value, index); // first param is a null event.
+                  // }
+                  });
+            });
     };//api.czrSetupSelect()
 
 
     /* NUMBER INPUT */
     api.czrSetupStepper = function(controlId, refresh) {
-      //Exclude no-selecter-js
-      $('input[type="number"]', api.control(controlId).container ).each( function() {
-          $(this).stepper();
-      });
+          //Exclude no-selecter-js
+          $('input[type="number"]', api.control(controlId).container ).each( function() {
+                $(this).stepper();
+          });
     };//api.czrSetupStepper()
 
     api.control.each(function(control){
-      if ( ! _.has(control,'id') )
-        return;
-      //exclude widget controls and menu controls for checkboxes
-      if ('widget_' != control.id.substring(0, 7) && 'nav_menu' != control.id.substring(0, 8) ) {
-        api.czrSetupCheckbox(control.id);
-      }
-      api.czrSetupSelect(control.id);
-      api.czrSetupStepper(control.id);
+          if ( ! _.has(control,'id') )
+            return;
+          //exclude widget controls and menu controls for checkboxes
+          if ( 'widget_' != control.id.substring(0, 'widget_'.length ) && 'nav_menu' != control.id.substring( 0, 'nav_menu'.length ) ) {
+                api.czrSetupCheckbox(control.id);
+          }
+          if ( 'nav_menu_locations' != control.id.substring( 0, 'nav_menu_locations'.length ) ) {
+                api.czrSetupSelect(control.id);
+          }
+          api.czrSetupStepper(control.id);
     });
 
 
     /* WIDGET PANEL ICON */
     if ( $('.control-panel-widgets').find('.accordion-section-title').first().length ) {
-      $('.control-panel-widgets').find('.accordion-section-title').first().prepend(
-        $('<span/>', {class:'fa fa-magic'} )
-      );
+          $('.control-panel-widgets').find('.accordion-section-title')
+                .first()
+                .prepend( $('<span/>', {class:'fa fa-magic'} ) );
     }
 
 

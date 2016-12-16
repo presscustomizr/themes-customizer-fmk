@@ -35,7 +35,7 @@ $.extend( CZRSkopeSaveMths, {
             var alwaysAfterSubmission = function( response, state ) {
                       //WP default treatments
                       api.state( 'saving' )( false );
-                      //api.state( 'processing' ).set( api.state( 'processing' ).get() - 1 );
+                      api.state( 'processing' ).set( 0 );
                       self.saveBtn.prop( 'disabled', false );
                       if ( ! _.isUndefined( response ) && response.setting_validities ) {
                             api._handleSettingValidities( {
@@ -49,20 +49,27 @@ $.extend( CZRSkopeSaveMths, {
                             //api.czr_serverNotification( { message: 'Successfully published !' } );//@to_translate
                       }
                 },
-                resolveSave = function() {
+                //params : { saveGlobal : true, saveSkopes : true }
+                resolveSave = function( params ) {
+                      var response, resolveSaveDfd = $.Deferred();
                       // set saving state.
                       // => will be set to false when all saved promises resolved
                       api.state( 'saving' )( true );
-                      self.fireAllSubmission()
-                            .always( function( response ) {
+                      self.fireAllSubmission( params )
+                            .always( function( _response_ ) {
+                                  response = _response_.response;
                                   alwaysAfterSubmission( response , this.state() );
                             })
-                            .fail( function( response ) {
+                            .fail( function( _response_ ) {
+                                  response = _response_.response;
                                   api.consoleLog('ALL SUBMISSIONS FAILED', response );
                                   self.globalSaveDeferred.reject( response );
                                   api.trigger( 'error', response );
+                                  resolveSaveDfd.resolve( _response_.hasNewMenu );
                             })
-                            .done( function( response ) {
+                            //_response_ = { response : response,  hasNewMenu : boolean }
+                            .done( function( _response_ ) {
+                                  response = _response_.response;
                                   //api.previewer.refresh() method is resolved with an object looking like :
                                   //{
                                   //    previewer : api.previewer,
@@ -129,12 +136,18 @@ $.extend( CZRSkopeSaveMths, {
                                               self.globalSaveDeferred.resolveWith( self.previewer, [ response ] );
 
                                               api.trigger( 'saved', response || {} );
+                                              resolveSaveDfd.resolve( _response_.hasNewMenu );
                                         });
                             });
-            };
+                return resolveSaveDfd.promise();
+            };//resolveSave
 
             if ( 0 === processing() ) {
-                  resolveSave();
+                  resolveSave().done( function( hasNewMenu ) {
+                        if ( hasNewMenu ) {
+                              resolveSave( { saveGlobal :false, saveSkopes : true } );
+                        }
+                  } );
             } else {
                   submitWhenDoneProcessing = function () {
                         if ( 0 === processing() ) {
@@ -145,5 +158,5 @@ $.extend( CZRSkopeSaveMths, {
                   api.state.bind( 'change', submitWhenDoneProcessing );
             }
             return self.globalSaveDeferred.promise();
-      }
+      }//save
 });//$.extend
