@@ -41,7 +41,7 @@ $.extend( CZRModuleMths, {
           //Prepare the item, make sure its id is set and unique
           item_candidate = module.prepareItemForAPI( item );
           //Item id checks !
-          if ( ! _.has( item,'id') ) {
+          if ( ! _.has( item_candidate, 'id' ) ) {
             throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
           }
           if ( module.czr_Item.has( item_candidate.id ) ) {
@@ -70,9 +70,10 @@ $.extend( CZRModuleMths, {
   prepareItemForAPI : function( item_candidate ) {
           var module = this,
               api_ready_item = {};
-          if ( ! _.isObject( item_candidate ) ) {
-                throw new Error('prepareitemForAPI : a item must be an object to be instantiated.');
-            }
+          // if ( ! _.isObject( item_candidate ) ) {
+          //       throw new Error('prepareitemForAPI : a item must be an object to be instantiated.');
+          // }
+          item_candidate = _.isObject( item_candidate ) ? item_candidate : {};
 
           _.each( module.defaultAPIitemModel, function( _value, _key ) {
                 var _candidate_val = item_candidate[_key];
@@ -107,6 +108,11 @@ $.extend( CZRModuleMths, {
                       break;
                 }//switch
           });
+
+          //if we don't have an id at this stage, let's generate it.
+          if ( ! _.has( api_ready_item, 'id' ) ) {
+                api_ready_item.id = module.generateItemId( module.module_type );
+          }
 
           //Now amend the initial_item_model with the generated id
           api_ready_item.initial_item_model.id = api_ready_item.id;
