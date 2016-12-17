@@ -65,6 +65,11 @@ var api = api || wp.customize, $ = $ || jQuery;
 
             var _bindPanelExpanded = function( expanded, panel_id ) {
                   api.czr_activePanelId( expanded ? panel_id : '' );
+                  //if the expanded panel id becomes empty (typically when switching back to the root panel), make sure that no section is set as currently active
+                  //=> fixes the problem of add_menu section staying expanded when switching back to another panel
+                  if ( _.isEmpty( api.czr_activePanelId() ) ) {
+                        api.czr_activeSectionId( '' );
+                  }
             };
             api.panel.each( function( _panel ) {
                   _panel.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, _panel.id ); } );
