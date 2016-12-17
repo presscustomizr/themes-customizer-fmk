@@ -2916,7 +2916,7 @@ $.extend( CZRSkopeSaveMths, {
                                     dfd.reject( r );
                               })
                               .done( function( r ) {
-                                    _submitGlobal();
+                                    self.cleanSkopeChangesetMetas().always( function() { _submitGlobal(); } );
                               });
                   } else if ( params.saveGlobal && ! params.saveSkopes ) {
                           _submitGlobal();
@@ -2932,13 +2932,29 @@ $.extend( CZRSkopeSaveMths, {
                                     } else {
                                           _responses_ = $.extend( _responses_ , r );
                                     }
-                                    dfd.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
+                                    self.cleanSkopeChangesetMetas().always( function() {
+                                          dfd.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
+                                    });
                               });
                   }
             }//else
 
             return dfd.promise();
-      }//fireAllSubmissions
+      },//fireAllSubmissions
+      cleanSkopeChangesetMetas : function() {
+            var self = this,
+                dfd = $.Deferred();
+                _query = $.extend(
+                      api.previewer.query(),
+                      { nonce:  api.previewer.nonce.save }
+                );
+            wp.ajax.post( 'czr_clean_skope_changeset_metas_after_publish' , _query )
+                  .always( function () { dfd.resolve(); })
+                  .fail( function ( response ) { api.consoleLog( 'cleanSkopeChangesetMetas failed', _query, response ); })
+                  .done( function( response ) { api.consoleLog( 'cleanSkopeChangesetMetas done', _query, response ); });
+
+            return dfd.promise();
+      }
 });//$.extend
 var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
 $.extend( CZRSkopeSaveMths, {
