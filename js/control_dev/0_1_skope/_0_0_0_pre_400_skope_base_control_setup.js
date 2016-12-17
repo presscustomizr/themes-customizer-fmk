@@ -14,6 +14,7 @@ $.extend( CZRSkopeBaseMths, {
     //  controls : [] of controls or controlId string
     //  section_id : string
     //}
+    //@return void()
     setupActiveSkopedControls : function( obj ) {
           var self = this, section_id, controls, setupParams, eligibleCtrls;
               defaultSetupParams = {
@@ -41,7 +42,9 @@ $.extend( CZRSkopeBaseMths, {
 
           controls = _.isString( controls ) ? [controls] : controls;
 
-          //filter only eligible ctrlIds
+
+          //1) Add CSS classes
+          //2) filter only eligible ctrlIds
           eligibleCtrls = _.filter( controls, function( ctrlId ) {
                 var setId = api.CZR_Helpers.getControlSettingId( ctrlId );
                 if ( setId && ! self.isSettingSkopeEligible( setId ) ) {
@@ -55,6 +58,10 @@ $.extend( CZRSkopeBaseMths, {
                 //return self.isSettingSkopeEligible( ctrlId );
                 //return self.isSettingResetEligible( ctrlId );
           });
+
+          //Bail before printing anything if 'nav_menu[' section
+          if ( 'nav_menu[' == section_id.substring( 0, 'nav_menu['.length ) )
+            return;
 
           //Render the reset icon ONLY for eligible controls
           //Setup the state for all controls, even not eligible ones

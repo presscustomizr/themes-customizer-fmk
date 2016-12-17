@@ -5,7 +5,8 @@ $.extend( CZRSkopeBaseMths, {
     // {
     //   candidates : silentUpdateCands,
     //   section_id : section_id,
-    //   refresh : true
+    //   refresh : true,
+    //   awake_if_not_active : false
     // }
     processSilentUpdates : function( params ) {
           //api.consoleLog('PROCESS SILENT UPDATES', params );
@@ -19,7 +20,8 @@ $.extend( CZRSkopeBaseMths, {
               defaultParams = {
                   candidates : [],
                   section_id : api.czr_activeSectionId(),
-                  refresh : true
+                  refresh : true,
+                  awake_if_not_active : false
               },
               dfd = $.Deferred();
 
@@ -32,12 +34,11 @@ $.extend( CZRSkopeBaseMths, {
 
           //do we have well defined silent update candidates ?
           if ( _.isEmpty( params.candidates ) )
-                params.candidates = self._getSilentUpdateCandidates( params.section_id );
+                params.candidates = self._getSilentUpdateCandidates( params.section_id, params.awake_if_not_active );
           if ( ! _.isArray( params.candidates ) ) {
                 throw new Error('processSilentUpdates : the update candidates must be an array.');
           }
 
-          //api.consoleLog('silentUpdateCands ============>>> ', api.czr_activeSkopeId(), params, silentUpdateCands );
           //bail now if we still don't have candidates to update
           if ( _.isEmpty( params.candidates ) )
             return dfd.resolve( [] ).promise();
@@ -286,12 +287,15 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * GET SILENT UPDATE CANDIDATE FROM A SECTION. FALLS BACK ON THE CURRENT ONE
     *****************************************************************************/
-    _getSilentUpdateCandidates : function( section_id ) {
+    _getSilentUpdateCandidates : function( section_id, awake_if_not_active ) {
           var self = this,
               SilentUpdateCands = [];
           section_id = ( _.isUndefined( section_id ) || _.isNull( section_id ) ) ? api.czr_activeSectionId() : section_id;
+
           //skope switch when no section expanded
-          if ( _.isEmpty( api.czr_activeSectionId() ) ) {
+          //=> Make it possible to "awake" a not active section
+          //=> typically used to awake nav_menu_locations section when in nav_menus panel
+          if ( _.isEmpty( api.czr_activeSectionId() ) && ! awake_if_not_active ) {
                 return [];
           }
           //error cases
@@ -307,7 +311,7 @@ $.extend( CZRSkopeBaseMths, {
           var section_settings = api.CZR_Helpers.getSectionSettingIds( section_id );
 
           //keep only the skope eligible setIds
-          section_settings = _.filter( section_settings, function(setId) {
+          section_settings = _.filter( section_settings, function( setId ) {
               return self.isSettingSkopeEligible( setId );
           });
 

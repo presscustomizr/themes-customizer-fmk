@@ -33,19 +33,38 @@ $.extend( CZRSkopeBaseMths, {
                 return dfd.resolve().promise();
           };
           if ( self.isExcludedSidebarsWidgets() && 'widgets' == api.czr_activePanelId() && to != self.getGlobalSkopeId() ) {
-                return _switchBack( api.panel( api.czr_activePanelId() ).params.title );
+                api.czr_serverNotification({
+                      status:'success',
+                      message : [
+                            'Widgets are created site wide.'//@to_translate
+                      ].join(' ')
+                });
+                //return dfd.resolve().promise();// _switchBack( api.panel( api.czr_activePanelId() ).params.title );
           }
           if ( self.isExcludedWPCustomCss() && 'custom_css' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
                 return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
           }
-          if ( self.isExcludedWPCustomCss() && 'admin_sec' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
+          if ( 'admin_sec' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
                 return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
           }
-          if ( self.isExcludedWPCustomCss() && 'add_menu' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
-                return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
+          if ( ( 'nav_menu' == api.czr_activeSectionId().substring( 0, 'nav_menu'.length ) || 'add_menu' == api.czr_activeSectionId() ) && to != self.getGlobalSkopeId() )  {
+                api.czr_serverNotification({
+                      status:'success',
+                      message : [
+                            'Menus are created site wide.'//@to_translate
+                      ].join(' ')
+                });
+                //_switchBack( api.section( api.czr_activeSectionId() ).params.title );
           }
-          if ( 'nav_menu' == api.czr_activeSectionId().substring( 0, 'nav_menu'.length ) ) {
-                _switchBack( api.section( api.czr_activeSectionId() ).params.title );
+
+
+          //AWAKE NOT CURRENTLY ACTIVE NAV MENUS SECTION
+          //=> this solves the problem of nav menu location not being refreshed on skope switch
+          if ( 'nav_menus' == api.czr_activePanelId() ) {
+                _.each( api.panel( api.czr_activePanelId() ).sections(), function( _sec ) {
+                      //PROCESS SILENT UPDATES
+                      self.processSilentUpdates( { section_id : _sec.id, awake_if_not_active : true } );
+                });
           }
 
 

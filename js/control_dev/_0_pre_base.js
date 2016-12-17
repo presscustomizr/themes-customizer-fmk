@@ -60,6 +60,7 @@ var api = api || wp.customize, $ = $ || jQuery;
                   _sec.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, _sec.id ); } );
             });
             api.section.bind( 'add', function( section_instance ) {
+                  api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
                   section_instance.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, section_instance.id ); } );
             });
 

@@ -111,7 +111,7 @@ $.extend( CZRSkopeBaseMths, {
             _.delay( function() {
                         api.czr_serverNotification( { expanded : false } );
                   },
-                  ( 'success' == notice.status || false !== notice.auto_collapse ) ? 3000 : 4000
+                  ( 'success' == notice.status || false !== notice.auto_collapse ) ? 4000 : 5000
             );
       },
 
