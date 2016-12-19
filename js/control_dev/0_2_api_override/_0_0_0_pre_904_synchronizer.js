@@ -44,9 +44,13 @@
         //if skope on,
         //wait for skope to be fully loaded to alter this
         if ( serverControlParams.isSkopOn ) {
-              api.czr_skopeReady.then( function () {
-                    _modifySynchronizer();
-              });
+              if ( 'pending' == api.czr_skopeReady.state() ) {
+                    return _original.call( self, to );
+              } else {
+                    api.czr_skopeReady.then( function () {
+                          _modifySynchronizer();
+                    });
+              }
         } else {
               _modifySynchronizer();
         }
