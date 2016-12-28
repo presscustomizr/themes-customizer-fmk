@@ -142,9 +142,6 @@
           return dfd.promise();
     };//_new_refresh()
 
-    //OVERRIDES CORE
-    api.Previewer.prototype.refresh = _new_refresh;
-
     //'czr-skope-started' is fired after the skopeBase has been initialized.
     //the api is 'ready' at this point
     api.bind( 'czr-skope-started' , function() {
@@ -153,6 +150,8 @@
           // api.bind( 'pre_refresh_done', function( params ) {
           // });
           czr_override_refresh_for_skope();
+          //OVERRIDES CORE
+          api.Previewer.prototype.refresh = _new_refresh;
     });
 
     //since 4.7 (when changeset has been introduced ), the core query takes parameter
