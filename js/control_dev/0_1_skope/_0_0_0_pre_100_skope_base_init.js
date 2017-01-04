@@ -189,8 +189,9 @@ $.extend( CZRSkopeBaseMths, {
           //REACT TO API DIRTYNESS
           api.czr_dirtyness.callbacks.add( function() { return self.apiDirtynessReact.apply(self, arguments ); } );
 
-          //LODING ICON DURING INITIAL SKOPE SETUP
-          self.toggleSkopeLoadPane();
+          //LOADING ICON DURING INITIAL SKOPE SETUP
+          //this api.Value() and its callback are declared in pre_base
+          api.czr_isLoadingSkope( true );
 
           //LISTEN TO EACH API SETTING CHANGES
           // => POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
@@ -336,8 +337,24 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_topNoteVisible = new api.Value( false );
           api.czr_skopeReady.then( function() {
                 api.czr_topNoteVisible.bind( function( visible ) {
-                        self.toggleTopNote( visible, serverControlParams.topNoteParams || {} );
-                        if ( ! visible ) {
+                        var noteParams = {},
+                            _defaultParams = {
+                                  title : '',
+                                  message : '',
+                                  actions : '',
+                                  selfCloseAfter : 20000
+                            };
+                        //noteParams is an object :
+                        //{
+                        // title : '',
+                        // message : '',
+                        // actions : fn(),
+                        // selfCloseAfter : 20000 in ms
+                        //}
+                        noteParams = $.extend( _defaultParams , serverControlParams.topNoteParams );
+
+                        //SPECIFIC AJAX ACTION FOR THE WELCOME NOTE
+                        noteParams.actions = function() {
                               var _query = $.extend(
                                     api.previewer.query(),
                                     { nonce:  api.previewer.nonce.save }
@@ -346,9 +363,12 @@ $.extend( CZRSkopeBaseMths, {
                                   .always( function () {})
                                   .fail( function ( response ) { api.consoleLog( 'czr_dismiss_top_note failed', _query, response ); })
                                   .done( function( response ) {});
-                        }
+                        };
+
+                        self.toggleTopNote( visible, noteParams );
                 });
-                //Togle the top note on initialization
+
+                //Toggle the top note on initialization
                 _.delay( function() {
                       api.czr_topNoteVisible( ! _.isEmpty( serverControlParams.isTopNoteOn ) || 1 == serverControlParams.isTopNoteOn );
                 }, 2000 );
@@ -412,64 +432,6 @@ $.extend( CZRSkopeBaseMths, {
                 });
           });
     },//initialize
-
-
-    //@fired before skopeReady
-    toggleSkopeLoadPane : function() {
-          var self = this, $skopeLoadingPanel;
-              _render = function() {
-                    var dfd = $.Deferred();
-                    try {
-                        _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
-                    }
-                    catch(e) {
-                        throw new Error('Error when parsing the the reset skope template : ' + e );//@to_translate
-                    }
-                    $.when( $('#customize-preview').after( $( _tmpl ) ) )
-                          .always( function() {
-                                dfd.resolve( $( '#czr-skope-pane' ) );
-                          });
-
-                    return dfd.promise();
-              };
-
-
-          $('body').addClass('czr-skop-loading');
-          _render()
-                .done( function( $_el ) {
-                      $skopeLoadingPanel = $_el;
-                })
-                .then( function() {
-                      if ( ! $skopeLoadingPanel.length )
-                        return;
-
-                      _.delay( function() {
-                            //set height
-                            var _height = $('#customize-preview').height();
-                            $skopeLoadingPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
-                            //display
-                            $('body').addClass('czr-skope-pane-open');
-                      }, 50 );
-                });
-
-          api.czr_skopeReady.done( function() {
-                _.delay( function() {
-                      $.when( $('body').removeClass('czr-skope-pane-open') ).done( function() {
-                            _.delay( function() {
-                                  $.when( $('body').removeClass('czr-skop-loading') ).done( function() {
-                                        if ( false !== $skopeLoadingPanel.length ) {
-                                              setTimeout( function() {
-                                                    $skopeLoadingPanel.remove();
-                                              }, 400 );
-                                        }
-                                  });
-                            }, 200);
-                      });
-                }, 50);
-
-          });
-    },
-
 
 
     /*****************************************************************************

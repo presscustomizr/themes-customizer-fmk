@@ -3,52 +3,75 @@
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 $.extend( CZRSkopeBaseMths, {
 
-      //callback of api.czr_topNoteVisible
+      //can be call directly, but is also a callback of api.czr_topNoteVisible, fired on skope base initialize
+      //noteParams is an object :
+      //{
+      // title : '',
+      // message : '',
+      // actions : fn()
+      //}
       toggleTopNote : function( visible, noteParams ) {
             noteParams = _.isObject( noteParams ) ? noteParams : {};
             var self = this,
                 _defaultParams = {
                       title : '',
-                      message : ''
+                      message : '',
+                      actions : '',
+                      selfCloseAfter : 20000
+                },
+                _renderAndSetup = function() {
+                      $.when( self.renderTopNoteTmpl( noteParams ) ).done( function( $_el ) {
+                            self.welcomeNote = $_el;
+                            //display
+                            _.delay( function() {
+                                $('body').addClass('czr-top-note-open');
+                            }, 200 );
+                            api.CZR_Helpers.setupDOMListeners(
+                                  [ {
+                                        trigger   : 'click keydown',
+                                        selector  : '.czr-top-note-close',
+                                        name      : 'close-top-note',
+                                        actions   : function() {
+                                              _destroy().done( function() {
+                                                    if ( _.isFunction( noteParams.actions ) ) {
+                                                          noteParams.actions();
+                                                    }
+                                              });
+                                        }
+                                  } ] ,
+                                  { dom_el : self.welcomeNote },
+                                  self
+                            );
+                      });
+                },
+                _destroy = function() {
+                      var dfd = $.Deferred();
+                      $('body').removeClass('czr-top-note-open');
+                      if ( self.welcomeNote.length ) {
+                            //display
+                            _.delay( function() {
+                                  self.welcomeNote.remove();
+                                  dfd.resolve();
+                            }, 300 );
+                      } else {
+                          dfd.resolve();
+                      }
+                      return dfd.promise();
                 };
 
             noteParams = $.extend( _defaultParams , noteParams);
 
             if ( visible ) {
-                  $.when( self.renderTopNoteTmpl( noteParams ) ).done( function( $_el ) {
-                        self.welcomeNote = $_el;
-                        //display
-                        _.delay( function() {
-                            $('body').addClass('czr-top-note-open');
-                        }, 200 );
-                        api.CZR_Helpers.setupDOMListeners(
-                              [ {
-                                    trigger   : 'click keydown',
-                                    selector  : '.czr-top-note-close',
-                                    name      : 'close-top-note',
-                                    actions   : function() {
-                                          api.czr_topNoteVisible( false );
-                                    }
-                              } ] ,
-                              { dom_el : self.welcomeNote },
-                              self
-                        );
-                  });
+                  _renderAndSetup();
             } else {
-                  $('body').removeClass('czr-top-note-open');
-                  if ( self.welcomeNote.length ) {
-                        //display
-                        _.delay( function() {
-                              self.welcomeNote.remove();
-                        }, 300 );
-                  }
+                  _destroy();
             }
 
             //Always auto-collapse the notification
             _.delay( function() {
-                        api.czr_topNoteVisible( false );
+                        _destroy();
                   },
-                  20000
+                  noteParams.selfCloseAfter || 20000
             );
       },
 
