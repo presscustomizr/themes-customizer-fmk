@@ -129,6 +129,7 @@
                   name : 'Slider'
             }
       });
+      api.trigger( 'czr-core-modules-declared', api.czrModuleMap );
 
 
       if ( 'function' == typeof api.CroppedImageControl ) {

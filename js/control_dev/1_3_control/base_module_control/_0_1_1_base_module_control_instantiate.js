@@ -66,7 +66,7 @@ $.extend( CZRBaseModuleControlMths, {
               parentConstructor = _base_constructor.extend( _mthds );
               constructor = parentConstructor.extend( control.getMultiModuleExtender( parentConstructor ) );
           } else {
-            //in the particular case of a module embedded in a control the constructor is ready to be fired.
+            //in the particular case of a module embedded in a control, the constructor is ready to be fired.
               constructor = _base_constructor.extend( _mthds );
           }
 
