@@ -115,6 +115,7 @@ $.extend( CZRBaseModuleControlMths, {
           var commonAPIModel = {
                 id : '',//module.id,
                 module_type : '',//module.module_type,
+                metas : {},//the module metas property, typically high level properties that area applied to all items of the module
                 items   : [],//$.extend( true, {}, module.items ),
                 crud : false,
                 multi_item : false,
@@ -201,10 +202,11 @@ $.extend( CZRBaseModuleControlMths, {
               //for now this is a collection with one module
               savedModules.push(
                     {
-                      id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
-                      module_type : control.params.module_type,
-                      section : control.section(),
-                      items   : $.extend( true, [] , _saved_items )//deep clone//must be a collection [] of items
+                          id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
+                          module_type : control.params.module_type,
+                          section : control.section(),
+                          metas : {},
+                          items   : $.extend( true, [] , _saved_items )//deep clone//must be a collection [] of items
                     }
               );
           }

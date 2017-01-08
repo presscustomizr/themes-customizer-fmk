@@ -30,7 +30,7 @@ $.extend( CZRModuleMths, {
 
         //extend the module with new template Selectors
         $.extend( module, {
-              crudModulePart : 'czr-crud-module-part',
+              crudModulePart : 'czr-crud-module-part',//create, read, update, delete
               rudItemPart : 'czr-rud-item-part',//read, update, delete
               ruItemPart : 'czr-ru-item-part',//read, update
               itemInputList : '',//is specific for each crud module
@@ -119,6 +119,12 @@ $.extend( CZRModuleMths, {
               //if in a sektion, the populateSavedItemCollection() will be fired on module edit
               if ( ! module.isInSektion() )
                 module.populateSavedItemCollection();
+
+              //Instantiate the metas when relevant
+              if ( module.hasMetas() ) {
+                    module.czr_Metas = new api.CZRModMetas( { module : module } );
+                    module.czr_Metas.ready();
+              }
         });
   },
 
@@ -238,5 +244,9 @@ $.extend( CZRModuleMths, {
   //@return bool
   isCrud : function() {
         return api.CZR_Helpers.isCrudModule( null, this );
+  },
+
+  hasMetas : function() {
+        return api.CZR_Helpers.hasModuleMetas( null, this );
   }
 });//$.extend//CZRBaseControlMths

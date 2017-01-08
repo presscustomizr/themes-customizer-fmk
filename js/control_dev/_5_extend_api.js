@@ -34,6 +34,9 @@
       //ITEMS => used as constructor when creating the collection of models
       api.CZRItem                   = api.Value.extend( CZRItemMths );
 
+      //MODULE METAS => used as constructor when creating module metas
+      api.CZRModMetas               = api.Value.extend( CZRModMetasMths );
+
       //MODULES => used as constructor when creating the collection of modules
       api.CZRModule                 = api.Value.extend( CZRModuleMths );
       api.CZRDynModule              = api.CZRModule.extend( CZRDynModuleMths );
@@ -71,66 +74,6 @@
             //czr_background : api.CZRBackgroundControl,
             //czr_sektions   : api.CZRSektionsControl
       });
-
-
-
-      //provides a meta description of each module
-      //=> will determine :
-      //1) how to initialize the module model. If not crud, then the initial item(s) model shall be provided
-      //2) which js template(s) to use : if crud, the module template shall include the add new and pre-item elements.
-      //   , if crud, the item shall be removable
-      //3) how to render : if multi item, the item content is rendered when user click on edit button.
-      //    If not multi item, the single item content is rendered as soon as the item wrapper is rendered.
-      //4) some DOM behaviour. For example, a multi item shall be sortable.
-      api.czrModuleMap = api.czrModuleMap || {};
-      $.extend( api.czrModuleMap, {
-            czr_widget_areas_module : {
-                  mthds : CZRWidgetAreaModuleMths,
-                  crud : true,
-                  sektion_allowed : false,
-                  name : 'Widget Areas'
-            },
-            czr_social_module : {
-                  mthds : CZRSocialModuleMths,
-                  crud : true,
-                  name : 'Social Icons'
-            },
-            czr_sektion_module : {
-                  mthds : CZRSektionMths,
-                  crud : true,
-                  name : 'Sektions'
-            },
-            czr_fp_module : {
-                  mthds : CZRFeaturedPageModuleMths,
-                  crud : true,
-                  name : 'Featured Pages'
-            },
-            czr_slide_module : {
-                  mthds : CZRSlideModuleMths,
-                  crud : true,
-                  name : 'Slider'
-            },
-            czr_text_module : {
-                  mthds : CZRTextModuleMths,
-                  crud : false,
-                  multi_item : false,
-                  name : 'Simple Text'
-            },
-            czr_text_editor_module : {
-                  mthds : CZRTextEditorModuleMths,
-                  crud : false,
-                  multi_item : false,
-                  name : 'WP Text Editor'
-            },
-            czr_background : {
-                  mthds : CZRBodyBgModuleMths,
-                  crud : false,
-                  multi_item : false,
-                  name : 'Slider'
-            }
-      });
-      api.trigger( 'czr-core-modules-declared', api.czrModuleMap );
-
 
       if ( 'function' == typeof api.CroppedImageControl ) {
             api.CZRCroppedImageControl   = api.CroppedImageControl.extend( CZRCroppedImageMths );

@@ -113,6 +113,12 @@ $.extend( CZRBaseModuleControlMths, {
                         }
                         api_ready_module[_key] = _candidate_val;
                     break;
+                    case 'metas' :
+                        if ( ! _.isObject( _candidate_val )  ) {
+                            throw new Error('prepareModuleForAPI : a module metas propoerty must be an object');
+                        }
+                        api_ready_module[_key] = _candidate_val;
+                    break;
                     case 'crud' :
                         //get the value from the czrModuleMap
                         if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {

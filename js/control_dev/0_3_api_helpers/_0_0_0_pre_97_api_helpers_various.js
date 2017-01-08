@@ -177,6 +177,21 @@
                 return;
 
               return api.czrModuleMap[module_type].crud || false;
+        },
+
+        //is a module crud ?
+        //@return bool
+        hasModuleMetas : function( module_type, moduleInst ) {
+              if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
+                return;
+              if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
+                module_type = moduleInst.module_type;
+              else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
+                return;
+              if ( ! _.has( api.czrModuleMap, module_type ) )
+                return;
+
+              return api.czrModuleMap[module_type].has_metas || false;
         }
 
   });//$.extend
