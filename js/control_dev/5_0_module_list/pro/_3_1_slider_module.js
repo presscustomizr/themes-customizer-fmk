@@ -30,11 +30,28 @@ $.extend( CZRSlideModuleMths, {
 
           //overrides the default success message
           this.itemAddedMessage = serverControlParams.translatedStrings.slideAdded;
-          // api.section( module.control.section() ).expanded.bind(function(to) {
-          //   if ( 'resolved' == module.isReady.state() )
-          //     return;
-          //   module.ready();
-          // });
+          //fired ready :
+          //1) on section expansion
+          //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled
+          if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
+             module.ready();
+          }
+          api.section( module.control.section() ).expanded.bind(function(to) {
+                if ( 'resolved' == module.isReady.state() )
+                  return;
+                module.ready();
+          });
+
+          module.isReady.then( function() {
+                //specific update for the item preModel on social-icon change
+                module.preItem.bind( function( to, from ) {
+                      if ( ! _.has(to, 'social-icon') )
+                        return;
+                      if ( _.isEqual( to['social-icon'], from['social-icon'] ) )
+                        return;
+                      module.updateItemModel( module.preItem, true );
+                });
+          });
   },//initialize
 
 
