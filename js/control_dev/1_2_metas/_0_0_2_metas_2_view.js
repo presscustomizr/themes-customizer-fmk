@@ -2,24 +2,50 @@
 var CZRModMetasMths = CZRModMetasMths || {};
 
 $.extend( CZRModMetasMths , {
-  //fired on initialize for metas in module embedded in a regular control
-  //fired when user edit module for metas in modules embedded in a sektion
-  mayBeRenderMetasWrapper : function() {
-        var metas = this;
+  // //fired on initialize for metas in module embedded in a regular control
+  // //fired when user edit module for metas in modules embedded in a sektion
+  // mayBeRenderMetasWrapper : function() {
+  //       var metas = this;
 
-        if ( 'pending' != metas.embedded.state() )
-          return;
+  //       if ( 'pending' != metas.embedded.state() )
+  //         return;
 
-        $.when( metas.renderMetasWrapper() ).done( function( $_container ) {
-              metas.container = $_container;
-              if ( _.isUndefined(metas.container) || ! metas.container.length ) {
-                  throw new Error( 'In mayBeRenderMetasWrapper the Metas view has not been rendered' );
-              } else {
-                  //say it
-                  metas.embedded.resolve();
-              }
-        });
-  },
+  //       $.when( metas.renderMetasWrapper() ).done( function( $_container ) {
+  //             metas.container = $_container;
+  //             if ( _.isUndefined(metas.container) || ! metas.container.length ) {
+  //                 throw new Error( 'In mayBeRenderMetasWrapper the Metas view has not been rendered' );
+  //             } else {
+  //                 //say it
+  //                 metas.embedded.resolve();
+  //             }
+  //       });
+  // },
+
+  // //the view wrapper has been rendered by WP
+  // //the content ( the various inputs ) is rendered by the following methods
+  // //an event is triggered on the control.container when content is rendered
+  // renderMetasWrapper : function( metas_model ) {
+  //       //=> an array of objects
+  //       var metas = this,
+  //           module = metas.module;
+
+  //       metas_model = metas_model || metas();
+
+  //       //render the metas wrapper
+  //       $_view_el = $('<li>', { class : module.control.css_attr.metas_wrapper } );
+
+  //       //append the metas view to the first module view wrapper
+  //       //!!note : => there could be additional sub view wrapper inside !!
+  //       //$( '.' + module.control.css_attr.items_wrapper , module.container).first().append( $_view_el );
+  //       // module.itemsWrapper has been stored as a $ var in module initialize() when the tmpl has been embedded
+  //       module.itemsWrapper.append( $_view_el );
+
+  //       //then, append the metas content wrapper
+  //       $_view_el.append( $( '<div/>', { class: module.control.css_attr.metas_content } ) );
+
+  //       return $_view_el;
+  // },
+
 
 
   //fired when metas is ready and embedded
@@ -36,9 +62,6 @@ $.extend( CZRModMetasMths , {
           metas.czr_MetasState = new api.Value();
           //set initial state
           metas.czr_MetasState.set('closed');
-
-          //always write the title
-          metas.writeMetasViewTitle();
 
 
           //When do we render the metas content ?
@@ -68,38 +91,13 @@ $.extend( CZRModMetasMths , {
 
 
           //DOM listeners for the user action in metas view wrapper
-          api.CZR_Helpers.setupDOMListeners(
-                metas.userEventMap(),//actions to execute
-                { model:metas_model, dom_el:metas.container },//model + dom scope
-                metas //instance where to look for the cb methods
-          );
+          // api.CZR_Helpers.setupDOMListeners(
+          //       metas.userEventMap(),//actions to execute
+          //       { model:metas_model, dom_el:metas.container },//model + dom scope
+          //       metas //instance where to look for the cb methods
+          // );
   },
 
-
-  //the view wrapper has been rendered by WP
-  //the content ( the various inputs ) is rendered by the following methods
-  //an event is triggered on the control.container when content is rendered
-  renderMetasWrapper : function( metas_model ) {
-        //=> an array of objects
-        var metas = this,
-            module = metas.module;
-
-        metas_model = metas_model || metas();
-
-        //render the metas wrapper
-        $_view_el = $('<li>', { class : module.control.css_attr.metas_wrapper } );
-
-        //append the metas view to the first module view wrapper
-        //!!note : => there could be additional sub view wrapper inside !!
-        //$( '.' + module.control.css_attr.items_wrapper , module.container).first().append( $_view_el );
-        // module.itemsWrapper has been stored as a $ var in module initialize() when the tmpl has been embedded
-        module.metasWrapper.append( $_view_el );
-
-        //then, append the metas content wrapper
-        $_view_el.append( $( '<div/>', { class: module.control.css_attr.metas_content } ) );
-
-        return $_view_el;
-  },
 
 
   //renders saved metas views and attach event handlers
@@ -124,7 +122,7 @@ $.extend( CZRModMetasMths , {
             return this;
 
           //the view content
-          $( metas_content_template( metas_model )).appendTo( $('.' + module.control.css_attr.metas_content, metas.container ) );
+          $( metas_content_template( metas_model )).appendTo( metas.container );
 
           return $( $( metas_content_template( metas_model )), metas.container );
   },

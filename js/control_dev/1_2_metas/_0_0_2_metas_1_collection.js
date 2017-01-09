@@ -53,7 +53,8 @@ $.extend( CZRModMetasMths , {
                     type : $(this).attr('data-input-type'),
                     input_value : _value,
                     container : $(this),
-                    metas : metas,
+                    input_parent : metas,
+                    is_meta : true,
                     module : module
               } ) );
 

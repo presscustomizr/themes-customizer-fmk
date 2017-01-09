@@ -11,7 +11,8 @@ $.extend( CZRSlideModuleMths, {
           //extend the module with new template Selectors
           $.extend( module, {
                 itemPreAddEl : 'czr-module-slide-pre-item-input-list',
-                itemInputList : 'czr-module-slide-item-input-list'
+                itemInputList : 'czr-module-slide-item-input-list',
+                metasInputList : 'czr-module-slide-metas-input-list'
           } );
 
           //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
@@ -19,7 +20,13 @@ $.extend( CZRSlideModuleMths, {
           //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
           module.itemConstructor = api.CZRItem.extend( module.CZRSliderItem || {} );
 
-          //declares a default model
+          //declares a default Metas model
+          this.defaultMetasModel = {
+              'slider-speed' : '',
+              'slider-layout' : '',
+          };
+
+          //declares a default Item model
           this.defaultItemModel = {
               id : '',
               title : '',
@@ -60,7 +67,8 @@ $.extend( CZRSlideModuleMths, {
                 var input = this;
                 //update the item title on slide-title change
                 input.bind('slide-title:changed', function(){
-                  input.updateItemTitle();
+                      console.log('ALORS slide-title changed callback', input(), input, input.input_parent, input.input_parent() );
+                      input.updateItemTitle();
                 });
                 api.CZRInput.prototype.ready.call( input);
           },
@@ -70,16 +78,20 @@ $.extend( CZRSlideModuleMths, {
           //Don't fire in pre item case
           updateItemTitle : function( _new_val ) {
                 var input = this,
-                    item = this.item,
+                    item = input.input_parent,
                     is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput;
 
-                var _new_model  = _.clone( item() ),
+                var _new_model  = $.extend( true, {}, item() ),
                     _new_title  = _new_model['slide-title'];
 
                 $.extend( _new_model, { title : _new_title} );
                 item.set( _new_model );
           },
   },//CZRSlidersInputMths
+
+
+
+
   CZRSliderItem : {
           //overrides the default parent method by a custom one
           //at this stage, the model passed in the obj is up to date

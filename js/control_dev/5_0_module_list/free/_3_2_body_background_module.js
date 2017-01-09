@@ -54,7 +54,7 @@ $.extend( CZRBodyBgModuleMths, {
                         'background-attachment' : 'bg_attachment_options',
                         'background-position' : 'bg_position_options'
                       },
-                      item          = input.item,
+                      item          = input.input_parent,
                       serverParams  = serverControlParams.body_bg_module_params,
                       options       = {},
                       module        = input.module;

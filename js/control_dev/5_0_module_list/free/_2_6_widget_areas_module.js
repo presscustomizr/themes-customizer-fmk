@@ -190,7 +190,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           _setupContextSelect : function() {
                   var input      = this,
                       input_contexts = input(),
-                      item = input.item,
+                      item = input.input_parent,
                       module     = input.module;
 
                   //generates the contexts options
@@ -214,7 +214,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           _setupLocationSelect : function(refresh ) {
                   var input      = this,
                       input_locations = input(),
-                      item = input.item,
+                      item = input.input_parent,
                       module     = input.module,
                       available_locs = api.sidebar_insights('available_locations')();
 
@@ -258,7 +258,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           //@param obj { dom_el: $() , model : {} )
           mayBeDisplayModelAlert : function() {
                   var input      = this,
-                      item = input.item,
+                      item = input.input_parent,
                       module     = input.module;
 
                   //check if we are in the pre Item case => if so, the locations might be empty
@@ -904,7 +904,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
   //overrides the parent class default model getter
   //=> add a dynamic title
-  getDefaultModel : function(id) {
+  getDefaultItemModel : function(id) {
           var module = this,
               _current_collection = module.itemCollection(),
               _default = _.clone( module.defaultItemModel ),

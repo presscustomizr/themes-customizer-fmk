@@ -12,7 +12,7 @@ $.extend( CZRModuleMths, {
 
   //Returns the default item defined in initialize
   //Each chid class can override the default item and the following method
-  getDefaultModel : function( id ) {
+  getDefaultItemModel : function( id ) {
           var module = this;
           return $.extend( _.clone( module.defaultItemModel ), { id : id || '' } );
   },
@@ -46,12 +46,12 @@ $.extend( CZRModuleMths, {
           if ( _item && ! _.isEmpty( _item) )
             _new_item = $.extend( _item, { id : _id } );
           else
-            _new_item = this.getDefaultModel( _id );
+            _new_item = this.getDefaultItemModel( _id );
 
           //check the id existence, and its unicity
           if ( _.has(_new_item, 'id') && module._isItemIdPossible(_id) ) {
                 //make sure that the provided item has all the default properties set
-                _.map( module.getDefaultModel() , function( value, property ){
+                _.map( module.getDefaultItemModel() , function( value, property ){
                       if ( ! _.has(_new_item, property) )
                         _new_item[property] = value;
                 });

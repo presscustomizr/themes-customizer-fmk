@@ -57,7 +57,7 @@ $.extend( CZRDynModuleMths, {
           module.setupDOMListeners( module.userEventMap() , { dom_el : module.container } );
 
           //PRE MODEL VALUE
-          module.preItem = new api.Value( module.getDefaultModel() );
+          module.preItem = new api.Value( module.getDefaultItemModel() );
 
           //PRE MODEL EMBED PROMISE
           module.preItemEmbedded = $.Deferred();//was module.czr_preItem.create('item_content');
@@ -95,7 +95,7 @@ $.extend( CZRDynModuleMths, {
                             id : _id,
                             type : $(this).attr('data-input-type'),
                             container : $(this),
-                            item : module.preItem,
+                            input_parent : module.preItem,
                             module : module,
                             is_preItemInput : true
                       } ) );
@@ -148,13 +148,13 @@ $.extend( CZRDynModuleMths, {
 
   _resetPreItemInputs : function() {
           var module = this;
-          module.preItem.set( module.getDefaultModel() );
+          module.preItem.set( module.getDefaultItemModel() );
           module.preItem.czr_Input.each( function( input_instance ) {
                 var _input_id = input_instance.id;
                 //do we have a default value ?
-                if ( ! _.has( module.getDefaultModel(), _input_id ) )
+                if ( ! _.has( module.getDefaultItemModel(), _input_id ) )
                   return;
-                input_instance.set( module.getDefaultModel()._input_id );
+                input_instance.set( module.getDefaultItemModel()._input_id );
           });
   }
 

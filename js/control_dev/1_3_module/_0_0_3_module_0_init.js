@@ -34,6 +34,7 @@ $.extend( CZRModuleMths, {
               rudItemPart : 'czr-rud-item-part',//read, update, delete
               ruItemPart : 'czr-ru-item-part',//read, update
               itemInputList : '',//is specific for each crud module
+              metasInputList : '',//is specific for each module
               AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
 
         } );
@@ -58,8 +59,26 @@ $.extend( CZRModuleMths, {
               });
         });
 
+        /*-----------------------------------------------
+        //METAS
+        ------------------------------------------------*/
+        //declares a default Item API model
+        module.defaultAPImetasModel = {
+              initial_metas_model : {},
+              defaultMetasModel : {},
+              control : {},//control instance
+              module : {}//module instance
+        };
 
+        //declares a default item model
+        module.defaultMetasModel = {};
+
+        //define a default Constructors
+        module.metasConstructor = api.CZRModMetas;
+
+        /*-----------------------------------------------
         //ITEMS
+        ------------------------------------------------*/
         module.itemCollection = new api.Value();
         //initialize the collection with the constructor options
         module.itemCollection.set([]);
@@ -82,7 +101,10 @@ $.extend( CZRModuleMths, {
         //czr_model stores the each model value => one value by created by model.id
         module.czr_Item = new api.Values();
 
+
+        /*-----------------------------------------------
         //INPUTS
+        ------------------------------------------------*/
         module.inputConstructor = api.CZRInput;
 
         //module.ready(); => fired by children
@@ -122,8 +144,21 @@ $.extend( CZRModuleMths, {
 
               //Instantiate the metas when relevant
               if ( module.hasMetas() ) {
-                    module.czr_Metas = new api.CZRModMetas( { module : module } );
+                    //Prepare the metas and instantiate it
+                    var metas_candidate = module.prepareMetasForAPI( {} );
+                    module.czr_Metas = new module.metasConstructor( metas_candidate );
                     module.czr_Metas.ready();
+                    //update the module model on metas change
+                    module.czr_Metas.callbacks.add( function( to, from ) {
+                          console.log("MODULE META CHANGED", to, from, module() );
+                          var _current_model = module(),
+                              _new_model = $.extend( true, {}, _current_model );
+                          _new_model.metas = to;
+                          //update the dirtyness state
+                          module.isDirty(true);
+                          //set the the new items model
+                          module( _new_model, {} );
+                    });
               }
         });
   },
@@ -248,5 +283,52 @@ $.extend( CZRModuleMths, {
 
   hasMetas : function() {
         return api.CZR_Helpers.hasModuleMetas( null, this );
+  },
+
+  //@return an API ready metas object with the following properties
+  // initial_metas_model : {},
+  // defaultMetasModel : {},
+  // control : {},//control instance
+  // module : {},//module instance
+  prepareMetasForAPI : function( metas_candidate ) {
+        var module = this,
+            api_ready_metas = {};
+        // if ( ! _.isObject( metas_candidate ) ) {
+        //       throw new Error('preparemetasForAPI : a metas must be an object to be instantiated.');
+        // }
+        metas_candidate = _.isObject( metas_candidate ) ? metas_candidate : {};
+
+        _.each( module.defaultAPImetasModel, function( _value, _key ) {
+              var _candidate_val = metas_candidate[_key];
+              switch( _key ) {
+                    case 'initial_metas_model' :
+                        //make sure that the provided metas has all the default properties set
+                        _.each( module.getDefaultMetasModel() , function( _value, _property ) {
+                              if ( ! _.has( metas_candidate, _property) )
+                                 metas_candidate[_property] = _value;
+                        });
+                        api_ready_metas[_key] = metas_candidate;
+
+                    break;
+                    case  'defaultMetasModel' :
+                        api_ready_metas[_key] = _.clone( module.defaultMetasModel );
+                    break;
+                    case  'control' :
+                        api_ready_metas[_key] = module.control;
+                    break;
+                    case  'module' :
+                        api_ready_metas[_key] = module;
+                    break;
+              }//switch
+        });
+        console.log('IN PREPARE METAS FOR API : ', module.defaultAPImetasModel, module.getDefaultMetasModel() );
+        return api_ready_metas;
+  },
+
+  //Returns the default metas defined in initialize
+  //Each chid class can override the default item and the following method
+  getDefaultMetasModel : function( id ) {
+          var module = this;
+          return $.extend( _.clone( module.defaultMetasModel ), {} );
   }
 });//$.extend//CZRBaseControlMths

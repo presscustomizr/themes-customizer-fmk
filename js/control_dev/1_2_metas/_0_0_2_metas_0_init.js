@@ -1,10 +1,13 @@
 //extends api.Value
 //options:
 // module : module,
+//  initial_metas_model : metas,
+// defaultMetasModel : module.defaultMetasModel
 // control : control instance
 var CZRModMetasMths = CZRModMetasMths || {};
 $.extend( CZRModMetasMths , {
   initialize: function( options ) {
+        console.log('OPITONS IN METAS INITIALIZE', options );
         if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
           throw new Error('No module assigned to metas.');
         }
@@ -17,7 +20,6 @@ $.extend( CZRModMetasMths , {
         //=> we don't want the ready method to be fired several times
         metas.isReady = $.Deferred();
         //will store the embedded and content rendered state
-        metas.embedded = $.Deferred();
         metas.contentRendered = $.Deferred();
 
         //input.options = options;
@@ -25,7 +27,9 @@ $.extend( CZRModMetasMths , {
         $.extend( metas, options || {} );
 
         //declares a default model
-        metas.defaultMetasModel = _.clone( options.defaultMetasModel ) || { id : '', title : '' };
+        metas.defaultMetasModel = _.clone( options.defaultMetasModel ) || {};
+
+        console.log('defaultMetasModel', metas.defaultMetasModel );
 
         //set initial values
         var _initial_model = $.extend( metas.defaultMetasModel, options.initial_metas_model );
@@ -49,24 +53,20 @@ $.extend( CZRModMetasMths , {
         //METAS IS READY
         //observe its changes when ready
         metas.isReady.done( function() {
+
+              metas.container = $(  '.' + metas.module.control.css_attr.metas_wrapper, metas.module.container );
               //listen to any metas change
               metas.callbacks.add( function() { return metas.metasReact.apply(metas, arguments ); } );
 
               //When shall we render the metas ?
               //If the module is part of a simple control, the metas can be render now,
-              //If the module is part of a sektion, then the metas will be rendered on module edit.
-              // if ( ! metas.module.isInSektion() ) {
-              //       metas.mayBeRenderMetasWrapper();
-              // }
-              metas.mayBeRenderMetasWrapper();
+              //metas.mayBeRenderMetasWrapper();
 
               //METAS WRAPPER VIEW SETUP
               //defer actions on metas view embedded
-              metas.embedded.done( function() {
-                    //define the metas view DOM event map
-                    //bind actions when the metas is embedded : metas title, etc.
-                    metas.metasWrapperViewSetup( _initial_model );
-              });
+              //define the metas view DOM event map
+              //bind actions when the metas is embedded : metas title, etc.
+              metas.metasWrapperViewSetup( _initial_model );
 
 
               //INPUTS SETUP
@@ -96,6 +96,7 @@ $.extend( CZRModMetasMths , {
         var metas = this,
             module = metas.module;
 
+        console.log('IN META REACT', to, from );
         //Always update the view title
         //metas.writeMetasViewTitle(to);
 

@@ -87,7 +87,7 @@ $.extend( CZRModuleMths, {
                       break;
                       case 'initial_item_model' :
                           //make sure that the provided item has all the default properties set
-                          _.each( module.getDefaultModel() , function( _value, _property ) {
+                          _.each( module.getDefaultItemModel() , function( _value, _property ) {
                                 if ( ! _.has( item_candidate, _property) )
                                    item_candidate[_property] = _value;
                           });

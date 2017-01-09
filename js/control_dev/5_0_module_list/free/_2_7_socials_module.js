@@ -101,7 +101,7 @@ $.extend( CZRSocialModuleMths, {
   CZRSocialsInputMths : {
           setupSelect : function() {
                 var input      = this,
-                    item = input.item,
+                    item = input.input_parent,
                     module     = input.module,
                     socialList = module.social_icons,
                     _model = item();
@@ -161,7 +161,7 @@ $.extend( CZRSocialModuleMths, {
 
         setupColorPicker : function( obj ) {
                 var input      = this,
-                    item = input.item,
+                    item = input.input_parent,
                     module     = input.module;
 
                 $( 'input[data-type="social-color"]', input.container ).wpColorPicker( {

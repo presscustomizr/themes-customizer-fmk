@@ -53,7 +53,7 @@ $.extend( CZRItemMths , {
                     type : $(this).attr('data-input-type'),
                     input_value : _value,
                     container : $(this),
-                    item : item,
+                    input_parent : item,
                     module : module
               } ) );
 

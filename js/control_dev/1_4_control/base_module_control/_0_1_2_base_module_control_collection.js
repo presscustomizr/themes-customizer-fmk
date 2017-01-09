@@ -110,6 +110,7 @@ $.extend( CZRBaseModuleControlMths, {
 
   //cb of control.czr_moduleCollection.callbacks
   moduleCollectionReact : function( to, from, data ) {
+        console.log('MODULE COLLECTION REACT', to, from, data );
         var control = this,
             is_module_added = _.size(to) > _.size(from),
             is_module_removed = _.size(from) > _.size(to),
@@ -141,7 +142,10 @@ $.extend( CZRBaseModuleControlMths, {
               return;
         }
         else {
-              api(this.id).set( control.filterModuleCollectionBeforeAjax(to), data );
+              console.log('Values to set', control.filterModuleCollectionBeforeAjax( to ) );
+              //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
+              //if the module has metas, the metas object is always added as the first element of the items array (unshifted)
+              api(this.id).set( control.filterModuleCollectionBeforeAjax( to ), data );
         }
   },
 
@@ -152,7 +156,8 @@ $.extend( CZRBaseModuleControlMths, {
   //@return the collection array
   filterModuleCollectionBeforeAjax : function( collection ) {
           var control = this,
-              _filtered_collection = $.extend( true, [], collection );
+              _filtered_collection = $.extend( true, [], collection ),
+              _to_return;
 
           _.each( collection , function( _mod, _key ) {
                 var db_ready_mod = $.extend( true, {}, _mod );
@@ -161,7 +166,9 @@ $.extend( CZRBaseModuleControlMths, {
 
           //we don't want to save the same things if we the modules are embedded in a control or in a sektion
           //=> in a sektion : we save the collection of modules
-          //=> in a control : we save the collection of item(s)
+          //=> in a control : we save
+          //1) the collection of item(s)
+          //2) the metas
           if ( control.isMultiModuleControl() ) {
                 return _filtered_collection;
           } else {
@@ -181,11 +188,12 @@ $.extend( CZRBaseModuleControlMths, {
                 if ( ! _.isArray( module_instance().items ) ) {
                   throw new Error('The module ' + module_id + ' should be an array in control : ' + control.id );
                 }
-                if ( module_instance.isMultiItem() )
-                  return module_instance().items;
-                else {
-                  return module_instance().items[0] || [];
-                }
+
+                //items
+                _to_return = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
+
+                //Add the metas if any
+                return module_instance.hasMetas() ? _.union( [ module_instance().metas ] , _to_return ) : _to_return;
           }
   },
 

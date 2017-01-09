@@ -57,6 +57,9 @@ $.extend( CZRModuleMths, {
                 case 'ruItemPart' :
                   _el = module.ruItemPart;
                   break;
+                case 'metasInputList' :
+                  _el = module.metasInputList;
+                  break;
                 case 'itemInputList' :
                   _el = module.itemInputList;
                   break;

@@ -119,7 +119,7 @@ $.extend( CZRFeaturedPageModuleMths, {
           updateItemModel : function( _new_val ) {
 
                   var input = this,
-                      item = this.item,
+                      item = this.input_parent,
                       is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput;
 
                   //check if we are in the pre Item case => if so, the fp-post might be empty
@@ -149,7 +149,7 @@ $.extend( CZRFeaturedPageModuleMths, {
 
           updateItemTitle : function( _new_val ) {
                   var input = this,
-                      item = this.item,
+                      item = this.input_parent,
                       is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput;
 
                   if ( is_preItemInput )
@@ -163,7 +163,7 @@ $.extend( CZRFeaturedPageModuleMths, {
 
 
           setThumbnailAjax : function() {
-                  var item     = this.item,
+                  var item     = this.input_parent,
                       _fp_post = item.czr_Input('fp-post')(),
                       _post_id;
 
@@ -206,7 +206,7 @@ $.extend( CZRFeaturedPageModuleMths, {
 
           addResetDefaultButton : function( $_template_params ) {
                   var input        = this,
-                      item         = input.item,
+                      item         = input.input_parent,
                       buttonLabel  = serverControlParams.translatedStrings.featuredPageImgReset,
                       successMess  = serverControlParams.translatedStrings.featuredPageResetSucc,
                       errMess      = serverControlParams.translatedStrings.featuredPageResetErr,
