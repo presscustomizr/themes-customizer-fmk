@@ -202,7 +202,6 @@ li#customize-control-custom_css textarea {
 
 
 /* PANELS AND SECTIONS TITLES */
-
 .wp-customizer .control-section.control-panel .accordion-section-title .panel-title {
   font-size: 24px;
   font-weight: inherit;
@@ -254,6 +253,16 @@ li#customize-control-custom_css textarea {
   line-height: 23px;
 }
 
+
+/* CONTROLS */
+li[id*="customize-control-"] {
+    margin: 8px 0;
+    padding: 2%;
+    width: 96%;
+    border: 1px solid #ddd;
+    box-shadow: 1px 1px 2px 1px rgba(204, 204, 204, 0.4);
+    -webkit-box-shadow: 1px 1px 2px 1px rgba(204, 204, 204, 0.4);
+}
 
 /* GENERAL STYLE */
 .control-section .accordion-section-content {
