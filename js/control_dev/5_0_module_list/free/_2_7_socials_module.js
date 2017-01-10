@@ -109,15 +109,15 @@ $.extend( CZRSocialModuleMths, {
                 //check if we are in the pre Item case => if so, the id is empty
                 //=> add the select text
                 if ( _.isEmpty(_model.id) ) {
-                  socialList = _.union( [serverControlParams.translatedStrings.selectSocialIcon], socialList );
+                      socialList = _.union( [ serverControlParams.translatedStrings.selectSocialIcon ], socialList );
                 }
 
                 //generates the options
                 _.each( socialList , function( icon_name, k ) {
                       var _value = ( 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
                           _attributes = {
-                            value : _value,
-                            html: api.CZR_Helpers.capitalize(icon_name)
+                                value : _value,
+                                html: api.CZR_Helpers.capitalize(icon_name)
                           };
                       if ( _value == _model['social-icon'] )
                         $.extend( _attributes, { selected : "selected" } );
@@ -137,25 +137,6 @@ $.extend( CZRSocialModuleMths, {
                 $( 'select[data-type="social-icon"]', input.container ).select2( {
                         templateResult: addIcon,
                         templateSelection: addIcon
-                });
-        },
-
-        setupIcheck : function( obj ) {
-                var input      = this;
-
-                $( 'input[type=checkbox]', input.container ).each( function(e) {
-                      if ( 0 !== $(this).closest('div[class^="icheckbox"]').length )
-                        return;
-
-                      $(this).iCheck({
-                            checkboxClass: 'icheckbox_flat-grey',
-                            checkedClass: 'checked',
-                            radioClass: 'iradio_flat-grey',
-                      })
-                      .on( 'ifChanged', function(e){
-                            $(this).val( false === $(this).is(':checked') ? 0 : 1 );
-                            $(e.currentTarget).trigger('change');
-                      });
                 });
         },
 

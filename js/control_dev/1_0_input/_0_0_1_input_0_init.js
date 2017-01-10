@@ -12,7 +12,6 @@ var CZRInputMths = CZRInputMths || {};
 // is_preItemInput : true
 $.extend( CZRInputMths , {
     initialize: function( name, options ) {
-          console.log('INPUT OPTIONS', options );
           if ( _.isUndefined( options.input_parent ) || _.isEmpty(options.input_parent) ) {
             throw new Error('No input_parent assigned to input ' + options.id + '. Aborting');
           }
@@ -41,6 +40,7 @@ $.extend( CZRInputMths , {
                 textarea : '',
                 check : 'setupIcheck',
                 select : 'setupSelect',
+                number : 'setupStepper',
                 upload : 'setupImageUploader',
                 color : 'setupColorPicker',
                 content_picker : 'setupContentPicker',
@@ -123,7 +123,6 @@ $.extend( CZRInputMths , {
     //update the collection of input
     //cb of input.callbacks.add
     inputReact : function( to, from) {
-            console.log('IN INPUT REACT', to, from );
             var input = this,
                 _current_input_parent = input.input_parent(),
                 _new_model        = _.clone( _current_input_parent );//initialize it to the current value
@@ -140,5 +139,31 @@ $.extend( CZRInputMths , {
               //=> useful to handle dependant reactions between different inputs
               input.input_parent.trigger( input.id + ':changed', to );
             }
+    },
+
+    setupIcheck : function( obj ) {
+            var input      = this;
+
+            $( 'input[type=checkbox]', input.container ).each( function(e) {
+                  if ( 0 !== $(this).closest('div[class^="icheckbox"]').length )
+                    return;
+
+                  $(this).iCheck({
+                        checkboxClass: 'icheckbox_flat-grey',
+                        checkedClass: 'checked',
+                        radioClass: 'iradio_flat-grey',
+                  })
+                  .on( 'ifChanged', function(e){
+                        $(this).val( false === $(this).is(':checked') ? 0 : 1 );
+                        $(e.currentTarget).trigger('change');
+                  });
+            });
+    },
+
+    setupStepper : function( obj ) {
+          var input      = this;
+          $('input[type="number"]',input.container ).each( function( e ) {
+                $(this).stepper();
+          });
     }
 });//$.extend
