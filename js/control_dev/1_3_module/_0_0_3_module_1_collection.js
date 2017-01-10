@@ -12,21 +12,48 @@ $.extend( CZRModuleMths, {
   //@fired in module ready on api('ready')
   //the module().items has been set in initialize
   populateSavedItemCollection : function() {
-          var module = this;
+          var module = this, _saved_items = [];
           if ( ! _.isArray( module().items ) ) {
-              throw new Error( 'The saved items collection must be an array in module :' + module.id );
+              throw new Error( 'populateSavedItemCollection : The saved items collection must be an array in module :' + module.id );
           }
 
           //populates the collection with the saved items
+          //the metas must be skipped
+          //the saved items + metas is an array looking like :
+          ////META IS THE FIRST ARRAY ELEMENT: A meta has no unique id and has the property is_meta set to true
+          //[
+          //  is_meta : true //<= inform us that this is not an item but a meta
+          //],
+          ////THEN COME THE ITEMS
+          //[
+          //  id : "czr_slide_module_0"
+          //     slide-background : 21,
+          //     ....
+          //   ],
+          //   [
+          // id : "czr_slide_module_1"
+          //     slide-background : 21,
+          //     ....
+          //   ]
+
+          //FILTER THE ACTUAL ITEMS ( REMOVE THE METAS ELEMENT IF ANY )
+          //=> the items and the metas should already be split at this stage, because it's done before module instantiation... this check is totally paranoid.
           _.each( module().items, function( item_candidate , key ) {
+                if ( _.has( item_candidate, 'id') && ! _.has( item_candidate, 'is_meta' ) ) {
+                      _saved_items.push( item_candidate );
+                }
+          });
+
+          //INSTANTIATE THE ITEMS
+          _.each( _saved_items, function( item_candidate , key ) {
                 //adds it to the collection and fire item.ready()
                 module.instantiateItem( item_candidate ).ready();
           });
 
           //check if everything went well
-          _.each( module().items, function( _item ) {
+          _.each( _saved_items, function( _item ) {
                 if ( _.isUndefined( _.findWhere( module.itemCollection(), _item.id ) ) ) {
-                  throw new Error( 'The saved items have not been properly populated in module : ' + module.id );
+                      throw new Error( 'populateSavedItemCollection : The saved items have not been properly populated in module : ' + module.id );
                 }
           });
 

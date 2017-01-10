@@ -76,7 +76,7 @@ $.extend( CZRBaseModuleControlMths, {
           }
 
           //normalizes the module for the API
-          var module_api_ready = control.prepareModuleForAPI( _.clone(obj.module) );
+          var module_api_ready = control.prepareModuleForAPI( _.clone( obj.module ) );
 
           //the module already exist in the collection
           if ( _.findWhere( _new_collection, { id : module_api_ready.id } ) ) {
@@ -110,7 +110,6 @@ $.extend( CZRBaseModuleControlMths, {
 
   //cb of control.czr_moduleCollection.callbacks
   moduleCollectionReact : function( to, from, data ) {
-        console.log('MODULE COLLECTION REACT', to, from, data );
         var control = this,
             is_module_added = _.size(to) > _.size(from),
             is_module_removed = _.size(from) > _.size(to),
@@ -142,7 +141,6 @@ $.extend( CZRBaseModuleControlMths, {
               return;
         }
         else {
-              console.log('Values to set', control.filterModuleCollectionBeforeAjax( to ) );
               //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
               //if the module has metas, the metas object is always added as the first element of the items array (unshifted)
               api(this.id).set( control.filterModuleCollectionBeforeAjax( to ), data );

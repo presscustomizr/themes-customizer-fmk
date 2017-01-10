@@ -18,7 +18,7 @@ $.extend( CZRModMetasMths , {
         metas.czr_Input = new api.Values();
 
         //this can be overridden by extended classes to add and overrides methods
-        metas.inputConstructor = module.inputConstructor;
+        metas.inputConstructor = module.inputMetasConstructor;
 
         if ( _.isEmpty(metas.defaultMetasModel) || _.isUndefined(metas.defaultMetasModel) ) {
           throw new Error('No default model found in metas ' + metas.id + '. Aborting');

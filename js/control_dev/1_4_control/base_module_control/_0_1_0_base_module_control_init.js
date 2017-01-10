@@ -176,17 +176,33 @@ $.extend( CZRBaseModuleControlMths, {
   },
 
   //@return the collection [] of saved module(s) to instantiate
+  //This method does not make sure that the module model is ready for API.
+  //=> it just returns an array of saved module candidates to instantiate.
+  //
+  //Before instantiation, we will make sure that all required property are defined for the modules with the method control.prepareModuleForAPI()
+  // control     : control,
+  // crud        : bool
+  // id          : '',
+  // items       : [], module.items,
+  // metas       : {}
+  // module_type : module.module_type,
+  // multi_item  : bool
+  // section     : module.section,
+  // is_added_by_user : is_added_by_user || false
   getSavedModules : function() {
           var control = this,
-              savedModules = [],
-              _module_type = control.params.module_type;
+              _savedModulesCandidates = [],
+              _module_type = control.params.module_type,
+              _raw_saved_module_val = [],
+              _saved_items = [],
+              _saved_metas = {};
 
           //In the case of multi module control synchronized with a sektion
           // => the saved modules is a collection saved in the setting
           //For a module embedded in a regular control, we need to hard code the single module collection
           // => in this case, the corresponding setting will store the collection of item(s)
           if ( control.isMultiModuleControl() ) {
-              savedModules = $.extend( true, [], api(control.id)() );//deep clone
+              _savedModulesCandidates = $.extend( true, [], api( control.id )() );//deep clone
           } else {
               //What is the current server saved value for this setting?
               //in a normal case, it should be an array of saved properties
@@ -194,23 +210,62 @@ $.extend( CZRBaseModuleControlMths, {
               //=> let's normalize it.
               //First let's perform a quick check on the current saved db val.
               //If the module is not multi-item, the saved value should be an object or empty if not set yet
-              if ( api.CZR_Helpers.isMultiItemModule( _module_type ) && ! _.isEmpty( api(control.id)() ) && ! _.isObject( api(control.id)() ) ) {
+              if ( api.CZR_Helpers.isMultiItemModule( _module_type ) && ! _.isEmpty( api( control.id )() ) && ! _.isObject( api( control.id )() ) ) {
                   api.consoleLog('Module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
               }
-              var _saved_items = _.isArray( api(control.id)() ) ? api(control.id)() : [ api(control.id)() ];
+
+              //SPLIT ITEMS [] and METAS {}
+              //In database, items and metas are saved in the same option array.
+              //If the module has metas ( the slider module for example ), the metas are described by an object which is always unshifted at the beginning of the setting value.
+
+              //the raw DB setting value is an array :  metas {} + the saved items :
+              ////META IS THE FIRST ARRAY ELEMENT: A meta has no unique id and has the property is_meta set to true
+              //[
+              //  is_meta : true //<= inform us that this is not an item but a meta
+              //],
+              ////THEN COME THE ITEMS
+              //[
+              //  id : "czr_slide_module_0"
+              //     slide-background : 21,
+              //     ....
+              //   ],
+              //   [
+              // id : "czr_slide_module_1"
+              //     slide-background : 21,
+              //     ....
+              //   ]
+              //  [...]
+
+              //POPULATE THE ITEMS [] and the METAS {} FROM THE RAW DB SAVED SETTING VAL
+              _raw_saved_module_val = _.isArray( api( control.id )() ) ? api( control.id )() : [ api( control.id )() ];
+
+              _.each( _raw_saved_module_val, function( item_or_metas_candidate , key ) {
+                    if ( api.CZR_Helpers.hasModuleMetas( _module_type ) && 0*0 === key ) {
+                          // a saved module metas object should not have an id
+                          if ( _.has( item_or_metas_candidate, 'id') ) {
+                                throw new Error( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no metas defined while it should.' );
+                          } else {
+                                _saved_metas = item_or_metas_candidate;
+                          }
+                    }
+                    if ( _.has( item_or_metas_candidate, 'id') && ! _.has( item_or_metas_candidate, 'is_meta' ) ) {
+                          _saved_items.push( item_or_metas_candidate );
+                    }
+              });
+
 
               //for now this is a collection with one module
-              savedModules.push(
+              _savedModulesCandidates.push(
                     {
                           id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
                           module_type : control.params.module_type,
                           section : control.section(),
-                          metas : {},
-                          items   : $.extend( true, [] , _saved_items )//deep clone//must be a collection [] of items
+                          metas : $.extend( true, {} , _saved_metas ),//disconnect with a deep cloning
+                          items : $.extend( true, [] , _saved_items )//disconnect with a deep cloning
                     }
               );
           }
-          return savedModules;
+          return _savedModulesCandidates;
   },
 
 

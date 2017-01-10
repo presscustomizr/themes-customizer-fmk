@@ -5,10 +5,14 @@
 //renders the control view
 //Listen to items collection changes and update the control setting
 //MODULE OPTIONS :
-  // section : module.section,
-  // module_type    : module.module_type,
-  // items   : module.items,
-  // control : control,
+  // control     : control,
+  // crud        : bool
+  // id          : '',
+  // items       : [], module.items,
+  // metas       : {}
+  // module_type : module.module_type,
+  // multi_item  : bool
+  // section     : module.section,
   // is_added_by_user : is_added_by_user || false
 var CZRModuleMths = CZRModuleMths || {};
 
@@ -103,9 +107,12 @@ $.extend( CZRModuleMths, {
 
 
         /*-----------------------------------------------
-        //INPUTS
+        //SET THE DEFAULT INPUT CONSTRUCTOR
         ------------------------------------------------*/
-        module.inputConstructor = api.CZRInput;
+        module.inputConstructor = api.CZRInput;//constructor for the items input
+        if ( module.hasMetas() ) {
+              module.inputMetasConstructor = api.CZRInput;//constructor for the metas input
+        }
 
         //module.ready(); => fired by children
         module.isReady.done( function() {
@@ -142,15 +149,15 @@ $.extend( CZRModuleMths, {
               if ( ! module.isInSektion() )
                 module.populateSavedItemCollection();
 
-              //Instantiate the metas when relevant
+              //When the module has metas :
+              //=> Instantiate the metas and setup listener
               if ( module.hasMetas() ) {
                     //Prepare the metas and instantiate it
-                    var metas_candidate = module.prepareMetasForAPI( {} );
+                    var metas_candidate = module.prepareMetasForAPI( module().metas || {} );
                     module.czr_Metas = new module.metasConstructor( metas_candidate );
                     module.czr_Metas.ready();
                     //update the module model on metas change
                     module.czr_Metas.callbacks.add( function( to, from ) {
-                          console.log("MODULE META CHANGED", to, from, module() );
                           var _current_model = module(),
                               _new_model = $.extend( true, {}, _current_model );
                           _new_model.metas = to;
@@ -290,6 +297,7 @@ $.extend( CZRModuleMths, {
   // defaultMetasModel : {},
   // control : {},//control instance
   // module : {},//module instance
+  //@param metas_candidate is an object. Can contain the saved metas properties on init.
   prepareMetasForAPI : function( metas_candidate ) {
         var module = this,
             api_ready_metas = {};
@@ -321,7 +329,6 @@ $.extend( CZRModuleMths, {
                     break;
               }//switch
         });
-        console.log('IN PREPARE METAS FOR API : ', module.defaultAPImetasModel, module.getDefaultMetasModel() );
         return api_ready_metas;
   },
 
@@ -329,6 +336,6 @@ $.extend( CZRModuleMths, {
   //Each chid class can override the default item and the following method
   getDefaultMetasModel : function( id ) {
           var module = this;
-          return $.extend( _.clone( module.defaultMetasModel ), {} );
+          return $.extend( _.clone( module.defaultMetasModel ), { is_meta : true } );
   }
 });//$.extend//CZRBaseControlMths

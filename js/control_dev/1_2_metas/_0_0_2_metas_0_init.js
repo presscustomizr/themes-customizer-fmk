@@ -1,13 +1,12 @@
 //extends api.Value
 //options:
 // module : module,
-//  initial_metas_model : metas,
+// initial_metas_model : metas, can contains the already db saved values
 // defaultMetasModel : module.defaultMetasModel
 // control : control instance
 var CZRModMetasMths = CZRModMetasMths || {};
 $.extend( CZRModMetasMths , {
   initialize: function( options ) {
-        console.log('OPITONS IN METAS INITIALIZE', options );
         if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
           throw new Error('No module assigned to metas.');
         }
@@ -26,10 +25,8 @@ $.extend( CZRModMetasMths , {
         //write the options as properties, name is included
         $.extend( metas, options || {} );
 
-        //declares a default model
-        metas.defaultMetasModel = _.clone( options.defaultMetasModel ) || {};
-
-        console.log('defaultMetasModel', metas.defaultMetasModel );
+        //declares a default metas model
+        metas.defaultMetasModel = _.clone( options.defaultMetasModel ) || { is_meta : true };
 
         //set initial values
         var _initial_model = $.extend( metas.defaultMetasModel, options.initial_metas_model );
@@ -49,14 +46,14 @@ $.extend( CZRModMetasMths , {
         ]);
 
 
-
         //METAS IS READY
         //observe its changes when ready
         metas.isReady.done( function() {
 
               metas.container = $(  '.' + metas.module.control.css_attr.metas_wrapper, metas.module.container );
               //listen to any metas change
-              metas.callbacks.add( function() { return metas.metasReact.apply(metas, arguments ); } );
+              //=> done in the module
+              //metas.callbacks.add( function() { return metas.metasReact.apply(metas, arguments ); } );
 
               //When shall we render the metas ?
               //If the module is part of a simple control, the metas can be render now,
@@ -92,20 +89,19 @@ $.extend( CZRModMetasMths , {
 
   //React to a single metas change
   //cb of module.czr_Metas(metas.id).callbacks
-  metasReact : function( to, from ) {
-        var metas = this,
-            module = metas.module;
+  // metasReact : function( to, from ) {
+  //       var metas = this,
+  //           module = metas.module;
 
-        console.log('IN META REACT', to, from );
-        //Always update the view title
-        //metas.writeMetasViewTitle(to);
+  //       //Always update the view title
+  //       //metas.writeMetasViewTitle(to);
 
-        //send metas to the preview. On update only, not on creation.
-        // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
-        //   api.consoleLog('DO WE REALLY NEED TO SEND THIS TO THE PREVIEW WITH _sendMetas(to, from) ?');
-        //   metas._sendMetas(to, from);
-        // }
-  },
+  //       //send metas to the preview. On update only, not on creation.
+  //       // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
+  //       //   api.consoleLog('DO WE REALLY NEED TO SEND THIS TO THE PREVIEW WITH _sendMetas(to, from) ?');
+  //       //   metas._sendMetas(to, from);
+  //       // }
+  // },
 
 
 });//$.extend

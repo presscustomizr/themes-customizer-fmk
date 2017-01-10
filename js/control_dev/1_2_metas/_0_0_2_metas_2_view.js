@@ -114,7 +114,6 @@ $.extend( CZRModMetasMths , {
           if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'metasInputList', metas_model ) ).length ) {
               throw new Error('No metas content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'metasInputList', metas_model ) );
           }
-
           var  metas_content_template = wp.template( module.getTemplateEl( 'metasInputList', metas_model ) );
 
           //do we have an html template ?

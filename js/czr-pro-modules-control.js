@@ -309,15 +309,19 @@ $.extend( CZRSlideModuleMths, {
                 metasInputList : 'czr-module-slide-metas-input-list'
           } );
 
+          this.slider_layouts = { 'full-width' : 'Full Width', boxed : 'Boxed' };
+
           //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
           module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputMths || {} );
+          module.inputMetasConstructor = api.CZRInput.extend( module.CZRSliderMetasInputMths || {} );
           //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
           module.itemConstructor = api.CZRItem.extend( module.CZRSliderItem || {} );
 
           //declares a default Metas model
           this.defaultMetasModel = {
-              'slider-speed' : '',
-              'slider-layout' : '',
+              is_meta : true,
+              'slider-speed' : 6,
+              'slider-layout' : 'full-width',
           };
 
           //declares a default Item model
@@ -343,16 +347,8 @@ $.extend( CZRSlideModuleMths, {
                 module.ready();
           });
 
-          module.isReady.then( function() {
-                //specific update for the item preModel on social-icon change
-                module.preItem.bind( function( to, from ) {
-                      if ( ! _.has(to, 'social-icon') )
-                        return;
-                      if ( _.isEqual( to['social-icon'], from['social-icon'] ) )
-                        return;
-                      module.updateItemModel( module.preItem, true );
-                });
-          });
+          module.isReady.then( function() {});
+
   },//initialize
 
 
@@ -360,10 +356,11 @@ $.extend( CZRSlideModuleMths, {
           ready : function() {
                 var input = this;
                 //update the item title on slide-title change
-                input.bind('slide-title:changed', function(){
-                      console.log('ALORS slide-title changed callback', input(), input, input.input_parent, input.input_parent() );
-                      input.updateItemTitle();
-                });
+                if ( ! input.is_meta ) {
+                      input.bind('slide-title:changed', function() {
+                            input.updateItemTitle();
+                      });
+                }
                 api.CZRInput.prototype.ready.call( input);
           },
 
@@ -380,10 +377,43 @@ $.extend( CZRSlideModuleMths, {
 
                 $.extend( _new_model, { title : _new_title} );
                 item.set( _new_model );
-          },
+          }
   },//CZRSlidersInputMths
 
 
+  CZRSliderMetasInputMths : {
+          setupSelect : function() {
+                var input      = this,
+                    metas      = input.input_parent,
+                    module     = input.module,
+                    _slider_layouts   = module.slider_layouts,//{}
+                    _model = metas();
+
+                //generates the options
+                _.each( _slider_layouts , function( _layout_name , _k ) {
+                      var _attributes = {
+                                value : _k,
+                                html: _layout_name
+                          };
+                      if ( _k == _model['slider-layout'] ) {
+                            $.extend( _attributes, { selected : "selected" } );
+                      }
+
+                      $( 'select[data-type="slider-layout"]', input.container ).append( $('<option>', _attributes) );
+                });
+
+                function addIcon( state ) {
+                      if (! state.id) { return state.text; }
+                      var $state = $(
+                        '<span class="fa ' + state.element.value.toLowerCase() + '">&nbsp;&nbsp;' + state.text + '</span>'
+                      );
+                      return $state;
+                }
+
+                //fire select2
+                $( 'select[data-type="slider-layout"]', input.container ).selecter();
+        }
+  },//CZRSlidersInputMths
 
 
   CZRSliderItem : {
