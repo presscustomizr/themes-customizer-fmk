@@ -131,7 +131,7 @@ var api = api || wp.customize, $ = $ || jQuery;
 
                             api.czr_isLoadingSkope( false );
                       }
-                  }, 15000);
+                  }, 30000);
             }
 
             //let's set a lower autosave interval ( default is 60000 ms )
