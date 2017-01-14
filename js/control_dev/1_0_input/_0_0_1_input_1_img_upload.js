@@ -21,20 +21,25 @@ $.extend( CZRInputMths , {
   },
 
   setupContentRendering : function( to, from) {
-        var input = this;
-
-
+        var input = this, _attachment;
         //retrieve new image if 'to' is different from the saved one
         //NEED A BETTER WAY?
         if ( ( input.attachment.id != to ) && from !== to ) {
               if ( ! to ) {
-                input.attachment = {};
-                input.renderImageUploaderTemplate();
+                    input.attachment = {};
+                    input.renderImageUploaderTemplate();
               }
-              wp.media.attachment( to ).fetch().done( function() {
-                input.attachment       = this.attributes;
-                input.renderImageUploaderTemplate();
-              });
+              //Has this image already been fetched ?
+              _attachment = wp.media.attachment( to );
+              if ( _.isObject( _attachment ) && _.has( _attachment, 'attributes' ) && _.has( _attachment.attributes, 'sizes' ) ) {
+                    input.attachment       = _attachment.attributes;
+                    input.renderImageUploaderTemplate();
+              } else {
+                    wp.media.attachment( to ).fetch().done( function() {
+                          input.attachment       = this.attributes;
+                          input.renderImageUploaderTemplate();
+                    });
+              }
         }//Standard reaction, the image has been updated by the user or init
         else if (  ! input.attachment.id || input.attachment.id === to ) {
               input.renderImageUploaderTemplate();
