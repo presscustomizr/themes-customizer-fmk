@@ -181,7 +181,7 @@
 
         //is a module crud ?
         //@return bool
-        hasModuleMetas : function( module_type, moduleInst ) {
+        hasModuleModOpt : function( module_type, moduleInst ) {
               if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
                 return;
               if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
@@ -191,7 +191,7 @@
               if ( ! _.has( api.czrModuleMap, module_type ) )
                 return;
 
-              return api.czrModuleMap[module_type].has_metas || false;
+              return api.czrModuleMap[module_type].has_mod_opt || false;
         }
 
   });//$.extend

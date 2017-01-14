@@ -115,7 +115,7 @@ $.extend( CZRBaseModuleControlMths, {
           var commonAPIModel = {
                 id : '',//module.id,
                 module_type : '',//module.module_type,
-                metas : {},//the module metas property, typically high level properties that area applied to all items of the module
+                modOpt : {},//the module modOpt property, typically high level properties that area applied to all items of the module
                 items   : [],//$.extend( true, {}, module.items ),
                 crud : false,
                 multi_item : false,
@@ -184,7 +184,7 @@ $.extend( CZRBaseModuleControlMths, {
   // crud        : bool
   // id          : '',
   // items       : [], module.items,
-  // metas       : {}
+  // modOpt       : {}
   // module_type : module.module_type,
   // multi_item  : bool
   // section     : module.section,
@@ -195,7 +195,7 @@ $.extend( CZRBaseModuleControlMths, {
               _module_type = control.params.module_type,
               _raw_saved_module_val = [],
               _saved_items = [],
-              _saved_metas = {};
+              _saved_modOpt = {};
 
           //In the case of multi module control synchronized with a sektion
           // => the saved modules is a collection saved in the setting
@@ -214,14 +214,14 @@ $.extend( CZRBaseModuleControlMths, {
                   api.consoleLog('Module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
               }
 
-              //SPLIT ITEMS [] and METAS {}
-              //In database, items and metas are saved in the same option array.
-              //If the module has metas ( the slider module for example ), the metas are described by an object which is always unshifted at the beginning of the setting value.
+              //SPLIT ITEMS [] and MODOPT {}
+              //In database, items and modOpt are saved in the same option array.
+              //If the module has modOpt ( the slider module for example ), the modOpt are described by an object which is always unshifted at the beginning of the setting value.
 
-              //the raw DB setting value is an array :  metas {} + the saved items :
-              ////META IS THE FIRST ARRAY ELEMENT: A meta has no unique id and has the property is_meta set to true
+              //the raw DB setting value is an array :  modOpt {} + the saved items :
+              ////META IS THE FIRST ARRAY ELEMENT: A modOpt has no unique id and has the property is_modOpt set to true
               //[
-              //  is_meta : true //<= inform us that this is not an item but a meta
+              //  is_mod_opt : true //<= inform us that this is not an item but a modOpt
               //],
               ////THEN COME THE ITEMS
               //[
@@ -236,20 +236,20 @@ $.extend( CZRBaseModuleControlMths, {
               //   ]
               //  [...]
 
-              //POPULATE THE ITEMS [] and the METAS {} FROM THE RAW DB SAVED SETTING VAL
+              //POPULATE THE ITEMS [] and the MODOPT {} FROM THE RAW DB SAVED SETTING VAL
               _raw_saved_module_val = _.isArray( api( control.id )() ) ? api( control.id )() : [ api( control.id )() ];
 
-              _.each( _raw_saved_module_val, function( item_or_metas_candidate , key ) {
-                    if ( api.CZR_Helpers.hasModuleMetas( _module_type ) && 0*0 === key ) {
-                          // a saved module metas object should not have an id
-                          if ( _.has( item_or_metas_candidate, 'id') ) {
-                                throw new Error( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no metas defined while it should.' );
+              _.each( _raw_saved_module_val, function( item_or_mod_opt_candidate , key ) {
+                    if ( api.CZR_Helpers.hasModuleModOpt( _module_type ) && 0*0 === key ) {
+                          // a saved module mod_opt object should not have an id
+                          if ( _.has( item_or_mod_opt_candidate, 'id') ) {
+                                throw new Error( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no mod_opt defined while it should.' );
                           } else {
-                                _saved_metas = item_or_metas_candidate;
+                                _saved_modOpt = item_or_mod_opt_candidate;
                           }
                     }
-                    if ( _.has( item_or_metas_candidate, 'id') && ! _.has( item_or_metas_candidate, 'is_meta' ) ) {
-                          _saved_items.push( item_or_metas_candidate );
+                    if ( _.has( item_or_mod_opt_candidate, 'id') && ! _.has( item_or_mod_opt_candidate, 'is_mod_opt' ) ) {
+                          _saved_items.push( item_or_mod_opt_candidate );
                     }
               });
 
@@ -260,7 +260,7 @@ $.extend( CZRBaseModuleControlMths, {
                           id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
                           module_type : control.params.module_type,
                           section : control.section(),
-                          metas : $.extend( true, {} , _saved_metas ),//disconnect with a deep cloning
+                          modOpt : $.extend( true, {} , _saved_modOpt ),//disconnect with a deep cloning
                           items : $.extend( true, [] , _saved_items )//disconnect with a deep cloning
                     }
               );

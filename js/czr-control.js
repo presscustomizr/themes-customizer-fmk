@@ -160,7 +160,7 @@ var api = api || wp.customize, $ = $ || jQuery;
 
                             api.czr_isLoadingSkope( false );
                       }
-                  }, 15000);
+                  }, 30000);
             }
 
             //let's set a lower autosave interval ( default is 60000 ms )
@@ -6884,7 +6884,7 @@ $.extend( CZRSkopeMths, {
 
         //is a module crud ?
         //@return bool
-        hasModuleMetas : function( module_type, moduleInst ) {
+        hasModuleModOpt : function( module_type, moduleInst ) {
               if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
                 return;
               if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
@@ -6894,7 +6894,7 @@ $.extend( CZRSkopeMths, {
               if ( ! _.has( api.czrModuleMap, module_type ) )
                 return;
 
-              return api.czrModuleMap[module_type].has_metas || false;
+              return api.czrModuleMap[module_type].has_mod_opt || false;
         }
 
   });//$.extend
@@ -7085,8 +7085,8 @@ $.extend( CZRSkopeMths, {
 // type : $(this).attr('data-input-type'),
 // value : $(this).find('[data-type]').val(),
 // container : $(this),
-// input_parent : {} can be an item instance or a metas instance (Value instance, has a parent module)
-// is_meta : true,
+// input_parent : {} can be an item instance or a modOpt instance (Value instance, has a parent module)
+// is_mod_opt : true,
 // module : module,
 // is_preItemInput : true
 $.extend( CZRInputMths , {
@@ -7269,20 +7269,25 @@ $.extend( CZRInputMths , {
   },
 
   setupContentRendering : function( to, from) {
-        var input = this;
-
-
+        var input = this, _attachment;
         //retrieve new image if 'to' is different from the saved one
         //NEED A BETTER WAY?
         if ( ( input.attachment.id != to ) && from !== to ) {
               if ( ! to ) {
-                input.attachment = {};
-                input.renderImageUploaderTemplate();
+                    input.attachment = {};
+                    input.renderImageUploaderTemplate();
               }
-              wp.media.attachment( to ).fetch().done( function() {
-                input.attachment       = this.attributes;
-                input.renderImageUploaderTemplate();
-              });
+              //Has this image already been fetched ?
+              _attachment = wp.media.attachment( to );
+              if ( _.isObject( _attachment ) && _.has( _attachment, 'attributes' ) && _.has( _attachment.attributes, 'sizes' ) ) {
+                    input.attachment       = _attachment.attributes;
+                    input.renderImageUploaderTemplate();
+              } else {
+                    wp.media.attachment( to ).fetch().done( function() {
+                          input.attachment       = this.attributes;
+                          input.renderImageUploaderTemplate();
+                    });
+              }
         }//Standard reaction, the image has been updated by the user or init
         else if (  ! input.attachment.id || input.attachment.id === to ) {
               input.renderImageUploaderTemplate();
@@ -8471,175 +8476,174 @@ $.extend( CZRItemMths , {
 //extends api.Value
 //options:
 // module : module,
-// initial_metas_model : metas, can contains the already db saved values
-// defaultMetasModel : module.defaultMetasModel
+// initial_modOpt_model : modOpt, can contains the already db saved values
+// defaultModOptModel : module.defaultModOptModel
 // control : control instance
-var CZRModMetasMths = CZRModMetasMths || {};
-$.extend( CZRModMetasMths , {
+var CZRModOptMths = CZRModOptMths || {};
+$.extend( CZRModOptMths , {
   initialize: function( options ) {
         if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
-          throw new Error('No module assigned to metas.');
+          throw new Error('No module assigned to modOpt.');
         }
 
-        var metas = this;
-        api.Value.prototype.initialize.call( metas, null, options );
+        var modOpt = this;
+        api.Value.prototype.initialize.call( modOpt, null, options );
 
         //DEFERRED STATES
         //store the state of ready.
         //=> we don't want the ready method to be fired several times
-        metas.isReady = $.Deferred();
+        modOpt.isReady = $.Deferred();
         //will store the embedded and content rendered state
-        metas.contentRendered = $.Deferred();
+        modOpt.contentRendered = $.Deferred();
 
         //input.options = options;
         //write the options as properties, name is included
-        $.extend( metas, options || {} );
+        $.extend( modOpt, options || {} );
 
-        //declares a default metas model
-        metas.defaultMetasModel = _.clone( options.defaultMetasModel ) || { is_meta : true };
+        //declares a default modOpt model
+        modOpt.defaultModOptModel = _.clone( options.defaultModOptModel ) || { is_mod_opt : true };
 
         //set initial values
-        var _initial_model = $.extend( metas.defaultMetasModel, options.initial_metas_model );
+        var _initial_model = $.extend( modOpt.defaultModOptModel, options.initial_modOpt_model );
 
         //this won't be listened to at this stage
-        metas.set( _initial_model );
+        modOpt.set( _initial_model );
 
         //USER EVENT MAP
-        metas.userEventMap = new api.Value( [
+        modOpt.userEventMap = new api.Value( [
               //edit view
               {
                 trigger   : 'click keydown',
-                selector  : [ '.' + metas.module.control.css_attr.edit_view_btn, '.' + metas.module.control.css_attr.metas_title ].join(','),
+                selector  : [ '.' + modOpt.module.control.css_attr.edit_view_btn ].join(','),
                 name      : 'edit_view',
                 actions   : ['setViewVisibility']
               }
         ]);
 
 
-        //METAS IS READY
+        //OPTIONS IS READY
         //observe its changes when ready
-        metas.isReady.done( function() {
-
-              metas.container = $(  '.' + metas.module.control.css_attr.metas_wrapper, metas.module.container );
-              //listen to any metas change
+        modOpt.isReady.done( function() {
+              modOpt.container = $(  '.' + modOpt.module.control.css_attr.mod_opt_wrapper, modOpt.module.container );
+              //listen to any modOpt change
               //=> done in the module
-              //metas.callbacks.add( function() { return metas.metasReact.apply(metas, arguments ); } );
+              //modOpt.callbacks.add( function() { return modOpt.modOptReact.apply(modOpt, arguments ); } );
 
-              //When shall we render the metas ?
-              //If the module is part of a simple control, the metas can be render now,
-              //metas.mayBeRenderMetasWrapper();
+              //When shall we render the modOpt ?
+              //If the module is part of a simple control, the modOpt can be render now,
+              //modOpt.mayBeRenderModOptWrapper();
 
-              //METAS WRAPPER VIEW SETUP
-              //defer actions on metas view embedded
-              //define the metas view DOM event map
-              //bind actions when the metas is embedded : metas title, etc.
-              metas.metasWrapperViewSetup( _initial_model );
+              //OPTIONS WRAPPER VIEW SETUP
+              //defer actions on modOpt view embedded
+              //define the modOpt view DOM event map
+              //bind actions when the modOpt is embedded : modOpt title, etc.
+              modOpt.modOptWrapperViewSetup( _initial_model );
 
 
               //INPUTS SETUP
-              //=> when the metas content has been rendered. Typically on metas expansion for a multi-metass module.
-              metas.contentRendered.done( function() {
+              //=> when the modOpt content has been rendered. Typically on modOpt expansion for a multi-modOpts module.
+              modOpt.contentRendered.done( function() {
                     //create the collection of inputs if needed
-                    if ( ! _.has(metas, 'czr_Input') )
-                      metas.setupInputCollectionFromDOM();
+                    if ( ! _.has(modOpt, 'czr_Input') )
+                      modOpt.setupInputCollectionFromDOM();
               });
 
-        });//metas.isReady.done()
+        });//modOpt.isReady.done()
 
   },//initialize
 
   //overridable method
-  //Fired if the metas has been instantiated
-  //The metas.callbacks are declared.
+  //Fired if the modOpt has been instantiated
+  //The modOpt.callbacks are declared.
   ready : function() {
         this.isReady.resolve();
   },
 
 
 
-  //React to a single metas change
-  //cb of module.czr_Metas(metas.id).callbacks
-  // metasReact : function( to, from ) {
-  //       var metas = this,
-  //           module = metas.module;
+  //React to a single modOpt change
+  //cb of module.czr_ModOpt(modOpt.id).callbacks
+  // modOptReact : function( to, from ) {
+  //       var modOpt = this,
+  //           module = modOpt.module;
 
   //       //Always update the view title
-  //       //metas.writeMetasViewTitle(to);
+  //       //modOpt.writeModOptViewTitle(to);
 
-  //       //send metas to the preview. On update only, not on creation.
+  //       //send modOpt to the preview. On update only, not on creation.
   //       // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
-  //       //   api.consoleLog('DO WE REALLY NEED TO SEND THIS TO THE PREVIEW WITH _sendMetas(to, from) ?');
-  //       //   metas._sendMetas(to, from);
+  //       //   api.consoleLog('DO WE REALLY NEED TO SEND THIS TO THE PREVIEW WITH _sendModOpt(to, from) ?');
+  //       //   modOpt._sendModOpt(to, from);
   //       // }
   // },
 
 
 });//$.extend//extends api.Value
 //options:
-  // id : metas.id,
-  // metas_model : metas,
-  // defaultMetasModel : module.defaultMetasModel,
+  // id : modOpt.id,
+  // modOpt_model : modOpt,
+  // defaultModOptModel : module.defaultModOptModel,
   // module : module,
   // is_added_by_user : is_added_by_user || false
-var CZRModMetasMths = CZRModMetasMths || {};
-$.extend( CZRModMetasMths , {
-  //Fired on metas.contentRendered.done()
-  //creates the inputs based on the rendered metass
+var CZRModOptMths = CZRModOptMths || {};
+$.extend( CZRModOptMths , {
+  //Fired on modOpt.contentRendered.done()
+  //creates the inputs based on the rendered modOpts
   setupInputCollectionFromDOM : function() {
-        var metas = this,
-            module = metas.module;
+        var modOpt = this,
+            module = modOpt.module;
 
         //INPUTS => Setup as soon as the view content is rendered
-        //the metas is a collection of inputs, each one has its own view module.
-        metas.czr_Input = new api.Values();
+        //the modOpt is a collection of inputs, each one has its own view module.
+        modOpt.czr_Input = new api.Values();
 
         //this can be overridden by extended classes to add and overrides methods
-        metas.inputConstructor = module.inputMetasConstructor;
+        modOpt.inputConstructor = module.inputModOptConstructor;
 
-        if ( _.isEmpty(metas.defaultMetasModel) || _.isUndefined(metas.defaultMetasModel) ) {
-          throw new Error('No default model found in metas ' + metas.id + '. Aborting');
+        if ( _.isEmpty(modOpt.defaultModOptModel) || _.isUndefined(modOpt.defaultModOptModel) ) {
+          throw new Error('No default model found in modOpt ' + modOpt.id + '. Aborting');
         }
 
-        //prepare and sets the metas value on api ready
+        //prepare and sets the modOpt value on api ready
         //=> triggers the module rendering + DOM LISTENERS
-        var metas_model = $.extend( true, {}, metas() );
+        var modOpt_model = $.extend( true, {}, modOpt() );
 
-        if ( ! _.isObject( metas_model ) )
-          metas_model = metas.defaultMetasModel;
+        if ( ! _.isObject( modOpt_model ) )
+          modOpt_model = modOpt.defaultModOptModel;
         else
-          metas_model = $.extend( metas.defaultMetasModel, metas_model );
+          modOpt_model = $.extend( modOpt.defaultModOptModel, modOpt_model );
 
-        var dom_metas_model = {};
+        var dom_modOpt_model = {};
 
-        //creates the inputs based on the rendered metass
-        $( '.' + module.control.css_attr.sub_set_wrapper, metas.container).each( function( _index ) {
+        //creates the inputs based on the rendered modOpts
+        $( '.' + module.control.css_attr.sub_set_wrapper, modOpt.container).each( function( _index ) {
               var _id = $(this).find('[data-type]').attr('data-type'),
-                  _value = _.has( metas_model, _id) ? metas_model[_id] : '';
+                  _value = _.has( modOpt_model, _id) ? modOpt_model[_id] : '';
               //skip if no valid input data-type is found in this node
               if ( _.isUndefined( _id ) || _.isEmpty( _id ) )
                 return;
-              //check if this property exists in the current metas model
-              if ( ! _.has( metas_model, _id ) ) {
-                    throw new Error('The metas property : ' + _id + ' has been found in the DOM but not in the metas model : '+ metas.id + '. The input can not be instantiated.');
+              //check if this property exists in the current modOpt model
+              if ( ! _.has( modOpt_model, _id ) ) {
+                    throw new Error('The modOpt property : ' + _id + ' has been found in the DOM but not in the modOpt model : '+ modOpt.id + '. The input can not be instantiated.');
               }
 
               //INSTANTIATE THE INPUT
-              metas.czr_Input.add( _id, new metas.inputConstructor( _id, {
+              modOpt.czr_Input.add( _id, new modOpt.inputConstructor( _id, {
                     id : _id,
                     type : $(this).attr('data-input-type'),
                     input_value : _value,
                     container : $(this),
-                    input_parent : metas,
-                    is_meta : true,
+                    input_parent : modOpt,
+                    is_mod_opt : true,
                     module : module
               } ) );
 
               //FIRE THE INPUT
               //fire ready once the input Value() instance is initialized
-              metas.czr_Input(_id).ready();
+              modOpt.czr_Input(_id).ready();
 
               //populate the collection
-              dom_metas_model[_id] = _value;
+              dom_modOpt_model[_id] = _value;
               //shall we trigger a specific event when the input collection from DOM has been populated ?
 
         });//each
@@ -8647,32 +8651,32 @@ $.extend( CZRModMetasMths , {
 
 
   removeInputCollection : function() {
-        var metas = this;
-        metas.czr_Input.each( function( input ) {
-            metas.czr_Input.remove( input.id );
+        var modOpt = this;
+        modOpt.czr_Input.each( function( input ) {
+            modOpt.czr_Input.remove( input.id );
         });
   }
 
 
 });//$.extend//extends api.CZRBaseControl
-var CZRModMetasMths = CZRModMetasMths || {};
+var CZRModOptMths = CZRModOptMths || {};
 
-$.extend( CZRModMetasMths , {
-  // //fired on initialize for metas in module embedded in a regular control
-  // //fired when user edit module for metas in modules embedded in a sektion
-  // mayBeRenderMetasWrapper : function() {
-  //       var metas = this;
+$.extend( CZRModOptMths , {
+  // //fired on initialize for modOpt in module embedded in a regular control
+  // //fired when user edit module for modOpt in modules embedded in a sektion
+  // mayBeRenderModOptWrapper : function() {
+  //       var modOpt = this;
 
-  //       if ( 'pending' != metas.embedded.state() )
+  //       if ( 'pending' != modOpt.embedded.state() )
   //         return;
 
-  //       $.when( metas.renderMetasWrapper() ).done( function( $_container ) {
-  //             metas.container = $_container;
-  //             if ( _.isUndefined(metas.container) || ! metas.container.length ) {
-  //                 throw new Error( 'In mayBeRenderMetasWrapper the Metas view has not been rendered' );
+  //       $.when( modOpt.renderModOptWrapper() ).done( function( $_container ) {
+  //             modOpt.container = $_container;
+  //             if ( _.isUndefined(modOpt.container) || ! modOpt.container.length ) {
+  //                 throw new Error( 'In mayBeRenderModOptWrapper the ModOpt view has not been rendered' );
   //             } else {
   //                 //say it
-  //                 metas.embedded.resolve();
+  //                 modOpt.embedded.resolve();
   //             }
   //       });
   // },
@@ -8680,106 +8684,106 @@ $.extend( CZRModMetasMths , {
   // //the view wrapper has been rendered by WP
   // //the content ( the various inputs ) is rendered by the following methods
   // //an event is triggered on the control.container when content is rendered
-  // renderMetasWrapper : function( metas_model ) {
+  // renderModOptWrapper : function( modOpt_model ) {
   //       //=> an array of objects
-  //       var metas = this,
-  //           module = metas.module;
+  //       var modOpt = this,
+  //           module = modOpt.module;
 
-  //       metas_model = metas_model || metas();
+  //       modOpt_model = modOpt_model || modOpt();
 
-  //       //render the metas wrapper
-  //       $_view_el = $('<li>', { class : module.control.css_attr.metas_wrapper } );
+  //       //render the modOpt mod_opt_wrapper
+  //       $_view_el = $('<li>', { class : module.control.css_attr.mod_opt_wrapper } );
 
-  //       //append the metas view to the first module view wrapper
+  //       //append the modOpt view to the first module view wrapper
   //       //!!note : => there could be additional sub view wrapper inside !!
   //       //$( '.' + module.control.css_attr.items_wrapper , module.container).first().append( $_view_el );
   //       // module.itemsWrapper has been stored as a $ var in module initialize() when the tmpl has been embedded
   //       module.itemsWrapper.append( $_view_el );
 
-  //       //then, append the metas content wrapper
-  //       $_view_el.append( $( '<div/>', { class: module.control.css_attr.metas_content } ) );
+  //       //then, append the modOpt content wrapper
+  //       $_view_el.append( $( '<div/>', { class: module.control.css_attr.modOpt_content } ) );
 
   //       return $_view_el;
   // },
 
 
 
-  //fired when metas is ready and embedded
-  //define the metas view DOM event map
-  //bind actions when the metas is embedded
-  metasWrapperViewSetup : function( metas_model ) {
-          var metas = this,
+  //fired when modOpt is ready and embedded
+  //define the modOpt view DOM event map
+  //bind actions when the modOpt is embedded
+  modOptWrapperViewSetup : function( modOpt_model ) {
+          var modOpt = this,
               module = this.module;
 
-          metas_model = metas() || metas.initial_metas_model;//could not be set yet
+          modOpt_model = modOpt() || modOpt.initial_modOpt_model;//could not be set yet
 
-          //czr_MetasState stores the current expansion status of a given view => one value by created by metas.id
-          //czr_MetasState can take 3 values : expanded, expanded_noscroll (=> used on view creation), closed
-          metas.czr_MetasState = new api.Value();
+          //czr_ModOptState stores the current expansion status of a given view => one value by created by modOpt.id
+          //czr_ModOptState can take 3 values : expanded, expanded_noscroll (=> used on view creation), closed
+          modOpt.czr_ModOptState = new api.Value();
           //set initial state
-          metas.czr_MetasState.set('closed');
+          modOpt.czr_ModOptState.set('closed');
 
 
-          //When do we render the metas content ?
-          var _updateMetasContentDeferred = function( $_content, to, from ) {
+          //When do we render the modOpt content ?
+          var _updateModOptContentDeferred = function( $_content, to, from ) {
                 //update the $.Deferred state
                 if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                    metas.contentRendered.resolve();
-                    metas.toggleMetasExpansion(to, from );
+                    modOpt.contentRendered.resolve();
+                    modOpt.toggleModOptExpansion(to, from );
                 }
                 else {
-                    throw new Error( 'Module : ' + metas.module.id + ', the metas content has not been rendered' );
+                    throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
                 }
           };
 
 
-          //react to the metas state changes
-          metas.czr_MetasState.callbacks.add( function( to, from ) {
+          //react to the modOpt state changes
+          modOpt.czr_ModOptState.callbacks.add( function( to, from ) {
               //toggle on view state change
-              metas.toggleMetasExpansion.apply(metas, arguments );
+              modOpt.toggleModOptExpansion.apply(modOpt, arguments );
           });
 
           //renderview content now
-          $.when( metas.renderMetasContent( metas_model ) ).done( function( $_metas_content ) {
-                _updateMetasContentDeferred( $_metas_content, true );
-                //metas.czr_MetasState.set('expanded');
+          $.when( modOpt.renderModOptContent( modOpt_model ) ).done( function( $_modOpt_content ) {
+                _updateModOptContentDeferred( $_modOpt_content, true );
+                //modOpt.czr_ModOptState.set('expanded');
           });
 
 
-          //DOM listeners for the user action in metas view wrapper
+          //DOM listeners for the user action in modOpt view wrapper
           // api.CZR_Helpers.setupDOMListeners(
-          //       metas.userEventMap(),//actions to execute
-          //       { model:metas_model, dom_el:metas.container },//model + dom scope
-          //       metas //instance where to look for the cb methods
+          //       modOpt.userEventMap(),//actions to execute
+          //       { model:modOpt_model, dom_el:modOpt.container },//model + dom scope
+          //       modOpt //instance where to look for the cb methods
           // );
   },
 
 
 
-  //renders saved metas views and attach event handlers
-  //the saved metas look like :
+  //renders saved modOpt views and attach event handlers
+  //the saved modOpt look like :
   //array[ { id : 'sidebar-one', title : 'A Title One' }, {id : 'sidebar-two', title : 'A Title Two' }]
-  renderMetasContent : function( metas_model ) {
+  renderModOptContent : function( modOpt_model ) {
           //=> an array of objects
-          var metas = this,
+          var modOpt = this,
               module = this.module;
 
-          metas_model = metas_model || metas();
+          modOpt_model = modOpt_model || modOpt();
 
           //do we have view content template script?
-          if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'metasInputList', metas_model ) ).length ) {
-              throw new Error('No metas content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'metasInputList', metas_model ) );
+          if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) ).length ) {
+              throw new Error('No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) );
           }
-          var  metas_content_template = wp.template( module.getTemplateEl( 'metasInputList', metas_model ) );
+          var  modOpt_content_template = wp.template( module.getTemplateEl( 'modOptInputList', modOpt_model ) );
 
           //do we have an html template ?
-          if ( ! metas_content_template )
+          if ( ! modOpt_content_template )
             return this;
 
           //the view content
-          $( metas_content_template( metas_model )).appendTo( metas.container );
+          $( modOpt_content_template( modOpt_model )).appendTo( modOpt.container );
 
-          return $( $( metas_content_template( metas_model )), metas.container );
+          return $( $( modOpt_content_template( modOpt_model )), modOpt.container );
   },
 
 
@@ -8792,7 +8796,7 @@ $.extend( CZRModMetasMths , {
   //         var item = this,
   //             module = this.module;
   //         if ( is_added_by_user ) {
-  //               item.czr_MetasState.set( 'expanded_noscroll' );
+  //               item.czr_ModOptState.set( 'expanded_noscroll' );
   //         } else {
   //               module.closeAllItems( item.id );
   //               if ( _.has(module, 'preItem') ) {
@@ -8804,21 +8808,21 @@ $.extend( CZRModMetasMths , {
 
 
   _getViewState : function() {
-          return -1 == this.czr_MetasState().indexOf('expanded') ? 'closed' : 'expanded';
+          return -1 == this.czr_ModOptState().indexOf('expanded') ? 'closed' : 'expanded';
   },
 
 
-  //callback of metas.czr_MetasState.callbacks
-  toggleMetasExpansion : function( status, from, duration ) {
-          var metas = this,
+  //callback of modOpt.czr_ModOptState.callbacks
+  toggleModOptExpansion : function( status, from, duration ) {
+          var modOpt = this,
               module = this.module;
 
           //slide Toggle and toggle the 'open' class
-          $( '.' + module.control.css_attr.metas_content , metas.container ).first().slideToggle( {
+          $( '.' + module.control.css_attr.mod_opt_content , modOpt.container ).first().slideToggle( {
                 duration : duration || 200,
                 done : function() {
                       var _is_expanded = 'closed' != status;
-                      metas.container.toggleClass('open' , _is_expanded );
+                      modOpt.container.toggleClass('open' , _is_expanded );
 
                       //close all alerts
                       module.closeAllAlerts();
@@ -8835,7 +8839,7 @@ $.extend( CZRModMetasMths , {
 
                       //scroll to the currently expanded view
                       if ( 'expanded' == status )
-                        module._adjustScrollExpandedBlock( metas.container );
+                        module._adjustScrollExpandedBlock( modOpt.container );
                 }//done callback
           } );
   }
@@ -8851,7 +8855,7 @@ $.extend( CZRModMetasMths , {
   // crud        : bool
   // id          : '',
   // items       : [], module.items,
-  // metas       : {}
+  // modOpt       : {}
   // module_type : module.module_type,
   // multi_item  : bool
   // section     : module.section,
@@ -8880,7 +8884,7 @@ $.extend( CZRModuleMths, {
               rudItemPart : 'czr-rud-item-part',//read, update, delete
               ruItemPart : 'czr-ru-item-part',//read, update
               itemInputList : '',//is specific for each crud module
-              metasInputList : '',//is specific for each module
+              modOptInputList : '',//is specific for each module
               AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
 
         } );
@@ -8906,21 +8910,21 @@ $.extend( CZRModuleMths, {
         });
 
         /*-----------------------------------------------
-        //METAS
+        //MODULE OPTIONS
         ------------------------------------------------*/
-        //declares a default Item API model
-        module.defaultAPImetasModel = {
-              initial_metas_model : {},
-              defaultMetasModel : {},
+        //declares a default Mod options API model
+        module.defaultAPImodOptModel = {
+              initial_modOpt_model : {},
+              defaultModOptModel : {},
               control : {},//control instance
               module : {}//module instance
         };
 
-        //declares a default item model
-        module.defaultMetasModel = {};
+        //declares a default modOpt model
+        module.defaultModOptModel = {};
 
         //define a default Constructors
-        module.metasConstructor = api.CZRModMetas;
+        module.modOptConstructor = api.CZRModOpt;
 
         /*-----------------------------------------------
         //ITEMS
@@ -8952,8 +8956,8 @@ $.extend( CZRModuleMths, {
         //SET THE DEFAULT INPUT CONSTRUCTOR
         ------------------------------------------------*/
         module.inputConstructor = api.CZRInput;//constructor for the items input
-        if ( module.hasMetas() ) {
-              module.inputMetasConstructor = api.CZRInput;//constructor for the metas input
+        if ( module.hasModOpt() ) {
+              module.inputModOptConstructor = api.CZRInput;//constructor for the modOpt input
         }
 
         //module.ready(); => fired by children
@@ -8991,18 +8995,18 @@ $.extend( CZRModuleMths, {
               if ( ! module.isInSektion() )
                 module.populateSavedItemCollection();
 
-              //When the module has metas :
-              //=> Instantiate the metas and setup listener
-              if ( module.hasMetas() ) {
-                    //Prepare the metas and instantiate it
-                    var metas_candidate = module.prepareMetasForAPI( module().metas || {} );
-                    module.czr_Metas = new module.metasConstructor( metas_candidate );
-                    module.czr_Metas.ready();
-                    //update the module model on metas change
-                    module.czr_Metas.callbacks.add( function( to, from ) {
+              //When the module has modOpt :
+              //=> Instantiate the modOpt and setup listener
+              if ( module.hasModOpt() ) {
+                    //Prepare the modOpt and instantiate it
+                    var modOpt_candidate = module.prepareModOptForAPI( module().modOpt || {} );
+                    module.czr_ModOpt = new module.modOptConstructor( modOpt_candidate );
+                    module.czr_ModOpt.ready();
+                    //update the module model on modOpt change
+                    module.czr_ModOpt.callbacks.add( function( to, from ) {
                           var _current_model = module(),
                               _new_model = $.extend( true, {}, _current_model );
-                          _new_model.metas = to;
+                          _new_model.modOpt = to;
                           //update the dirtyness state
                           module.isDirty(true);
                           //set the the new items model
@@ -9130,55 +9134,55 @@ $.extend( CZRModuleMths, {
         return api.CZR_Helpers.isCrudModule( null, this );
   },
 
-  hasMetas : function() {
-        return api.CZR_Helpers.hasModuleMetas( null, this );
+  hasModOpt : function() {
+        return api.CZR_Helpers.hasModuleModOpt( null, this );
   },
 
-  //@return an API ready metas object with the following properties
-  // initial_metas_model : {},
-  // defaultMetasModel : {},
+  //@return an API ready modOpt object with the following properties
+  // initial_modOpt_model : {},
+  // defaultModOptModel : {},
   // control : {},//control instance
   // module : {},//module instance
-  //@param metas_candidate is an object. Can contain the saved metas properties on init.
-  prepareMetasForAPI : function( metas_candidate ) {
+  //@param modOpt_candidate is an object. Can contain the saved modOpt properties on init.
+  prepareModOptForAPI : function( modOpt_candidate ) {
         var module = this,
-            api_ready_metas = {};
-        // if ( ! _.isObject( metas_candidate ) ) {
-        //       throw new Error('preparemetasForAPI : a metas must be an object to be instantiated.');
+            api_ready_modOpt = {};
+        // if ( ! _.isObject( modOpt_candidate ) ) {
+        //       throw new Error('preparemodOptForAPI : a modOpt must be an object to be instantiated.');
         // }
-        metas_candidate = _.isObject( metas_candidate ) ? metas_candidate : {};
+        modOpt_candidate = _.isObject( modOpt_candidate ) ? modOpt_candidate : {};
 
-        _.each( module.defaultAPImetasModel, function( _value, _key ) {
-              var _candidate_val = metas_candidate[_key];
+        _.each( module.defaultAPImodOptModel, function( _value, _key ) {
+              var _candidate_val = modOpt_candidate[_key];
               switch( _key ) {
-                    case 'initial_metas_model' :
-                        //make sure that the provided metas has all the default properties set
-                        _.each( module.getDefaultMetasModel() , function( _value, _property ) {
-                              if ( ! _.has( metas_candidate, _property) )
-                                 metas_candidate[_property] = _value;
+                    case 'initial_modOpt_model' :
+                        //make sure that the provided modOpt has all the default properties set
+                        _.each( module.getDefaultModOptModel() , function( _value, _property ) {
+                              if ( ! _.has( modOpt_candidate, _property) )
+                                 modOpt_candidate[_property] = _value;
                         });
-                        api_ready_metas[_key] = metas_candidate;
+                        api_ready_modOpt[_key] = modOpt_candidate;
 
                     break;
-                    case  'defaultMetasModel' :
-                        api_ready_metas[_key] = _.clone( module.defaultMetasModel );
+                    case  'defaultModOptModel' :
+                        api_ready_modOpt[_key] = _.clone( module.defaultModOptModel );
                     break;
                     case  'control' :
-                        api_ready_metas[_key] = module.control;
+                        api_ready_modOpt[_key] = module.control;
                     break;
                     case  'module' :
-                        api_ready_metas[_key] = module;
+                        api_ready_modOpt[_key] = module;
                     break;
               }//switch
         });
-        return api_ready_metas;
+        return api_ready_modOpt;
   },
 
-  //Returns the default metas defined in initialize
+  //Returns the default modOpt defined in initialize
   //Each chid class can override the default item and the following method
-  getDefaultMetasModel : function( id ) {
+  getDefaultModOptModel : function( id ) {
           var module = this;
-          return $.extend( _.clone( module.defaultMetasModel ), { is_meta : true } );
+          return $.extend( _.clone( module.defaultModOptModel ), { is_mod_opt : true } );
   }
 });//$.extend//CZRBaseControlMths//MULTI CONTROL CLASS
 //extends api.CZRBaseControl
@@ -9200,11 +9204,11 @@ $.extend( CZRModuleMths, {
           }
 
           //populates the collection with the saved items
-          //the metas must be skipped
-          //the saved items + metas is an array looking like :
-          ////META IS THE FIRST ARRAY ELEMENT: A meta has no unique id and has the property is_meta set to true
+          //the modOpt must be skipped
+          //the saved items + modOpt is an array looking like :
+          ////MODOPT IS THE FIRST ARRAY ELEMENT: A modOpt has no unique id and has the property is_mod_opt set to true
           //[
-          //  is_meta : true //<= inform us that this is not an item but a meta
+          //  is_mod_opt : true //<= inform us that this is not an item but a modOpt
           //],
           ////THEN COME THE ITEMS
           //[
@@ -9218,10 +9222,10 @@ $.extend( CZRModuleMths, {
           //     ....
           //   ]
 
-          //FILTER THE ACTUAL ITEMS ( REMOVE THE METAS ELEMENT IF ANY )
-          //=> the items and the metas should already be split at this stage, because it's done before module instantiation... this check is totally paranoid.
+          //FILTER THE ACTUAL ITEMS ( REMOVE THE MODOPTS ELEMENT IF ANY )
+          //=> the items and the modOpt should already be split at this stage, because it's done before module instantiation... this check is totally paranoid.
           _.each( module().items, function( item_candidate , key ) {
-                if ( _.has( item_candidate, 'id') && ! _.has( item_candidate, 'is_meta' ) ) {
+                if ( _.has( item_candidate, 'id') && ! _.has( item_candidate, 'is_mod_opt' ) ) {
                       _saved_items.push( item_candidate );
                 }
           });
@@ -9571,8 +9575,8 @@ $.extend( CZRModuleMths, {
                 case 'ruItemPart' :
                   _el = module.ruItemPart;
                   break;
-                case 'metasInputList' :
-                  _el = module.metasInputList;
+                case 'modOptInputList' :
+                  _el = module.modOptInputList;
                   break;
                 case 'itemInputList' :
                   _el = module.itemInputList;
@@ -11263,7 +11267,7 @@ $.extend( CZRBodyBgModuleMths, {
 });
 (function ( api, $, _ ) {
 
-//provides a meta description of each module
+//provides a description of each module
       //=> will determine :
       //1) how to initialize the module model. If not crud, then the initial item(s) model shall be provided
       //2) which js template(s) to use : if crud, the module template shall include the add new and pre-item elements.
@@ -11431,7 +11435,7 @@ $.extend( CZRBaseModuleControlMths, {
           var commonAPIModel = {
                 id : '',//module.id,
                 module_type : '',//module.module_type,
-                metas : {},//the module metas property, typically high level properties that area applied to all items of the module
+                modOpt : {},//the module modOpt property, typically high level properties that area applied to all items of the module
                 items   : [],//$.extend( true, {}, module.items ),
                 crud : false,
                 multi_item : false,
@@ -11500,7 +11504,7 @@ $.extend( CZRBaseModuleControlMths, {
   // crud        : bool
   // id          : '',
   // items       : [], module.items,
-  // metas       : {}
+  // modOpt       : {}
   // module_type : module.module_type,
   // multi_item  : bool
   // section     : module.section,
@@ -11511,7 +11515,7 @@ $.extend( CZRBaseModuleControlMths, {
               _module_type = control.params.module_type,
               _raw_saved_module_val = [],
               _saved_items = [],
-              _saved_metas = {};
+              _saved_modOpt = {};
 
           //In the case of multi module control synchronized with a sektion
           // => the saved modules is a collection saved in the setting
@@ -11530,14 +11534,14 @@ $.extend( CZRBaseModuleControlMths, {
                   api.consoleLog('Module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
               }
 
-              //SPLIT ITEMS [] and METAS {}
-              //In database, items and metas are saved in the same option array.
-              //If the module has metas ( the slider module for example ), the metas are described by an object which is always unshifted at the beginning of the setting value.
+              //SPLIT ITEMS [] and MODOPT {}
+              //In database, items and modOpt are saved in the same option array.
+              //If the module has modOpt ( the slider module for example ), the modOpt are described by an object which is always unshifted at the beginning of the setting value.
 
-              //the raw DB setting value is an array :  metas {} + the saved items :
-              ////META IS THE FIRST ARRAY ELEMENT: A meta has no unique id and has the property is_meta set to true
+              //the raw DB setting value is an array :  modOpt {} + the saved items :
+              ////META IS THE FIRST ARRAY ELEMENT: A modOpt has no unique id and has the property is_modOpt set to true
               //[
-              //  is_meta : true //<= inform us that this is not an item but a meta
+              //  is_mod_opt : true //<= inform us that this is not an item but a modOpt
               //],
               ////THEN COME THE ITEMS
               //[
@@ -11552,20 +11556,20 @@ $.extend( CZRBaseModuleControlMths, {
               //   ]
               //  [...]
 
-              //POPULATE THE ITEMS [] and the METAS {} FROM THE RAW DB SAVED SETTING VAL
+              //POPULATE THE ITEMS [] and the MODOPT {} FROM THE RAW DB SAVED SETTING VAL
               _raw_saved_module_val = _.isArray( api( control.id )() ) ? api( control.id )() : [ api( control.id )() ];
 
-              _.each( _raw_saved_module_val, function( item_or_metas_candidate , key ) {
-                    if ( api.CZR_Helpers.hasModuleMetas( _module_type ) && 0*0 === key ) {
-                          // a saved module metas object should not have an id
-                          if ( _.has( item_or_metas_candidate, 'id') ) {
-                                throw new Error( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no metas defined while it should.' );
+              _.each( _raw_saved_module_val, function( item_or_mod_opt_candidate , key ) {
+                    if ( api.CZR_Helpers.hasModuleModOpt( _module_type ) && 0*0 === key ) {
+                          // a saved module mod_opt object should not have an id
+                          if ( _.has( item_or_mod_opt_candidate, 'id') ) {
+                                throw new Error( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no mod_opt defined while it should.' );
                           } else {
-                                _saved_metas = item_or_metas_candidate;
+                                _saved_modOpt = item_or_mod_opt_candidate;
                           }
                     }
-                    if ( _.has( item_or_metas_candidate, 'id') && ! _.has( item_or_metas_candidate, 'is_meta' ) ) {
-                          _saved_items.push( item_or_metas_candidate );
+                    if ( _.has( item_or_mod_opt_candidate, 'id') && ! _.has( item_or_mod_opt_candidate, 'is_mod_opt' ) ) {
+                          _saved_items.push( item_or_mod_opt_candidate );
                     }
               });
 
@@ -11576,7 +11580,7 @@ $.extend( CZRBaseModuleControlMths, {
                           id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
                           module_type : control.params.module_type,
                           section : control.section(),
-                          metas : $.extend( true, {} , _saved_metas ),//disconnect with a deep cloning
+                          modOpt : $.extend( true, {} , _saved_modOpt ),//disconnect with a deep cloning
                           items : $.extend( true, [] , _saved_items )//disconnect with a deep cloning
                     }
               );
@@ -11703,9 +11707,9 @@ $.extend( CZRBaseModuleControlMths, {
                         }
                         api_ready_module[_key] = _candidate_val;
                     break;
-                    case 'metas' :
+                    case 'modOpt' :
                         if ( ! _.isObject( _candidate_val )  ) {
-                            throw new Error('prepareModuleForAPI : a module metas property must be an object');
+                            throw new Error('prepareModuleForAPI : a module modOpt property must be an object');
                         }
                         api_ready_module[_key] = _candidate_val;
                     break;
@@ -11965,7 +11969,7 @@ $.extend( CZRBaseModuleControlMths, {
         }
         else {
               //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
-              //if the module has metas, the metas object is always added as the first element of the items array (unshifted)
+              //if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
               api(this.id).set( control.filterModuleCollectionBeforeAjax( to ), data );
         }
   },
@@ -11989,7 +11993,7 @@ $.extend( CZRBaseModuleControlMths, {
           //=> in a sektion : we save the collection of modules
           //=> in a control : we save
           //1) the collection of item(s)
-          //2) the metas
+          //2) the modOpt
           if ( control.isMultiModuleControl() ) {
                 return _filtered_collection;
           } else {
@@ -12013,8 +12017,8 @@ $.extend( CZRBaseModuleControlMths, {
                 //items
                 _to_return = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
 
-                //Add the metas if any
-                return module_instance.hasMetas() ? _.union( [ module_instance().metas ] , _to_return ) : _to_return;
+                //Add the modOpt if any
+                return module_instance.hasModOpt() ? _.union( [ module_instance().modOpt ] , _to_return ) : _to_return;
           }
   },
 
@@ -12884,7 +12888,7 @@ $.extend( CZRLayoutSelectMths , {
       $.extend( CZRBaseControlMths, api.Events );
       $.extend( CZRModuleMths, api.Events );
       $.extend( CZRItemMths, api.Events );
-      $.extend( CZRModMetasMths, api.Events );
+      $.extend( CZRModOptMths, api.Events );
 
       //$.extend( CZRInputMths, api.Events ); => in conflict with synchronizer. Input non DOM Events must be handled by the parent item
       $.extend( CZRSkopeBaseMths, api.Events );
@@ -12916,8 +12920,8 @@ $.extend( CZRLayoutSelectMths , {
       //ITEMS => used as constructor when creating the collection of models
       api.CZRItem                   = api.Value.extend( CZRItemMths );
 
-      //MODULE METAS => used as constructor when creating module metas
-      api.CZRModMetas               = api.Value.extend( CZRModMetasMths );
+      //MODULE OPTIONS => used as constructor when creating module options
+      api.CZRModOpt               = api.Value.extend( CZRModOptMths );
 
       //MODULES => used as constructor when creating the collection of modules
       api.CZRModule                 = api.Value.extend( CZRModuleMths );

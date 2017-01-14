@@ -18,11 +18,11 @@ $.extend( CZRModuleMths, {
           }
 
           //populates the collection with the saved items
-          //the metas must be skipped
-          //the saved items + metas is an array looking like :
-          ////META IS THE FIRST ARRAY ELEMENT: A meta has no unique id and has the property is_meta set to true
+          //the modOpt must be skipped
+          //the saved items + modOpt is an array looking like :
+          ////MODOPT IS THE FIRST ARRAY ELEMENT: A modOpt has no unique id and has the property is_mod_opt set to true
           //[
-          //  is_meta : true //<= inform us that this is not an item but a meta
+          //  is_mod_opt : true //<= inform us that this is not an item but a modOpt
           //],
           ////THEN COME THE ITEMS
           //[
@@ -36,10 +36,10 @@ $.extend( CZRModuleMths, {
           //     ....
           //   ]
 
-          //FILTER THE ACTUAL ITEMS ( REMOVE THE METAS ELEMENT IF ANY )
-          //=> the items and the metas should already be split at this stage, because it's done before module instantiation... this check is totally paranoid.
+          //FILTER THE ACTUAL ITEMS ( REMOVE THE MODOPTS ELEMENT IF ANY )
+          //=> the items and the modOpt should already be split at this stage, because it's done before module instantiation... this check is totally paranoid.
           _.each( module().items, function( item_candidate , key ) {
-                if ( _.has( item_candidate, 'id') && ! _.has( item_candidate, 'is_meta' ) ) {
+                if ( _.has( item_candidate, 'id') && ! _.has( item_candidate, 'is_mod_opt' ) ) {
                       _saved_items.push( item_candidate );
                 }
           });

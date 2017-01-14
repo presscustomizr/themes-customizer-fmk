@@ -1,7 +1,7 @@
 
 (function ( api, $, _ ) {
 
-//provides a meta description of each module
+//provides a description of each module
       //=> will determine :
       //1) how to initialize the module model. If not crud, then the initial item(s) model shall be provided
       //2) which js template(s) to use : if crud, the module template shall include the add new and pre-item elements.
@@ -25,7 +25,7 @@
                   mthds : CZRSlideModuleMths,
                   crud : true,
                   name : 'Slider',
-                  has_metas : true
+                  has_mod_opt : true
             },
             czr_text_module : {
                   mthds : CZRTextModuleMths,

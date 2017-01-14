@@ -306,20 +306,21 @@ $.extend( CZRSlideModuleMths, {
           $.extend( module, {
                 itemPreAddEl : 'czr-module-slide-pre-item-input-list',
                 itemInputList : 'czr-module-slide-item-input-list',
-                metasInputList : 'czr-module-slide-metas-input-list'
+                modOptInputList : 'czr-module-slide-mod-opt-input-list'
           } );
 
           this.slider_layouts = { 'full-width' : 'Full Width', boxed : 'Boxed' };
 
           //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
           module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputMths || {} );
-          module.inputMetasConstructor = api.CZRInput.extend( module.CZRSliderMetasInputMths || {} );
+          module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputMths || {} );
           //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
           module.itemConstructor = api.CZRItem.extend( module.CZRSliderItem || {} );
 
-          //declares a default Metas model
-          this.defaultMetasModel = {
-              is_meta : true,
+          //declares a default ModOpt model
+          this.defaultModOptModel = {
+              is_mod_opt : true,
+              module_id : module.id,
               'slider-speed' : 6,
               'slider-layout' : 'full-width',
           };
@@ -356,7 +357,7 @@ $.extend( CZRSlideModuleMths, {
           ready : function() {
                 var input = this;
                 //update the item title on slide-title change
-                if ( ! input.is_meta ) {
+                if ( ! input.is_mod_opt ) {
                       input.bind('slide-title:changed', function() {
                             input.updateItemTitle();
                       });
@@ -381,13 +382,13 @@ $.extend( CZRSlideModuleMths, {
   },//CZRSlidersInputMths
 
 
-  CZRSliderMetasInputMths : {
+  CZRSliderModOptInputMths : {
           setupSelect : function() {
                 var input      = this,
-                    metas      = input.input_parent,
+                    modOpt      = input.input_parent,
                     module     = input.module,
                     _slider_layouts   = module.slider_layouts,//{}
-                    _model = metas();
+                    _model = modOpt();
 
                 //generates the options
                 _.each( _slider_layouts , function( _layout_name , _k ) {
@@ -401,14 +402,6 @@ $.extend( CZRSlideModuleMths, {
 
                       $( 'select[data-type="slider-layout"]', input.container ).append( $('<option>', _attributes) );
                 });
-
-                function addIcon( state ) {
-                      if (! state.id) { return state.text; }
-                      var $state = $(
-                        '<span class="fa ' + state.element.value.toLowerCase() + '">&nbsp;&nbsp;' + state.text + '</span>'
-                      );
-                      return $state;
-                }
 
                 //fire select2
                 $( 'select[data-type="slider-layout"]', input.container ).selecter();
@@ -426,7 +419,18 @@ $.extend( CZRSlideModuleMths, {
                           _title = _model.title ? _model.title : serverControlParams.translatedStrings.slideTitle;
 
                 _title = api.CZR_Helpers.truncate(_title, 25);
-                $( '.' + module.control.css_attr.item_title , item.container ).html( _title );
+                _title = [
+                      '<span class="slide-thumb"></span>',
+                      _title,
+                ].join('');
+                wp.media.attachment( _model['slide-background'] ).fetch()
+                      .always( function() {
+                            var attachment = this;
+                            $( '.' + module.control.css_attr.item_title , item.container ).html( _title );
+                            if ( _.isObject( attachment ) && _.has( attachment, 'attributes' ) && _.has( attachment.attributes, 'sizes' ) ) {
+                                 $( '.slide-thumb', item.container ).append( $('<img/>', { src : this.get('sizes').thumbnail.url, width : 32, height : 32, alt : attachment.attributes.title } ) );
+                            }
+                      });
           }
   }
 });//extends api.CZRDynModule
@@ -1844,7 +1848,7 @@ $.extend( CZRSektionMths, {
 });//$.extend
 (function ( api, $, _ ) {
 
-//provides a meta description of each module
+//provides a description of each module
       //=> will determine :
       //1) how to initialize the module model. If not crud, then the initial item(s) model shall be provided
       //2) which js template(s) to use : if crud, the module template shall include the add new and pre-item elements.
@@ -1868,7 +1872,7 @@ $.extend( CZRSektionMths, {
                   mthds : CZRSlideModuleMths,
                   crud : true,
                   name : 'Slider',
-                  has_metas : true
+                  has_mod_opt : true
             },
             czr_text_module : {
                   mthds : CZRTextModuleMths,

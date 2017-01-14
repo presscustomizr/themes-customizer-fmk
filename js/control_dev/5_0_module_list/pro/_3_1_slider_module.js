@@ -12,20 +12,20 @@ $.extend( CZRSlideModuleMths, {
           $.extend( module, {
                 itemPreAddEl : 'czr-module-slide-pre-item-input-list',
                 itemInputList : 'czr-module-slide-item-input-list',
-                metasInputList : 'czr-module-slide-metas-input-list'
+                modOptInputList : 'czr-module-slide-mod-opt-input-list'
           } );
 
           this.slider_layouts = { 'full-width' : 'Full Width', boxed : 'Boxed' };
 
           //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
           module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputMths || {} );
-          module.inputMetasConstructor = api.CZRInput.extend( module.CZRSliderMetasInputMths || {} );
+          module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputMths || {} );
           //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
           module.itemConstructor = api.CZRItem.extend( module.CZRSliderItem || {} );
 
-          //declares a default Metas model
-          this.defaultMetasModel = {
-              is_meta : true,
+          //declares a default ModOpt model
+          this.defaultModOptModel = {
+              is_mod_opt : true,
               module_id : module.id,
               'slider-speed' : 6,
               'slider-layout' : 'full-width',
@@ -63,7 +63,7 @@ $.extend( CZRSlideModuleMths, {
           ready : function() {
                 var input = this;
                 //update the item title on slide-title change
-                if ( ! input.is_meta ) {
+                if ( ! input.is_mod_opt ) {
                       input.bind('slide-title:changed', function() {
                             input.updateItemTitle();
                       });
@@ -88,13 +88,13 @@ $.extend( CZRSlideModuleMths, {
   },//CZRSlidersInputMths
 
 
-  CZRSliderMetasInputMths : {
+  CZRSliderModOptInputMths : {
           setupSelect : function() {
                 var input      = this,
-                    metas      = input.input_parent,
+                    modOpt      = input.input_parent,
                     module     = input.module,
                     _slider_layouts   = module.slider_layouts,//{}
-                    _model = metas();
+                    _model = modOpt();
 
                 //generates the options
                 _.each( _slider_layouts , function( _layout_name , _k ) {

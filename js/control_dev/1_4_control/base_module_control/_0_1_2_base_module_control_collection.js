@@ -142,7 +142,7 @@ $.extend( CZRBaseModuleControlMths, {
         }
         else {
               //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
-              //if the module has metas, the metas object is always added as the first element of the items array (unshifted)
+              //if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
               api(this.id).set( control.filterModuleCollectionBeforeAjax( to ), data );
         }
   },
@@ -166,7 +166,7 @@ $.extend( CZRBaseModuleControlMths, {
           //=> in a sektion : we save the collection of modules
           //=> in a control : we save
           //1) the collection of item(s)
-          //2) the metas
+          //2) the modOpt
           if ( control.isMultiModuleControl() ) {
                 return _filtered_collection;
           } else {
@@ -190,8 +190,8 @@ $.extend( CZRBaseModuleControlMths, {
                 //items
                 _to_return = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
 
-                //Add the metas if any
-                return module_instance.hasMetas() ? _.union( [ module_instance().metas ] , _to_return ) : _to_return;
+                //Add the modOpt if any
+                return module_instance.hasModOpt() ? _.union( [ module_instance().modOpt ] , _to_return ) : _to_return;
           }
   },
 

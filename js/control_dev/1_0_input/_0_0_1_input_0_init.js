@@ -6,8 +6,8 @@ var CZRInputMths = CZRInputMths || {};
 // type : $(this).attr('data-input-type'),
 // value : $(this).find('[data-type]').val(),
 // container : $(this),
-// input_parent : {} can be an item instance or a metas instance (Value instance, has a parent module)
-// is_meta : true,
+// input_parent : {} can be an item instance or a modOpt instance (Value instance, has a parent module)
+// is_mod_opt : true,
 // module : module,
 // is_preItemInput : true
 $.extend( CZRInputMths , {

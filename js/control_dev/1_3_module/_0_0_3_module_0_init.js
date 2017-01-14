@@ -9,7 +9,7 @@
   // crud        : bool
   // id          : '',
   // items       : [], module.items,
-  // metas       : {}
+  // modOpt       : {}
   // module_type : module.module_type,
   // multi_item  : bool
   // section     : module.section,
@@ -38,7 +38,7 @@ $.extend( CZRModuleMths, {
               rudItemPart : 'czr-rud-item-part',//read, update, delete
               ruItemPart : 'czr-ru-item-part',//read, update
               itemInputList : '',//is specific for each crud module
-              metasInputList : '',//is specific for each module
+              modOptInputList : '',//is specific for each module
               AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
 
         } );
@@ -64,21 +64,21 @@ $.extend( CZRModuleMths, {
         });
 
         /*-----------------------------------------------
-        //METAS
+        //MODULE OPTIONS
         ------------------------------------------------*/
-        //declares a default Item API model
-        module.defaultAPImetasModel = {
-              initial_metas_model : {},
-              defaultMetasModel : {},
+        //declares a default Mod options API model
+        module.defaultAPImodOptModel = {
+              initial_modOpt_model : {},
+              defaultModOptModel : {},
               control : {},//control instance
               module : {}//module instance
         };
 
-        //declares a default item model
-        module.defaultMetasModel = {};
+        //declares a default modOpt model
+        module.defaultModOptModel = {};
 
         //define a default Constructors
-        module.metasConstructor = api.CZRModMetas;
+        module.modOptConstructor = api.CZRModOpt;
 
         /*-----------------------------------------------
         //ITEMS
@@ -110,8 +110,8 @@ $.extend( CZRModuleMths, {
         //SET THE DEFAULT INPUT CONSTRUCTOR
         ------------------------------------------------*/
         module.inputConstructor = api.CZRInput;//constructor for the items input
-        if ( module.hasMetas() ) {
-              module.inputMetasConstructor = api.CZRInput;//constructor for the metas input
+        if ( module.hasModOpt() ) {
+              module.inputModOptConstructor = api.CZRInput;//constructor for the modOpt input
         }
 
         //module.ready(); => fired by children
@@ -149,18 +149,18 @@ $.extend( CZRModuleMths, {
               if ( ! module.isInSektion() )
                 module.populateSavedItemCollection();
 
-              //When the module has metas :
-              //=> Instantiate the metas and setup listener
-              if ( module.hasMetas() ) {
-                    //Prepare the metas and instantiate it
-                    var metas_candidate = module.prepareMetasForAPI( module().metas || {} );
-                    module.czr_Metas = new module.metasConstructor( metas_candidate );
-                    module.czr_Metas.ready();
-                    //update the module model on metas change
-                    module.czr_Metas.callbacks.add( function( to, from ) {
+              //When the module has modOpt :
+              //=> Instantiate the modOpt and setup listener
+              if ( module.hasModOpt() ) {
+                    //Prepare the modOpt and instantiate it
+                    var modOpt_candidate = module.prepareModOptForAPI( module().modOpt || {} );
+                    module.czr_ModOpt = new module.modOptConstructor( modOpt_candidate );
+                    module.czr_ModOpt.ready();
+                    //update the module model on modOpt change
+                    module.czr_ModOpt.callbacks.add( function( to, from ) {
                           var _current_model = module(),
                               _new_model = $.extend( true, {}, _current_model );
-                          _new_model.metas = to;
+                          _new_model.modOpt = to;
                           //update the dirtyness state
                           module.isDirty(true);
                           //set the the new items model
@@ -288,54 +288,54 @@ $.extend( CZRModuleMths, {
         return api.CZR_Helpers.isCrudModule( null, this );
   },
 
-  hasMetas : function() {
-        return api.CZR_Helpers.hasModuleMetas( null, this );
+  hasModOpt : function() {
+        return api.CZR_Helpers.hasModuleModOpt( null, this );
   },
 
-  //@return an API ready metas object with the following properties
-  // initial_metas_model : {},
-  // defaultMetasModel : {},
+  //@return an API ready modOpt object with the following properties
+  // initial_modOpt_model : {},
+  // defaultModOptModel : {},
   // control : {},//control instance
   // module : {},//module instance
-  //@param metas_candidate is an object. Can contain the saved metas properties on init.
-  prepareMetasForAPI : function( metas_candidate ) {
+  //@param modOpt_candidate is an object. Can contain the saved modOpt properties on init.
+  prepareModOptForAPI : function( modOpt_candidate ) {
         var module = this,
-            api_ready_metas = {};
-        // if ( ! _.isObject( metas_candidate ) ) {
-        //       throw new Error('preparemetasForAPI : a metas must be an object to be instantiated.');
+            api_ready_modOpt = {};
+        // if ( ! _.isObject( modOpt_candidate ) ) {
+        //       throw new Error('preparemodOptForAPI : a modOpt must be an object to be instantiated.');
         // }
-        metas_candidate = _.isObject( metas_candidate ) ? metas_candidate : {};
+        modOpt_candidate = _.isObject( modOpt_candidate ) ? modOpt_candidate : {};
 
-        _.each( module.defaultAPImetasModel, function( _value, _key ) {
-              var _candidate_val = metas_candidate[_key];
+        _.each( module.defaultAPImodOptModel, function( _value, _key ) {
+              var _candidate_val = modOpt_candidate[_key];
               switch( _key ) {
-                    case 'initial_metas_model' :
-                        //make sure that the provided metas has all the default properties set
-                        _.each( module.getDefaultMetasModel() , function( _value, _property ) {
-                              if ( ! _.has( metas_candidate, _property) )
-                                 metas_candidate[_property] = _value;
+                    case 'initial_modOpt_model' :
+                        //make sure that the provided modOpt has all the default properties set
+                        _.each( module.getDefaultModOptModel() , function( _value, _property ) {
+                              if ( ! _.has( modOpt_candidate, _property) )
+                                 modOpt_candidate[_property] = _value;
                         });
-                        api_ready_metas[_key] = metas_candidate;
+                        api_ready_modOpt[_key] = modOpt_candidate;
 
                     break;
-                    case  'defaultMetasModel' :
-                        api_ready_metas[_key] = _.clone( module.defaultMetasModel );
+                    case  'defaultModOptModel' :
+                        api_ready_modOpt[_key] = _.clone( module.defaultModOptModel );
                     break;
                     case  'control' :
-                        api_ready_metas[_key] = module.control;
+                        api_ready_modOpt[_key] = module.control;
                     break;
                     case  'module' :
-                        api_ready_metas[_key] = module;
+                        api_ready_modOpt[_key] = module;
                     break;
               }//switch
         });
-        return api_ready_metas;
+        return api_ready_modOpt;
   },
 
-  //Returns the default metas defined in initialize
+  //Returns the default modOpt defined in initialize
   //Each chid class can override the default item and the following method
-  getDefaultMetasModel : function( id ) {
+  getDefaultModOptModel : function( id ) {
           var module = this;
-          return $.extend( _.clone( module.defaultMetasModel ), { is_meta : true } );
+          return $.extend( _.clone( module.defaultModOptModel ), { is_mod_opt : true } );
   }
 });//$.extend//CZRBaseControlMths

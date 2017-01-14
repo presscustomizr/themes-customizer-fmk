@@ -108,9 +108,9 @@ $.extend( CZRBaseModuleControlMths, {
                         }
                         api_ready_module[_key] = _candidate_val;
                     break;
-                    case 'metas' :
+                    case 'modOpt' :
                         if ( ! _.isObject( _candidate_val )  ) {
-                            throw new Error('prepareModuleForAPI : a module metas property must be an object');
+                            throw new Error('prepareModuleForAPI : a module modOpt property must be an object');
                         }
                         api_ready_module[_key] = _candidate_val;
                     break;
