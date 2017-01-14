@@ -47,8 +47,9 @@ $.extend( CZRItemMths , {
           var _updateItemContentDeferred = function( $_content, to, from ) {
                 //update the $.Deferred state
                 if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                    item.contentRendered.resolve();
-                    item.toggleItemExpansion(to, from );
+                    item.trigger( 'contentRendered' );
+                    item.contentContainer = $_content;
+                    item.toggleItemExpansion( to, from );
                 }
                 else {
                     throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
@@ -57,19 +58,34 @@ $.extend( CZRItemMths , {
 
           if ( item.module.isMultiItem() ) {
                 item.czr_ItemState.callbacks.add( function( to, from ) {
-                      //renderview content if needed on first expansion
-                      if ( 'resolved' == item.contentRendered.state() ) {
-                          //toggle on view state change
-                          item.toggleItemExpansion(to, from );
-                          return;
+                      //czr_ItemState can take 3 states : expanded, expanded_noscroll, closed
+                      var _isExpanded = -1 !== to.indexOf('expanded');
+                      if ( _isExpanded ) {
+                            //item already rendered ?
+                            if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
+                                  //toggle on view state change
+                                  item.toggleItemExpansion(to, from );
+                            } else {
+                                  $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
+                                        //introduce a small delay to give some times to the modules to be printed.
+                                        //@todo : needed ?
+                                        _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
+                                        _updateItemContentDeferred( $_item_content, to, from );
+                                  });
+                            }
+                      } else {
+                            //toggle on view state change
+                            item.toggleItemExpansion( to, from ).done( function() {
+                                  if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
+                                        $( '.' + module.control.css_attr.item_content, item.container ).children().each( function() {
+                                              $(this).remove();
+                                        });
+                                        item.contentContainer = null;
+                                        //will remove the input collection values
+                                        item.trigger( 'contentRemoved' );
+                                  }
+                            });
                       }
-
-                      $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
-                            //introduce a small delay to give some times to the modules to be printed.
-                            //@todo : needed ?
-                            _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 400 );
-                            _updateItemContentDeferred( $_item_content, to, from );
-                      });
                 });
           } else {
                 //react to the item state changes
@@ -204,7 +220,8 @@ $.extend( CZRItemMths , {
   //callback of item.czr_ItemState.callbacks
   toggleItemExpansion : function( status, from, duration ) {
           var item = this,
-              module = this.module;
+              module = this.module,
+              dfd = $.Deferred();
 
           //slide Toggle and toggle the 'open' class
           $( '.' + module.control.css_attr.item_content , item.container ).first().slideToggle( {
@@ -229,8 +246,10 @@ $.extend( CZRItemMths , {
                       //scroll to the currently expanded view
                       if ( 'expanded' == status )
                         module._adjustScrollExpandedBlock( item.container );
+                      dfd.resolve();
                 }//done callback
-          } );
+        } );
+        return dfd.promise();
   },
 
 

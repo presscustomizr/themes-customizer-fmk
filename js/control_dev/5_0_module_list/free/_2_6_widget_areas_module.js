@@ -333,7 +333,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                           return;
                         //don't try to invoke the input instances before the content is actually rendered
                         //=> there might be cases when the content rendering is debounced...
-                        item.contentRendered.then( function() {
+                        item.bind('contentRendered', function() {
                               //refresh the location list
                               item.czr_Input('locations')._setupLocationSelect( true );//true for refresh
                               //refresh the location alert message

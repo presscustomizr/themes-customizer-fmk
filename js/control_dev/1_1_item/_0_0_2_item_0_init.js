@@ -21,7 +21,9 @@ $.extend( CZRItemMths , {
         item.isReady = $.Deferred();
         //will store the embedded and content rendered state
         item.embedded = $.Deferred();
-        item.contentRendered = $.Deferred();
+        item.container = null;//will store the item $ dom element
+        item.contentContainer = null;//will store the item content $ dom element
+        item.inputCollection = new api.Value({});
 
         //input.options = options;
         //write the options as properties, name is included
@@ -35,8 +37,6 @@ $.extend( CZRItemMths , {
 
         //this won't be listened to at this stage
         item.set( _initial_model );
-
-
 
         //USER EVENT MAP
         item.userEventMap = new api.Value( [
@@ -94,10 +94,18 @@ $.extend( CZRItemMths , {
 
               //INPUTS SETUP
               //=> when the item content has been rendered. Typically on item expansion for a multi-items module.
-              item.contentRendered.done( function() {
+              item.bind( 'contentRendered', function() {
                     //create the collection of inputs if needed
-                    if ( ! _.has(item, 'czr_Input') )
+                    //first time or after a removal
+                    if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) )
                       item.setupInputCollectionFromDOM();
+              });
+
+              //INPUTS DESTROY
+              item.bind( 'contentRemoved', function() {
+                    //create the collection of inputs if needed
+                    if ( _.has(item, 'czr_Input') )
+                      item.removeInputCollection();
               });
 
         });//item.isReady.done()

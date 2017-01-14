@@ -32,10 +32,10 @@ $.extend( CZRColumnMths , {
           //the modules are stored only with their id in a column
           column.defautModuleModelInColumn = { id : '' };
 
-          api.consoleLog('column.sektion.contentRendered.state()', column.sektion.contentRendered.state() );
+          //api.consoleLog('column.sektion.contentRendered.state()', column.sektion.contentRendered.state() );
 
           //defer the column rendering when the parent sektion content is rendered
-          column.sektion.contentRendered.done(function() {
+          column.sektion.bind( 'contentRendered', function() {
                 //render the column
                 column.container = column.render();
                 api.consoleLog('COLUMN CONTAINER?', column.container );
@@ -137,7 +137,7 @@ $.extend( CZRColumnMths , {
 
 
 
-    //fired on parent section contentRendered.done()
+    //fired on parent section 'contentRendered'
     render : function() {
           var column   = this;
           $view     = $( wp.template('czr-sektion-column')( {id: column.id}) );

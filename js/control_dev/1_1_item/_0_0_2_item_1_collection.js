@@ -7,7 +7,7 @@
   // is_added_by_user : is_added_by_user || false
 var CZRItemMths = CZRItemMths || {};
 $.extend( CZRItemMths , {
-  //Fired on item.contentRendered.done()
+  //Fired on 'contentRendered'
   //creates the inputs based on the rendered items
   setupInputCollectionFromDOM : function() {
         var item = this,
@@ -66,6 +66,9 @@ $.extend( CZRItemMths , {
               //shall we trigger a specific event when the input collection from DOM has been populated ?
 
         });//each
+
+        //stores the collection
+        item.inputCollection( dom_item_model );
   },
 
 
@@ -74,6 +77,7 @@ $.extend( CZRItemMths , {
         item.czr_Input.each( function( input ) {
             item.czr_Input.remove( input.id );
         });
+        item.inputCollection({});
   }
 
 

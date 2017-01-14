@@ -11,11 +11,11 @@ $.extend( CZRInputMths , {
           if ( ! input.container )
             return this;
 
-          this.contentRendered = $.Deferred();
+          this.tmplRendered = $.Deferred();
           this.setupContentRendering( _model, {} );
 
           //valid just in the init
-          this.contentRendered.done( function(){
+          this.tmplRendered.done( function(){
             input.czrImgUploaderBinding();
           });
   },
@@ -58,7 +58,7 @@ $.extend( CZRInputMths , {
         input.container.on( 'click keydown', '.remove-button', input.czrImgUploadRemoveFile );
 
         input.bind( input.id + ':changed', function( to, from ){
-              input.contentRendered = $.Deferred();
+              input.tmplRendered = $.Deferred();
               input.setupContentRendering(to,from);
         });
   },
@@ -171,7 +171,7 @@ $.extend( CZRInputMths , {
 
         $_view_el.html( view_template( _template_params) );
 
-        input.contentRendered.resolve();
+        input.tmplRendered.resolve();
         input.container.trigger( input.id + ':content_rendered' );
 
         return true;
