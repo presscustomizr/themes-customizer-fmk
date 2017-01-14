@@ -49,22 +49,28 @@ var api = api || wp.customize, $ = $ || jQuery;
       //BIND EXISTING AND FUTURE SECTIONS AND PANELS
       api.czr_activeSectionId = new api.Value('');
       api.czr_activePanelId = new api.Value('');
+
+
+      /*****************************************************************************
+      * OBSERVE SECTIONS AND PANEL EXPANSION
+      * /store the current expanded section and panel
+      *****************************************************************************/
       api.bind('ready', function() {
             if ( 'function' != typeof api.Section ) {
               throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
             }
-            var _bindSectionExpanded = function( expanded, section_id ) {
+            var _storeCurrentSection = function( expanded, section_id ) {
                   api.czr_activeSectionId( expanded ? section_id : '' );
             };
             api.section.each( function( _sec ) {
-                  _sec.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, _sec.id ); } );
+                  _sec.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, _sec.id ); } );
             });
             api.section.bind( 'add', function( section_instance ) {
                   api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
-                  section_instance.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, section_instance.id ); } );
+                  section_instance.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, section_instance.id ); } );
             });
 
-            var _bindPanelExpanded = function( expanded, panel_id ) {
+            var _storeCurrentPanel = function( expanded, panel_id ) {
                   api.czr_activePanelId( expanded ? panel_id : '' );
                   //if the expanded panel id becomes empty (typically when switching back to the root panel), make sure that no section is set as currently active
                   //=> fixes the problem of add_menu section staying expanded when switching back to another panel
@@ -73,10 +79,10 @@ var api = api || wp.customize, $ = $ || jQuery;
                   }
             };
             api.panel.each( function( _panel ) {
-                  _panel.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, _panel.id ); } );
+                  _panel.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, _panel.id ); } );
             });
             api.panel.bind( 'add', function( panel_instance ) {
-                  panel_instance.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, panel_instance.id ); } );
+                  panel_instance.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, panel_instance.id ); } );
             });
 
       });
@@ -100,7 +106,10 @@ var api = api || wp.customize, $ = $ || jQuery;
                 });
       });
 
-      //FIRE SKOPE ON READY
+
+      /*****************************************************************************
+      * FIRE SKOPE ON READY
+      *****************************************************************************/
       //this promise will be resolved when
       //1) the initial skopes collection has been populated
       //2) the initial skope has been switched to

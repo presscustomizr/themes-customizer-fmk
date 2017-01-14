@@ -19,7 +19,7 @@ $.extend( CZRModOptMths , {
         //=> we don't want the ready method to be fired several times
         modOpt.isReady = $.Deferred();
         //will store the embedded and content rendered state
-        modOpt.contentRendered = $.Deferred();
+        modOpt.modOptRendered = $.Deferred();
 
         //input.options = options;
         //write the options as properties, name is included
@@ -67,7 +67,7 @@ $.extend( CZRModOptMths , {
 
               //INPUTS SETUP
               //=> when the modOpt content has been rendered. Typically on modOpt expansion for a multi-modOpts module.
-              modOpt.contentRendered.done( function() {
+              modOpt.modOptRendered.done( function() {
                     //create the collection of inputs if needed
                     if ( ! _.has(modOpt, 'czr_Input') )
                       modOpt.setupInputCollectionFromDOM();

@@ -68,7 +68,7 @@ $.extend( CZRModOptMths , {
           var _updateModOptContentDeferred = function( $_content, to, from ) {
                 //update the $.Deferred state
                 if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                    modOpt.contentRendered.resolve();
+                    modOpt.modOptRendered.resolve();
                     modOpt.toggleModOptExpansion(to, from );
                 }
                 else {

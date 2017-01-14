@@ -7,7 +7,7 @@
   // is_added_by_user : is_added_by_user || false
 var CZRModOptMths = CZRModOptMths || {};
 $.extend( CZRModOptMths , {
-  //Fired on modOpt.contentRendered.done()
+  //Fired on modOpt.modOptRendered.done()
   //creates the inputs based on the rendered modOpts
   setupInputCollectionFromDOM : function() {
         var modOpt = this,
