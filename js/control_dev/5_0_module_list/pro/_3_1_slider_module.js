@@ -26,6 +26,7 @@ $.extend( CZRSlideModuleMths, {
           //declares a default Metas model
           this.defaultMetasModel = {
               is_meta : true,
+              module_id : module.id,
               'slider-speed' : 6,
               'slider-layout' : 'full-width',
           };
@@ -108,14 +109,6 @@ $.extend( CZRSlideModuleMths, {
                       $( 'select[data-type="slider-layout"]', input.container ).append( $('<option>', _attributes) );
                 });
 
-                function addIcon( state ) {
-                      if (! state.id) { return state.text; }
-                      var $state = $(
-                        '<span class="fa ' + state.element.value.toLowerCase() + '">&nbsp;&nbsp;' + state.text + '</span>'
-                      );
-                      return $state;
-                }
-
                 //fire select2
                 $( 'select[data-type="slider-layout"]', input.container ).selecter();
         }
@@ -132,7 +125,18 @@ $.extend( CZRSlideModuleMths, {
                           _title = _model.title ? _model.title : serverControlParams.translatedStrings.slideTitle;
 
                 _title = api.CZR_Helpers.truncate(_title, 25);
-                $( '.' + module.control.css_attr.item_title , item.container ).html( _title );
+                _title = [
+                      '<span class="slide-thumb"></span>',
+                      _title,
+                ].join('');
+                wp.media.attachment( _model['slide-background'] ).fetch()
+                      .always( function() {
+                            var attachment = this;
+                            $( '.' + module.control.css_attr.item_title , item.container ).html( _title );
+                            if ( _.isObject( attachment ) && _.has( attachment, 'attributes' ) && _.has( attachment.attributes, 'sizes' ) ) {
+                                 $( '.slide-thumb', item.container ).append( $('<img/>', { src : this.get('sizes').thumbnail.url, width : 32, height : 32, alt : attachment.attributes.title } ) );
+                            }
+                      });
           }
   }
 });
