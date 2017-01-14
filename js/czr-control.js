@@ -78,22 +78,28 @@ var api = api || wp.customize, $ = $ || jQuery;
       //BIND EXISTING AND FUTURE SECTIONS AND PANELS
       api.czr_activeSectionId = new api.Value('');
       api.czr_activePanelId = new api.Value('');
+
+
+      /*****************************************************************************
+      * OBSERVE SECTIONS AND PANEL EXPANSION
+      * /store the current expanded section and panel
+      *****************************************************************************/
       api.bind('ready', function() {
             if ( 'function' != typeof api.Section ) {
               throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
             }
-            var _bindSectionExpanded = function( expanded, section_id ) {
+            var _storeCurrentSection = function( expanded, section_id ) {
                   api.czr_activeSectionId( expanded ? section_id : '' );
             };
             api.section.each( function( _sec ) {
-                  _sec.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, _sec.id ); } );
+                  _sec.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, _sec.id ); } );
             });
             api.section.bind( 'add', function( section_instance ) {
                   api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
-                  section_instance.expanded.bind( function( expanded ) { _bindSectionExpanded( expanded, section_instance.id ); } );
+                  section_instance.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, section_instance.id ); } );
             });
 
-            var _bindPanelExpanded = function( expanded, panel_id ) {
+            var _storeCurrentPanel = function( expanded, panel_id ) {
                   api.czr_activePanelId( expanded ? panel_id : '' );
                   //if the expanded panel id becomes empty (typically when switching back to the root panel), make sure that no section is set as currently active
                   //=> fixes the problem of add_menu section staying expanded when switching back to another panel
@@ -102,10 +108,10 @@ var api = api || wp.customize, $ = $ || jQuery;
                   }
             };
             api.panel.each( function( _panel ) {
-                  _panel.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, _panel.id ); } );
+                  _panel.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, _panel.id ); } );
             });
             api.panel.bind( 'add', function( panel_instance ) {
-                  panel_instance.expanded.bind( function( expanded ) { _bindPanelExpanded( expanded, panel_instance.id ); } );
+                  panel_instance.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, panel_instance.id ); } );
             });
 
       });
@@ -129,7 +135,10 @@ var api = api || wp.customize, $ = $ || jQuery;
                 });
       });
 
-      //FIRE SKOPE ON READY
+
+      /*****************************************************************************
+      * FIRE SKOPE ON READY
+      *****************************************************************************/
       //this promise will be resolved when
       //1) the initial skopes collection has been populated
       //2) the initial skope has been switched to
@@ -7259,11 +7268,11 @@ $.extend( CZRInputMths , {
           if ( ! input.container )
             return this;
 
-          this.contentRendered = $.Deferred();
+          this.tmplRendered = $.Deferred();
           this.setupContentRendering( _model, {} );
 
           //valid just in the init
-          this.contentRendered.done( function(){
+          this.tmplRendered.done( function(){
             input.czrImgUploaderBinding();
           });
   },
@@ -7306,7 +7315,7 @@ $.extend( CZRInputMths , {
         input.container.on( 'click keydown', '.remove-button', input.czrImgUploadRemoveFile );
 
         input.bind( input.id + ':changed', function( to, from ){
-              input.contentRendered = $.Deferred();
+              input.tmplRendered = $.Deferred();
               input.setupContentRendering(to,from);
         });
   },
@@ -7419,7 +7428,7 @@ $.extend( CZRInputMths , {
 
         $_view_el.html( view_template( _template_params) );
 
-        input.contentRendered.resolve();
+        input.tmplRendered.resolve();
         input.container.trigger( input.id + ':content_rendered' );
 
         return true;
@@ -7916,7 +7925,9 @@ $.extend( CZRItemMths , {
         item.isReady = $.Deferred();
         //will store the embedded and content rendered state
         item.embedded = $.Deferred();
-        item.contentRendered = $.Deferred();
+        item.container = null;//will store the item $ dom element
+        item.contentContainer = null;//will store the item content $ dom element
+        item.inputCollection = new api.Value({});
 
         //input.options = options;
         //write the options as properties, name is included
@@ -7930,8 +7941,6 @@ $.extend( CZRItemMths , {
 
         //this won't be listened to at this stage
         item.set( _initial_model );
-
-
 
         //USER EVENT MAP
         item.userEventMap = new api.Value( [
@@ -7989,10 +7998,18 @@ $.extend( CZRItemMths , {
 
               //INPUTS SETUP
               //=> when the item content has been rendered. Typically on item expansion for a multi-items module.
-              item.contentRendered.done( function() {
+              item.bind( 'contentRendered', function() {
                     //create the collection of inputs if needed
-                    if ( ! _.has(item, 'czr_Input') )
+                    //first time or after a removal
+                    if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) )
                       item.setupInputCollectionFromDOM();
+              });
+
+              //INPUTS DESTROY
+              item.bind( 'contentRemoved', function() {
+                    //create the collection of inputs if needed
+                    if ( _.has(item, 'czr_Input') )
+                      item.removeInputCollection();
               });
 
         });//item.isReady.done()
@@ -8043,7 +8060,7 @@ $.extend( CZRItemMths , {
   // is_added_by_user : is_added_by_user || false
 var CZRItemMths = CZRItemMths || {};
 $.extend( CZRItemMths , {
-  //Fired on item.contentRendered.done()
+  //Fired on 'contentRendered'
   //creates the inputs based on the rendered items
   setupInputCollectionFromDOM : function() {
         var item = this,
@@ -8102,6 +8119,9 @@ $.extend( CZRItemMths , {
               //shall we trigger a specific event when the input collection from DOM has been populated ?
 
         });//each
+
+        //stores the collection
+        item.inputCollection( dom_item_model );
   },
 
 
@@ -8110,6 +8130,7 @@ $.extend( CZRItemMths , {
         item.czr_Input.each( function( input ) {
             item.czr_Input.remove( input.id );
         });
+        item.inputCollection({});
   }
 
 
@@ -8223,8 +8244,9 @@ $.extend( CZRItemMths , {
           var _updateItemContentDeferred = function( $_content, to, from ) {
                 //update the $.Deferred state
                 if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                    item.contentRendered.resolve();
-                    item.toggleItemExpansion(to, from );
+                    item.trigger( 'contentRendered' );
+                    item.contentContainer = $_content;
+                    item.toggleItemExpansion( to, from );
                 }
                 else {
                     throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
@@ -8233,19 +8255,34 @@ $.extend( CZRItemMths , {
 
           if ( item.module.isMultiItem() ) {
                 item.czr_ItemState.callbacks.add( function( to, from ) {
-                      //renderview content if needed on first expansion
-                      if ( 'resolved' == item.contentRendered.state() ) {
-                          //toggle on view state change
-                          item.toggleItemExpansion(to, from );
-                          return;
+                      //czr_ItemState can take 3 states : expanded, expanded_noscroll, closed
+                      var _isExpanded = -1 !== to.indexOf('expanded');
+                      if ( _isExpanded ) {
+                            //item already rendered ?
+                            if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
+                                  //toggle on view state change
+                                  item.toggleItemExpansion(to, from );
+                            } else {
+                                  $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
+                                        //introduce a small delay to give some times to the modules to be printed.
+                                        //@todo : needed ?
+                                        _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
+                                        _updateItemContentDeferred( $_item_content, to, from );
+                                  });
+                            }
+                      } else {
+                            //toggle on view state change
+                            item.toggleItemExpansion( to, from ).done( function() {
+                                  if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
+                                        $( '.' + module.control.css_attr.item_content, item.container ).children().each( function() {
+                                              $(this).remove();
+                                        });
+                                        item.contentContainer = null;
+                                        //will remove the input collection values
+                                        item.trigger( 'contentRemoved' );
+                                  }
+                            });
                       }
-
-                      $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
-                            //introduce a small delay to give some times to the modules to be printed.
-                            //@todo : needed ?
-                            _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 400 );
-                            _updateItemContentDeferred( $_item_content, to, from );
-                      });
                 });
           } else {
                 //react to the item state changes
@@ -8380,7 +8417,8 @@ $.extend( CZRItemMths , {
   //callback of item.czr_ItemState.callbacks
   toggleItemExpansion : function( status, from, duration ) {
           var item = this,
-              module = this.module;
+              module = this.module,
+              dfd = $.Deferred();
 
           //slide Toggle and toggle the 'open' class
           $( '.' + module.control.css_attr.item_content , item.container ).first().slideToggle( {
@@ -8405,8 +8443,10 @@ $.extend( CZRItemMths , {
                       //scroll to the currently expanded view
                       if ( 'expanded' == status )
                         module._adjustScrollExpandedBlock( item.container );
+                      dfd.resolve();
                 }//done callback
-          } );
+        } );
+        return dfd.promise();
   },
 
 
@@ -8494,7 +8534,7 @@ $.extend( CZRModOptMths , {
         //=> we don't want the ready method to be fired several times
         modOpt.isReady = $.Deferred();
         //will store the embedded and content rendered state
-        modOpt.contentRendered = $.Deferred();
+        modOpt.modOptRendered = $.Deferred();
 
         //input.options = options;
         //write the options as properties, name is included
@@ -8542,7 +8582,7 @@ $.extend( CZRModOptMths , {
 
               //INPUTS SETUP
               //=> when the modOpt content has been rendered. Typically on modOpt expansion for a multi-modOpts module.
-              modOpt.contentRendered.done( function() {
+              modOpt.modOptRendered.done( function() {
                     //create the collection of inputs if needed
                     if ( ! _.has(modOpt, 'czr_Input') )
                       modOpt.setupInputCollectionFromDOM();
@@ -8587,7 +8627,7 @@ $.extend( CZRModOptMths , {
   // is_added_by_user : is_added_by_user || false
 var CZRModOptMths = CZRModOptMths || {};
 $.extend( CZRModOptMths , {
-  //Fired on modOpt.contentRendered.done()
+  //Fired on modOpt.modOptRendered.done()
   //creates the inputs based on the rendered modOpts
   setupInputCollectionFromDOM : function() {
         var modOpt = this,
@@ -8728,7 +8768,7 @@ $.extend( CZRModOptMths , {
           var _updateModOptContentDeferred = function( $_content, to, from ) {
                 //update the $.Deferred state
                 if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                    modOpt.contentRendered.resolve();
+                    modOpt.modOptRendered.resolve();
                     modOpt.toggleModOptExpansion(to, from );
                 }
                 else {
@@ -10503,7 +10543,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                           return;
                         //don't try to invoke the input instances before the content is actually rendered
                         //=> there might be cases when the content rendering is debounced...
-                        item.contentRendered.then( function() {
+                        item.bind('contentRendered', function() {
                               //refresh the location list
                               item.czr_Input('locations')._setupLocationSelect( true );//true for refresh
                               //refresh the location alert message

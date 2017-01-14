@@ -29,6 +29,7 @@ $.extend( CZRSlideModuleMths, {
               module_id : module.id,
               'slider-speed' : 6,
               'slider-layout' : 'full-width',
+              'lazyload' : 1
           };
 
           //declares a default Item model
