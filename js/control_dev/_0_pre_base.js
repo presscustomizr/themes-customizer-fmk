@@ -52,6 +52,18 @@ var api = api || wp.customize, $ = $ || jQuery;
 
 
       /*****************************************************************************
+      * CLOSE THE MOD OPTION PANEL ( if exists ) ON : section change, panel change, skope switch
+      *****************************************************************************/
+      //@return void()
+      var _closeModOpt = function() {
+            if ( ! _.has( api, 'czr_ModOptVisible') )
+              return;
+            api.czr_ModOptVisible(false);
+      };
+      api.czr_activeSectionId.bind( _closeModOpt );
+      api.czr_activePanelId.bind( _closeModOpt );
+
+      /*****************************************************************************
       * OBSERVE SECTIONS AND PANEL EXPANSION
       * /store the current expanded section and panel
       *****************************************************************************/

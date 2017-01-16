@@ -278,6 +278,10 @@ $.extend( CZRSkopeBaseMths, {
                 //REACT TO ACTIVE SKOPE UPDATE
                 //api.czr_activeSkopeId.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
                 api.czr_activeSkopeId.bind( function( to, from ) {
+                        //Always close the mod option panel if exists
+                        if ( _.has( api, 'czr_ModOptVisible') ) {
+                              api.czr_ModOptVisible( false );
+                        }
                         return self.activeSkopeReact( to, from );
                 }, { deferred : true } );
 

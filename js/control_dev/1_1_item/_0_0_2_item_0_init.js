@@ -103,7 +103,6 @@ $.extend( CZRItemMths , {
 
               //INPUTS DESTROY
               item.bind( 'contentRemoved', function() {
-                    //create the collection of inputs if needed
                     if ( _.has(item, 'czr_Input') )
                       item.removeInputCollection();
               });

@@ -148,9 +148,8 @@ $.extend( CZRSkopeBaseMths, {
           } else {
                 _debouncedProcessSilentUpdates();
           }
-
           return dfd.promise();
-    },
+    },//activeSkopeReact
 
 
 

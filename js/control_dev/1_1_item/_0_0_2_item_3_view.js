@@ -33,9 +33,7 @@ $.extend( CZRItemMths , {
 
           //czr_ItemState stores the current expansion status of a given view => one value by created by item.id
           //czr_ItemState can take 3 values : expanded, expanded_noscroll (=> used on view creation), closed
-          item.czr_ItemState = new api.Value();
-          //set initial state
-          item.czr_ItemState.set('closed');
+          item.czr_ItemState = new api.Value( 'closed');
 
           //always write the title
           item.writeItemViewTitle();

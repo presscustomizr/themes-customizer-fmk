@@ -609,8 +609,6 @@ $.extend( CZRSektionMths, {
                       if ( expanded ) {
                             sek_module.renderModulePanel();
 
-
-
                             api.consoleLog('REACT TO MODULE PANEL STATE', expanded,  module.control.params.syncCollection, sek_module() );
                             api.consoleLog('WHEN DOES THIS ACTION OCCUR?', api.czrModulePanelBinded.state() );
 

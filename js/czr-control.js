@@ -81,6 +81,18 @@ var api = api || wp.customize, $ = $ || jQuery;
 
 
       /*****************************************************************************
+      * CLOSE THE MOD OPTION PANEL ( if exists ) ON : section change, panel change, skope switch
+      *****************************************************************************/
+      //@return void()
+      var _closeModOpt = function() {
+            if ( ! _.has( api, 'czr_ModOptVisible') )
+              return;
+            api.czr_ModOptVisible(false);
+      };
+      api.czr_activeSectionId.bind( _closeModOpt );
+      api.czr_activePanelId.bind( _closeModOpt );
+
+      /*****************************************************************************
       * OBSERVE SECTIONS AND PANEL EXPANSION
       * /store the current expanded section and panel
       *****************************************************************************/
@@ -558,6 +570,10 @@ $.extend( CZRSkopeBaseMths, {
                 //REACT TO ACTIVE SKOPE UPDATE
                 //api.czr_activeSkopeId.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
                 api.czr_activeSkopeId.bind( function( to, from ) {
+                        //Always close the mod option panel if exists
+                        if ( _.has( api, 'czr_ModOptVisible') ) {
+                              api.czr_ModOptVisible( false );
+                        }
                         return self.activeSkopeReact( to, from );
                 }, { deferred : true } );
 
@@ -2644,9 +2660,8 @@ $.extend( CZRSkopeBaseMths, {
           } else {
                 _debouncedProcessSilentUpdates();
           }
-
           return dfd.promise();
-    },
+    },//activeSkopeReact
 
 
 
@@ -8007,7 +8022,6 @@ $.extend( CZRItemMths , {
 
               //INPUTS DESTROY
               item.bind( 'contentRemoved', function() {
-                    //create the collection of inputs if needed
                     if ( _.has(item, 'czr_Input') )
                       item.removeInputCollection();
               });
@@ -8230,9 +8244,7 @@ $.extend( CZRItemMths , {
 
           //czr_ItemState stores the current expansion status of a given view => one value by created by item.id
           //czr_ItemState can take 3 values : expanded, expanded_noscroll (=> used on view creation), closed
-          item.czr_ItemState = new api.Value();
-          //set initial state
-          item.czr_ItemState.set('closed');
+          item.czr_ItemState = new api.Value( 'closed');
 
           //always write the title
           item.writeItemViewTitle();
@@ -8533,8 +8545,10 @@ $.extend( CZRModOptMths , {
         //store the state of ready.
         //=> we don't want the ready method to be fired several times
         modOpt.isReady = $.Deferred();
-        //will store the embedded and content rendered state
-        modOpt.modOptRendered = $.Deferred();
+
+        //VARIOUS DEFINITIONS
+        modOpt.container = null;//will store the modOpt $ dom element
+        modOpt.inputCollection = new api.Value({});
 
         //input.options = options;
         //write the options as properties, name is included
@@ -8545,26 +8559,37 @@ $.extend( CZRModOptMths , {
 
         //set initial values
         var _initial_model = $.extend( modOpt.defaultModOptModel, options.initial_modOpt_model );
-
+        var ctrl = modOpt.module.control;
         //this won't be listened to at this stage
         modOpt.set( _initial_model );
 
-        //USER EVENT MAP
-        modOpt.userEventMap = new api.Value( [
-              //edit view
-              {
-                trigger   : 'click keydown',
-                selector  : [ '.' + modOpt.module.control.css_attr.edit_view_btn ].join(','),
-                name      : 'edit_view',
-                actions   : ['setViewVisibility']
-              }
-        ]);
+        //MOD OPT PANEL SETTINGS
+        api.czr_ModOptVisible = new api.Value( false );
 
+        //MOD OPT VISIBLE REACT
+        api.czr_ModOptVisible.bind( function( visible ) {
+              if ( visible ) {
+                    modOpt.modOptWrapperViewSetup( _initial_model ).done( function() {
+                          modOpt.setupInputCollectionFromDOM().toggleModPanelView( visible );
+                    });
+
+              } else {
+                    modOpt.toggleModPanelView( visible ).done( function() {
+                          if ( false !== modOpt.container.length ) {
+                                $.when( modOpt.container.remove() ).done( function() {
+                                      modOpt.removeInputCollection();
+                                });
+                          } else {
+                                modOpt.removeInputCollection();
+                          }
+                          modOpt.container = null;
+                    });
+              }
+        } );
 
         //OPTIONS IS READY
         //observe its changes when ready
         modOpt.isReady.done( function() {
-              modOpt.container = $(  '.' + modOpt.module.control.css_attr.mod_opt_wrapper, modOpt.module.container );
               //listen to any modOpt change
               //=> done in the module
               //modOpt.callbacks.add( function() { return modOpt.modOptReact.apply(modOpt, arguments ); } );
@@ -8573,21 +8598,36 @@ $.extend( CZRModOptMths , {
               //If the module is part of a simple control, the modOpt can be render now,
               //modOpt.mayBeRenderModOptWrapper();
 
-              //OPTIONS WRAPPER VIEW SETUP
-              //defer actions on modOpt view embedded
-              //define the modOpt view DOM event map
-              //bind actions when the modOpt is embedded : modOpt title, etc.
-              modOpt.modOptWrapperViewSetup( _initial_model );
+              //RENDER THE CONTROL TITLE GEAR ICON
+              if( ! $( '.' + ctrl.css_attr.edit_modopt_icon, ctrl.container ).length ) {
+                    $.when( ctrl.container
+                          .find('.customize-control-title').first()//was.find('.customize-control-title')
+                          .append( $( '<span/>', {
+                                class : [ ctrl.css_attr.edit_modopt_icon, 'fa fa-cog' ].join(' '),
+                                title : 'Settings'//@to_translate
+                          } ) ) )
+                    .done( function(){
+                          $( '.' + ctrl.css_attr.edit_modopt_icon, ctrl.container ).fadeIn( 400 );
+                    });
+              }
 
-
-              //INPUTS SETUP
-              //=> when the modOpt content has been rendered. Typically on modOpt expansion for a multi-modOpts module.
-              modOpt.modOptRendered.done( function() {
-                    //create the collection of inputs if needed
-                    if ( ! _.has(modOpt, 'czr_Input') )
-                      modOpt.setupInputCollectionFromDOM();
-              });
-
+              //LISTEN TO USER ACTIONS ON CONTROL EL
+              api.CZR_Helpers.setupDOMListeners(
+                    [
+                          //toggle mod options
+                          {
+                                trigger   : 'click keydown',
+                                selector  : '.' + ctrl.css_attr.edit_modopt_icon,
+                                name      : 'toggle_mod_option',
+                                actions   : function() {
+                                      api.czr_ModOptVisible( ! api.czr_ModOptVisible() );
+                                }
+                          }
+                    ],//actions to execute
+                    { dom_el: ctrl.container },//dom scope
+                    modOpt //instance where to look for the cb methods
+              );
+              //modOpt.userEventMap = new api.Value( [] );
         });//modOpt.isReady.done()
 
   },//initialize
@@ -8627,11 +8667,15 @@ $.extend( CZRModOptMths , {
   // is_added_by_user : is_added_by_user || false
 var CZRModOptMths = CZRModOptMths || {};
 $.extend( CZRModOptMths , {
-  //Fired on modOpt.modOptRendered.done()
+  //Fired on user click
   //creates the inputs based on the rendered modOpts
   setupInputCollectionFromDOM : function() {
         var modOpt = this,
             module = modOpt.module;
+
+        //bail if already done
+        if ( _.has( modOpt, 'czr_Input') && ! _.isEmpty( modOpt.inputCollection() ) )
+          return;
 
         //INPUTS => Setup as soon as the view content is rendered
         //the modOpt is a collection of inputs, each one has its own view module.
@@ -8685,8 +8729,11 @@ $.extend( CZRModOptMths , {
               //populate the collection
               dom_modOpt_model[_id] = _value;
               //shall we trigger a specific event when the input collection from DOM has been populated ?
-
         });//each
+
+        //stores the collection
+        modOpt.inputCollection( dom_modOpt_model );
+        return this;
   },
 
 
@@ -8695,6 +8742,7 @@ $.extend( CZRModOptMths , {
         modOpt.czr_Input.each( function( input ) {
             modOpt.czr_Input.remove( input.id );
         });
+        modOpt.inputCollection({});
   }
 
 
@@ -8702,100 +8750,47 @@ $.extend( CZRModOptMths , {
 var CZRModOptMths = CZRModOptMths || {};
 
 $.extend( CZRModOptMths , {
-  // //fired on initialize for modOpt in module embedded in a regular control
-  // //fired when user edit module for modOpt in modules embedded in a sektion
-  // mayBeRenderModOptWrapper : function() {
-  //       var modOpt = this;
-
-  //       if ( 'pending' != modOpt.embedded.state() )
-  //         return;
-
-  //       $.when( modOpt.renderModOptWrapper() ).done( function( $_container ) {
-  //             modOpt.container = $_container;
-  //             if ( _.isUndefined(modOpt.container) || ! modOpt.container.length ) {
-  //                 throw new Error( 'In mayBeRenderModOptWrapper the ModOpt view has not been rendered' );
-  //             } else {
-  //                 //say it
-  //                 modOpt.embedded.resolve();
-  //             }
-  //       });
-  // },
-
-  // //the view wrapper has been rendered by WP
-  // //the content ( the various inputs ) is rendered by the following methods
-  // //an event is triggered on the control.container when content is rendered
-  // renderModOptWrapper : function( modOpt_model ) {
-  //       //=> an array of objects
-  //       var modOpt = this,
-  //           module = modOpt.module;
-
-  //       modOpt_model = modOpt_model || modOpt();
-
-  //       //render the modOpt mod_opt_wrapper
-  //       $_view_el = $('<li>', { class : module.control.css_attr.mod_opt_wrapper } );
-
-  //       //append the modOpt view to the first module view wrapper
-  //       //!!note : => there could be additional sub view wrapper inside !!
-  //       //$( '.' + module.control.css_attr.items_wrapper , module.container).first().append( $_view_el );
-  //       // module.itemsWrapper has been stored as a $ var in module initialize() when the tmpl has been embedded
-  //       module.itemsWrapper.append( $_view_el );
-
-  //       //then, append the modOpt content wrapper
-  //       $_view_el.append( $( '<div/>', { class: module.control.css_attr.modOpt_content } ) );
-
-  //       return $_view_el;
-  // },
-
-
-
   //fired when modOpt is ready and embedded
   //define the modOpt view DOM event map
   //bind actions when the modOpt is embedded
   modOptWrapperViewSetup : function( modOpt_model ) {
           var modOpt = this,
-              module = this.module;
+              module = this.module,
+              dfd = $.Deferred(),
+              _setupDOMListeners = function( $_container ) {
+                    //DOM listeners for the user action in modOpt view wrapper
+                    api.CZR_Helpers.setupDOMListeners(
+                         [
+                                //toggle mod options
+                                {
+                                      trigger   : 'click keydown',
+                                      selector  : '.' + module.control.css_attr.close_modopt_icon,
+                                      name      : 'close_mod_option',
+                                      actions   : function() {
+                                            api.czr_ModOptVisible( false );
+                                      }
+                                }
+                          ],//actions to execute
+                          { dom_el: $_container },//model + dom scope
+                          modOpt //instance where to look for the cb methods
+                    );
+              };
 
           modOpt_model = modOpt() || modOpt.initial_modOpt_model;//could not be set yet
 
-          //czr_ModOptState stores the current expansion status of a given view => one value by created by modOpt.id
-          //czr_ModOptState can take 3 values : expanded, expanded_noscroll (=> used on view creation), closed
-          modOpt.czr_ModOptState = new api.Value();
-          //set initial state
-          modOpt.czr_ModOptState.set('closed');
-
-
-          //When do we render the modOpt content ?
-          var _updateModOptContentDeferred = function( $_content, to, from ) {
+          //renderview content now
+          $.when( modOpt.renderModOptContent( modOpt_model ) ).done( function( $_container ) {
                 //update the $.Deferred state
-                if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                    modOpt.modOptRendered.resolve();
-                    modOpt.toggleModOptExpansion(to, from );
+                if ( ! _.isUndefined( $_container ) && false !== $_container.length ) {
+                      modOpt.container = $_container;
+                      _setupDOMListeners( $_container );
+                      dfd.resolve();
                 }
                 else {
-                    throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
+                      throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
                 }
-          };
-
-
-          //react to the modOpt state changes
-          modOpt.czr_ModOptState.callbacks.add( function( to, from ) {
-              //toggle on view state change
-              modOpt.toggleModOptExpansion.apply(modOpt, arguments );
           });
-
-          //renderview content now
-          $.when( modOpt.renderModOptContent( modOpt_model ) ).done( function( $_modOpt_content ) {
-                _updateModOptContentDeferred( $_modOpt_content, true );
-                //modOpt.czr_ModOptState.set('expanded');
-          });
-
-
-          //DOM listeners for the user action in modOpt view wrapper
-          // api.CZR_Helpers.setupDOMListeners(
-          //       modOpt.userEventMap(),//actions to execute
-          //       { model:modOpt_model, dom_el:modOpt.container },//model + dom scope
-          //       modOpt //instance where to look for the cb methods
-          // );
+          return dfd.promise();
   },
 
 
@@ -8820,71 +8815,35 @@ $.extend( CZRModOptMths , {
           if ( ! modOpt_content_template )
             return this;
 
-          //the view content
-          $( modOpt_content_template( modOpt_model )).appendTo( modOpt.container );
+          $('#widgets-left').after( $( '<div/>', {
+                class : module.control.css_attr.mod_opt_wrapper,
+                html : '<span class="fa fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
+          } ) );
 
-          return $( $( modOpt_content_template( modOpt_model )), modOpt.container );
+          //render the mod opt content for this module
+          $( '.' + module.control.css_attr.mod_opt_wrapper ).append( $( modOpt_content_template( modOpt_model ) ) );
+
+          return $( '.' + module.control.css_attr.mod_opt_wrapper );
   },
 
 
 
+  toggleModPanelView : function( visible ) {
+        var modOpt = this,
+            module = this.module,
+            ctrl = module.control,
+            dfd = $.Deferred();
 
-  //@param : obj = { event : {}, model : {}, view : ${} }
-  //Fired on view_rendered:new when a new model has been added
-  //Fired on click on edit_view_btn
-  // setViewVisibility : function( obj, is_added_by_user ) {
-  //         var item = this,
-  //             module = this.module;
-  //         if ( is_added_by_user ) {
-  //               item.czr_ModOptState.set( 'expanded_noscroll' );
-  //         } else {
-  //               module.closeAllItems( item.id );
-  //               if ( _.has(module, 'preItem') ) {
-  //                 module.preItemExpanded.set(false);
-  //               }
-  //               item.czr_ItemState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
-  //         }
-  // },
-
-
-  _getViewState : function() {
-          return -1 == this.czr_ModOptState().indexOf('expanded') ? 'closed' : 'expanded';
-  },
-
-
-  //callback of modOpt.czr_ModOptState.callbacks
-  toggleModOptExpansion : function( status, from, duration ) {
-          var modOpt = this,
-              module = this.module;
-
-          //slide Toggle and toggle the 'open' class
-          $( '.' + module.control.css_attr.mod_opt_content , modOpt.container ).first().slideToggle( {
-                duration : duration || 200,
-                done : function() {
-                      var _is_expanded = 'closed' != status;
-                      modOpt.container.toggleClass('open' , _is_expanded );
-
-                      //close all alerts
-                      module.closeAllAlerts();
-
-                      //toggle the icon activate class depending on the status
-                      //switch icon
-                      var $_edit_icon = $(this).siblings().find('.' + module.control.css_attr.edit_view_btn );
-
-                      $_edit_icon.toggleClass('active' , _is_expanded );
-                      if ( _is_expanded )
-                        $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.translatedStrings.close );
-                      else
-                        $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.translatedStrings.edit );
-
-                      //scroll to the currently expanded view
-                      if ( 'expanded' == status )
-                        module._adjustScrollExpandedBlock( modOpt.container );
-                }//done callback
-          } );
+        module.control.container.toggleClass( 'czr-modopt-visible', visible );
+        $('body').toggleClass('czr-editing-modopt', visible );
+        //Let the panel slide (  -webkit-transition: left .18s ease-in-out )
+        _.delay( function() {
+              dfd.resolve();
+        }, 200 );
+        return dfd.promise();
   }
-});//$.extend
-//MULTI CONTROL CLASS
+
+});//$.extend//MULTI CONTROL CLASS
 //extends api.Value
 //
 //Setup the collection of items

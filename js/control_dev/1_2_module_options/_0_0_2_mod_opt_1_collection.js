@@ -7,11 +7,15 @@
   // is_added_by_user : is_added_by_user || false
 var CZRModOptMths = CZRModOptMths || {};
 $.extend( CZRModOptMths , {
-  //Fired on modOpt.modOptRendered.done()
+  //Fired on user click
   //creates the inputs based on the rendered modOpts
   setupInputCollectionFromDOM : function() {
         var modOpt = this,
             module = modOpt.module;
+
+        //bail if already done
+        if ( _.has( modOpt, 'czr_Input') && ! _.isEmpty( modOpt.inputCollection() ) )
+          return;
 
         //INPUTS => Setup as soon as the view content is rendered
         //the modOpt is a collection of inputs, each one has its own view module.
@@ -65,8 +69,11 @@ $.extend( CZRModOptMths , {
               //populate the collection
               dom_modOpt_model[_id] = _value;
               //shall we trigger a specific event when the input collection from DOM has been populated ?
-
         });//each
+
+        //stores the collection
+        modOpt.inputCollection( dom_modOpt_model );
+        return this;
   },
 
 
@@ -75,6 +82,7 @@ $.extend( CZRModOptMths , {
         modOpt.czr_Input.each( function( input ) {
             modOpt.czr_Input.remove( input.id );
         });
+        modOpt.inputCollection({});
   }
 
 

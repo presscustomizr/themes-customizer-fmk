@@ -157,6 +157,9 @@
     box-shadow: none;
     cursor: pointer;
     -webkit-transition: left .18s ease-in-out, color .1s ease-in-out, background .1s ease-in-out;
+    -moz-transition: left .18s ease-in-out, color .1s ease-in-out, background .1s ease-in-out;
+    -ms-transition: left .18s ease-in-out, color .1s ease-in-out, background .1s ease-in-out;
+    -o-transition: left .18s ease-in-out, color .1s ease-in-out, background .1s ease-in-out;
     transition: left .18s ease-in-out, color .1s ease-in-out, background .1s ease-in-out;
 }
 
@@ -267,6 +270,9 @@ li.czr-single-module.gu-mirror, li.czr-module-candidate.gu-mirror {
   z-index: 4;
   background: rgba(0, 0, 0, 0.47);
   -webkit-transition: all .18s;
+  -moz-transition: all .18s;
+  -ms-transition: all .18s;
+  -o-transition: all .18s;
   transition: all .18s;
   border-right: 1px solid #ddd;
 }
@@ -297,8 +303,11 @@ body.czr-adding-module #customize-preview {
   top: -1px;
   font: normal 20px/1 dashicons;
   vertical-align: middle;
-  -webkit-transition: all 0.2s;
-  transition: all 0.2s;
+  -webkit-transition: all .2s;
+  -moz-transition: all .2s;
+  -ms-transition: all .2s;
+  -o-transition: all .2s;
+  transition: all .2s;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -396,7 +405,10 @@ body.czr-adding-module .add-new-module:before {
   margin: 0;
   z-index: 4;
   background: rgba(0, 0, 0, 0.47);
-  -webkit-transition: all .18s;
+ -webkit-transition: all .18s;
+  -moz-transition: all .18s;
+  -ms-transition: all .18s;
+  -o-transition: all .18s;
   transition: all .18s;
   border-right: 1px solid #ddd;
   color: #fff;
