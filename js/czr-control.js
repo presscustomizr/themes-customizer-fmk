@@ -8569,7 +8569,8 @@ $.extend( CZRModOptMths , {
         //MOD OPT VISIBLE REACT
         api.czr_ModOptVisible.bind( function( visible ) {
               if ( visible ) {
-                    modOpt.modOptWrapperViewSetup( _initial_model ).done( function() {
+                    modOpt.modOptWrapperViewSetup( _initial_model ).done( function( $_container ) {
+                          modOpt.container = $_container;
                           modOpt.setupInputCollectionFromDOM().toggleModPanelView( visible );
                     });
 
@@ -8782,9 +8783,8 @@ $.extend( CZRModOptMths , {
           $.when( modOpt.renderModOptContent( modOpt_model ) ).done( function( $_container ) {
                 //update the $.Deferred state
                 if ( ! _.isUndefined( $_container ) && false !== $_container.length ) {
-                      modOpt.container = $_container;
                       _setupDOMListeners( $_container );
-                      dfd.resolve();
+                      dfd.resolve( $_container );
                 }
                 else {
                       throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );

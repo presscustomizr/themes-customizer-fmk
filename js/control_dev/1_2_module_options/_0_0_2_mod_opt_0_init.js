@@ -42,7 +42,8 @@ $.extend( CZRModOptMths , {
         //MOD OPT VISIBLE REACT
         api.czr_ModOptVisible.bind( function( visible ) {
               if ( visible ) {
-                    modOpt.modOptWrapperViewSetup( _initial_model ).done( function() {
+                    modOpt.modOptWrapperViewSetup( _initial_model ).done( function( $_container ) {
+                          modOpt.container = $_container;
                           modOpt.setupInputCollectionFromDOM().toggleModPanelView( visible );
                     });
 
