@@ -66,9 +66,19 @@ $.extend( CZRModOptMths , {
           if ( ! modOpt_content_template )
             return this;
 
+          var _ctrlLabel = '';
+          try {
+                    _ctrlLabel = 'Options for ' + module.control.params.label;//@to_translate
+              } catch(e) {
+                    _ctrlLabel = 'Settings';//@to_translate
+              }
+
           $('#widgets-left').after( $( '<div/>', {
                 class : module.control.css_attr.mod_opt_wrapper,
-                html : '<span class="fa fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
+                html : [
+                      [ '<h2 class="mod-opt-title">', _ctrlLabel , '</h2>' ].join(''),
+                      '<span class="fa fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
+                ].join('')
           } ) );
 
           //render the mod opt content for this module

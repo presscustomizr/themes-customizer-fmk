@@ -1083,6 +1083,13 @@ body.czr-editing-modopt .czr-mod-opt-wrapper {
 .czr-mod-opt-wrapper .czr-notice {
   color: #fff;
 }
+
+.czr-mod-opt-wrapper .mod-opt-title {
+  color: #fff;
+  border-bottom: 1px solid #fff;
+  padding: 5% 0;
+  text-align: center;
+}
 .in-sub-panel #czr-donate-customizer,
  .in-sub-panel .czr-cta-wrap {
    left: -450px;
