@@ -2,16 +2,18 @@ var CZRInputMths = CZRInputMths || {};
 
 //extends api.Value
 //an input is instanciated with the typical set of options :
-//id : _id,
-// type : $(this).attr('data-input-type'),
-// value : $(this).find('[data-type]').val(),
 // container : $(this),
+// id : _id,
+// input_options : {} <= a set of options that are used when setting up the input type
 // input_parent : {} can be an item instance or a modOpt instance (Value instance, has a parent module)
-// is_mod_opt : true,
+// input_value : $(this).find('[data-type]').val(),
 // module : module,
-// is_preItemInput : true
+// type : $(this).attr('data-input-type'),
+// is_mod_opt : bool,
+// is_preItemInput : bool
 $.extend( CZRInputMths , {
     initialize: function( name, options ) {
+          console.log('INPUT CTOR OPTIONS', options );
           if ( _.isUndefined( options.input_parent ) || _.isEmpty(options.input_parent) ) {
             throw new Error('No input_parent assigned to input ' + options.id + '. Aborting');
           }
@@ -31,27 +33,19 @@ $.extend( CZRInputMths , {
           input.isReady = $.Deferred();
 
           //initialize to the provided value if any
-          if ( ! _.isUndefined(options.input_value) )
-            input.set(options.input_value);
+          if ( ! _.isUndefined(options.input_value) ) {
+                input.set( options.input_value );
+          }
 
-          //setup the appropriate input based on the type
-          input.type_map = {
-                text : '',
-                textarea : '',
-                check : 'setupIcheck',
-                select : 'setupSelect',
-                number : 'setupStepper',
-                upload : 'setupImageUploader',
-                color : 'setupColorPicker',
-                content_picker : 'setupContentPicker',
-                text_editor    : 'setupTextEditor',
-                password : ''
-          };
 
-          if ( _.has( input.type_map, input.type ) ) {
-                  var _meth = input.type_map[input.type];
-                  if ( _.isFunction(input[_meth]) )
-                    input[_meth]();
+          //Try to find a match with the provided constructor type
+          //=> fire the relevant callback with the provided input_options
+          //input.type_map is d
+          if ( api.czrInputMap && _.has( api.czrInputMap, input.type ) ) {
+                  var _meth = api.czrInputMap[input.type];
+                  if ( _.isFunction( input[_meth]) ) {
+                        input[_meth]( options.input_options || null );
+                  }
           }
 
           var trigger_map = {

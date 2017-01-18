@@ -84,4 +84,23 @@
                   czr_cropped_image : api.CZRCroppedImageControl
             });
       }
+
+      //Declare all available input type as a map
+      api.czrInputMap = api.czrInputMap || {};
+      //input_type => callback fn to fire in the Input constructor on initialize
+      //the callback can receive specific params define in each module constructor
+      //For example, a content picker can be given params to display only taxonomies
+      $.extend( api.czrInputMap, {
+            text      : '',
+            textarea  : '',
+            check     : 'setupIcheck',
+            select    : 'setupSelect',
+            number    : 'setupStepper',
+            upload    : 'setupImageUploader',
+            color     : 'setupColorPicker',
+            content_picker : 'setupContentPicker',
+            text_editor    : 'setupTextEditor',
+            password : ''
+      });
+
 })( wp.customize, jQuery, _ );
