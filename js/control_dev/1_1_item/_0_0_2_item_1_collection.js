@@ -49,9 +49,8 @@ $.extend( CZRItemMths , {
 
               //Do we have a specific set of options defined in the parent module for this inputConstructor ?
               var _inputType    = $(this).attr( 'data-input-type' ),
-                  _inputOptions = _.has( module.inputOptions, '_inputType' ) ? module.inputOptions[ _inputType ] : {};
+                  _inputOptions = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
 
-              console.log( 'INPUT OPTIONS ? ', module.inputOptions, _inputOptions );
               //INSTANTIATE THE INPUT
               item.czr_Input.add( _id, new item.inputConstructor( _id, {
                     id : _id,
