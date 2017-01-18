@@ -23,7 +23,10 @@ $.extend( CZRSlideModuleMths, {
 
           //SET THE CONTENT PICKER OPTIONS
           $.extend( module.inputOptions, {
-                'content_picker' : { opt_one : "joie", opt_two : "tristesse " }
+                'content_picker' : {
+                      post : '',//['page'],<= all post types
+                      taxonomy : ''//'_none_'//<= all taxonomy types
+                }
           });
 
           //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
