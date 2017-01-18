@@ -17,9 +17,15 @@ $.extend( CZRSlideModuleMths, {
 
           this.slider_layouts = { 'full-width' : 'Full Width', boxed : 'Boxed' };
 
-          //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
+          //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUTS
           module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputMths || {} );
           module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputMths || {} );
+
+          //SET THE CONTENT PICKER OPTIONS
+          $.extend( module.inputOptions, {
+                'content_picker' : { opt_one : "joie", opt_two : "tristesse " }
+          });
+
           //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
           module.itemConstructor = api.CZRItem.extend( module.CZRSliderItem || {} );
 
@@ -39,6 +45,7 @@ $.extend( CZRSlideModuleMths, {
               'slide-background' : '',
               'slide-title'      : '',
               'slide-subtitle'   : '',
+              'slide-link'       : ''
           };
 
           //overrides the default success message
