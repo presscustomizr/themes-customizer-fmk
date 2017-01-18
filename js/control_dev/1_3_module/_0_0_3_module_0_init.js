@@ -107,13 +107,19 @@ $.extend( CZRModuleMths, {
 
 
         /*-----------------------------------------------
-        //SET THE DEFAULT INPUT CONSTRUCTOR
+        //SET THE DEFAULT INPUT CONSTRUCTOR AND INPUT OPTIONS
         ------------------------------------------------*/
         module.inputConstructor = api.CZRInput;//constructor for the items input
         if ( module.hasModOpt() ) {
               module.inputModOptConstructor = api.CZRInput;//constructor for the modOpt input
         }
+        module.inputOptions = {};//<= can be set by each module specifically
+        //For example, if I need specific options for the content_picker, this is where I will set them in the module extended object
 
+
+        /*-----------------------------------------------
+        //FIRE ON isReady
+        ------------------------------------------------*/
         //module.ready(); => fired by children
         module.isReady.done( function() {
               //store the module dirtyness, => no items set
