@@ -8,11 +8,20 @@ var czr_debug = {
 var api = api || wp.customize, $ = $ || jQuery;
 (function (api, $, _) {
       //Dev mode aware and IE compatible api.consoleLog()
-      api.consoleLog = function() {
+      api.consoleLog = function( isError ) {
+            // if ( ! serverControlParams.isDevMode )
+            //   return;
             //fix for IE, because console is only defined when in F12 debugging mode in IE
-            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) || ! serverControlParams.isDevMode )
+            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
               return;
-            console.log.apply( console, arguments );
+
+            var _toArr = Array.from( arguments );
+            _toArr = _toArr.join(' ');
+            var _styled = [
+                '%c ' + _toArr,
+                'background: #008ec2; color: white; display: block;',
+            ];
+            console.log.apply( console, _styled );
       };
 
       api.czr_isSkopOn = function() {
