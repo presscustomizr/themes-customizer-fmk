@@ -13,7 +13,6 @@ var CZRInputMths = CZRInputMths || {};
 // is_preItemInput : bool
 $.extend( CZRInputMths , {
     initialize: function( name, options ) {
-          console.log('INPUT CTOR OPTIONS', options );
           if ( _.isUndefined( options.input_parent ) || _.isEmpty(options.input_parent) ) {
             throw new Error('No input_parent assigned to input ' + options.id + '. Aborting');
           }
@@ -36,7 +35,6 @@ $.extend( CZRInputMths , {
           if ( ! _.isUndefined(options.input_value) ) {
                 input.set( options.input_value );
           }
-
 
           //Try to find a match with the provided constructor type
           //=> fire the relevant callback with the provided input_options

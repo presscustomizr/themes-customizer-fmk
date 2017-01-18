@@ -311,9 +311,18 @@ $.extend( CZRSlideModuleMths, {
 
           this.slider_layouts = { 'full-width' : 'Full Width', boxed : 'Boxed' };
 
-          //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
+          //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUTS
           module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputMths || {} );
           module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputMths || {} );
+
+          //SET THE CONTENT PICKER OPTIONS
+          $.extend( module.inputOptions, {
+                'content_picker' : {
+                      post : '',//['page'],<= all post types
+                      taxonomy : ''//'_none_'//<= all taxonomy types
+                }
+          });
+
           //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
           module.itemConstructor = api.CZRItem.extend( module.CZRSliderItem || {} );
 
@@ -323,7 +332,8 @@ $.extend( CZRSlideModuleMths, {
               module_id : module.id,
               'slider-speed' : 6,
               'slider-layout' : 'full-width',
-              'lazyload' : 1
+              'lazyload' : 1,
+              'slider-height' : 100
           };
 
           //declares a default Item model
@@ -333,6 +343,7 @@ $.extend( CZRSlideModuleMths, {
               'slide-background' : '',
               'slide-title'      : '',
               'slide-subtitle'   : '',
+              'slide-link'       : ''
           };
 
           //overrides the default success message
@@ -406,6 +417,44 @@ $.extend( CZRSlideModuleMths, {
 
                 //fire select2
                 $( 'select[data-type="slider-layout"]', input.container ).selecter();
+        },
+        setupRangeSlider : function( options ) {
+              var input = this,
+                  $handle,
+                  updateHandle = function(el, val) {
+                    el.textContent = val;
+                  }
+
+              $( input.container ).find('input').rangeslider( {
+                    // Feature detection the default is `true`.
+                    // Set this to `false` if you want to use
+                    // the polyfill also in Browsers which support
+                    // the native <input type="range"> element.
+                    polyfill: false,
+
+                    // Default CSS classes
+                    rangeClass: 'rangeslider',
+                    disabledClass: 'rangeslider--disabled',
+                    horizontalClass: 'rangeslider--horizontal',
+                    verticalClass: 'rangeslider--vertical',
+                    fillClass: 'rangeslider__fill',
+                    handleClass: 'rangeslider__handle',
+
+                    // Callback function
+                    onInit: function() {
+                          $handle = $('.rangeslider__handle', this.$range);
+                          $('.rangeslider__handle', this.$range);
+                          updateHandle($handle[0], this.value);
+                    },
+
+                    // Callback function
+                    onSlide: function(position, value) {},
+
+                    // Callback function
+                    onSlideEnd: function(position, value) {}
+              } ).on('input', function() {
+                    updateHandle($handle[0], this.value);
+              });
         }
   },//CZRSlidersInputMths
 

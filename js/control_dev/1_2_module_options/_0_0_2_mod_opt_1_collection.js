@@ -44,8 +44,10 @@ $.extend( CZRModOptMths , {
               var _id = $(this).find('[data-type]').attr('data-type'),
                   _value = _.has( modOpt_model, _id) ? modOpt_model[_id] : '';
               //skip if no valid input data-type is found in this node
-              if ( _.isUndefined( _id ) || _.isEmpty( _id ) )
-                return;
+              if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
+                    api.consoleLog('setupInputCollectionFromDOM : missing data-type for ' + module.id );
+                    return;
+              }
               //check if this property exists in the current modOpt model
               if ( ! _.has( modOpt_model, _id ) ) {
                     throw new Error('The modOpt property : ' + _id + ' has been found in the DOM but not in the modOpt model : '+ modOpt.id + '. The input can not be instantiated.');

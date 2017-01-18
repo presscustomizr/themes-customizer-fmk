@@ -100,7 +100,8 @@
             color     : 'setupColorPicker',
             content_picker : 'setupContentPicker',
             text_editor    : 'setupTextEditor',
-            password : ''
+            password : '',
+            range_slider : 'setupRangeSlider'
       });
 
 })( wp.customize, jQuery, _ );
