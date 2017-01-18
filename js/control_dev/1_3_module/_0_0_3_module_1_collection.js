@@ -88,7 +88,7 @@ $.extend( CZRModuleMths, {
 
 
   //@return an API ready item object with the following properties
-  //id : '',
+  // id : '',
   // initial_item_model : {},
   // defaultItemModel : {},
   // control : {},//control instance
