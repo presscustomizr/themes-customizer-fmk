@@ -97,8 +97,11 @@ $.extend( CZRItemMths , {
               item.bind( 'contentRendered', function() {
                     //create the collection of inputs if needed
                     //first time or after a removal
-                    if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) )
-                      item.setupInputCollectionFromDOM();
+                    if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) ) {
+                          try { item.setupInputCollectionFromDOM(); } catch(e) {
+                                api.consoleLog( e );
+                          }
+                    }
               });
 
               //INPUTS DESTROY

@@ -105,10 +105,20 @@
                       }
 
                       var wpDominusId = api.CZR_Helpers.build_setId( params.dominus );
+                      if ( ! api.control.has( wpDominusId ) )
+                        return;
+
                       if ( api.control( wpDominusId ).section() != targetSectionId )
                         return;
 
-                      params = self._prepareDominusParams( params );
+                      //Attempt to normalize the params
+                      try {
+                            params = self._prepareDominusParams( params );
+                      } catch( e ) {
+                            api.consoleLog( 'prepareDominus Params error : ' + e );
+                            return;
+                      }
+
 
                       self._processDominusCallbacks( params.dominus, params, refresh )
                             .fail( function() {
@@ -132,7 +142,13 @@
                                 }
 
                                 if ( _.contains( params.servi , shortServudId ) && ! _.contains( _dominiIds , params.dominus ) ) {
-                                      params = self._prepareDominusParams( params );
+                                      //Attempt to normalize the params
+                                      try {
+                                            params = self._prepareDominusParams( params );
+                                      } catch( e ) {
+                                            api.consoleLog( 'prepareDominus Params error : ' + e );
+                                            return;
+                                      }
                                       _dominiIds.push( params.dominus );
                                 }
                           });
