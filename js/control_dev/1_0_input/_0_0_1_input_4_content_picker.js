@@ -1,13 +1,39 @@
 /* Fix caching, select2 default one seems to not correctly work, or it doesn't what I think it should */
+// the content_picker options are set in the module with :
+// $.extend( module.inputOptions, {
+//       'content_picker' : {
+//             post : '',//<= all post types
+//             taxonomy : ''//<= all taxonomy types
+//       }
+// });
+// To narrow down the post or taxonomy types, the option can be set this way :
+// $.extend( module.inputOptions, {
+//       'content_picker' : {
+//             post : [ 'page', 'cpt1', ...]
+//             taxonomy : [ 'category', 'tag', 'Custom_Tax_1', ... ]
+//       }
+// });
+// To disable all posts or taxonomy, use '_none_'
+// $.extend( module.inputOptions, {
+//       'content_picker' : {
+//             post : [ 'page', 'cpt1', ...]
+//             taxonomy : '_none_' //<= won't load or search in taxonomies when requesting wp in ajax
+//       }
+// });
 var CZRInputMths = CZRInputMths || {};
 $.extend( CZRInputMths , {
-  setupContentPicker: function() {
+  setupContentPicker: function( wpObjectTypes ) {
           var input  = this,
           _event_map = [];
 
           /* Dummy for the prototype purpose */
-          input.object = ['post']; //this.control.params.object_types  - array('page', 'post')
-          input.type   = 'post_type'; //this.control.params.type  - post_type
+          //input.object = ['post']; //this.control.params.object_types  - array('page', 'post')
+          $.extend( {
+                post : '',
+                taxonomy : ''
+          }, _.isObject( wpObjectTypes ) ? wpObjectTypes : {} );
+
+          input.wpObjectTypes = wpObjectTypes;
 
           /* Methodize this or use a template */
           input.container.find('.czr-input').append('<select data-select-type="content-picker-select" class="js-example-basic-simple"></select>');
@@ -19,7 +45,34 @@ $.extend( CZRInputMths , {
                       trigger   : 'change',
                       selector  : 'select[data-select-type]',
                       name      : 'set_input_value',
-                      actions   : 'updateContentPickerModel'
+                      actions   : function( obj ){
+                            var $_changed_input   = $(obj.dom_event.currentTarget, obj.dom_el ),
+                                _raw_val          = $( $_changed_input, obj.dom_el ).select2( 'data' ),
+                                _val_candidate    = {},
+                                _default          = {
+                                      id          : '',
+                                      type_label  : '',
+                                      title       : '',
+                                      object_type : '',
+                                      url         : ''
+                                };
+
+                            _raw_val = _.isArray( _raw_val ) ? _raw_val[0] : _raw_val;
+                            if ( ! _.isObject( _raw_val ) || _.isEmpty( _raw_val ) ) {
+                                api.consoleLog( 'Content Picker Input : the picked value should be an object not empty.');
+                                return;
+                            }
+
+                            //normalize and purge useless select2 fields
+                            _.each( _default, function( val, k ){
+                                  if ( ! _.has( _raw_val, k ) || _.isEmpty( _raw_val[k] ) ) {
+                                        api.consoleLog( 'content_picker : missing input param : ' + k );
+                                        return;
+                                  }
+                                  _val_candidate[k] = _raw_val[k];
+                            } );
+                            input.set( _val_candidate );
+                      }
                 }
           ];
 
@@ -48,13 +101,12 @@ $.extend( CZRInputMths , {
                             var page = params.page ? params.page - 1 : 0;
                             page = params.term ? params.page : page;
                             return {
-                                  action: params.term ? "search-available-content-items-customizer" : "load-available-content-items-customizer",
-                                  search: params.term,
-                                  wp_customize: 'on',
-                                  page: page,
-                                  type: input.type,
-                                  object: input.object,
-                                  CZRCpNonce: serverControlParams.CZRCpNonce
+                                  action          : params.term ? "search-available-content-items-customizer" : "load-available-content-items-customizer",
+                                  search          : params.term,
+                                  wp_customize    : 'on',
+                                  page            : page,
+                                  wp_object_types : JSON.stringify( input.wpObjectTypes ),
+                                  CZRCpNonce      : serverControlParams.CZRCpNonce
                             };
                       },
                       /* transport: function (params, success, failure) {
@@ -83,6 +135,7 @@ $.extend( CZRInputMths , {
                             });
                             return {
                                   results: _results,
+                                  //The pagination param will trigger the infinite load
                                   pagination: { more: data.data.items.length == 10 }
                             };
                       },
@@ -114,27 +167,5 @@ $.extend( CZRInputMths , {
            _model = input();
 
         return _model;
-  },
-
-  updateContentPickerModel: function( obj ){
-        var input = this,
-            $_changed_input   = $(obj.dom_event.currentTarget, obj.dom_el ),
-            _new_val          = $( $_changed_input, obj.dom_el ).select2('data');
-
-        //purge useless select2 fields
-        if ( _new_val.length ) {
-              _new_val = _.map( _new_val, function( _item ){
-                    return {
-                          id          :  _item.id,
-                          type_label  :  _item.type_label,
-                          title       :  _item.title,
-                          object_type :  _item.object_type,
-                          url         :  _item.url
-                    };
-              });
-        }
-
-        input.set(_new_val);
-        return;
   }
 });//$.extend
