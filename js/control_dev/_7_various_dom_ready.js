@@ -99,14 +99,6 @@
     });
 
 
-    /* WIDGET PANEL ICON */
-    if ( $('.control-panel-widgets').find('.accordion-section-title').first().length ) {
-          $('.control-panel-widgets').find('.accordion-section-title')
-                .first()
-                .prepend( $('<span/>', {class:'fa fa-magic'} ) );
-    }
-
-
     var fireHeaderButtons = function() {
           var $home_button = $('<span/>', { class:'customize-controls-home fa fa-home', html:'<span class="screen-reader-text">Home</span>' } );
           $.when( $('#customize-header-actions').append( $home_button ) )
