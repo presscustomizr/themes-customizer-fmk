@@ -48,18 +48,20 @@ $.extend( CZRItemMths , {
               }
 
               //Do we have a specific set of options defined in the parent module for this inputConstructor ?
-              var _inputType    = $(this).attr( 'data-input-type' ),
-                  _inputOptions = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
+              var _inputType      = $(this).attr( 'data-input-type' ),
+                  _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
+                  _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
 
               //INSTANTIATE THE INPUT
               item.czr_Input.add( _id, new item.inputConstructor( _id, {
-                    id : _id,
-                    type : $(this).attr( 'data-input-type' ),
-                    input_value : _value,
+                    id            : _id,
+                    type          : _inputType,
+                    transport     : _inputTransport,
+                    input_value   : _value,
                     input_options : _inputOptions,//<= a module can define a specific set of option
-                    container : $(this),
-                    input_parent : item,
-                    module : module
+                    container     : $(this),
+                    input_parent  : item,
+                    module        : module
               } ) );
 
               //FIRE THE INPUT

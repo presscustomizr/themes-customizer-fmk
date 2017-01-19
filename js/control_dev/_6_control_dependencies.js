@@ -321,24 +321,24 @@
                   return;
 
                 var _doVisibilitiesWhenPossible = function() {
-                      if ( ! api.state.has( 'silent-update-processing' ) || api.state( 'silent-update-processing' )() )
-                        return;
-                      api.control( wpServusSetId, function( _controlInst ) {
-                          var _args = {
-                                duration : 'fast',
-                                completeCallback : function() {},
-                                unchanged : false
-                          };
+                        if ( ! api.state.has( 'silent-update-processing' ) || api.state( 'silent-update-processing' )() )
+                          return;
+                        api.control( wpServusSetId, function( _controlInst ) {
+                              var _args = {
+                                    duration : 'fast',
+                                    completeCallback : function() {},
+                                    unchanged : false
+                              };
 
-                          if ( _.has( _controlInst, 'active' ) )
-                            visibility = visibility && _controlInst.active();
+                              if ( _.has( _controlInst, 'active' ) )
+                                visibility = visibility && _controlInst.active();
 
-                          if ( _.has( _controlInst, 'defaultActiveArguments' ) )
-                            _args = control.defaultActiveArguments;
+                              if ( _.has( _controlInst, 'defaultActiveArguments' ) )
+                                _args = control.defaultActiveArguments;
 
-                          _controlInst.onChangeActive( visibility , _controlInst.defaultActiveArguments );
-                      });
-                      api.state( 'silent-update-processing' ).unbind( _doVisibilitiesWhenPossible );
+                              _controlInst.onChangeActive( visibility , _controlInst.defaultActiveArguments );
+                        });
+                        api.state( 'silent-update-processing' ).unbind( _doVisibilitiesWhenPossible );
                 };
 
                 if ( api.state.has( 'silent-update-processing' ) && api.state( 'silent-update-processing' )() ) {

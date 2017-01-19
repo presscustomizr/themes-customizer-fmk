@@ -101,6 +101,7 @@ $.extend( CZRSlideModuleMths, {
 
 
   CZRSliderModOptInputMths : {
+          //overrides the default method
           setupSelect : function() {
                 var input      = this,
                     modOpt      = input.input_parent,
@@ -117,50 +118,9 @@ $.extend( CZRSlideModuleMths, {
                       if ( _k == _model['slider-layout'] ) {
                             $.extend( _attributes, { selected : "selected" } );
                       }
-
                       $( 'select[data-type="slider-layout"]', input.container ).append( $('<option>', _attributes) );
                 });
-
-                //fire select2
                 $( 'select[data-type="slider-layout"]', input.container ).selecter();
-        },
-        setupRangeSlider : function( options ) {
-              var input = this,
-                  $handle,
-                  updateHandle = function(el, val) {
-                    el.textContent = val;
-                  }
-
-              $( input.container ).find('input').rangeslider( {
-                    // Feature detection the default is `true`.
-                    // Set this to `false` if you want to use
-                    // the polyfill also in Browsers which support
-                    // the native <input type="range"> element.
-                    polyfill: false,
-
-                    // Default CSS classes
-                    rangeClass: 'rangeslider',
-                    disabledClass: 'rangeslider--disabled',
-                    horizontalClass: 'rangeslider--horizontal',
-                    verticalClass: 'rangeslider--vertical',
-                    fillClass: 'rangeslider__fill',
-                    handleClass: 'rangeslider__handle',
-
-                    // Callback function
-                    onInit: function() {
-                          $handle = $('.rangeslider__handle', this.$range);
-                          $('.rangeslider__handle', this.$range);
-                          updateHandle($handle[0], this.value);
-                    },
-
-                    // Callback function
-                    onSlide: function(position, value) {},
-
-                    // Callback function
-                    onSlideEnd: function(position, value) {}
-              } ).on('input', function() {
-                    updateHandle($handle[0], this.value);
-              });
         }
   },//CZRSlidersInputMths
 

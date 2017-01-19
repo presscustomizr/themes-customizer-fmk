@@ -87,7 +87,7 @@
 
         //@return bool
         //@uses api.czr_partials
-        has_part_refresh : function( setId ) {
+        hasPartRefresh : function( setId ) {
               if ( ! _.has( api, 'czr_partials')  )
                 return;
               return  _.contains( _.map( api.czr_partials(), function( partial, key ) {

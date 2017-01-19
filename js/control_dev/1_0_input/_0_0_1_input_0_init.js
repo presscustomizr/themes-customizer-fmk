@@ -8,6 +8,7 @@ var CZRInputMths = CZRInputMths || {};
 // input_parent : {} can be an item instance or a modOpt instance (Value instance, has a parent module)
 // input_value : $(this).find('[data-type]').val(),
 // module : module,
+// transport : inherit or specified in the template with data-transport="postMessage" or "refresh".
 // type : $(this).attr('data-input-type'),
 // is_mod_opt : bool,
 // is_preItemInput : bool
@@ -40,10 +41,12 @@ $.extend( CZRInputMths , {
           //=> fire the relevant callback with the provided input_options
           //input.type_map is d
           if ( api.czrInputMap && _.has( api.czrInputMap, input.type ) ) {
-                  var _meth = api.czrInputMap[input.type];
-                  if ( _.isFunction( input[_meth]) ) {
-                        input[_meth]( options.input_options || null );
-                  }
+                var _meth = api.czrInputMap[ input.type ];
+                if ( _.isFunction( input[_meth]) ) {
+                      input[_meth]( options.input_options || null );
+                }
+          } else {
+                api.consoleLog('Warning an input : ' + input.id + ' has no corresponding method defined in api.czrInputMap.');
           }
 
           var trigger_map = {
@@ -77,7 +80,7 @@ $.extend( CZRInputMths , {
             var input = this;
             input.setupDOMListeners( input.input_event_map , { dom_el : input.container }, input );
             //Setup individual input listener
-            input.callbacks.add( function() { return input.inputReact.apply(input, arguments ); } );
+            input.callbacks.add( function() { return input.inputReact.apply( input, arguments ); } );
             //synchronizer setup
             //the input instance must be initialized. => initialize method has been done.
             $.when( input.setupSynchronizer() ).done( function() {
@@ -114,7 +117,7 @@ $.extend( CZRInputMths , {
     //react to a single input change
     //update the collection of input
     //cb of input.callbacks.add
-    inputReact : function( to, from) {
+    inputReact : function( to, from, data ) {
             var input = this,
                 _current_input_parent = input.input_parent(),
                 _new_model        = _.clone( _current_input_parent );//initialize it to the current value
@@ -123,16 +126,56 @@ $.extend( CZRInputMths , {
             //set the new val to the changed property
             _new_model[input.id] = to;
 
-            //inform the input_parent
-            input.input_parent.set( _new_model );
+            //inform the input_parent : item or modOpt
+            input.input_parent.set( _new_model, {
+                  input_changed     : input.id,
+                  input_transport   : input.transport,
+                  not_preview_sent  : 'postMessage' === input.transport//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
+            } );
 
             if ( ! _.has( input, 'is_preItemInput' ) ) {
-              //inform the input_parent that an input has changed
-              //=> useful to handle dependant reactions between different inputs
-              input.input_parent.trigger( input.id + ':changed', to );
+                  //inform the input_parent that an input has changed
+                  //=> useful to handle dependant reactions between different inputs
+                  input.input_parent.trigger( input.id + ':changed', to );
+            }
+
+            //Each input instantiated in an item or a modOpt can have a specific transport set.
+            //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
+            //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
+            //send input to the preview. On update only, not on creation.
+            if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
+                  input._sendInput( to, from );
             }
     },
 
+
+    //The idea is to send only the currently modified item instead of the entire collection
+    //the entire collection is sent anyway on api(setId).set( value ), and accessible in the preview via api(setId).bind( fn( to) )
+    _sendInput : function( to, from ) {
+          var input = this,
+              module = input.module;
+
+          if ( _.isEqual( to, from ) )
+            return;
+
+          module.control.previewer.send( 'czr_input', {
+                set_id        : module.control.id,
+                module_id     : module.id,//<= will allow us to target the right dom element on front end
+                input_id      : input.id,
+                value         : to
+          });
+
+          //add a hook here
+          module.trigger( 'input_sent', { input : to , dom_el: input.container } );
+    },
+
+
+
+
+
+    /*-----------------------------------------
+    SOME DEFAULT CALLBACKS
+    ------------------------------------------*/
     setupIcheck : function( obj ) {
             var input      = this;
 
@@ -157,5 +200,43 @@ $.extend( CZRInputMths , {
           $('input[type="number"]',input.container ).each( function( e ) {
                 $(this).stepper();
           });
-    }
+    },
+
+    //@use rangeslider https://github.com/andreruffert/rangeslider.js
+    setupRangeSlider : function( options ) {
+              var input = this,
+                  $handle,
+                  _updateHandle = function(el, val) {
+                        el.textContent = val + "%";
+                  };
+
+              $( input.container ).find('input').rangeslider( {
+                    // Feature detection the default is `true`.
+                    // Set this to `false` if you want to use
+                    // the polyfill also in Browsers which support
+                    // the native <input type="range"> element.
+                    polyfill: false,
+
+                    // Default CSS classes
+                    rangeClass: 'rangeslider',
+                    disabledClass: 'rangeslider--disabled',
+                    horizontalClass: 'rangeslider--horizontal',
+                    verticalClass: 'rangeslider--vertical',
+                    fillClass: 'rangeslider__fill',
+                    handleClass: 'rangeslider__handle',
+
+                    // Callback function
+                    onInit: function() {
+                          $handle = $('.rangeslider__handle', this.$range);
+                          $('.rangeslider__handle', this.$range);
+                          _updateHandle( $handle[0], this.value );
+                    },
+                    // Callback function
+                    //onSlide: function(position, value) {},
+                    // Callback function
+                    //onSlideEnd: function(position, value) {}
+              } ).on('input', function() {
+                    _updateHandle( $handle[0], this.value );
+              });
+        }
 });//$.extend

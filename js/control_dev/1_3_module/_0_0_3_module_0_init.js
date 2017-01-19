@@ -147,7 +147,7 @@ $.extend( CZRModuleMths, {
                     if ( module.isMultiItem() )
                       module._makeItemsSortable();
 
-                    api.consoleLog('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
+                    //api.consoleLog('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
               });
 
               //populate and instantiate the items now when a module is embedded in a regular control
@@ -163,14 +163,14 @@ $.extend( CZRModuleMths, {
                     module.czr_ModOpt = new module.modOptConstructor( modOpt_candidate );
                     module.czr_ModOpt.ready();
                     //update the module model on modOpt change
-                    module.czr_ModOpt.callbacks.add( function( to, from ) {
+                    module.czr_ModOpt.callbacks.add( function( to, from, data ) {
                           var _current_model = module(),
                               _new_model = $.extend( true, {}, _current_model );
                           _new_model.modOpt = to;
                           //update the dirtyness state
                           module.isDirty(true);
                           //set the the new items model
-                          module( _new_model, {} );
+                          module( _new_model, data );
                     });
               }
         });
@@ -250,7 +250,7 @@ $.extend( CZRModuleMths, {
         //1) only needed if transport is postMessage, because is triggered by wp otherwise
         //2) only needed when : add, remove, sort item(s).
         //var is_item_update = ( _.size(from) == _.size(to) ) && ! _.isEmpty( _.difference(from, to) );
-        if ( 'postMessage' == api(module.control.id).transport && is_item_collection_sorted && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+        if ( 'postMessage' == api(module.control.id).transport && is_item_collection_sorted && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
               refreshPreview = _.debounce( refreshPreview, 500 );//500ms are enough
               refreshPreview();
         }

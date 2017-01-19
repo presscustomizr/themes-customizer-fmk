@@ -1080,6 +1080,13 @@ body.czr-editing-modopt .czr-mod-opt-wrapper {
 }
 
 /* OPTIONS STYLE */
+.czr-mod-opt-wrapper .czr-sub-set {
+    border: 1px dotted #ccc;
+    background: rgba(238, 238, 238, 0.18);
+    padding: 3%;
+    width: 94%;
+    margin: 5px 0;
+}
 .czr-mod-opt-wrapper .czr-notice {
   color: #fff;
 }
@@ -1090,6 +1097,7 @@ body.czr-editing-modopt .czr-mod-opt-wrapper {
   padding: 5% 0;
   text-align: center;
 }
+
 .in-sub-panel #czr-donate-customizer,
  .in-sub-panel .czr-cta-wrap {
    left: -450px;
@@ -1723,7 +1731,12 @@ body.czr-customize-content_editor-pane-resize #customize-preview:before {
   -moz-border-radius: 50%;
   -webkit-border-radius: 50%;
   border-radius: 50%;
+  line-height: 42px;
+  text-align: center;
+  color: #404040;
+  font-size: 15px;
 }
+
 .rangeslider__handle:after {
   content: "";
   display: block;

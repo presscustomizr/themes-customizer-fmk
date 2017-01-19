@@ -53,15 +53,22 @@ $.extend( CZRModOptMths , {
                     throw new Error('The modOpt property : ' + _id + ' has been found in the DOM but not in the modOpt model : '+ modOpt.id + '. The input can not be instantiated.');
               }
 
+              //Do we have a specific set of options defined in the parent module for this inputConstructor ?
+              var _inputType      = $(this).attr( 'data-input-type' ),
+                  _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
+                  _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
+
               //INSTANTIATE THE INPUT
               modOpt.czr_Input.add( _id, new modOpt.inputConstructor( _id, {
-                    id : _id,
-                    type : $(this).attr('data-input-type'),
-                    input_value : _value,
-                    container : $(this),
-                    input_parent : modOpt,
-                    is_mod_opt : true,
-                    module : module
+                    id            : _id,
+                    type          : _inputType,
+                    transport     : _inputTransport,
+                    input_value   : _value,
+                    input_options : _inputOptions,//<= a module can define a specific set of option
+                    container     : $(this),
+                    input_parent  : modOpt,
+                    is_mod_opt    : true,
+                    module        : module
               } ) );
 
               //FIRE THE INPUT

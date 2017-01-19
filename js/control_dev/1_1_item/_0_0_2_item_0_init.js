@@ -142,10 +142,10 @@ $.extend( CZRItemMths , {
         item.writeItemViewTitle(to);
 
         //send item to the preview. On update only, not on creation.
-        if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
-          api.consoleLog('DO WE REALLY NEED TO SEND THIS TO THE PREVIEW WITH _sendItem(to, from) ?');
-          item._sendItem(to, from);
-        }
+        // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
+        //       api.consoleLog('DO WE REALLY NEED TO SEND THIS TO THE PREVIEW WITH _sendItem(to, from) ?');
+        //       item._sendItem(to, from);
+        // }
   },
 
 

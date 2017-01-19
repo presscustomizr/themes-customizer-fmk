@@ -137,7 +137,7 @@ $.extend( CZRDynModuleMths, {
                 //refresh the preview frame (only needed if transport is postMessage )
                 //must be a dom event not triggered
                 //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
-                if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+                if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
                   module.control.previewer.refresh();
                 }
           });

@@ -156,7 +156,7 @@ $.extend( CZRModuleMths, {
                       module.itemCollection.set( module._getSortedDOMItemCollection(), { item_collection_sorted : true } );
 
                       //refreshes the preview frame, only if the associated setting is a postMessage transport one, with no partial refresh
-                      if ( 'postMessage' == api( module.control.id ).transport && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+                      if ( 'postMessage' == api( module.control.id ).transport && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
                               _.delay( function() { api.previewer.refresh(); }, 100 );
                       }
                 }

@@ -119,18 +119,18 @@ $.extend( CZRBaseModuleControlMths, {
         //MODULE REMOVED
         //Remove the module instance if needed
         if ( is_module_removed ) {
-            //find the module to remove
-            var _to_remove = _.filter( from, function( _mod ){
-                return _.isUndefined( _.findWhere( to, { id : _mod.id } ) );
-            });
-            _to_remove = _to_remove[0];
-            control.czr_Module.remove( _to_remove.id );
+              //find the module to remove
+              var _to_remove = _.filter( from, function( _mod ){
+                  return _.isUndefined( _.findWhere( to, { id : _mod.id } ) );
+              });
+              _to_remove = _to_remove[0];
+              control.czr_Module.remove( _to_remove.id );
         }
 
         //is there a passed module param ?
         //if so prepare it for DB
-        if ( _.isObject( data  ) && _.has(data, 'module') ) {
-            data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
+        if ( _.isObject( data  ) && _.has( data, 'module' ) ) {
+              data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
         }
 
         //Inform the the setting

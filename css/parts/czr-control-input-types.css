@@ -563,7 +563,12 @@ body.czr-customize-content_editor-pane-resize #customize-preview:before {
   -moz-border-radius: 50%;
   -webkit-border-radius: 50%;
   border-radius: 50%;
+  line-height: 42px;
+  text-align: center;
+  color: #404040;
+  font-size: 15px;
 }
+
 .rangeslider__handle:after {
   content: "";
   display: block;

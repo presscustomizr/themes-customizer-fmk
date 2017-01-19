@@ -6695,15 +6695,39 @@ $.extend( CZRSkopeMths, {
 (function (api, $, _) {
   //PREPARE THE SKOPE AWARE PREVIEWER
   if ( serverControlParams.isSkopOn ) {
-        var _old_preview = api.Setting.prototype.preview;
-        api.Setting.prototype.preview = function( to, from , o) {
-            if ( _.has( api, 'czr_isPreviewerSkopeAware' ) && 'pending' == api.czr_isPreviewerSkopeAware.state() )
-              this.previewer.refresh();
-            //as soon as the previewer is setup, let's behave as usual
-            //=> but don't refresh when silently updating
-            if ( ! _.has(o, 'silent') || false === o.silent ) {
-                return _old_preview.call(this);
-            }
+        //var _old_preview = api.Setting.prototype.preview;
+        api.Setting.prototype.preview = function( to, from , data ) {
+              var setting = this, transport;
+                  transport = setting.transport;
+
+              if ( _.has( api, 'czr_isPreviewerSkopeAware' ) && 'pending' == api.czr_isPreviewerSkopeAware.state() )
+                this.previewer.refresh();
+              //as soon as the previewer is setup, let's behave as usual
+              //=> but don't refresh when silently updating
+
+              //Each input instantiated in an item or a modOpt can have a specific transport set.
+              //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
+              //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
+              //
+              //If the input transport is specifically set to postMessage, then we don't want to send the 'setting' event to the preview
+              //=> this will prevent any partial refresh to be triggered if the input control parent is defined has a partial refresh one.
+              //=> the input will be sent to preview with module.control.previewer.send( 'czr_input', {...} )
+              if ( _.isObject( data ) && true === data.not_preview_sent ) {
+                    return;
+              }
+
+              if ( ! _.has( data, 'silent' ) || false === data.silent ) {
+                    //CORE PREVIEW AS OF WP 4.7+
+                    if ( 'postMessage' === transport && ! api.state( 'previewerAlive' ).get() ) {
+                          transport = 'refresh';
+                    }
+
+                    if ( 'postMessage' === transport ) {
+                          setting.previewer.send( 'setting', [ setting.id, setting() ] );
+                    } else if ( 'refresh' === transport ) {
+                          setting.previewer.refresh();
+                    }
+              }
         };
   }
 
@@ -6824,7 +6848,7 @@ $.extend( CZRSkopeMths, {
 
         //@return bool
         //@uses api.czr_partials
-        has_part_refresh : function( setId ) {
+        hasPartRefresh : function( setId ) {
               if ( ! _.has( api, 'czr_partials')  )
                 return;
               return  _.contains( _.map( api.czr_partials(), function( partial, key ) {
@@ -7121,6 +7145,7 @@ $.extend( CZRSkopeMths, {
 // input_parent : {} can be an item instance or a modOpt instance (Value instance, has a parent module)
 // input_value : $(this).find('[data-type]').val(),
 // module : module,
+// transport : inherit or specified in the template with data-transport="postMessage" or "refresh".
 // type : $(this).attr('data-input-type'),
 // is_mod_opt : bool,
 // is_preItemInput : bool
@@ -7153,10 +7178,12 @@ $.extend( CZRInputMths , {
           //=> fire the relevant callback with the provided input_options
           //input.type_map is d
           if ( api.czrInputMap && _.has( api.czrInputMap, input.type ) ) {
-                  var _meth = api.czrInputMap[input.type];
-                  if ( _.isFunction( input[_meth]) ) {
-                        input[_meth]( options.input_options || null );
-                  }
+                var _meth = api.czrInputMap[ input.type ];
+                if ( _.isFunction( input[_meth]) ) {
+                      input[_meth]( options.input_options || null );
+                }
+          } else {
+                api.consoleLog('Warning an input : ' + input.id + ' has no corresponding method defined in api.czrInputMap.');
           }
 
           var trigger_map = {
@@ -7190,7 +7217,7 @@ $.extend( CZRInputMths , {
             var input = this;
             input.setupDOMListeners( input.input_event_map , { dom_el : input.container }, input );
             //Setup individual input listener
-            input.callbacks.add( function() { return input.inputReact.apply(input, arguments ); } );
+            input.callbacks.add( function() { return input.inputReact.apply( input, arguments ); } );
             //synchronizer setup
             //the input instance must be initialized. => initialize method has been done.
             $.when( input.setupSynchronizer() ).done( function() {
@@ -7227,7 +7254,7 @@ $.extend( CZRInputMths , {
     //react to a single input change
     //update the collection of input
     //cb of input.callbacks.add
-    inputReact : function( to, from) {
+    inputReact : function( to, from, data ) {
             var input = this,
                 _current_input_parent = input.input_parent(),
                 _new_model        = _.clone( _current_input_parent );//initialize it to the current value
@@ -7236,16 +7263,56 @@ $.extend( CZRInputMths , {
             //set the new val to the changed property
             _new_model[input.id] = to;
 
-            //inform the input_parent
-            input.input_parent.set( _new_model );
+            //inform the input_parent : item or modOpt
+            input.input_parent.set( _new_model, {
+                  input_changed     : input.id,
+                  input_transport   : input.transport,
+                  not_preview_sent  : 'postMessage' === input.transport//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
+            } );
 
             if ( ! _.has( input, 'is_preItemInput' ) ) {
-              //inform the input_parent that an input has changed
-              //=> useful to handle dependant reactions between different inputs
-              input.input_parent.trigger( input.id + ':changed', to );
+                  //inform the input_parent that an input has changed
+                  //=> useful to handle dependant reactions between different inputs
+                  input.input_parent.trigger( input.id + ':changed', to );
+            }
+
+            //Each input instantiated in an item or a modOpt can have a specific transport set.
+            //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
+            //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
+            //send input to the preview. On update only, not on creation.
+            if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
+                  input._sendInput( to, from );
             }
     },
 
+
+    //The idea is to send only the currently modified item instead of the entire collection
+    //the entire collection is sent anyway on api(setId).set( value ), and accessible in the preview via api(setId).bind( fn( to) )
+    _sendInput : function( to, from ) {
+          var input = this,
+              module = input.module;
+
+          if ( _.isEqual( to, from ) )
+            return;
+
+          module.control.previewer.send( 'czr_input', {
+                set_id        : module.control.id,
+                module_id     : module.id,//<= will allow us to target the right dom element on front end
+                input_id      : input.id,
+                value         : to
+          });
+
+          //add a hook here
+          module.trigger( 'input_sent', { input : to , dom_el: input.container } );
+    },
+
+
+
+
+
+    /*-----------------------------------------
+    SOME DEFAULT CALLBACKS
+    ------------------------------------------*/
     setupIcheck : function( obj ) {
             var input      = this;
 
@@ -7270,9 +7337,46 @@ $.extend( CZRInputMths , {
           $('input[type="number"]',input.container ).each( function( e ) {
                 $(this).stepper();
           });
-    }
-});//$.extend
-var CZRInputMths = CZRInputMths || {};
+    },
+
+    //@use rangeslider https://github.com/andreruffert/rangeslider.js
+    setupRangeSlider : function( options ) {
+              var input = this,
+                  $handle,
+                  _updateHandle = function(el, val) {
+                        el.textContent = val + "%";
+                  };
+
+              $( input.container ).find('input').rangeslider( {
+                    // Feature detection the default is `true`.
+                    // Set this to `false` if you want to use
+                    // the polyfill also in Browsers which support
+                    // the native <input type="range"> element.
+                    polyfill: false,
+
+                    // Default CSS classes
+                    rangeClass: 'rangeslider',
+                    disabledClass: 'rangeslider--disabled',
+                    horizontalClass: 'rangeslider--horizontal',
+                    verticalClass: 'rangeslider--vertical',
+                    fillClass: 'rangeslider__fill',
+                    handleClass: 'rangeslider__handle',
+
+                    // Callback function
+                    onInit: function() {
+                          $handle = $('.rangeslider__handle', this.$range);
+                          $('.rangeslider__handle', this.$range);
+                          _updateHandle( $handle[0], this.value );
+                    },
+                    // Callback function
+                    //onSlide: function(position, value) {},
+                    // Callback function
+                    //onSlideEnd: function(position, value) {}
+              } ).on('input', function() {
+                    _updateHandle( $handle[0], this.value );
+              });
+        }
+});//$.extendvar CZRInputMths = CZRInputMths || {};
 $.extend( CZRInputMths , {
     setupImageUploader : function() {
           var input        = this,
@@ -8095,10 +8199,10 @@ $.extend( CZRItemMths , {
         item.writeItemViewTitle(to);
 
         //send item to the preview. On update only, not on creation.
-        if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
-          api.consoleLog('DO WE REALLY NEED TO SEND THIS TO THE PREVIEW WITH _sendItem(to, from) ?');
-          item._sendItem(to, from);
-        }
+        // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
+        //       api.consoleLog('DO WE REALLY NEED TO SEND THIS TO THE PREVIEW WITH _sendItem(to, from) ?');
+        //       item._sendItem(to, from);
+        // }
   },
 
 
@@ -8152,18 +8256,20 @@ $.extend( CZRItemMths , {
               }
 
               //Do we have a specific set of options defined in the parent module for this inputConstructor ?
-              var _inputType    = $(this).attr( 'data-input-type' ),
-                  _inputOptions = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
+              var _inputType      = $(this).attr( 'data-input-type' ),
+                  _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
+                  _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
 
               //INSTANTIATE THE INPUT
               item.czr_Input.add( _id, new item.inputConstructor( _id, {
-                    id : _id,
-                    type : $(this).attr( 'data-input-type' ),
-                    input_value : _value,
+                    id            : _id,
+                    type          : _inputType,
+                    transport     : _inputTransport,
+                    input_value   : _value,
                     input_options : _inputOptions,//<= a module can define a specific set of option
-                    container : $(this),
-                    input_parent : item,
-                    module : module
+                    container     : $(this),
+                    input_parent  : item,
+                    module        : module
               } ) );
 
               //FIRE THE INPUT
@@ -8682,25 +8788,6 @@ $.extend( CZRModOptMths , {
         this.isReady.resolve();
   },
 
-
-
-  //React to a single modOpt change
-  //cb of module.czr_ModOpt(modOpt.id).callbacks
-  // modOptReact : function( to, from ) {
-  //       var modOpt = this,
-  //           module = modOpt.module;
-
-  //       //Always update the view title
-  //       //modOpt.writeModOptViewTitle(to);
-
-  //       //send modOpt to the preview. On update only, not on creation.
-  //       // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
-  //       //   api.consoleLog('DO WE REALLY NEED TO SEND THIS TO THE PREVIEW WITH _sendModOpt(to, from) ?');
-  //       //   modOpt._sendModOpt(to, from);
-  //       // }
-  // },
-
-
 });//$.extend//extends api.Value
 //options:
   // id : modOpt.id,
@@ -8756,15 +8843,22 @@ $.extend( CZRModOptMths , {
                     throw new Error('The modOpt property : ' + _id + ' has been found in the DOM but not in the modOpt model : '+ modOpt.id + '. The input can not be instantiated.');
               }
 
+              //Do we have a specific set of options defined in the parent module for this inputConstructor ?
+              var _inputType      = $(this).attr( 'data-input-type' ),
+                  _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
+                  _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
+
               //INSTANTIATE THE INPUT
               modOpt.czr_Input.add( _id, new modOpt.inputConstructor( _id, {
-                    id : _id,
-                    type : $(this).attr('data-input-type'),
-                    input_value : _value,
-                    container : $(this),
-                    input_parent : modOpt,
-                    is_mod_opt : true,
-                    module : module
+                    id            : _id,
+                    type          : _inputType,
+                    transport     : _inputTransport,
+                    input_value   : _value,
+                    input_options : _inputOptions,//<= a module can define a specific set of option
+                    container     : $(this),
+                    input_parent  : modOpt,
+                    is_mod_opt    : true,
+                    module        : module
               } ) );
 
               //FIRE THE INPUT
@@ -9046,7 +9140,7 @@ $.extend( CZRModuleMths, {
                     if ( module.isMultiItem() )
                       module._makeItemsSortable();
 
-                    api.consoleLog('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
+                    //api.consoleLog('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
               });
 
               //populate and instantiate the items now when a module is embedded in a regular control
@@ -9062,14 +9156,14 @@ $.extend( CZRModuleMths, {
                     module.czr_ModOpt = new module.modOptConstructor( modOpt_candidate );
                     module.czr_ModOpt.ready();
                     //update the module model on modOpt change
-                    module.czr_ModOpt.callbacks.add( function( to, from ) {
+                    module.czr_ModOpt.callbacks.add( function( to, from, data ) {
                           var _current_model = module(),
                               _new_model = $.extend( true, {}, _current_model );
                           _new_model.modOpt = to;
                           //update the dirtyness state
                           module.isDirty(true);
                           //set the the new items model
-                          module( _new_model, {} );
+                          module( _new_model, data );
                     });
               }
         });
@@ -9149,7 +9243,7 @@ $.extend( CZRModuleMths, {
         //1) only needed if transport is postMessage, because is triggered by wp otherwise
         //2) only needed when : add, remove, sort item(s).
         //var is_item_update = ( _.size(from) == _.size(to) ) && ! _.isEmpty( _.difference(from, to) );
-        if ( 'postMessage' == api(module.control.id).transport && is_item_collection_sorted && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+        if ( 'postMessage' == api(module.control.id).transport && is_item_collection_sorted && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
               refreshPreview = _.debounce( refreshPreview, 500 );//500ms are enough
               refreshPreview();
         }
@@ -9733,7 +9827,7 @@ $.extend( CZRModuleMths, {
                       module.itemCollection.set( module._getSortedDOMItemCollection(), { item_collection_sorted : true } );
 
                       //refreshes the preview frame, only if the associated setting is a postMessage transport one, with no partial refresh
-                      if ( 'postMessage' == api( module.control.id ).transport && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+                      if ( 'postMessage' == api( module.control.id ).transport && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
                               _.delay( function() { api.previewer.refresh(); }, 100 );
                       }
                 }
@@ -9879,7 +9973,7 @@ $.extend( CZRDynModuleMths, {
                 //refresh the preview frame (only needed if transport is postMessage )
                 //must be a dom event not triggered
                 //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
-                if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.has_part_refresh( module.control.id ) ) {
+                if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
                   module.control.previewer.refresh();
                 }
           });
@@ -12005,18 +12099,18 @@ $.extend( CZRBaseModuleControlMths, {
         //MODULE REMOVED
         //Remove the module instance if needed
         if ( is_module_removed ) {
-            //find the module to remove
-            var _to_remove = _.filter( from, function( _mod ){
-                return _.isUndefined( _.findWhere( to, { id : _mod.id } ) );
-            });
-            _to_remove = _to_remove[0];
-            control.czr_Module.remove( _to_remove.id );
+              //find the module to remove
+              var _to_remove = _.filter( from, function( _mod ){
+                  return _.isUndefined( _.findWhere( to, { id : _mod.id } ) );
+              });
+              _to_remove = _to_remove[0];
+              control.czr_Module.remove( _to_remove.id );
         }
 
         //is there a passed module param ?
         //if so prepare it for DB
-        if ( _.isObject( data  ) && _.has(data, 'module') ) {
-            data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
+        if ( _.isObject( data  ) && _.has( data, 'module' ) ) {
+              data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
         }
 
         //Inform the the setting
@@ -13370,24 +13464,24 @@ $.extend( CZRLayoutSelectMths , {
                   return;
 
                 var _doVisibilitiesWhenPossible = function() {
-                      if ( ! api.state.has( 'silent-update-processing' ) || api.state( 'silent-update-processing' )() )
-                        return;
-                      api.control( wpServusSetId, function( _controlInst ) {
-                          var _args = {
-                                duration : 'fast',
-                                completeCallback : function() {},
-                                unchanged : false
-                          };
+                        if ( ! api.state.has( 'silent-update-processing' ) || api.state( 'silent-update-processing' )() )
+                          return;
+                        api.control( wpServusSetId, function( _controlInst ) {
+                              var _args = {
+                                    duration : 'fast',
+                                    completeCallback : function() {},
+                                    unchanged : false
+                              };
 
-                          if ( _.has( _controlInst, 'active' ) )
-                            visibility = visibility && _controlInst.active();
+                              if ( _.has( _controlInst, 'active' ) )
+                                visibility = visibility && _controlInst.active();
 
-                          if ( _.has( _controlInst, 'defaultActiveArguments' ) )
-                            _args = control.defaultActiveArguments;
+                              if ( _.has( _controlInst, 'defaultActiveArguments' ) )
+                                _args = control.defaultActiveArguments;
 
-                          _controlInst.onChangeActive( visibility , _controlInst.defaultActiveArguments );
-                      });
-                      api.state( 'silent-update-processing' ).unbind( _doVisibilitiesWhenPossible );
+                              _controlInst.onChangeActive( visibility , _controlInst.defaultActiveArguments );
+                        });
+                        api.state( 'silent-update-processing' ).unbind( _doVisibilitiesWhenPossible );
                 };
 
                 if ( api.state.has( 'silent-update-processing' ) && api.state( 'silent-update-processing' )() ) {

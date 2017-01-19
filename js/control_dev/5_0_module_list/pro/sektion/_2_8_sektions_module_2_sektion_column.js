@@ -280,7 +280,7 @@ $.extend( CZRSektionMths, {
         //1) only needed if transport is postMessage, because is triggered by wp otherwise
         //2) only needed when : add, remove, sort item(s)
         //module update case
-        // if ( 'postMessage' == api(control.id).transport && ! api.CZR_Helpers.has_part_refresh( control.id ) ) {
+        // if ( 'postMessage' == api(control.id).transport && ! api.CZR_Helpers.hasPartRefresh( control.id ) ) {
         //     if ( is_collection_sorted )
         //         control.previewer.refresh();
         // }

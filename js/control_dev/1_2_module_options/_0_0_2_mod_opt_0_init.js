@@ -113,23 +113,4 @@ $.extend( CZRModOptMths , {
         this.isReady.resolve();
   },
 
-
-
-  //React to a single modOpt change
-  //cb of module.czr_ModOpt(modOpt.id).callbacks
-  // modOptReact : function( to, from ) {
-  //       var modOpt = this,
-  //           module = modOpt.module;
-
-  //       //Always update the view title
-  //       //modOpt.writeModOptViewTitle(to);
-
-  //       //send modOpt to the preview. On update only, not on creation.
-  //       // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
-  //       //   api.consoleLog('DO WE REALLY NEED TO SEND THIS TO THE PREVIEW WITH _sendModOpt(to, from) ?');
-  //       //   modOpt._sendModOpt(to, from);
-  //       // }
-  // },
-
-
 });//$.extend
