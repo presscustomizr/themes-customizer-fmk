@@ -276,7 +276,7 @@ $.extend( CZRMultiModuleControlMths, {
                           //               item.container = $_item_container;
 
                           //               $.when( item.renderItemContent() ).done( function() {
-                          //                   item.setupInputCollectionFromDOM();
+                          //                   api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
                           //               });
 
                           //               if ( ! item.module.isMultiItem() )
@@ -293,7 +293,7 @@ $.extend( CZRMultiModuleControlMths, {
                           module.czr_Item.each ( function( item ) {
                                 item.czr_ItemState.set('closed');
                                 item._destroyView( 0 );
-                                //item.removeInputCollection();
+                                //api.CZR_Helpers.removeInputCollection.call( item );
                                 module.czr_Item.remove( item.id );
                           } );
                     }

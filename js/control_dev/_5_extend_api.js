@@ -37,7 +37,7 @@
       api.CZRItem                   = api.Value.extend( CZRItemMths );
 
       //MODULE OPTIONS => used as constructor when creating module options
-      api.CZRModOpt               = api.Value.extend( CZRModOptMths );
+      api.CZRModOpt                 = api.Value.extend( CZRModOptMths );
 
       //MODULES => used as constructor when creating the collection of modules
       api.CZRModule                 = api.Value.extend( CZRModuleMths );

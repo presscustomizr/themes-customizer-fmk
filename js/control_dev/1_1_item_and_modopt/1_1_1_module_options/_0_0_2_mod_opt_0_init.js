@@ -44,17 +44,21 @@ $.extend( CZRModOptMths , {
               if ( visible ) {
                     modOpt.modOptWrapperViewSetup( _initial_model ).done( function( $_container ) {
                           modOpt.container = $_container;
-                          modOpt.setupInputCollectionFromDOM().toggleModPanelView( visible );
+                          try {
+                                api.CZR_Helpers.setupInputCollectionFromDOM.call( modOpt ).toggleModPanelView( visible );
+                          } catch(e) {
+                                api.consoleLog(e);
+                          }
                     });
 
               } else {
                     modOpt.toggleModPanelView( visible ).done( function() {
                           if ( false !== modOpt.container.length ) {
                                 $.when( modOpt.container.remove() ).done( function() {
-                                      modOpt.removeInputCollection();
+                                      api.CZR_Helpers.removeInputCollection.call( modOpt );
                                 });
                           } else {
-                                modOpt.removeInputCollection();
+                                api.CZR_Helpers.removeInputCollection.call( modOpt );
                           }
                           modOpt.container = null;
                     });

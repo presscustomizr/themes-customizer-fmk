@@ -98,7 +98,7 @@ $.extend( CZRItemMths , {
                     //create the collection of inputs if needed
                     //first time or after a removal
                     if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) ) {
-                          try { item.setupInputCollectionFromDOM(); } catch(e) {
+                          try { api.CZR_Helpers.setupInputCollectionFromDOM.call( item ); } catch(e) {
                                 api.consoleLog( e );
                           }
                     }
@@ -107,7 +107,7 @@ $.extend( CZRItemMths , {
               //INPUTS DESTROY
               item.bind( 'contentRemoved', function() {
                     if ( _.has(item, 'czr_Input') )
-                      item.removeInputCollection();
+                      api.CZR_Helpers.removeInputCollection.call( item );
               });
 
         });//item.isReady.done()

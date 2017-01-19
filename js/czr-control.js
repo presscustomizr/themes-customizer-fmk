@@ -6953,8 +6953,116 @@ $.extend( CZRSkopeMths, {
                 return;
 
               return api.czrModuleMap[module_type].has_mod_opt || false;
-        }
+        },
 
+
+
+        //This method is now statically accessed by item and modopt instances because it does the same job for both.
+        //=> It instantiates the inputs based on what it finds in the DOM ( item or mod opt js templates )
+        //
+        //Fired on 'contentRendered' for items and on user click for module options (mod opt)
+        //creates the inputs based on the rendered parent item or mod option
+        //inputParentInst can be an item instance or a module option instance
+        setupInputCollectionFromDOM : function() {
+              var inputParentInst = this;//<= because fired with .call( inputParentInst )
+              if ( ! _.isFunction( inputParentInst ) ) {
+                    throw new Error( 'setupInputCollectionFromDOM : inputParentInst is not valid.' );
+              }
+              var module = inputParentInst.module,
+                  is_mod_opt = _.has( inputParentInst() , 'is_mod_opt' );
+
+              //bail if already done
+              if ( _.has( inputParentInst, 'czr_Input') && ! _.isEmpty( inputParentInst.inputCollection() ) )
+                return;
+
+              //INPUTS => Setup as soon as the view content is rendered
+              //the inputParentInst is a collection of inputs, each one has its own view module.
+              inputParentInst.czr_Input = new api.Values();
+
+              //IS THE PARENT AN ITEM OR A MODULE OPTION ?
+              //those default constructors (declared in the module init ) can be overridden by extended item or mod opt constructors inside the modules
+              inputParentInst.inputConstructor = is_mod_opt ? module.inputModOptConstructor : module.inputConstructor;
+
+              var _defaultInputParentModel = is_mod_opt ? inputParentInst.defaultModOptModel : inputParentInst.defaultItemModel;
+
+              if ( _.isEmpty( _defaultInputParentModel ) || _.isUndefined( _defaultInputParentModel ) ) {
+                throw new Error( 'No default model found in item or mod opt ' + inputParentInst.id + '.' );
+              }
+
+              //prepare and sets the inputParentInst value on api ready
+              //=> triggers the module rendering + DOM LISTENERS
+              var inputParentInst_model = $.extend( true, {}, inputParentInst() );
+
+              if ( ! _.isObject( inputParentInst_model ) )
+                inputParentInst_model = _defaultInputParentModel;
+              else
+                inputParentInst_model = $.extend( _defaultInputParentModel, inputParentInst_model );
+
+              var dom_inputParentInst_model = {};
+
+              //creates the inputs based on the rendered item or mod opt
+              $( '.' + module.control.css_attr.sub_set_wrapper, inputParentInst.container).each( function( _index ) {
+                    var _id = $(this).find('[data-type]').attr( 'data-type' ),
+                        _value = _.has( inputParentInst_model, _id) ? inputParentInst_model[ _id ] : '';
+                    //skip if no valid input data-type is found in this node
+                    if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
+                          api.consoleLog( 'setupInputCollectionFromDOM : missing data-type for ' + module.id );
+                          return;
+                    }
+                    //check if this property exists in the current inputParentInst model
+                    if ( ! _.has( inputParentInst_model, _id ) ) {
+                          throw new Error('The item or mod opt property : ' + _id + ' has been found in the DOM but not in the item or mod opt model : '+ inputParentInst.id + '. The input can not be instantiated.');
+                    }
+
+                    //Do we have a specific set of options defined in the parent module for this inputConstructor ?
+                    var _inputType      = $(this).attr( 'data-input-type' ),
+                        _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
+                        _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
+
+                    //INSTANTIATE THE INPUT
+                    inputParentInst.czr_Input.add( _id, new inputParentInst.inputConstructor( _id, {
+                          id            : _id,
+                          type          : _inputType,
+                          transport     : _inputTransport,
+                          input_value   : _value,
+                          input_options : _inputOptions,//<= a module can define a specific set of option
+                          container     : $(this),
+                          input_parent  : inputParentInst,
+                          is_mod_opt    : is_mod_opt,
+                          module        : module
+                    } ) );
+
+                    //FIRE THE INPUT
+                    //fires ready once the input Value() instance is initialized
+                    inputParentInst.czr_Input( _id ).ready();
+
+                    //POPULATES THE PARENT INPUT COLLECTION
+                    dom_inputParentInst_model[ _id ] = _value;
+                    //shall we trigger a specific event when the input collection from DOM has been populated ?
+              });//each
+
+              //stores the collection
+              inputParentInst.inputCollection( dom_inputParentInst_model );
+              //chain
+              return inputParentInst;
+        },
+
+        //@self explanatory: removes a collection of input from a parent item or modOpt instance
+        //Triggered by : user actions usually when an item is collapsed or when the modOpt panel is closed
+        removeInputCollection : function() {
+              var inputParentInst = this;//<= because fired with .call( inputParentInst )
+              if ( ! _.isFunction( inputParentInst ) ) {
+                    throw new Error( 'removeInputCollection : inputParentInst is not valid.' );
+              }
+              if ( ! _.has( inputParentInst, 'czr_Input') )
+                return;
+              //remove each input api.Value() instance
+              inputParentInst.czr_Input.each( function( _input ) {
+                    inputParentInst.czr_Input.remove( _input.id );
+              });
+              //reset the input collection property
+              inputParentInst.inputCollection({});
+        }
   });//$.extend
 
   //react to a ctx change
@@ -8155,7 +8263,7 @@ $.extend( CZRItemMths , {
                     //create the collection of inputs if needed
                     //first time or after a removal
                     if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) ) {
-                          try { item.setupInputCollectionFromDOM(); } catch(e) {
+                          try { api.CZR_Helpers.setupInputCollectionFromDOM.call( item ); } catch(e) {
                                 api.consoleLog( e );
                           }
                     }
@@ -8164,7 +8272,7 @@ $.extend( CZRItemMths , {
               //INPUTS DESTROY
               item.bind( 'contentRemoved', function() {
                     if ( _.has(item, 'czr_Input') )
-                      item.removeInputCollection();
+                      api.CZR_Helpers.removeInputCollection.call( item );
               });
 
         });//item.isReady.done()
@@ -8215,85 +8323,7 @@ $.extend( CZRItemMths , {
   // is_added_by_user : is_added_by_user || false
 var CZRItemMths = CZRItemMths || {};
 $.extend( CZRItemMths , {
-  //Fired on 'contentRendered'
-  //creates the inputs based on the rendered items
-  setupInputCollectionFromDOM : function() {
-        var item = this,
-            module = item.module;
 
-        //INPUTS => Setup as soon as the view content is rendered
-        //the item is a collection of inputs, each one has its own view module.
-        item.czr_Input = new api.Values();
-
-        //this can be overridden by extended classes to add and overrides methods
-        item.inputConstructor = module.inputConstructor;
-
-        if ( _.isEmpty(item.defaultItemModel) || _.isUndefined(item.defaultItemModel) ) {
-          throw new Error('No default model found in item ' + item.id + '. Aborting');
-        }
-
-        //prepare and sets the item value on api ready
-        //=> triggers the module rendering + DOM LISTENERS
-        var item_model = $.extend( true, {}, item() );
-
-        if ( ! _.isObject( item_model ) )
-          item_model = item.defaultItemModel;
-        else
-          item_model = $.extend( item.defaultItemModel, item_model );
-
-        var dom_item_model = {};
-
-        //creates the inputs based on the rendered items
-        $( '.' + module.control.css_attr.sub_set_wrapper, item.container).each( function( _index ) {
-              var _id = $(this).find('[data-type]').attr('data-type'),
-                  _value = _.has( item_model, _id) ? item_model[_id] : '';
-              //skip if no valid input data-type is found in this node
-              if ( _.isUndefined( _id ) || _.isEmpty( _id ) )
-                return;
-              //check if this property exists in the current item model
-              if ( ! _.has( item_model, _id ) ) {
-                    throw new Error('The item property : ' + _id + ' has been found in the DOM but not in the item model : '+ item.id + '. The input can not be instantiated.');
-              }
-
-              //Do we have a specific set of options defined in the parent module for this inputConstructor ?
-              var _inputType      = $(this).attr( 'data-input-type' ),
-                  _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
-                  _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
-
-              //INSTANTIATE THE INPUT
-              item.czr_Input.add( _id, new item.inputConstructor( _id, {
-                    id            : _id,
-                    type          : _inputType,
-                    transport     : _inputTransport,
-                    input_value   : _value,
-                    input_options : _inputOptions,//<= a module can define a specific set of option
-                    container     : $(this),
-                    input_parent  : item,
-                    module        : module
-              } ) );
-
-              //FIRE THE INPUT
-              //fire ready once the input Value() instance is initialized
-              item.czr_Input(_id).ready();
-
-              //populate the collection
-              dom_item_model[_id] = _value;
-              //shall we trigger a specific event when the input collection from DOM has been populated ?
-
-        });//each
-
-        //stores the collection
-        item.inputCollection( dom_item_model );
-  },
-
-
-  removeInputCollection : function() {
-        var item = this;
-        item.czr_Input.each( function( input ) {
-            item.czr_Input.remove( input.id );
-        });
-        item.inputCollection({});
-  }
 
 
 });//$.extend//extends api.CZRBaseControl
@@ -8719,17 +8749,21 @@ $.extend( CZRModOptMths , {
               if ( visible ) {
                     modOpt.modOptWrapperViewSetup( _initial_model ).done( function( $_container ) {
                           modOpt.container = $_container;
-                          modOpt.setupInputCollectionFromDOM().toggleModPanelView( visible );
+                          try {
+                                api.CZR_Helpers.setupInputCollectionFromDOM.call( modOpt ).toggleModPanelView( visible );
+                          } catch(e) {
+                                api.consoleLog(e);
+                          }
                     });
 
               } else {
                     modOpt.toggleModPanelView( visible ).done( function() {
                           if ( false !== modOpt.container.length ) {
                                 $.when( modOpt.container.remove() ).done( function() {
-                                      modOpt.removeInputCollection();
+                                      api.CZR_Helpers.removeInputCollection.call( modOpt );
                                 });
                           } else {
-                                modOpt.removeInputCollection();
+                                api.CZR_Helpers.removeInputCollection.call( modOpt );
                           }
                           modOpt.container = null;
                     });
@@ -8797,92 +8831,7 @@ $.extend( CZRModOptMths , {
   // is_added_by_user : is_added_by_user || false
 var CZRModOptMths = CZRModOptMths || {};
 $.extend( CZRModOptMths , {
-  //Fired on user click
-  //creates the inputs based on the rendered modOpts
-  setupInputCollectionFromDOM : function() {
-        var modOpt = this,
-            module = modOpt.module;
 
-        //bail if already done
-        if ( _.has( modOpt, 'czr_Input') && ! _.isEmpty( modOpt.inputCollection() ) )
-          return;
-
-        //INPUTS => Setup as soon as the view content is rendered
-        //the modOpt is a collection of inputs, each one has its own view module.
-        modOpt.czr_Input = new api.Values();
-
-        //this can be overridden by extended classes to add and overrides methods
-        modOpt.inputConstructor = module.inputModOptConstructor;
-
-        if ( _.isEmpty(modOpt.defaultModOptModel) || _.isUndefined(modOpt.defaultModOptModel) ) {
-          throw new Error('No default model found in modOpt ' + modOpt.id + '. Aborting');
-        }
-
-        //prepare and sets the modOpt value on api ready
-        //=> triggers the module rendering + DOM LISTENERS
-        var modOpt_model = $.extend( true, {}, modOpt() );
-
-        if ( ! _.isObject( modOpt_model ) )
-          modOpt_model = modOpt.defaultModOptModel;
-        else
-          modOpt_model = $.extend( modOpt.defaultModOptModel, modOpt_model );
-
-        var dom_modOpt_model = {};
-
-        //creates the inputs based on the rendered modOpts
-        $( '.' + module.control.css_attr.sub_set_wrapper, modOpt.container).each( function( _index ) {
-              var _id = $(this).find('[data-type]').attr('data-type'),
-                  _value = _.has( modOpt_model, _id) ? modOpt_model[_id] : '';
-              //skip if no valid input data-type is found in this node
-              if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
-                    api.consoleLog('setupInputCollectionFromDOM : missing data-type for ' + module.id );
-                    return;
-              }
-              //check if this property exists in the current modOpt model
-              if ( ! _.has( modOpt_model, _id ) ) {
-                    throw new Error('The modOpt property : ' + _id + ' has been found in the DOM but not in the modOpt model : '+ modOpt.id + '. The input can not be instantiated.');
-              }
-
-              //Do we have a specific set of options defined in the parent module for this inputConstructor ?
-              var _inputType      = $(this).attr( 'data-input-type' ),
-                  _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
-                  _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
-
-              //INSTANTIATE THE INPUT
-              modOpt.czr_Input.add( _id, new modOpt.inputConstructor( _id, {
-                    id            : _id,
-                    type          : _inputType,
-                    transport     : _inputTransport,
-                    input_value   : _value,
-                    input_options : _inputOptions,//<= a module can define a specific set of option
-                    container     : $(this),
-                    input_parent  : modOpt,
-                    is_mod_opt    : true,
-                    module        : module
-              } ) );
-
-              //FIRE THE INPUT
-              //fire ready once the input Value() instance is initialized
-              modOpt.czr_Input(_id).ready();
-
-              //populate the collection
-              dom_modOpt_model[_id] = _value;
-              //shall we trigger a specific event when the input collection from DOM has been populated ?
-        });//each
-
-        //stores the collection
-        modOpt.inputCollection( dom_modOpt_model );
-        return this;
-  },
-
-
-  removeInputCollection : function() {
-        var modOpt = this;
-        modOpt.czr_Input.each( function( input ) {
-            modOpt.czr_Input.remove( input.id );
-        });
-        modOpt.inputCollection({});
-  }
 
 
 });//$.extend//extends api.CZRBaseControl
@@ -10118,7 +10067,7 @@ $.extend( CZRSocialModuleMths, {
 
 
           this.social_icons = [
-            '500px','adn','amazon','android','angellist','apple','behance','behance-square','bitbucket','bitbucket-square','black-tie','btc','buysellads','chrome','codepen','codiepie','connectdevelop','contao','dashcube','delicious','delicious','deviantart','digg','dribbble','dropbox','drupal','edge','empire','expeditedssl','facebook','facebook','facebook-f (alias)','facebook-official','facebook-square','firefox','flickr','fonticons','fort-awesome','forumbee','foursquare','get-pocket','gg','gg-circle','git','github','github','github-alt','github-square','git-square','google','google','google-plus','google-plus-circle','google-plus-official','google-plus-square', 'google-wallet','gratipay','hacker-news','houzz','instagram','internet-explorer','ioxhost','joomla','jsfiddle','lastfm','lastfm-square','leanpub','linkedin','linkedin','linkedin-square','linux','maxcdn','meanpath','medium','mixcloud','modx','odnoklassniki','odnoklassniki-square','opencart','openid','opera','optin-monster','pagelines','paypal','pied-piper','pied-piper-alt','pinterest','pinterest-p','pinterest-square','product-hunt','qq','rebel','reddit','reddit-alien','reddit-square','renren','rss','rss-square','safari','scribd','sellsy','share-alt','share-alt-square','shirtsinbulk','simplybuilt','skyatlas','skype','slack','slideshare','snapchat', 'soundcloud','spotify','stack-exchange','stack-overflow','steam','steam-square','stumbleupon','stumbleupon','stumbleupon-circle', 'telegram', 'tencent-weibo','trello','tripadvisor','tumblr','tumblr-square','twitch','twitter','twitter','twitter-square','usb','viacoin','vimeo','vimeo-square','vine','vk','weibo','weixin','whatsapp','wikipedia-w','windows','wordpress','xing','xing-square','yahoo','yahoo','y-combinator','yelp','youtube','youtube-play','youtube-square'
+            '500px','adn','amazon','android','angellist','apple','behance','behance-square','bitbucket','bitbucket-square','black-tie','btc','buysellads','chrome','codepen','codiepie','connectdevelop','contao','dashcube','delicious','delicious','deviantart','digg','dribbble','dropbox','drupal','edge','empire','expeditedssl','facebook','facebook','facebook-f (alias)','facebook-official','facebook-square','firefox','flickr','fonticons','fort-awesome','forumbee','foursquare','get-pocket','gg','gg-circle','git','github','github','github-alt','github-square', 'gitlab', 'git-square','google','google','google-plus','google-plus-circle','google-plus-official','google-plus-square', 'google-wallet','gratipay','hacker-news','houzz','instagram','internet-explorer','ioxhost','joomla','jsfiddle','lastfm','lastfm-square','leanpub','linkedin','linkedin','linkedin-square','linux','maxcdn','meanpath','medium','mixcloud','modx','odnoklassniki','odnoklassniki-square','opencart','openid','opera','optin-monster','pagelines','paypal','pied-piper','pied-piper-alt','pinterest','pinterest-p','pinterest-square','product-hunt','qq','rebel','reddit','reddit-alien','reddit-square','renren','rss','rss-square','safari','scribd','sellsy','share-alt','share-alt-square','shirtsinbulk','simplybuilt','skyatlas','skype','slack','slideshare','snapchat', 'soundcloud','spotify','stack-exchange','stack-overflow','steam','steam-square','stumbleupon','stumbleupon','stumbleupon-circle', 'telegram', 'tencent-weibo','trello','tripadvisor','tumblr','tumblr-square','twitch','twitter','twitter','twitter-square','usb','viacoin','vimeo','vimeo-square','vine','vk','weibo','weixin','whatsapp','wikipedia-w','windows','wordpress','xing','xing-square','yahoo','yahoo','y-combinator','yelp','youtube','youtube-play','youtube-square'
           ];
           //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
           module.inputConstructor = api.CZRInput.extend( module.CZRSocialsInputMths || {} );
@@ -12629,7 +12578,7 @@ $.extend( CZRMultiModuleControlMths, {
                           //               item.container = $_item_container;
 
                           //               $.when( item.renderItemContent() ).done( function() {
-                          //                   item.setupInputCollectionFromDOM();
+                          //                   api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
                           //               });
 
                           //               if ( ! item.module.isMultiItem() )
@@ -12646,7 +12595,7 @@ $.extend( CZRMultiModuleControlMths, {
                           module.czr_Item.each ( function( item ) {
                                 item.czr_ItemState.set('closed');
                                 item._destroyView( 0 );
-                                //item.removeInputCollection();
+                                //api.CZR_Helpers.removeInputCollection.call( item );
                                 module.czr_Item.remove( item.id );
                           } );
                     }
@@ -13718,14 +13667,6 @@ $.extend( CZRLayoutSelectMths , {
           }
           api.czrSetupStepper(control.id);
     });
-
-
-    /* WIDGET PANEL ICON */
-    if ( $('.control-panel-widgets').find('.accordion-section-title').first().length ) {
-          $('.control-panel-widgets').find('.accordion-section-title')
-                .first()
-                .prepend( $('<span/>', {class:'fa fa-magic'} ) );
-    }
 
 
     var fireHeaderButtons = function() {
