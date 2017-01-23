@@ -28,6 +28,7 @@ $.extend( CZRSocialModuleMths, {
                 id : '',
                 title : '' ,
                 'social-icon' : '',
+                'social-link-type' : 'url',
                 'social-link' : '',
                 'social-color' : serverControlParams.social_el_params.defaultSocialColor,
                 'social-target' : 1
@@ -51,9 +52,9 @@ $.extend( CZRSocialModuleMths, {
           module.isReady.then( function() {
                 //specific update for the item preModel on social-icon change
                 module.preItem.bind( function( to, from ) {
-                      if ( ! _.has(to, 'social-icon') )
+                      if ( ! ( _.has(to, 'social-icon') || _.has(to, 'social-link-type') ) )
                         return;
-                      if ( _.isEqual( to['social-icon'], from['social-icon'] ) )
+                      if ( _.isEqual( to['social-icon'], from['social-icon'] ) && _.isEqual( to['social-link-type'], from['social-link-type'] ) )
                         return;
                       module.updateItemModel( module.preItem, true );
                 });
@@ -102,42 +103,60 @@ $.extend( CZRSocialModuleMths, {
           setupSelect : function() {
                 var input      = this,
                     item = input.input_parent,
-                    module     = input.module,
-                    socialList = module.social_icons,
-                    _model = item();
+                    module     = input.module
+                    _model     = item(),
+                    _preItem   = _.isEmpty(_model.id);
 
-                //check if we are in the pre Item case => if so, the id is empty
-                //=> add the select text
-                if ( _.isEmpty(_model.id) ) {
-                      socialList = _.union( [ serverControlParams.translatedStrings.selectSocialIcon ], socialList );
+                //setup the select for the social icon
+                if ( 'social-icon' == this.id  ) {
+                          var socialList = module.social_icons;
+
+
+                          //check if we are in the pre Item case => if so, the id is empty
+                          //=> add the select text
+                          if ( _preItem ) {
+                                socialList = _.union( [ serverControlParams.translatedStrings.selectSocialIcon ], socialList );
+                          }
+
+                          //generates the options
+                          _.each( socialList , function( icon_name, k ) {
+                                //if we are in the preItem case at index 0 we have no icon
+                                var _value = ( _preItem && 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
+                                    _attributes = {
+                                          value : _value,
+                                          html: api.CZR_Helpers.capitalize(icon_name)
+                                    };
+                                if ( _value == _model['social-icon'] )
+                                  $.extend( _attributes, { selected : "selected" } );
+
+                                $( 'select[data-type="social-icon"]', input.container ).append( $('<option>', _attributes) );
+                          });
+
+                          function addIcon( state ) {
+                                if (! state.id) { return state.text; }
+                                var $state = $(
+                                  '<span class="fa ' + state.element.value.toLowerCase() + '">&nbsp;&nbsp;' + state.text + '</span>'
+                                );
+                                return $state;
+                          }
+
+                          //fire select2
+                          $( 'select[data-type="social-icon"]', input.container ).select2( {
+                                  templateResult: addIcon,
+                                  templateSelection: addIcon
+                          });
                 }
+                //setup the select for the social link type
+                else if ( _preItem && 'social-link-type' == this.id ) {
+                          //only in pre item case
+                          var data = [{ id: 'url', text: 'url' }, { id: 'email', text: 'email' }, { id: 'tel', text: 'tel' }];
 
-                //generates the options
-                _.each( socialList , function( icon_name, k ) {
-                      var _value = ( 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
-                          _attributes = {
-                                value : _value,
-                                html: api.CZR_Helpers.capitalize(icon_name)
-                          };
-                      if ( _value == _model['social-icon'] )
-                        $.extend( _attributes, { selected : "selected" } );
+                          //fire select2
+                          $( 'select[data-type="social-link-type"]', input.container )
+                                .select2( { data:data, minimumResultsForSearch: Infinity } )
+                                .append( $('<option>', { value: 'url' } ) );
 
-                      $( 'select[data-type="social-icon"]', input.container ).append( $('<option>', _attributes) );
-                });
-
-                function addIcon( state ) {
-                      if (! state.id) { return state.text; }
-                      var $state = $(
-                        '<span class="fa ' + state.element.value.toLowerCase() + '">&nbsp;&nbsp;' + state.text + '</span>'
-                      );
-                      return $state;
                 }
-
-                //fire select2
-                $( 'select[data-type="social-icon"]', input.container ).select2( {
-                        templateResult: addIcon,
-                        templateSelection: addIcon
-                });
         },
 
         setupColorPicker : function( obj ) {
