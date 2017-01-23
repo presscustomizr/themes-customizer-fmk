@@ -52,6 +52,8 @@ $.extend( CZRInputMths , {
           var trigger_map = {
                 text : 'keyup',
                 textarea : 'keyup',
+                url: 'keyup',
+                tel: 'keyup',
                 password : 'keyup',
                 color : 'colorpickerchange',
                 range : 'input propertychange'
