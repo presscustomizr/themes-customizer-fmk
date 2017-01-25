@@ -175,6 +175,7 @@ $.extend( CZRBaseModuleControlMths, {
         return api.control( api.CZR_Helpers.build_setId( control.params.syncCollection ) );
   },
 
+
   //@return the collection [] of saved module(s) to instantiate
   //This method does not make sure that the module model is ready for API.
   //=> it just returns an array of saved module candidates to instantiate.

@@ -127,52 +127,45 @@ $.extend( CZRModuleMths, {
 
               //initialize the module api.Value()
               //constructorOptions has the same structure as the one described in prepareModuleforAPI
-              module.set( module.initializeModuleModel( constructorOptions ) );
+              //setting the module Value won't be listen to at this stage
+              module.initializeModuleModel( constructorOptions )
+                    .done( function( initialModuleValue ) {
+                          module.set( initialModuleValue );
+                    })
+                    .fail( function( response ){ api.consoleLog( 'Module : ' + module.id + ' initialize module model failed : ', response ); })
+                    .always( function( initialModuleValue ) {
+                          //listen to each single module change
+                          module.callbacks.add( function() { return module.moduleReact.apply(module, arguments ); } );
 
-              //listen to each single module change
-              module.callbacks.add( function() { return module.moduleReact.apply(module, arguments ); } );
+                          //if the module is not registered yet (for example when the module is added by user),
+                          //=> push it to the collection of the module-collection control
+                          //=> updates the wp api setting
+                          if (  ! module.control.isModuleRegistered( module.id ) ) {
+                              module.control.updateModulesCollection( { module : constructorOptions, is_registered : false } );
+                          }
 
-              //if the module is not registered yet (for example when the module is added by user),
-              //=> push it to the collection of the module-collection control
-              //=> updates the wp api setting
-              if (  ! module.control.isModuleRegistered( module.id ) ) {
-                  module.control.updateModulesCollection( { module : constructorOptions, is_registered : false } );
-              }
+                          module.bind('items-collection-populated', function( collection ) {
+                                //listen to item Collection changes
+                                module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply(module, arguments ); } );
 
-              module.bind('items-collection-populated', function( collection ) {
-                    //listen to item Collection changes
-                    module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply(module, arguments ); } );
+                                //it can be overridden by a module in its initialize method
+                                if ( module.isMultiItem() )
+                                  module._makeItemsSortable();
 
-                    //it can be overridden by a module in its initialize method
-                    if ( module.isMultiItem() )
-                      module._makeItemsSortable();
+                                //api.consoleLog('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
+                          });
 
-                    //api.consoleLog('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
-              });
+                          //populate and instantiate the items now when a module is embedded in a regular control
+                          //if in a sektion, the populateSavedItemCollection() will be fired on module edit
+                          if ( ! module.isInSektion() )
+                            module.populateSavedItemCollection();
 
-              //populate and instantiate the items now when a module is embedded in a regular control
-              //if in a sektion, the populateSavedItemCollection() will be fired on module edit
-              if ( ! module.isInSektion() )
-                module.populateSavedItemCollection();
-
-              //When the module has modOpt :
-              //=> Instantiate the modOpt and setup listener
-              if ( module.hasModOpt() ) {
-                    //Prepare the modOpt and instantiate it
-                    var modOpt_candidate = module.prepareModOptForAPI( module().modOpt || {} );
-                    module.czr_ModOpt = new module.modOptConstructor( modOpt_candidate );
-                    module.czr_ModOpt.ready();
-                    //update the module model on modOpt change
-                    module.czr_ModOpt.callbacks.add( function( to, from, data ) {
-                          var _current_model = module(),
-                              _new_model = $.extend( true, {}, _current_model );
-                          _new_model.modOpt = to;
-                          //update the dirtyness state
-                          module.isDirty(true);
-                          //set the the new items model
-                          module( _new_model, data );
+                          //When the module has modOpt :
+                          //=> Instantiate the modOpt and setup listener
+                          if ( module.hasModOpt() ) {
+                              module.instantiateModOpt();
+                          }
                     });
-              }
         });
   },
 
@@ -196,7 +189,7 @@ $.extend( CZRModuleMths, {
   //fired when module is initialized, on module.isReady.done()
   //designed to be extended or overridden to add specific items or properties
   initializeModuleModel : function( constructorOptions ) {
-        var module = this;
+        var module = this, dfd = $.Deferred();
         if ( ! module.isMultiItem() && ! module.isCrud() ) {
               //this is a static module. We only have one item
               //init module item if needed.
@@ -205,7 +198,7 @@ $.extend( CZRModuleMths, {
                     constructorOptions.items = [ $.extend( def, { id : module.id } ) ];
               }
         }
-        return constructorOptions;
+        return  dfd.resolve( constructorOptions ).promise();
   },
 
 
@@ -296,6 +289,29 @@ $.extend( CZRModuleMths, {
 
   hasModOpt : function() {
         return api.CZR_Helpers.hasModuleModOpt( null, this );
+  },
+
+
+  //////////////////////////////////
+  ///PREPARE AND INSTANTIATE MODULE OPTION
+  //////////////////////////////////
+  //fired when module isReady
+  instantiateModOpt : function() {
+        var module = this;
+        //Prepare the modOpt and instantiate it
+        var modOpt_candidate = module.prepareModOptForAPI( module().modOpt || {} );
+        module.czr_ModOpt = new module.modOptConstructor( modOpt_candidate );
+        module.czr_ModOpt.ready();
+        //update the module model on modOpt change
+        module.czr_ModOpt.callbacks.add( function( to, from, data ) {
+              var _current_model = module(),
+                  _new_model = $.extend( true, {}, _current_model );
+              _new_model.modOpt = to;
+              //update the dirtyness state
+              module.isDirty(true);
+              //set the the new items model
+              module( _new_model, data );
+        });
   },
 
   //@return an API ready modOpt object with the following properties
