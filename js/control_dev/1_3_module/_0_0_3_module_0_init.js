@@ -83,9 +83,7 @@ $.extend( CZRModuleMths, {
         /*-----------------------------------------------
         //ITEMS
         ------------------------------------------------*/
-        module.itemCollection = new api.Value();
-        //initialize the collection with the constructor options
-        module.itemCollection.set([]);
+        module.itemCollection = new api.Value( [] );
 
         //declares a default Item API model
         module.defaultAPIitemModel = {
@@ -198,7 +196,7 @@ $.extend( CZRModuleMths, {
                     constructorOptions.items = [ $.extend( def, { id : module.id } ) ];
               }
         }
-        return  dfd.resolve( constructorOptions ).promise();
+        return dfd.resolve( constructorOptions ).promise();
   },
 
 
