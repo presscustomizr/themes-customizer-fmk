@@ -301,6 +301,24 @@
               });
               //reset the input collection property
               inputParentInst.inputCollection({});
+        },
+
+        //Re-instantiate a module control based on its id
+        //@param wpSetId : the api id of the control to refresh
+        refreshModuleControl : function( wpSetId ) {
+              var _constructor = api.controlConstructor.czr_module,
+                  _control_type = api.control( wpSetId ).params.type,
+                  _control_data = api.settings.controls[wpSetId];
+
+              //remove the container and its control
+              $.when( api.control( wpSetId ).container.remove() ).done( function() {
+                    //remove the control from the api control collection
+                    api.control.remove( wpSetId );
+
+                    //re-instantiate the control with the updated _control_data
+                    api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
+              });
+
         }
   });//$.extend
 
