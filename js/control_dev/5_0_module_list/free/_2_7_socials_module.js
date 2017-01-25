@@ -16,7 +16,152 @@ $.extend( CZRSocialModuleMths, {
 
 
           this.social_icons = [
-            '500px','adn','amazon','android','angellist','apple','behance','behance-square','bitbucket','bitbucket-square','black-tie','btc','buysellads','chrome','codepen','codiepie','connectdevelop','contao','dashcube','delicious','delicious','deviantart','digg','dribbble','dropbox','drupal','edge','empire','expeditedssl','facebook','facebook','facebook-f (alias)','facebook-official','facebook-square','firefox','flickr','fonticons','fort-awesome','forumbee','foursquare','get-pocket','gg','gg-circle','git','github','github','github-alt','github-square', 'gitlab', 'git-square','google','google','google-plus','google-plus-circle','google-plus-official','google-plus-square', 'google-wallet','gratipay','hacker-news','houzz','instagram','internet-explorer','ioxhost','joomla','jsfiddle','lastfm','lastfm-square','leanpub','linkedin','linkedin','linkedin-square','linux','maxcdn','meanpath','medium','mixcloud','modx','odnoklassniki','odnoklassniki-square','opencart','openid','opera','optin-monster','pagelines','paypal','pied-piper','pied-piper-alt','pinterest','pinterest-p','pinterest-square','product-hunt','qq','rebel','reddit','reddit-alien','reddit-square','renren','rss','rss-square','safari','scribd','sellsy','share-alt','share-alt-square','shirtsinbulk','simplybuilt','skyatlas','skype','slack','slideshare','snapchat', 'soundcloud','spotify','stack-exchange','stack-overflow','steam','steam-square','stumbleupon','stumbleupon','stumbleupon-circle', 'telegram', 'tencent-weibo','trello','tripadvisor','tumblr','tumblr-square','twitch','twitter','twitter','twitter-square','usb','viacoin','vimeo','vimeo-square','vine','vk','weibo','weixin','whatsapp','wikipedia-w','windows','wordpress','xing','xing-square','yahoo','yahoo','y-combinator','yelp','youtube','youtube-play','youtube-square'
+            '500px',
+            'adn',
+            'amazon',
+            'android',
+            'angellist',
+            'apple',
+            'behance',
+            'behance-square',
+            'bitbucket',
+            'bitbucket-square',
+            'black-tie',
+            'btc',
+            'buysellads',
+            'chrome',
+            'codepen',
+            'codiepie',
+            'connectdevelop',
+            'contao',
+            'dashcube',
+            'delicious',
+            'deviantart',
+            'digg',
+            'dribbble',
+            'dropbox',
+            'drupal',
+            'edge',
+            'empire',
+            'envelope',
+            'envelope-o',
+            'envelope-square',
+            'expeditedssl',
+            'facebook',
+            'facebook-f (alias)',
+            'facebook-official',
+            'facebook-square',
+            'firefox',
+            'flickr',
+            'fonticons',
+            'fort-awesome',
+            'forumbee',
+            'foursquare',
+            'get-pocket',
+            'gg',
+            'gg-circle',
+            'git',
+            'github',
+            'github-alt',
+            'github-square',
+            'gitlab',
+            'git-square',
+            'google',
+            'google-plus',
+            'google-plus-circle',
+            'google-plus-official',
+            'google-plus-square',
+            'google-wallet',
+            'gratipay',
+            'hacker-news',
+            'houzz',
+            'instagram',
+            'internet-explorer',
+            'ioxhost',
+            'joomla',
+            'jsfiddle',
+            'lastfm',
+            'lastfm-square',
+            'leanpub',
+            'linkedin',
+            'linkedin-square',
+            'linux',
+            'maxcdn',
+            'meanpath',
+            'medium',
+            'mixcloud',
+            'modx',
+            'odnoklassniki',
+            'odnoklassniki-square',
+            'opencart',
+            'openid',
+            'opera',
+            'optin-monster',
+            'pagelines',
+            'paypal',
+            'pied-piper',
+            'pied-piper-alt',
+            'pinterest',
+            'pinterest-p',
+            'pinterest-square',
+            'product-hunt',
+            'qq',
+            'rebel',
+            'reddit',
+            'reddit-alien',
+            'reddit-square',
+            'renren',
+            'rss',
+            'rss-square',
+            'safari',
+            'scribd',
+            'sellsy',
+            'share-alt',
+            'share-alt-square',
+            'shirtsinbulk',
+            'simplybuilt',
+            'skyatlas',
+            'skype',
+            'slack',
+            'slideshare',
+            'snapchat',
+            'soundcloud',
+            'spotify',
+            'stack-exchange',
+            'stack-overflow',
+            'steam',
+            'steam-square',
+            'stumbleupon',
+            'stumbleupon-circle',
+            'telegram',
+            'tencent-weibo',
+            'trello',
+            'tripadvisor',
+            'tumblr',
+            'tumblr-square',
+            'twitch',
+            'twitter',
+            'twitter-square',
+            'usb',
+            'viacoin',
+            'vimeo',
+            'vimeo-square',
+            'vine',
+            'vk',
+            'weibo',
+            'weixin',
+            'whatsapp',
+            'wikipedia-w',
+            'windows',
+            'wordpress',
+            'xing',
+            'xing-square',
+            'yahoo',
+            'y-combinator',
+            'yelp',
+            'youtube',
+            'youtube-play',
+            'youtube-square'
           ];
           //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
           module.inputConstructor = api.CZRInput.extend( module.CZRSocialsInputMths || {} );
@@ -74,7 +219,7 @@ $.extend( CZRSocialModuleMths, {
             return;
 
           var _new_model  = $.extend( true, {}, item() ),//always safer to deep clone ( alternative to _.clone() ) => we don't know how nested this object might be in the future.
-              _new_title  = api.CZR_Helpers.capitalize( _new_model['social-icon'].replace('fa-', '') ),
+              _new_title  = this.getTitleFromIcon( _new_model['social-icon'] ),
               _new_color  = serverControlParams.social_el_params.defaultSocialColor;
 
           //add text follow us... to the title
@@ -86,11 +231,20 @@ $.extend( CZRSocialModuleMths, {
           } else {
               item.czr_Input('title').set( _new_title );
               item.czr_Input('social-link').set( '' );
-              item.czr_Input('social-color').set( _new_color );
+              if ( item.czr_Input('social-color') ) { //optional
+                item.czr_Input('social-color').set( _new_color );
+              }
           }
   },
 
+  /* Helpers */
+  getTitleFromIcon : function( icon ) {
+          return api.CZR_Helpers.capitalize( icon.replace('fa-', '').replace('envelope', 'email') );
+  },
 
+  getIconFromTitle : function( title ) {
+          return  'fa-' . title.toLowerCase().replace('envelope', 'email');
+  },
 
 
 
@@ -100,24 +254,27 @@ $.extend( CZRSocialModuleMths, {
 
   CZRSocialsInputMths : {
           setupSelect : function() {
-                var input      = this,
-                    item = input.input_parent,
-                    module     = input.module,
-                    socialList = module.social_icons,
-                    _model = item();
+                var input        = this,
+                    item         = input.input_parent,
+                    module       = input.module,
+                    socialList   = module.social_icons,
+                    _model       = item(),
+                    //check if we are in the pre Item case => if so, the id is empty
+                    is_preItem   = _.isEmpty(_model.id);
 
-                //check if we are in the pre Item case => if so, the id is empty
-                //=> add the select text
-                if ( _.isEmpty(_model.id) ) {
+                //=> add the select text in the pre Item case
+                if ( is_preItem ) {
                       socialList = _.union( [ serverControlParams.translatedStrings.selectSocialIcon ], socialList );
                 }
 
                 //generates the options
                 _.each( socialList , function( icon_name, k ) {
-                      var _value = ( 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
+                      // in the pre Item case the first select element is the notice "Select a social icon"
+                      // doesn't need the fa-* class
+                      var _value = ( is_preItem && 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
                           _attributes = {
                                 value : _value,
-                                html: api.CZR_Helpers.capitalize(icon_name)
+                                html: module.getTitleFromIcon( icon_name )
                           };
                       if ( _value == _model['social-icon'] )
                         $.extend( _attributes, { selected : "selected" } );
@@ -142,18 +299,18 @@ $.extend( CZRSocialModuleMths, {
 
         setupColorPicker : function( obj ) {
                 var input      = this,
-                    item = input.input_parent,
+                    item       = input.input_parent,
                     module     = input.module;
 
                 $( 'input[data-type="social-color"]', input.container ).wpColorPicker( {
-                          defaultColor : 'rgba(255,255,255,0.7)',
+                          defaultColor : serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)',
                           change : function( e, o ) {
                                 //if the input val is not updated here, it's not detected right away.
                                 //weird
                                 //is there a "change complete" kind of event for iris ?
                                 //hack to reset the color to default...@todo => use another color picker.
                                 if ( _.has(o, 'color') && 16777215 == o.color._color )
-                                  $(this).val( 'rgba(255,255,255,0.7)' );
+                                  $(this).val( serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)' );
                                 else
                                   $(this).val( o.color.toString() );
 
@@ -210,7 +367,7 @@ $.extend( CZRSocialModuleMths, {
                   var item = this,
                       module     = item.module,
                       _model = model || item(),
-                      _title = api.CZR_Helpers.capitalize( _model['social-icon'].replace('fa-', '') );
+                      _title = module.getTitleFromIcon( _model['social-icon'] );
 
                   $( '.' + module.control.css_attr.item_title , item.container ).html(
                     item._buildTitle( _title, _model['social-icon'], _model['social-color'] )
