@@ -25,6 +25,7 @@
               });
 
               //stores and update the widget zone settings
+              api.czr_widgetZoneSettings = api.czr_widgetZoneSettings || new api.Value();//will store all widget zones data sent by preview as an observable object
               api.czr_widgetZoneSettings.set( {
                     actives :  data.renderedSidebars,
                     inactives :  _inactives,
@@ -35,12 +36,16 @@
 
         });
 
-        api.previewer.bind( 'czr-wp-conditional-ready', function(data ) {
-              api.czr_wp_conditionals.set( data );
+        /* WP CONDITIONAL TAGS => stores and observes the WP conditional tags sent by the preview */
+        api.previewer.bind( 'czr-query-data-ready', function( data ) {
+              api.czr_wpQueryInfos = api.czr_wpQueryInfos || new api.Value();
+              api.czr_wpQueryInfos( data );
         });
 
-        api.previewer.bind( 'czr-partial-refresh', function(data) {
-              api.czr_partials.set(data);
+        //PARTIAL REFRESHS => stores and observes the partials sent by the preview
+        api.previewer.bind( 'czr-partial-refresh', function( data ) {
+              api.czr_partials = api.czr_partials || new api.Value();
+              api.czr_partials.set( data );
         });
   });//api.bind('ready')
 })( wp.customize , jQuery, _ );

@@ -51,7 +51,18 @@ $.extend( CZRWidgetAreaModuleMths, {
           //overrides the default success message
           this.itemAddedMessage = serverControlParams.translatedStrings.widgetZoneAdded;
 
-          //observe and react to sidebar insights from the preview frame
+          //Observe and react to sidebar insights from the preview frame
+          // SIDEBAR INSIGHTS => stores and observes the sidebars and widgets settings sent by the preview */
+          if ( ! _.has( api, 'sidebar_insights' ) ) {
+                api.sidebar_insights = new api.Values();
+                api.sidebar_insights.create('candidates');//will store the sidebar candidates on preview refresh
+                api.sidebar_insights.create('actives');//will record the refreshed active list of active sidebars sent from the preview
+                api.sidebar_insights.create('inactives');
+                api.sidebar_insights.create('registered');
+                api.sidebar_insights.create('available_locations');
+          }
+
+
           this.listenToSidebarInsights();
 
           //React on 'houston-widget-settings'
@@ -60,6 +71,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           // registered :  _registered,
           // candidates :  _candidates,
           // available_locations :  data.availableWidgetLocations//built server side
+          api.czr_widgetZoneSettings = api.czr_widgetZoneSettings || new api.Value();
           api.czr_widgetZoneSettings.bind( function( updated_data_sent_from_preview , from ) {
                   module.isReady.then( function() {
                         _.each( updated_data_sent_from_preview, function( _data, _key ) {
@@ -140,9 +152,9 @@ $.extend( CZRWidgetAreaModuleMths, {
   //overrides parent method
   //adds the default widget zones in the items
   initializeModuleModel : function( constructorOptions ) {
-              var module = this;
+              var module = this, dfd = $.Deferred();
               constructorOptions.items = _.union( _.has( module.serverParams, 'default_zones' ) ? module.serverParams.default_zones : [], constructorOptions.items );
-              return constructorOptions;
+              return dfd.resolve( constructorOptions ).promise();
   },
 
 
@@ -498,13 +510,13 @@ $.extend( CZRWidgetAreaModuleMths, {
           },
 
           //@param contexts = array of contexts
+          //api.czr_wpQueryInfos is refreshed on each preview refresh
           _getMatchingContexts : function( defaults ) {
                   var module = this,
-                      _current = api.czr_wp_conditionals() || {},
-                      _matched = _.filter(module.context_match_map, function( hu, wp ) { return true === _current[wp]; });
+                      _current = api.czr_wpQueryInfos().conditional_tags || {},
+                      _matched = _.filter( module.context_match_map, function( hu, wp ) { return true === _current[wp]; } );
 
                   return _.isEmpty( _matched ) ? defaults : _matched;
-
           }
   },//CZRWZonesItem
 

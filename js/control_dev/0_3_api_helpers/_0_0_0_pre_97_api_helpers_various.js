@@ -304,10 +304,6 @@
         }
   });//$.extend
 
-  //react to a ctx change
-  //api.czr_wp_conditionals.callbacks.add( function( e, o) {
-    //api.consoleLog('the wp conditionals have been updated', e, o );
-  //});
 
   // $( window ).on( 'message', function( e, o) {
   //   api.consoleLog('WHAT ARE WE LISTENING TO?', e, o );
