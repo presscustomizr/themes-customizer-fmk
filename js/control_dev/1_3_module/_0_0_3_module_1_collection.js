@@ -238,7 +238,7 @@ $.extend( CZRModuleMths, {
           }
 
           //updates the collection value
-          module.itemCollection.set(_new_collection);
+          module.itemCollection.set( _new_collection );
   },
 
 
@@ -264,5 +264,30 @@ $.extend( CZRModuleMths, {
               throw new Error('There was a problem when re-building the item collection from the DOM in module : ' + module.id );
           }
           return _new_collection;
+  },
+
+
+  //This method should
+  //1) remove the item views
+  //2) remove the czr_items instances
+  //3) remove the item collection
+  //4) re-initialize items
+  //5) re-setup the item collection
+  //6) re-instantiate the items
+  //7) re-render their views
+  refreshItemCollection : function() {
+        var module = this;
+        //Remove item views and instances
+        module.czr_Item.each( function( _itm ) {
+              $.when( module.czr_Item( _itm.id ).container.remove() ).done( function() {
+                    //Remove item instances
+                    module.czr_Item.remove( _itm.id );
+              });
+        });
+
+        // Reset the item collection
+        // => the collection listeners will be setup after populate, on 'items-collection-populated'
+        module.itemCollection = new api.Value( [] );
+        module.populateSavedItemCollection();
   }
 });//$.extend//CZRBaseControlMths
