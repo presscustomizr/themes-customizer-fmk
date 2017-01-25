@@ -1,10 +1,15 @@
 
 (function (api, $, _) {
+  //This promise will let us know when we have the first set of preview query ready to use
+  //This is needed for modules contextually dependant
+  //For example, the slider module will initialize the module model based on the contextual informations, if no items have been set yet.
+  api.czr_wpQueryDataReady = $.Deferred();
+
   /*****************************************************************************
   * CAPTURE PREVIEW INFORMATIONS ON REFRESH + REACT TO THEM
   *****************************************************************************/
   //Data are sent by the preview frame when the panel has sent the 'sync' or even better 'active' event
-  api.bind('ready', function() {
+  api.bind( 'ready', function() {
         //observe widget settings changes
         api.previewer.bind('houston-widget-settings', function(data) {
               //get the difference
@@ -40,6 +45,7 @@
         api.previewer.bind( 'czr-query-data-ready', function( data ) {
               api.czr_wpQueryInfos = api.czr_wpQueryInfos || new api.Value();
               api.czr_wpQueryInfos( data );
+              api.czr_wpQueryDataReady.resolve( data );
         });
 
         //PARTIAL REFRESHS => stores and observes the partials sent by the preview
