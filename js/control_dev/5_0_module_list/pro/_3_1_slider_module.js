@@ -3,10 +3,10 @@
 var CZRSlideModuleMths = CZRSlideModuleMths || {};
 
 $.extend( CZRSlideModuleMths, {
-  initialize: function( id, options ) {
+  initialize: function( id, constructorOptions ) {
           var module = this;
           //run the parent initialize
-          api.CZRDynModule.prototype.initialize.call( module, id, options );
+          api.CZRDynModule.prototype.initialize.call( module, id, constructorOptions );
 
           //extend the module with new template Selectors
           $.extend( module, {
@@ -66,9 +66,70 @@ $.extend( CZRSlideModuleMths, {
                 module.ready();
           });
 
-          module.isReady.then( function() {});
+          // module.czr_wpQueryInfos = api.czr_wpQueryInfos();
+          // if ( 'resolved' == api.czr_wpQueryDataReady.state() ) {
+          //     module.czr_wpQueryInfos( api.czr_wpQueryInfos() );
+          // } else {
+          //     api.czr_wpQueryDataReady.done( function() {
+          //           module.czr_wpQueryInfos( api.czr_wpQueryInfos() );
+          //     });
+          // }
+          module.isReady.then( function() {
+                //Refresh the items if the associated setting has no value yet
+                api.czr_wpQueryInfos.bind( function( query_data ) {
+                      var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                      if ( ! api.has( _setId ) || ! _.isEmpty( api( _setId )() ) )
+                        return;
+                      //module.refreshItemCollection();
+                      module.initializeModuleModel( constructorOptions, query_data )
+                            .done( function( newModuleValue ) {
+                                  module.set( newModuleValue );
+                                  module.refreshItemCollection();
+                            })
+                            .always( function( newModuleValue ) {
+
+                            });
+                } );
+          });
 
   },//initialize
+
+  //overrides the default method.
+  //Create a contextual item based on what the server send with 'czr-query-data-ready'
+  //This method is fired when the module is initialized
+  //and then on each query_data update, if the associated setting has not been set yet, it is fired to get the default contextual item
+  //1) image : if post / page, the featured image
+  //2) title : several cases @see : hu_set_hph_title()
+  //3) subtitle : no subtitle except for home page : the site tagline
+  initializeModuleModel : function( constructorOptions, new_data ) {
+        var module = this, dfd = $.Deferred();
+        // if ( ! _.isEmpty( constructorOptions.items ) )
+        //   return dfd.resolve( constructorOptions ).promise();
+        //Always get the query data from the freshest source
+        api.czr_wpQueryDataReady.then( function( data ) {
+              var _query_data, _default;
+              if ( _.isUndefined( new_data ) ) {
+                    _query_data = data.query_data;
+              } else {
+                    _query_data = new_data.query_data;
+              }
+
+              _default = $.extend( true, {}, module.defaultItemModel );
+              constructorOptions.items = [
+                    $.extend( _default, {
+                          'id' : 'default_item_' + module.id,
+                          'slide-background' : ( false !== _query_data.post_thumbnail_id ) ? _query_data.post_thumbnail_id : '',
+                          'slide-title' : false !== _query_data.post_title ? _query_data.post_title : ''
+                    })
+              ];
+              dfd.resolve( constructorOptions );
+        });
+        return dfd.promise();
+  },
+
+  _getServerDefaultSlideItem : function() {
+
+  },
 
 
   CZRSliderInputMths : {
