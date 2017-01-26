@@ -1,4 +1,9 @@
-/*! iCheck v1.0.1 by Damir Sultanov, http://git.io/arlzeA, MIT Licensed */
+/*! addEventListener Polyfill ie9- http://stackoverflow.com/a/27790212*/
+window.addEventListener=window.addEventListener||function(a,b){window.attachEvent("on"+a,b)},/*!  Datenow Polyfill ie9- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now */
+Date.now||(Date.now=function(){return(new Date).getTime()}),/*! Object.create monkey patch ie8 http://stackoverflow.com/a/18020326 */
+Object.create||(Object.create=function(a,b){function c(){}if("undefined"!=typeof b)throw"The multiple-argument version of Object.create is not provided by this browser and cannot be shimmed.";return c.prototype=a,new c}),/*! https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter */
+Array.prototype.filter||(Array.prototype.filter=function(a){"use strict";if(void 0===this||null===this)throw new TypeError;var b=Object(this),c=b.length>>>0;if("function"!=typeof a)throw new TypeError;for(var d=[],e=arguments.length>=2?arguments[1]:void 0,f=0;f<c;f++)if(f in b){var g=b[f];a.call(e,g,f,b)&&d.push(g)}return d}),/*! map was added to the ECMA-262 standard in the 5th edition */
+Array.prototype.map||(Array.prototype.map=function(a,b){var c,d,e;if(null===this)throw new TypeError(" this is null or not defined");var f=Object(this),g=f.length>>>0;if("function"!=typeof a)throw new TypeError(a+" is not a function");for(arguments.length>1&&(c=b),d=new Array(g),e=0;e<g;){var h,i;e in f&&(h=f[e],i=a.call(c,h,e,f),d[e]=i),e++}return d});/*! iCheck v1.0.1 by Damir Sultanov, http://git.io/arlzeA, MIT Licensed */
 if ( 'function' != typeof(jQuery.fn.iCheck) ) {
   !function(a){function b(a,b,e){var f=a[0],g=/er/.test(e)?p:/bl/.test(e)?n:l,h=e==q?{checked:f[l],disabled:f[n],indeterminate:"true"==a.attr(p)||"false"==a.attr(o)}:f[g];if(/^(ch|di|in)/.test(e)&&!h)c(a,g);else if(/^(un|en|de)/.test(e)&&h)d(a,g);else if(e==q)for(g in h)h[g]?c(a,g,!0):d(a,g,!0);else b&&"toggle"!=e||(b||a[u]("ifClicked"),h?f[r]!==k&&d(a,g):c(a,g))}function c(b,c,e){var q=b[0],u=b.parent(),v=c==l,x=c==p,y=c==n,z=x?o:v?m:"enabled",A=f(b,z+g(q[r])),B=f(b,c+g(q[r]));if(!0!==q[c]){if(!e&&c==l&&q[r]==k&&q.name){var C=b.closest("form"),D='input[name="'+q.name+'"]',D=C.length?C.find(D):a(D);D.each(function(){this!==q&&a(this).data(i)&&d(a(this),c)})}x?(q[c]=!0,q[l]&&d(b,l,"force")):(e||(q[c]=!0),v&&q[p]&&d(b,p,!1)),h(b,v,c,e)}q[n]&&f(b,w,!0)&&u.find("."+j).css(w,"default"),u[s](B||f(b,c)||""),y?u.attr("aria-disabled","true"):u.attr("aria-checked",x?"mixed":"true"),u[t](A||f(b,z)||"")}function d(a,b,c){var d=a[0],e=a.parent(),i=b==l,k=b==p,q=b==n,u=k?o:i?m:"enabled",v=f(a,u+g(d[r])),x=f(a,b+g(d[r]));!1!==d[b]&&((k||!c||"force"==c)&&(d[b]=!1),h(a,i,u,c)),!d[n]&&f(a,w,!0)&&e.find("."+j).css(w,"pointer"),e[t](x||f(a,b)||""),q?e.attr("aria-disabled","false"):e.attr("aria-checked","false"),e[s](v||f(a,u)||"")}function e(b,c){b.data(i)&&(b.parent().html(b.attr("style",b.data(i).s||"")),c&&b[u](c),b.off(".i").unwrap(),a(v+'[for="'+b[0].id+'"]').add(b.closest(v)).off(".i"))}function f(a,b,c){return a.data(i)?a.data(i).o[b+(c?"":"Class")]:void 0}function g(a){return a.charAt(0).toUpperCase()+a.slice(1)}function h(a,b,c,d){d||(b&&a[u]("ifToggled"),a[u]("ifChanged")[u]("if"+g(c)))}var i="iCheck",j=i+"-helper",k="radio",l="checked",m="un"+l,n="disabled",o="determinate",p="in"+o,q="update",r="type",s="addClass",t="removeClass",u="trigger",v="label",w="cursor",x=/ipad|iphone|ipod|android|blackberry|windows phone|opera mini|silk/i.test(navigator.userAgent);a.fn[i]=function(f,g){var h='input[type="checkbox"], input[type="'+k+'"]',m=a(),o=function(b){b.each(function(){var b=a(this);m=b.is(h)?m.add(b):m.add(b.find(h))})};if(/^(check|uncheck|toggle|indeterminate|determinate|disable|enable|update|destroy)$/i.test(f))return f=f.toLowerCase(),o(this),m.each(function(){var c=a(this);"destroy"==f?e(c,"ifDestroyed"):b(c,!0,f),a.isFunction(g)&&g()});if("object"!=typeof f&&f)return this;var w=a.extend({checkedClass:l,disabledClass:n,indeterminateClass:p,labelHover:!0,aria:!1},f),y=w.handle,z=w.hoverClass||"hover",A=w.focusClass||"focus",B=w.activeClass||"active",C=!!w.labelHover,D=w.labelHoverClass||"hover",E=0|(""+w.increaseArea).replace("%","");return("checkbox"==y||y==k)&&(h='input[type="'+y+'"]'),-50>E&&(E=-50),o(this),m.each(function(){var f=a(this);e(f);var g=this,h=g.id,m=-E+"%",o=100+2*E+"%",o={position:"absolute",top:m,left:m,display:"block",width:o,height:o,margin:0,padding:0,background:"#fff",border:0,opacity:0},m=x?{position:"absolute",visibility:"hidden"}:E?o:{position:"absolute",opacity:0},p="checkbox"==g[r]?w.checkboxClass||"icheckbox":w.radioClass||"i"+k,y=a(v+'[for="'+h+'"]').add(f.closest(v)),F=!!w.aria,G=i+"-"+Math.random().toString(36).substr(2,6),H='<div class="'+p+'" '+(F?'role="'+g[r]+'" ':"");F&&y.each(function(){H+='aria-labelledby="',this.id?H+=this.id:(this.id=G,H+=G),H+='"'}),H=f.wrap(H+"/>")[u]("ifCreated").parent().append(w.insert),o=a('<ins class="'+j+'"/>').css(o).appendTo(H),f.data(i,{o:w,s:f.attr("style")}).css(m),w.inheritClass&&H[s](g.className||""),w.inheritID&&h&&H.attr("id",i+"-"+h),"static"==H.css("position")&&H.css("position","relative"),b(f,!0,q),y.length&&y.on("click.i mouseover.i mouseout.i touchbegin.i touchend.i",function(c){var d=c[r],e=a(this);if(!g[n]){if("click"==d){if(a(c.target).is("a"))return;b(f,!1,!0)}else C&&(/ut|nd/.test(d)?(H[t](z),e[t](D)):(H[s](z),e[s](D)));if(!x)return!1;c.stopPropagation()}}),f.on("click.i focus.i blur.i keyup.i keydown.i keypress.i",function(a){var b=a[r];return a=a.keyCode,"click"==b?!1:"keydown"==b&&32==a?(g[r]==k&&g[l]||(g[l]?d(f,l):c(f,l)),!1):("keyup"==b&&g[r]==k?!g[l]&&c(f,l):/us|ur/.test(b)&&H["blur"==b?t:s](A),void 0)}),o.on("click mousedown mouseup mouseover mouseout touchbegin.i touchend.i",function(a){var c=a[r],d=/wn|up/.test(c)?B:z;if(!g[n]){if("click"==c?b(f,!1,!0):(/wn|er|in/.test(c)?H[s](d):H[t](d+" "+B),y.length&&C&&d==z&&y[/ut|nd/.test(c)?t:s](D)),!x)return!1;a.stopPropagation()}})})}}(window.jQuery||window.Zepto);
 }
@@ -10086,7 +10091,152 @@ $.extend( CZRSocialModuleMths, {
 
 
           this.social_icons = [
-            '500px','adn','amazon','android','angellist','apple','behance','behance-square','bitbucket','bitbucket-square','black-tie','btc','buysellads','chrome','codepen','codiepie','connectdevelop','contao','dashcube','delicious','delicious','deviantart','digg','dribbble','dropbox','drupal','edge','empire','expeditedssl','facebook','facebook','facebook-f (alias)','facebook-official','facebook-square','firefox','flickr','fonticons','fort-awesome','forumbee','foursquare','get-pocket','gg','gg-circle','git','github','github','github-alt','github-square', 'gitlab', 'git-square','google','google','google-plus','google-plus-circle','google-plus-official','google-plus-square', 'google-wallet','gratipay','hacker-news','houzz','instagram','internet-explorer','ioxhost','joomla','jsfiddle','lastfm','lastfm-square','leanpub','linkedin','linkedin','linkedin-square','linux','maxcdn','meanpath','medium','mixcloud','modx','odnoklassniki','odnoklassniki-square','opencart','openid','opera','optin-monster','pagelines','paypal','pied-piper','pied-piper-alt','pinterest','pinterest-p','pinterest-square','product-hunt','qq','rebel','reddit','reddit-alien','reddit-square','renren','rss','rss-square','safari','scribd','sellsy','share-alt','share-alt-square','shirtsinbulk','simplybuilt','skyatlas','skype','slack','slideshare','snapchat', 'soundcloud','spotify','stack-exchange','stack-overflow','steam','steam-square','stumbleupon','stumbleupon','stumbleupon-circle', 'telegram', 'tencent-weibo','trello','tripadvisor','tumblr','tumblr-square','twitch','twitter','twitter','twitter-square','usb','viacoin','vimeo','vimeo-square','vine','vk','weibo','weixin','whatsapp','wikipedia-w','windows','wordpress','xing','xing-square','yahoo','yahoo','y-combinator','yelp','youtube','youtube-play','youtube-square'
+            '500px',
+            'adn',
+            'amazon',
+            'android',
+            'angellist',
+            'apple',
+            'behance',
+            'behance-square',
+            'bitbucket',
+            'bitbucket-square',
+            'black-tie',
+            'btc',
+            'buysellads',
+            'chrome',
+            'codepen',
+            'codiepie',
+            'connectdevelop',
+            'contao',
+            'dashcube',
+            'delicious',
+            'deviantart',
+            'digg',
+            'dribbble',
+            'dropbox',
+            'drupal',
+            'edge',
+            'empire',
+            'envelope',
+            'envelope-o',
+            'envelope-square',
+            'expeditedssl',
+            'facebook',
+            'facebook-f (alias)',
+            'facebook-official',
+            'facebook-square',
+            'firefox',
+            'flickr',
+            'fonticons',
+            'fort-awesome',
+            'forumbee',
+            'foursquare',
+            'get-pocket',
+            'gg',
+            'gg-circle',
+            'git',
+            'github',
+            'github-alt',
+            'github-square',
+            'gitlab',
+            'git-square',
+            'google',
+            'google-plus',
+            'google-plus-circle',
+            'google-plus-official',
+            'google-plus-square',
+            'google-wallet',
+            'gratipay',
+            'hacker-news',
+            'houzz',
+            'instagram',
+            'internet-explorer',
+            'ioxhost',
+            'joomla',
+            'jsfiddle',
+            'lastfm',
+            'lastfm-square',
+            'leanpub',
+            'linkedin',
+            'linkedin-square',
+            'linux',
+            'maxcdn',
+            'meanpath',
+            'medium',
+            'mixcloud',
+            'modx',
+            'odnoklassniki',
+            'odnoklassniki-square',
+            'opencart',
+            'openid',
+            'opera',
+            'optin-monster',
+            'pagelines',
+            'paypal',
+            'pied-piper',
+            'pied-piper-alt',
+            'pinterest',
+            'pinterest-p',
+            'pinterest-square',
+            'product-hunt',
+            'qq',
+            'rebel',
+            'reddit',
+            'reddit-alien',
+            'reddit-square',
+            'renren',
+            'rss',
+            'rss-square',
+            'safari',
+            'scribd',
+            'sellsy',
+            'share-alt',
+            'share-alt-square',
+            'shirtsinbulk',
+            'simplybuilt',
+            'skyatlas',
+            'skype',
+            'slack',
+            'slideshare',
+            'snapchat',
+            'soundcloud',
+            'spotify',
+            'stack-exchange',
+            'stack-overflow',
+            'steam',
+            'steam-square',
+            'stumbleupon',
+            'stumbleupon-circle',
+            'telegram',
+            'tencent-weibo',
+            'trello',
+            'tripadvisor',
+            'tumblr',
+            'tumblr-square',
+            'twitch',
+            'twitter',
+            'twitter-square',
+            'usb',
+            'viacoin',
+            'vimeo',
+            'vimeo-square',
+            'vine',
+            'vk',
+            'weibo',
+            'weixin',
+            'whatsapp',
+            'wikipedia-w',
+            'windows',
+            'wordpress',
+            'xing',
+            'xing-square',
+            'yahoo',
+            'y-combinator',
+            'yelp',
+            'youtube',
+            'youtube-play',
+            'youtube-square'
           ];
           //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
           module.inputConstructor = api.CZRInput.extend( module.CZRSocialsInputMths || {} );
@@ -10144,7 +10294,7 @@ $.extend( CZRSocialModuleMths, {
             return;
 
           var _new_model  = $.extend( true, {}, item() ),//always safer to deep clone ( alternative to _.clone() ) => we don't know how nested this object might be in the future.
-              _new_title  = api.CZR_Helpers.capitalize( _new_model['social-icon'].replace('fa-', '') ),
+              _new_title  = this.getTitleFromIcon( _new_model['social-icon'] ),
               _new_color  = serverControlParams.social_el_params.defaultSocialColor;
 
           //add text follow us... to the title
@@ -10156,11 +10306,20 @@ $.extend( CZRSocialModuleMths, {
           } else {
               item.czr_Input('title').set( _new_title );
               item.czr_Input('social-link').set( '' );
-              item.czr_Input('social-color').set( _new_color );
+              if ( item.czr_Input('social-color') ) { //optional
+                item.czr_Input('social-color').set( _new_color );
+              }
           }
   },
 
+  /* Helpers */
+  getTitleFromIcon : function( icon ) {
+          return api.CZR_Helpers.capitalize( icon.replace('fa-', '').replace('envelope', 'email') );
+  },
 
+  getIconFromTitle : function( title ) {
+          return  'fa-' . title.toLowerCase().replace('envelope', 'email');
+  },
 
 
 
@@ -10170,24 +10329,27 @@ $.extend( CZRSocialModuleMths, {
 
   CZRSocialsInputMths : {
           setupSelect : function() {
-                var input      = this,
-                    item = input.input_parent,
-                    module     = input.module,
-                    socialList = module.social_icons,
-                    _model = item();
+                var input        = this,
+                    item         = input.input_parent,
+                    module       = input.module,
+                    socialList   = module.social_icons,
+                    _model       = item(),
+                    //check if we are in the pre Item case => if so, the id is empty
+                    is_preItem   = _.isEmpty(_model.id);
 
-                //check if we are in the pre Item case => if so, the id is empty
-                //=> add the select text
-                if ( _.isEmpty(_model.id) ) {
+                //=> add the select text in the pre Item case
+                if ( is_preItem ) {
                       socialList = _.union( [ serverControlParams.translatedStrings.selectSocialIcon ], socialList );
                 }
 
                 //generates the options
                 _.each( socialList , function( icon_name, k ) {
-                      var _value = ( 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
+                      // in the pre Item case the first select element is the notice "Select a social icon"
+                      // doesn't need the fa-* class
+                      var _value = ( is_preItem && 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
                           _attributes = {
                                 value : _value,
-                                html: api.CZR_Helpers.capitalize(icon_name)
+                                html: module.getTitleFromIcon( icon_name )
                           };
                       if ( _value == _model['social-icon'] )
                         $.extend( _attributes, { selected : "selected" } );
@@ -10212,18 +10374,18 @@ $.extend( CZRSocialModuleMths, {
 
         setupColorPicker : function( obj ) {
                 var input      = this,
-                    item = input.input_parent,
+                    item       = input.input_parent,
                     module     = input.module;
 
                 $( 'input[data-type="social-color"]', input.container ).wpColorPicker( {
-                          defaultColor : 'rgba(255,255,255,0.7)',
+                          defaultColor : serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)',
                           change : function( e, o ) {
                                 //if the input val is not updated here, it's not detected right away.
                                 //weird
                                 //is there a "change complete" kind of event for iris ?
                                 //hack to reset the color to default...@todo => use another color picker.
                                 if ( _.has(o, 'color') && 16777215 == o.color._color )
-                                  $(this).val( 'rgba(255,255,255,0.7)' );
+                                  $(this).val( serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)' );
                                 else
                                   $(this).val( o.color.toString() );
 
@@ -10280,7 +10442,7 @@ $.extend( CZRSocialModuleMths, {
                   var item = this,
                       module     = item.module,
                       _model = model || item(),
-                      _title = api.CZR_Helpers.capitalize( _model['social-icon'].replace('fa-', '') );
+                      _title = module.getTitleFromIcon( _model['social-icon'] );
 
                   $( '.' + module.control.css_attr.item_title , item.container ).html(
                     item._buildTitle( _title, _model['social-icon'], _model['social-color'] )
@@ -13073,7 +13235,10 @@ $.extend( CZRLayoutSelectMths , {
       api.CZRDynModule              = api.CZRModule.extend( CZRDynModuleMths );
 
       //COLUMNS => used as constructor
-      api.CZRColumn                 = api.Value.extend( CZRColumnMths );
+      //Columns are a pro feature, only part of the full build.
+      if ( ! _.isUndefined( window.CZRColumnMths ) ) {
+            api.CZRColumn           = api.Value.extend( CZRColumnMths );
+      }
 
       //CONTROLS
       api.CZRBaseControl            = api.Control.extend( CZRBaseControlMths );

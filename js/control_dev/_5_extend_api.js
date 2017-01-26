@@ -44,7 +44,10 @@
       api.CZRDynModule              = api.CZRModule.extend( CZRDynModuleMths );
 
       //COLUMNS => used as constructor
-      api.CZRColumn                 = api.Value.extend( CZRColumnMths );
+      //Columns are a pro feature, only part of the full build.
+      if ( ! _.isUndefined( window.CZRColumnMths ) ) {
+            api.CZRColumn           = api.Value.extend( CZRColumnMths );
+      }
 
       //CONTROLS
       api.CZRBaseControl            = api.Control.extend( CZRBaseControlMths );
