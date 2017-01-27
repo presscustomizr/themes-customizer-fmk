@@ -7201,8 +7201,10 @@ $.extend( CZRSkopeMths, {
   //This promise will let us know when we have the first set of preview query ready to use
   //This is needed for modules contextually dependant
   //For example, the slider module will initialize the module model based on the contextual informations, if no items have been set yet.
-  api.czr_wpQueryDataReady = $.Deferred();
 
+  api.czr_wpQueryDataReady = $.Deferred();
+  api.czr_wpQueryInfos = api.czr_wpQueryInfos || new api.Value();
+  api.czr_partials = api.czr_partials || new api.Value();
   /*****************************************************************************
   * CAPTURE PREVIEW INFORMATIONS ON REFRESH + REACT TO THEM
   *****************************************************************************/
@@ -7241,14 +7243,14 @@ $.extend( CZRSkopeMths, {
 
         /* WP CONDITIONAL TAGS => stores and observes the WP conditional tags sent by the preview */
         api.previewer.bind( 'czr-query-data-ready', function( data ) {
-              api.czr_wpQueryInfos = api.czr_wpQueryInfos || new api.Value();
               api.czr_wpQueryInfos( data );
-              api.czr_wpQueryDataReady.resolve( data );
+              if ( 'pending' == api.czr_wpQueryDataReady.state() ) {
+                    api.czr_wpQueryDataReady.resolve( data );
+              }
         });
 
         //PARTIAL REFRESHS => stores and observes the partials sent by the preview
         api.previewer.bind( 'czr-partial-refresh', function( data ) {
-              api.czr_partials = api.czr_partials || new api.Value();
               api.czr_partials.set( data );
         });
   });//api.bind('ready')
@@ -14279,21 +14281,24 @@ $.extend( CZRSlideModuleMths, {
           //     });
           // }
           module.isReady.then( function() {
-                //Refresh the items if the associated setting has no value yet
-                api.czr_wpQueryInfos.bind( function( query_data ) {
-                      var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
-                      if ( ! api.has( _setId ) || ! _.isEmpty( api( _setId )() ) )
-                        return;
-                      //module.refreshItemCollection();
-                      module.initializeModuleModel( constructorOptions, query_data )
-                            .done( function( newModuleValue ) {
-                                  module.set( newModuleValue );
-                                  module.refreshItemCollection();
-                            })
-                            .always( function( newModuleValue ) {
 
-                            });
-                } );
+                      //Refresh the items if the associated setting has no value yet
+                      api.czr_wpQueryInfos.bind( function( query_data ) {
+
+                            var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                            if ( ! api.has( _setId ) || ! _.isEmpty( api( _setId )() ) )
+                              return;
+                            //module.refreshItemCollection();
+                            module.initializeModuleModel( constructorOptions, query_data )
+                                  .done( function( newModuleValue ) {
+                                        module.set( newModuleValue );
+                                        module.refreshItemCollection();
+                                  })
+                                  .always( function( newModuleValue ) {
+
+                                  });
+                      } );
+
           });
 
   },//initialize
@@ -14313,17 +14318,18 @@ $.extend( CZRSlideModuleMths, {
         api.czr_wpQueryDataReady.then( function( data ) {
               var _query_data, _default;
               if ( _.isUndefined( new_data ) ) {
-                    _query_data = data.query_data;
+                    _query_data = _.isObject( data ) ? data.query_data : {};
               } else {
-                    _query_data = new_data.query_data;
+                    _query_data = _.isObject( new_data ) ? new_data.query_data : {};
               }
 
               _default = $.extend( true, {}, module.defaultItemModel );
               constructorOptions.items = [
                     $.extend( _default, {
                           'id' : 'default_item_' + module.id,
-                          'slide-background' : ( false !== _query_data.post_thumbnail_id ) ? _query_data.post_thumbnail_id : '',
-                          'slide-title' : false !== _query_data.post_title ? _query_data.post_title : ''
+                          'slide-background' : ( ! _.isEmpty( _query_data.post_thumbnail_id ) ) ? _query_data.post_thumbnail_id : '',
+                          'slide-title' : ! _.isEmpty( _query_data.post_title )? _query_data.post_title : '',
+                          'slide-subtitle' : ! _.isEmpty( _query_data.subtitle ) ? _query_data.subtitle : ''
                     })
               ];
               dfd.resolve( constructorOptions );
