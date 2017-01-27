@@ -13622,8 +13622,10 @@ $.extend( CZRLayoutSelectMths , {
                 if ( ! _.isBoolean( visibility ) || ( 'unchanged' == visibility && ! refresh ) )
                   return;
 
+                //when skope is enabled, we might be doing a silent update
+                //=> this method should be bailed if so
                 var _doVisibilitiesWhenPossible = function() {
-                        if ( ! api.state.has( 'silent-update-processing' ) || api.state( 'silent-update-processing' )() )
+                        if ( api.state.has( 'silent-update-processing' ) && api.state( 'silent-update-processing' )() )
                           return;
                         api.control( wpServusSetId, function( _controlInst ) {
                               var _args = {
@@ -13640,7 +13642,9 @@ $.extend( CZRLayoutSelectMths , {
 
                               _controlInst.onChangeActive( visibility , _controlInst.defaultActiveArguments );
                         });
-                        api.state( 'silent-update-processing' ).unbind( _doVisibilitiesWhenPossible );
+                        if ( api.state.has( 'silent-update-processing' ) ) {
+                              api.state( 'silent-update-processing' ).unbind( _doVisibilitiesWhenPossible );
+                        }
                 };
 
                 if ( api.state.has( 'silent-update-processing' ) && api.state( 'silent-update-processing' )() ) {
