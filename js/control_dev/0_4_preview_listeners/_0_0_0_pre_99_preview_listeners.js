@@ -3,8 +3,10 @@
   //This promise will let us know when we have the first set of preview query ready to use
   //This is needed for modules contextually dependant
   //For example, the slider module will initialize the module model based on the contextual informations, if no items have been set yet.
-  api.czr_wpQueryDataReady = $.Deferred();
 
+  api.czr_wpQueryDataReady = $.Deferred();
+  api.czr_wpQueryInfos = api.czr_wpQueryInfos || new api.Value();
+  api.czr_partials = api.czr_partials || new api.Value();
   /*****************************************************************************
   * CAPTURE PREVIEW INFORMATIONS ON REFRESH + REACT TO THEM
   *****************************************************************************/
@@ -43,14 +45,14 @@
 
         /* WP CONDITIONAL TAGS => stores and observes the WP conditional tags sent by the preview */
         api.previewer.bind( 'czr-query-data-ready', function( data ) {
-              api.czr_wpQueryInfos = api.czr_wpQueryInfos || new api.Value();
               api.czr_wpQueryInfos( data );
-              api.czr_wpQueryDataReady.resolve( data );
+              if ( 'pending' == api.czr_wpQueryDataReady.state() ) {
+                    api.czr_wpQueryDataReady.resolve( data );
+              }
         });
 
         //PARTIAL REFRESHS => stores and observes the partials sent by the preview
         api.previewer.bind( 'czr-partial-refresh', function( data ) {
-              api.czr_partials = api.czr_partials || new api.Value();
               api.czr_partials.set( data );
         });
   });//api.bind('ready')
