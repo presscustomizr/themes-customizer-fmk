@@ -268,7 +268,7 @@ $.extend( CZRItemMths , {
           module.closeAllItems();
 
           if ( _.has(module, 'preItem') ) {
-              module.preItemExpanded.set(false);
+              module.preItemExpanded(false);
           }
 
           //then close any other open remove alert in the module containuer

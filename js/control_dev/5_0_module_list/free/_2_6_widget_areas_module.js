@@ -782,7 +782,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           }, 150 ) );
 
           //Close all views on widget panel expansion/clos
-          module.closeAllItems();
+          module.closeAllItems().closeAllAlerts();
           //Close preItem dialog box if exists
           if ( _.has( module, 'preItemExpanded' ) )
             module.preItemExpanded.set(false);
@@ -810,7 +810,7 @@ $.extend( CZRWidgetAreaModuleMths, {
             container.scrollTop( 0 );
           }
 
-          module.closeAllItems();
+          module.closeAllItems().closeAllAlerts();
 
           content.slideToggle();
   },

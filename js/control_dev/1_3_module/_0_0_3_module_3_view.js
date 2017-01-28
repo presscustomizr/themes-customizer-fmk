@@ -81,15 +81,16 @@ $.extend( CZRModuleMths, {
 
   //fired on add_item
   //fired on views_sorted
-  closeAllItems : function(id) {
+  closeAllItems : function( id ) {
           var module = this,
               _current_collection = _.clone( module.itemCollection() ),
               _filtered_collection = _.filter( _current_collection , function( mod) { return mod.id != id; } );
 
-          _.each( _filtered_collection, function(_item) {
+          _.each( _filtered_collection, function( _item ) {
                 if ( module.czr_Item.has(_item.id) && 'expanded' == module.czr_Item(_item.id)._getViewState(_item.id) )
                   module.czr_Item(_item.id).czr_ItemState.set( 'closed' ); // => will fire the cb toggleItemExpansion
            } );
+          return this;
   },
 
 
@@ -134,6 +135,7 @@ $.extend( CZRModuleMths, {
                       } );
                 }
           });
+          return this;
   },
 
 
@@ -157,8 +159,8 @@ $.extend( CZRModuleMths, {
                             if ( _.has(module, 'preItem') ) {
                                   module.preItemExpanded.set(false);
                             }
-                            module.closeAllItems();
-                            module.closeAllAlerts();
+
+                            module.closeAllItems().closeAllAlerts();
 
                             //refreshes the preview frame  :
                             //1) only needed if transport is postMessage, because is triggered by wp otherwise

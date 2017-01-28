@@ -164,7 +164,7 @@ $.extend( CZRModuleMths, {
                               module.instantiateModOpt();
                           }
                     });
-        });
+        });//module.isReady.done()
   },
 
 

@@ -48,6 +48,16 @@ $.extend( CZRBaseModuleControlMths, {
           //     api.consoleLog( 'SETTING ', control.id, ' HAS CHANGED : ', to, from );
           // });
 
+          //close any open item and dialog boxes on section expansion
+          api.section( control.section() ).expanded.bind(function(to) {
+                control.czr_Module.each( function( _mod ){
+                      _mod.closeAllItems().closeAllAlerts();
+                      if ( _.has( _mod, 'preItem' ) ) {
+                            _mod.preItemExpanded(false);
+                      }
+                });
+          });
+
   },
 
 
