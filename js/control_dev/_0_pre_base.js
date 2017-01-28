@@ -42,6 +42,36 @@ var api = api || wp.customize, $ = $ || jQuery;
       api.czr_activeSectionId = new api.Value('');
       api.czr_activePanelId = new api.Value('');
 
+      /*****************************************************************************
+      * OBSERVE UBIQUE CONTROL'S SECTIONS EXPANSION
+      *****************************************************************************/
+      if ( 'function' === typeof api.Section ) {
+            //move controls back and forth in declared ubique sections
+            //=> implemented in the customizr theme for the social links boolean visibility controls ( socials in header, sidebar, footer )
+            api.control.bind( 'add', function( _ctrl ) {
+                  if ( _ctrl.params.ubq_section && _ctrl.params.ubq_section.section ) {
+                        //save original state
+                        _ctrl.params.original_priority = _ctrl.params.priority;
+                        _ctrl.params.original_section  = _ctrl.params.section;
+
+                        api.section.when( _ctrl.params.ubq_section.section, function( _section_instance ) {
+                                _section_instance.expanded.bind( function( expanded ) {
+                                      if ( expanded ) {
+                                            if ( _ctrl.params.ubq_section.priority ) {
+                                                  _ctrl.priority( _ctrl.params.ubq_section.priority );
+                                            }
+                                            _ctrl.section( _ctrl.params.ubq_section.section );
+                                      }
+                                      else {
+                                            _ctrl.priority( _ctrl.params.original_priority );
+                                            _ctrl.section( _ctrl.params.original_section );
+                                      }
+                                });
+
+                        } );
+                  }
+            });
+      }
 
       /*****************************************************************************
       * CLOSE THE MOD OPTION PANEL ( if exists ) ON : section change, panel change, skope switch
@@ -87,34 +117,6 @@ var api = api || wp.customize, $ = $ || jQuery;
             });
             api.panel.bind( 'add', function( panel_instance ) {
                   panel_instance.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, panel_instance.id ); } );
-            });
-
-
-            //observe ubique control's sections
-            //move controls back and forth in declared ubique sections
-            //=> implemented in the customizr theme for the social links boolean visibility controls ( socials in header, sidebar, footer )
-            api.control.each( function( _ctrl ) {
-                  if ( _ctrl.params.ubq_section && _ctrl.params.ubq_section.section ) {
-                        //save original state
-                        _ctrl.params.original_priority = _ctrl.params.priority;
-                        _ctrl.params.original_section  = _ctrl.params.section;
-
-                        api.section.when( _ctrl.params.ubq_section.section, function( _section_instance ) {
-                                _section_instance.expanded.bind( function( expanded ) {
-                                      if ( expanded ) {
-                                            if ( _ctrl.params.ubq_section.priority ) {
-                                                  _ctrl.priority( _ctrl.params.ubq_section.priority );
-                                            }
-                                            _ctrl.section( _ctrl.params.ubq_section.section );
-                                      }
-                                      else {
-                                            _ctrl.priority( _ctrl.params.original_priority );
-                                            _ctrl.section( _ctrl.params.original_section );
-                                      }
-                                });
-
-                        } );
-                  }
             });
       });
 
