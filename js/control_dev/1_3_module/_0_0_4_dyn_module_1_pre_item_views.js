@@ -46,8 +46,6 @@ $.extend( CZRDynModuleMths, {
   //@param : obj = { event : {}, item : {}, view : ${} }
   setPreItemViewVisibility : function(obj) {
           var module = this;
-
-          module.closeAllItems();
           module.preItemExpanded.set( ! module.preItemExpanded() );
   },
 

@@ -90,91 +90,101 @@ $.extend( CZRBaseModuleControlMths, {
               switch( _key ) {
                     //PROPERTIES COMMON TO ALL MODULES IN ALL CONTEXTS
                     case 'id' :
-                        if ( _.isEmpty( _candidate_val ) ) {
-                            api_ready_module[_key] = control.generateModuleId( module_candidate.module_type );
-                        } else {
-                            api_ready_module[_key] = _candidate_val;
-                        }
+                          if ( _.isEmpty( _candidate_val ) ) {
+                                api_ready_module[_key] = control.generateModuleId( module_candidate.module_type );
+                          } else {
+                                api_ready_module[_key] = _candidate_val;
+                          }
                     break;
                     case 'module_type' :
-                        if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                            throw new Error('prepareModuleForAPI : a module type must a string not empty');
-                        }
-                        api_ready_module[_key] = _candidate_val;
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                throw new Error('prepareModuleForAPI : a module type must a string not empty');
+                          }
+                          api_ready_module[_key] = _candidate_val;
                     break;
                     case 'items' :
-                        if ( ! _.isArray( _candidate_val )  ) {
-                            throw new Error('prepareModuleForAPI : a module item list must be an array');
-                        }
-                        api_ready_module[_key] = _candidate_val;
+                          if ( ! _.isArray( _candidate_val )  ) {
+                                throw new Error('prepareModuleForAPI : a module item list must be an array');
+                          }
+                          api_ready_module[_key] = _candidate_val;
                     break;
                     case 'modOpt' :
-                        if ( ! _.isObject( _candidate_val )  ) {
-                            throw new Error('prepareModuleForAPI : a module modOpt property must be an object');
-                        }
-                        api_ready_module[_key] = _candidate_val;
+                          if ( ! _.isObject( _candidate_val )  ) {
+                                throw new Error('prepareModuleForAPI : a module modOpt property must be an object');
+                          }
+                          api_ready_module[_key] = _candidate_val;
                     break;
                     case 'crud' :
-                        //get the value from the czrModuleMap
-                        if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                          _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
-                        } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                            throw new Error('prepareModuleForAPI : the module param "crud" must be a boolean');
-                        }
-                        api_ready_module[_key] = _candidate_val || false;
+                          //get the value from the czrModuleMap
+                          if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
+                          } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                throw new Error('prepareModuleForAPI : the module param "crud" must be a boolean');
+                          }
+                          api_ready_module[_key] = _candidate_val || false;
                     break;
                     case 'multi_item' :
-                        //get the value from the czrModuleMap
-                        if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                          _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
-                        } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                            throw new Error('prepareModuleForAPI : the module param "multi_item" must be a boolean');
-                        }
-                        api_ready_module[_key] = _candidate_val || false;
+                          //get the value from the czrModuleMap
+                          if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                          } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                throw new Error('prepareModuleForAPI : the module param "multi_item" must be a boolean');
+                          }
+                          api_ready_module[_key] = _candidate_val || false;
+                    break;
+                    //if the sortable property is not set, then check if crud or multi-item
+                    case 'sortable' :
+                          //get the value from the czrModuleMap
+                          if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                _candidate_val = api.czrModuleMap[ module_candidate.module_type ].sortable || api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                          } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                throw new Error('prepareModuleForAPI : the module param "sortable" must be a boolean');
+                          }
+                          api_ready_module[_key] = _candidate_val || false;
                     break;
                     case  'control' :
-                        api_ready_module[_key] = control;//this
+                          api_ready_module[_key] = control;//this
                     break;
 
 
 
                     //PROPERTIES FOR MODULE EMBEDDED IN A CONTROL
                     case  'section' :
-                        if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                            throw new Error('prepareModuleForAPI : a module section must be a string not empty');
-                        }
-                        api_ready_module[_key] = _candidate_val;
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                throw new Error('prepareModuleForAPI : a module section must be a string not empty');
+                          }
+                          api_ready_module[_key] = _candidate_val;
                     break;
 
 
 
                     //PROPERTIES FOR MODULE EMBEDDED IN A SEKTION
                     case  'column_id' :
-                        if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                            throw new Error('prepareModuleForAPI : a module column id must a string not empty');
-                        }
-                        api_ready_module[_key] = _candidate_val;
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                throw new Error('prepareModuleForAPI : a module column id must a string not empty');
+                          }
+                          api_ready_module[_key] = _candidate_val;
                     break;
                     case  'sektion' :
-                        if ( ! _.isObject( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                            throw new Error('prepareModuleForAPI : a module sektion must be an object not empty');
-                        }
-                        api_ready_module[_key] = _candidate_val;
+                          if ( ! _.isObject( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                throw new Error('prepareModuleForAPI : a module sektion must be an object not empty');
+                          }
+                          api_ready_module[_key] = _candidate_val;
                     break;
                     case  'sektion_id' :
-                        if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                            throw new Error('prepareModuleForAPI : a module sektion id must be a string not empty');
-                        }
-                        api_ready_module[_key] = _candidate_val;
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                throw new Error('prepareModuleForAPI : a module sektion id must be a string not empty');
+                          }
+                          api_ready_module[_key] = _candidate_val;
                     break;
                     case 'is_added_by_user' :
-                        if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                            throw new Error('prepareModuleForAPI : the module param "is_added_by_user" must be a boolean');
-                        }
+                          if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                throw new Error('prepareModuleForAPI : the module param "is_added_by_user" must be a boolean');
+                          }
                         api_ready_module[_key] = _candidate_val || false;
                     break;
                     case 'dirty' :
-                        api_ready_module[_key] = _candidate_val || false;
+                          api_ready_module[_key] = _candidate_val || false;
                     break;
               }//switch
         });

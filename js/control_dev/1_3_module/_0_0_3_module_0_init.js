@@ -147,9 +147,9 @@ $.extend( CZRModuleMths, {
                                 module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply(module, arguments ); } );
 
                                 //it can be overridden by a module in its initialize method
-                                if ( module.isMultiItem() )
-                                  module._makeItemsSortable();
-
+                                if ( module.isMultiItem() ) {
+                                      module._makeItemsSortable();
+                                }
                                 //api.consoleLog('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
                           });
 
@@ -202,7 +202,6 @@ $.extend( CZRModuleMths, {
 
 
   //cb of : module.itemCollection.callbacks
-  //@o can pass object params like {item_collection_sorted: true}
   itemCollectionReact : function( to, from, o ) {
         var module = this,
             _current_model = module(),
@@ -216,35 +215,15 @@ $.extend( CZRModuleMths, {
 
 
   //cb of module.callbacks
-  //@o can pass object params like {item_collection_sorted: true}
   moduleReact : function( to, from, o ) {
         //cb of : module.callbacks
         var module            = this,
             control           = module.control,
-            is_item_update    = ( _.size(from.items) == _.size(to.items) ) && ! _.isEmpty( _.difference(to.items, from.items) ),
-            is_column_update  = to.column_id != from.column_id,
-            is_item_collection_sorted = _.has( o, 'item_collection_sorted' ) && o.item_collection_sorted,
+            isItemUpdate    = ( _.size(from.items) == _.size(to.items) ) && ! _.isEmpty( _.difference(to.items, from.items) ),
+            isColumnUpdate  = to.column_id != from.column_id,
             refreshPreview    = function() {
-                module.control.previewer.refresh();
+                  module.control.previewer.refresh();
             };
-
-        //Sorted collection case
-        if ( is_item_collection_sorted ) {
-              if ( _.has(module, 'preItem') ) {
-                module.preItemExpanded.set(false);
-              }
-              module.closeAllItems();
-              module.closeAllAlerts();
-        }
-
-        //refreshes the preview frame  :
-        //1) only needed if transport is postMessage, because is triggered by wp otherwise
-        //2) only needed when : add, remove, sort item(s).
-        //var is_item_update = ( _.size(from) == _.size(to) ) && ! _.isEmpty( _.difference(from, to) );
-        if ( 'postMessage' == api(module.control.id).transport && is_item_collection_sorted && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
-              refreshPreview = _.debounce( refreshPreview, 500 );//500ms are enough
-              refreshPreview();
-        }
 
         //update the collection + pass data
         control.updateModulesCollection( {

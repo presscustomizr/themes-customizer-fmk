@@ -34,14 +34,14 @@ $.extend( CZRDynModuleMths, {
                     trigger   : 'click keydown',
                     selector  : [ '.' + module.control.css_attr.open_pre_add_btn, '.' + module.control.css_attr.cancel_pre_add_btn ].join(','),
                     name      : 'pre_add_item',
-                    actions   : ['renderPreItemView','setPreItemViewVisibility'],
+                    actions   : [ 'closeAllItems', 'closeAllAlerts', 'renderPreItemView','setPreItemViewVisibility' ],
                 },
                 //add new item
                 {
                     trigger   : 'click keydown',
                     selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
                     name      : 'add_item',
-                    actions   : ['closeAllItems', 'addItem'],
+                    actions   : [ 'closeAllAlerts', 'closeAllItems', 'addItem' ],
                 }
           ]);//module.userEventMap
   },
