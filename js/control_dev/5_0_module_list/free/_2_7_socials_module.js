@@ -183,14 +183,16 @@ $.extend( CZRSocialModuleMths, {
 
           //fired ready :
           //1) on section expansion
-          //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled
+          //2) or in the case of a module embedded in a regular control, if the module section is already opened => typically when skope is enabled
           if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
-             module.ready();
-          }
-          api.section( module.control.section() ).expanded.bind(function(to) {
-                if ( 'resolved' == module.isReady.state() )
-                  return;
                 module.ready();
+          }
+
+          api.section( module.control.section() ).expanded.bind(function(to) {
+                //set module ready on section expansion
+                if ( 'resolved' != module.isReady.state() ) {
+                      module.ready();
+                }
           });
 
           module.isReady.then( function() {
@@ -218,22 +220,26 @@ $.extend( CZRSocialModuleMths, {
           if ( ! _.has( item(), 'social-icon') || _.isEmpty( item()['social-icon'] ) )
             return;
 
-          var _new_model  = $.extend( true, {}, item() ),//always safer to deep clone ( alternative to _.clone() ) => we don't know how nested this object might be in the future.
-              _new_title  = this.getTitleFromIcon( _new_model['social-icon'] ),
-              _new_color  = serverControlParams.social_el_params.defaultSocialColor;
+          var _new_model, _new_title, _new_color;
+
+          _new_model  = $.extend( true, {}, item() );//always safer to deep clone ( alternative to _.clone() ) => we don't know how nested this object might be in the future
+          _new_title  = this.getTitleFromIcon( _new_model['social-icon'] );
+          _new_color  = serverControlParams.social_el_params.defaultSocialColor;
+          if ( ! is_preItem && item.czr_Input.has( 'social-color' ) )
+            _new_color = item.czr_Input('social-color')();
 
           //add text follow us... to the title
           _new_title = [ serverControlParams.translatedStrings.followUs, _new_title].join(' ');
 
           if ( is_preItem ) {
-              _new_model = $.extend( _new_model, { title : _new_title, 'social-color' : _new_color } );
-              item.set( _new_model );
+                _new_model = $.extend( _new_model, { title : _new_title, 'social-color' : _new_color } );
+                item.set( _new_model );
           } else {
-              item.czr_Input('title').set( _new_title );
-              item.czr_Input('social-link').set( '' );
-              if ( item.czr_Input('social-color') ) { //optional
-                item.czr_Input('social-color').set( _new_color );
-              }
+                item.czr_Input('title').set( _new_title );
+                item.czr_Input('social-link').set( '' );
+                if ( item.czr_Input('social-color') ) { //optional
+                  item.czr_Input('social-color').set( _new_color );
+                }
           }
   },
 
@@ -300,9 +306,12 @@ $.extend( CZRSocialModuleMths, {
         setupColorPicker : function( obj ) {
                 var input      = this,
                     item       = input.input_parent,
-                    module     = input.module;
+                    module     = input.module,
+                    $el        = $( 'input[data-type="social-color"]', input.container );
 
-                $( 'input[data-type="social-color"]', input.container ).wpColorPicker( {
+                $el.iris( {
+                          palettes: true,
+                          hide:false,
                           defaultColor : serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)',
                           change : function( e, o ) {
                                 //if the input val is not updated here, it's not detected right away.
@@ -320,7 +329,7 @@ $.extend( CZRSocialModuleMths, {
 
                 //when the picker opens, it might be below the visible viewport.
                 //No built-in event available to react on this in the wpColorPicker unfortunately
-                $( 'input[data-type="social-color"]', input.container ).closest('div').on('click keydown', function() {
+                $el.closest('div').on('click keydown', function() {
                       module._adjustScrollExpandedBlock( input.container );
                 });
         }
@@ -346,7 +355,6 @@ $.extend( CZRSocialModuleMths, {
                 item.bind('social-icon:changed', function(){
                       item.module.updateItemModel( item );
                 });
-
           },
 
 
