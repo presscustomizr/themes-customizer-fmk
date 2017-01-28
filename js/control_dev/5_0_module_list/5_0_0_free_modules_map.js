@@ -21,7 +21,8 @@
                   mthds : CZRSocialModuleMths,
                   crud : true,
                   sortable : true,
-                  name : 'Social Icons'
+                  name : 'Social Icons',
+                  has_mod_opt : true
             },
             czr_background : {
                   mthds : CZRBodyBgModuleMths,

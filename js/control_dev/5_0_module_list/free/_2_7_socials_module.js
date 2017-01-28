@@ -11,7 +11,8 @@ $.extend( CZRSocialModuleMths, {
           //extend the module with new template Selectors
           $.extend( module, {
                 itemPreAddEl : 'czr-module-social-pre-add-view-content',
-                itemInputList : 'czr-module-social-item-content'
+                itemInputList : 'czr-module-social-item-content',
+                modOptInputList : 'czr-module-social-mod-opt'
           } );
 
 
@@ -168,6 +169,13 @@ $.extend( CZRSocialModuleMths, {
           //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
           module.itemConstructor = api.CZRItem.extend( module.CZRSocialsItem || {} );
 
+          //declares a default ModOpt model
+          this.defaultModOptModel = {
+              is_mod_opt : true,
+              module_id : module.id,
+              'social-size' : 14
+          };
+
           //declares a default model
           this.defaultItemModel = {
                 id : '',
@@ -236,7 +244,7 @@ $.extend( CZRSocialModuleMths, {
                 item.set( _new_model );
           } else {
                 item.czr_Input('title').set( _new_title );
-                item.czr_Input('social-link').set( '' );
+                //item.czr_Input('social-link').set( '' );
                 if ( item.czr_Input('social-color') ) { //optional
                   item.czr_Input('social-color').set( _new_color );
                 }

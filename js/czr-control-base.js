@@ -73,6 +73,36 @@ var api = api || wp.customize, $ = $ || jQuery;
       api.czr_activeSectionId = new api.Value('');
       api.czr_activePanelId = new api.Value('');
 
+      /*****************************************************************************
+      * OBSERVE UBIQUE CONTROL'S SECTIONS EXPANSION
+      *****************************************************************************/
+      if ( 'function' === typeof api.Section ) {
+            //move controls back and forth in declared ubique sections
+            //=> implemented in the customizr theme for the social links boolean visibility controls ( socials in header, sidebar, footer )
+            api.control.bind( 'add', function( _ctrl ) {
+                  if ( _ctrl.params.ubq_section && _ctrl.params.ubq_section.section ) {
+                        //save original state
+                        _ctrl.params.original_priority = _ctrl.params.priority;
+                        _ctrl.params.original_section  = _ctrl.params.section;
+
+                        api.section.when( _ctrl.params.ubq_section.section, function( _section_instance ) {
+                                _section_instance.expanded.bind( function( expanded ) {
+                                      if ( expanded ) {
+                                            if ( _ctrl.params.ubq_section.priority ) {
+                                                  _ctrl.priority( _ctrl.params.ubq_section.priority );
+                                            }
+                                            _ctrl.section( _ctrl.params.ubq_section.section );
+                                      }
+                                      else {
+                                            _ctrl.priority( _ctrl.params.original_priority );
+                                            _ctrl.section( _ctrl.params.original_section );
+                                      }
+                                });
+
+                        } );
+                  }
+            });
+      }
 
       /*****************************************************************************
       * CLOSE THE MOD OPTION PANEL ( if exists ) ON : section change, panel change, skope switch
@@ -118,34 +148,6 @@ var api = api || wp.customize, $ = $ || jQuery;
             });
             api.panel.bind( 'add', function( panel_instance ) {
                   panel_instance.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, panel_instance.id ); } );
-            });
-
-
-            //observe ubique control's sections
-            //move controls back and forth in declared ubique sections
-            //=> implemented in the customizr theme for the social links boolean visibility controls ( socials in header, sidebar, footer )
-            api.control.each( function( _ctrl ) {
-                  if ( _ctrl.params.ubq_section && _ctrl.params.ubq_section.section ) {
-                        //save original state
-                        _ctrl.params.original_priority = _ctrl.params.priority;
-                        _ctrl.params.original_section  = _ctrl.params.section;
-
-                        api.section.when( _ctrl.params.ubq_section.section, function( _section_instance ) {
-                                _section_instance.expanded.bind( function( expanded ) {
-                                      if ( expanded ) {
-                                            if ( _ctrl.params.ubq_section.priority ) {
-                                                  _ctrl.priority( _ctrl.params.ubq_section.priority );
-                                            }
-                                            _ctrl.section( _ctrl.params.ubq_section.section );
-                                      }
-                                      else {
-                                            _ctrl.priority( _ctrl.params.original_priority );
-                                            _ctrl.section( _ctrl.params.original_section );
-                                      }
-                                });
-
-                        } );
-                  }
             });
       });
 
@@ -9120,6 +9122,7 @@ $.extend( CZRModuleMths, {
                           //When the module has modOpt :
                           //=> Instantiate the modOpt and setup listener
                           if ( module.hasModOpt() ) {
+                              console.log('INSTANTIATE MOD OPT ?');
                               module.instantiateModOpt();
                           }
                     });
@@ -9236,6 +9239,7 @@ $.extend( CZRModuleMths, {
         var module = this;
         //Prepare the modOpt and instantiate it
         var modOpt_candidate = module.prepareModOptForAPI( module().modOpt || {} );
+        console.log('modOpt_candidate', modOpt_candidate);
         module.czr_ModOpt = new module.modOptConstructor( modOpt_candidate );
         module.czr_ModOpt.ready();
         //update the module model on modOpt change
@@ -10119,7 +10123,8 @@ $.extend( CZRSocialModuleMths, {
           //extend the module with new template Selectors
           $.extend( module, {
                 itemPreAddEl : 'czr-module-social-pre-add-view-content',
-                itemInputList : 'czr-module-social-item-content'
+                itemInputList : 'czr-module-social-item-content',
+                modOptInputList : 'czr-module-social-mod-opt'
           } );
 
 
@@ -10276,6 +10281,13 @@ $.extend( CZRSocialModuleMths, {
           //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
           module.itemConstructor = api.CZRItem.extend( module.CZRSocialsItem || {} );
 
+          //declares a default ModOpt model
+          this.defaultModOptModel = {
+              is_mod_opt : true,
+              module_id : module.id,
+              'social-size' : 14
+          };
+
           //declares a default model
           this.defaultItemModel = {
                 id : '',
@@ -10344,7 +10356,7 @@ $.extend( CZRSocialModuleMths, {
                 item.set( _new_model );
           } else {
                 item.czr_Input('title').set( _new_title );
-                item.czr_Input('social-link').set( '' );
+                //item.czr_Input('social-link').set( '' );
                 if ( item.czr_Input('social-color') ) { //optional
                   item.czr_Input('social-color').set( _new_color );
                 }
@@ -11624,7 +11636,8 @@ $.extend( CZRBodyBgModuleMths, {
                   mthds : CZRSocialModuleMths,
                   crud : true,
                   sortable : true,
-                  name : 'Social Icons'
+                  name : 'Social Icons',
+                  has_mod_opt : true
             },
             czr_background : {
                   mthds : CZRBodyBgModuleMths,
@@ -11913,7 +11926,7 @@ $.extend( CZRBaseModuleControlMths, {
                     if ( api.CZR_Helpers.hasModuleModOpt( _module_type ) && 0*0 === key ) {
                           // a saved module mod_opt object should not have an id
                           if ( _.has( item_or_mod_opt_candidate, 'id') ) {
-                                throw new Error( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no mod_opt defined while it should.' );
+                                api.consoleLog( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no mod_opt defined while it should.' );
                           } else {
                                 _saved_modOpt = item_or_mod_opt_candidate;
                           }
