@@ -64,7 +64,7 @@ $.extend( CZRItemMths , {
                                   //toggle on view state change
                                   item.toggleItemExpansion(to, from );
                             } else {
-                                  $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
+                                  $.when( item.renderItemContent( item() || item.initial_item_model ) ).done( function( $_item_content ) {
                                         //introduce a small delay to give some times to the modules to be printed.
                                         //@todo : needed ?
                                         _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
@@ -75,6 +75,7 @@ $.extend( CZRItemMths , {
                             //toggle on view state change
                             item.toggleItemExpansion( to, from ).done( function() {
                                   if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
+                                        item.trigger( 'beforeContenRemoved' );
                                         $( '.' + module.control.css_attr.item_content, item.container ).children().each( function() {
                                               $(this).remove();
                                         });

@@ -346,6 +346,7 @@ $.extend( CZRSocialModuleMths, {
                 item.bind('social-icon:changed', function(){
                       item.module.updateItemModel( item );
                 });
+
           },
 
 

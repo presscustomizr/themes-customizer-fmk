@@ -242,7 +242,7 @@
               //creates the inputs based on the rendered item or mod opt
               $( '.' + module.control.css_attr.sub_set_wrapper, inputParentInst.container).each( function( _index ) {
                     var _id = $(this).find('[data-type]').attr( 'data-type' ),
-                        _value = _.has( inputParentInst_model, _id) ? inputParentInst_model[ _id ] : '';
+                        _value = _.has( inputParentInst_model, _id ) ? inputParentInst_model[ _id ] : '';
                     //skip if no valid input data-type is found in this node
                     if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
                           api.consoleLog( 'setupInputCollectionFromDOM : missing data-type for ' + module.id );
