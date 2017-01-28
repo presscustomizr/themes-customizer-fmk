@@ -76,9 +76,13 @@ $.extend( CZRItemMths , {
                             item.toggleItemExpansion( to, from ).done( function() {
                                   if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
                                         item.trigger( 'beforeContenRemoved' );
+                                        //Removes DOM input nodes
                                         $( '.' + module.control.css_attr.item_content, item.container ).children().each( function() {
                                               $(this).remove();
                                         });
+                                        //clean any other content like a commented html markup
+                                        $( '.' + module.control.css_attr.item_content, item.container ).html('');
+                                        //reset the contentContainer property
                                         item.contentContainer = null;
                                         //will remove the input collection values
                                         item.trigger( 'contentRemoved' );
