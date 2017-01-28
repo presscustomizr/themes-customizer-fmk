@@ -89,6 +89,33 @@ var api = api || wp.customize, $ = $ || jQuery;
                   panel_instance.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, panel_instance.id ); } );
             });
 
+
+            //observe ubique control's sections
+            //move controls back and forth in declared ubique sections
+            api.control.each( function( control ) {
+                  if ( control.params.ubq_section && control.params.ubq_section.section ) {
+                        //save original state
+                        control.params.original_priority = control.params.priority;
+                        control.params.original_section  = control.params.section;
+
+                        api.section.when( control.params.ubq_section.section, function( _section_instance ) {
+                                _section_instance.expanded.bind( function( expanded) {
+                                      if ( expanded ) {
+                                            if ( control.params.ubq_section.priority ) {
+                                                  control.priority( control.params.ubq_section.priority );
+                                            }
+                                            control.section( control.params.ubq_section.section );
+                                      }
+                                      else {
+                                            control.priority( control.params.original_priority );
+
+                                            control.section( control.params.original_section );
+                                      }
+                                });
+
+                        } );
+                  }
+            });
       });
 
       //SET THE ACTIVE STATE OF THE THEMES SECTION BASED ON WHAT THE SERVER SENT
