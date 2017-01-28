@@ -1202,14 +1202,14 @@ $.extend( CZRSektionMths, {
         var module = this,
             is_column_added   = _.size(from) < _.size(to),
             is_column_removed = _.size(from) > _.size(to),
-            is_column_update  = _.size(from) == _.size(to),
-            //is_column_collection_sorted = _.isEmpty(_to_add) && _.isEmpty(_to_remove)  && ! is_column_update,
+            isColumnUpdate  = _.size(from) == _.size(to),
+            //is_column_collection_sorted = _.isEmpty(_to_add) && _.isEmpty(_to_remove)  && ! isColumnUpdate,
             _current_sek_model = {},
             _new_sek_model = {};
 
         //COLUMN UPDATE CASE
         //parse the columns and find the one that has changed.
-        if ( is_column_update ) {
+        if ( isColumnUpdate ) {
               _.each( to, function( _col, _key ) {
                     if ( _.isEqual( _col, from[_key] ) )
                       return;

@@ -119,6 +119,7 @@ $.extend( CZRBaseModuleControlMths, {
                 items   : [],//$.extend( true, {}, module.items ),
                 crud : false,
                 multi_item : false,
+                sortable : false,//<= a module can be multi-item but not necessarily sortable
                 control : {},//control,
           };
 

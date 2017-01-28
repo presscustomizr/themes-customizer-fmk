@@ -213,7 +213,7 @@ $.extend( CZRModuleMths, {
           //=> typically used when reordering the collection item with sortable or when a item is removed
           if ( _.has( obj, 'collection' ) ) {
                 //reset the collection
-                module.itemCollection.set(obj.collection);
+                module.itemCollection.set( obj.collection );
                 return;
           }
 
@@ -248,7 +248,8 @@ $.extend( CZRModuleMths, {
   _getSortedDOMItemCollection : function( ) {
           var module = this,
               _old_collection = _.clone( module.itemCollection() ),
-              _new_collection = [];
+              _new_collection = [],
+              dfd = $.Deferred();
 
           //re-build the collection from the DOM
           $( '.' + module.control.css_attr.single_item, module.container ).each( function( _index ) {
@@ -263,7 +264,7 @@ $.extend( CZRModuleMths, {
           if ( _old_collection.length != _new_collection.length ) {
               throw new Error('There was a problem when re-building the item collection from the DOM in module : ' + module.id );
           }
-          return _new_collection;
+          return dfd.resolve( _new_collection ).promise();
   },
 
 
