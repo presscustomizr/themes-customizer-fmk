@@ -212,6 +212,7 @@
   float: right;
   width: 60%;
 }
+
 .width-100 .czr-input {
   width: 100%;
 }
@@ -221,7 +222,10 @@
   padding: 1px 0;
   font-size: 13px;
 }
-
+/* rtl */
+.rtl.wp-customizer .czr-sub-set .customize-control-title {
+  float: right;
+}
 .czr-item-title .fa {
   font-size: 18px;
 }
@@ -386,7 +390,13 @@
   font-size: 25px;
   line-height: 24px;
 }
-
+/* rtl */
+.rtl.wp-customizer .czr-toggle-modopt {
+  left: 0;
+  right: auto;
+  padding-left: 0;
+  padding-right: 3px;
+}
 .czr-modopt-visible .czr-toggle-modopt, .czr-toggle-modopt:hover {
   color: #3b8dbd;
 }
