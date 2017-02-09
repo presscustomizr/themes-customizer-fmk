@@ -470,3 +470,19 @@ body.czr-editing-modopt .czr-mod-opt-wrapper {
   padding: 5% 0;
   text-align: center;
 }
+
+
+/* SLIDER MODULE SPECIFICS */
+.czr_slide_module .czr-item-title {
+  padding: 0px 7px;
+  height: 32px;
+}
+.czr_slide_module .slide-title, .czr_slide_module .slide-thumb {
+  display: block;
+  height: 32px;
+  line-height: 32px;
+  float: left;
+}
+.czr_slide_module .slide-title {
+  padding-left: 5px;
+}

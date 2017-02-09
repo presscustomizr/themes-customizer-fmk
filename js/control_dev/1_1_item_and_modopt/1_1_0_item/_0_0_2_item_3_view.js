@@ -189,7 +189,7 @@ $.extend( CZRItemMths , {
             _model = item_model || item(),
             _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
 
-        _title = api.CZR_Helpers.truncate(_title, 20);
+        _title = api.CZR_Helpers.truncate( _title, 20 );
         $( '.' + module.control.css_attr.item_title , item.container ).text(_title );
         //add a hook here
         api.CZR_Helpers.doActions('after_writeViewTitle', item.container , _model, item );

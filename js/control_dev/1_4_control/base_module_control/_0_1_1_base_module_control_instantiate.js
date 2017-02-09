@@ -27,6 +27,7 @@ $.extend( CZRBaseModuleControlMths, {
           }
 
           var module_api_ready = control.prepareModuleForAPI( module );
+
           //instanciate the module with the default constructor
           control.czr_Module.add( module_api_ready.id, new constructor( module_api_ready.id, module_api_ready ) );
 
