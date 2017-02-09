@@ -151,7 +151,7 @@
     float: right;
 }
 /* RTL fix of check box position */
-.rtl .icheckbox_flat-green {
+.rtl [class*=icheckbox_flat-] {
   float: left;
 }
 .icheckbox_flat-green {
