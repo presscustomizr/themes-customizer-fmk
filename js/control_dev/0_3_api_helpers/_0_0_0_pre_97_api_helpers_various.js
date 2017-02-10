@@ -15,16 +15,19 @@
         getControlSettingId : function( control_id, setting_type ) {
               setting_type = 'default' || setting_type;
               if ( ! api.control.has( control_id ) ) {
-                    throw new Error( 'The requested control_id is not registered in the api yet : ' + control_id );
+                    api.consoleLog( 'getControlSettingId : The requested control_id is not registered in the api yet : ' + control_id );
+                    return control_id;
               }
               if ( ! _.has( api.control( control_id ), 'settings' ) || _.isEmpty( api.control( control_id ).settings ) )
-                return;
+                return control_id;
 
               if ( ! _.has( api.control( control_id ).settings, setting_type ) ) {
-                    throw new Error( 'The requested control_id does not have the requested setting type : ' + control_id + ' , ' + setting_type );
+                    api.consoleLog( 'getControlSettingId : The requested control_id does not have the requested setting type : ' + control_id + ' , ' + setting_type );
+                    return control_id;
               }
               if ( _.isUndefined( api.control( control_id ).settings[setting_type].id ) ) {
-                    throw new Error( 'The requested control_id has no setting id assigned : ' + control_id );
+                    api.consoleLog( 'getControlSettingId : The requested control_id has no setting id assigned : ' + control_id );
+                    return control_id;
               }
               return api.control( control_id ).settings[setting_type].id;
         },

@@ -18,6 +18,7 @@
 
         to = this._setter.apply( this, arguments );
         to = this.validate( to );
+        args = _.extend( { silent : false }, _.isObject( o ) ? o : {} );
 
         // Bail if the sanitized value is null or unchanged.
         if ( null === to || _.isEqual( from, to ) ) {
@@ -26,6 +27,9 @@
 
         this._value = to;
         this._dirty = true;
+        if ( true === args.silent ) {
+              return this;
+        }
 
         if ( this._deferreds ) {
               _.each( self._deferreds, function( _prom ) {

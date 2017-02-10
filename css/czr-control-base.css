@@ -580,8 +580,9 @@ li#customize-control-tc_theme_options-tc_custom_css textarea {
 
 /* HOME BUTTON */
 #customize-header-actions .customize-controls-close {
-  left:45px;
+  left: 45px;
 }
+
 .customize-controls-home, .customize-controls-close {
   top: -1px;
 }
@@ -613,7 +614,7 @@ li#customize-control-tc_theme_options-tc_custom_css textarea {
     line-height:45px;
     position: relative;
     top: -4px;
-    left: 14px;
+    left: 15px;
 }
 .customize-controls-home:hover {
     background: #fff;
@@ -622,6 +623,17 @@ li#customize-control-tc_theme_options-tc_custom_css textarea {
     outline: none;
     -webkit-box-shadow: none;
     box-shadow: none;
+}
+/* rtl: home button */
+.rtl.wp-customizer #customize-header-actions .customize-controls-close {
+  right: 45px;
+  left: auto;
+}
+.rtl.wp-customizer .customize-controls-home {
+  left: auto;
+  right: 0;
+  border-right: 0;
+  border-left: 1px solid #ddd;
 }
 
 /* HEADER MENU NOTICE */
@@ -849,6 +861,7 @@ span.czr-panel-subtitle {
   float: right;
   width: 60%;
 }
+
 .width-100 .czr-input {
   width: 100%;
 }
@@ -858,7 +871,10 @@ span.czr-panel-subtitle {
   padding: 1px 0;
   font-size: 13px;
 }
-
+/* rtl */
+.rtl.wp-customizer .czr-sub-set .customize-control-title {
+  float: right;
+}
 .czr-item-title .fa {
   font-size: 18px;
 }
@@ -1023,7 +1039,13 @@ span.czr-panel-subtitle {
   font-size: 25px;
   line-height: 24px;
 }
-
+/* rtl */
+.rtl.wp-customizer .czr-toggle-modopt {
+  left: 0;
+  right: auto;
+  padding-left: 0;
+  padding-right: 3px;
+}
 .czr-modopt-visible .czr-toggle-modopt, .czr-toggle-modopt:hover {
   color: #3b8dbd;
 }
@@ -1098,6 +1120,21 @@ body.czr-editing-modopt .czr-mod-opt-wrapper {
   text-align: center;
 }
 
+
+/* SLIDER MODULE SPECIFICS */
+.czr_slide_module .czr-item-title {
+  padding: 0px 7px;
+  height: 32px;
+}
+.czr_slide_module .slide-title, .czr_slide_module .slide-thumb {
+  display: block;
+  height: 32px;
+  line-height: 32px;
+  float: left;
+}
+.czr_slide_module .slide-title {
+  padding-left: 5px;
+}
 .in-sub-panel #czr-donate-customizer,
  .in-sub-panel .czr-cta-wrap {
    left: -450px;
@@ -1319,7 +1356,7 @@ body.czr-editing-modopt .czr-mod-opt-wrapper {
     float: right;
 }
 /* RTL fix of check box position */
-.rtl .icheckbox_flat-green {
+.rtl [class*=icheckbox_flat-] {
   float: left;
 }
 .icheckbox_flat-green {

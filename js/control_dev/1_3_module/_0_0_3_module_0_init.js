@@ -133,7 +133,7 @@ $.extend( CZRModuleMths, {
                     .fail( function( response ){ api.consoleLog( 'Module : ' + module.id + ' initialize module model failed : ', response ); })
                     .always( function( initialModuleValue ) {
                           //listen to each single module change
-                          module.callbacks.add( function() { return module.moduleReact.apply(module, arguments ); } );
+                          module.callbacks.add( function() { return module.moduleReact.apply( module, arguments ); } );
 
                           //if the module is not registered yet (for example when the module is added by user),
                           //=> push it to the collection of the module-collection control

@@ -1113,7 +1113,7 @@ $.extend( CZRSkopeBaseMths, {
                         skope_id;
 
                     if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
-                      api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.previewer._new_refresh() method.');
+                      api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.czr_skopeBase.bindAPISettings method.');
                       //return;
                     }
 
@@ -5748,6 +5748,7 @@ $.extend( CZRSkopeMths, {
 
         to = this._setter.apply( this, arguments );
         to = this.validate( to );
+        args = _.extend( { silent : false }, _.isObject( o ) ? o : {} );
 
         // Bail if the sanitized value is null or unchanged.
         if ( null === to || _.isEqual( from, to ) ) {
@@ -5756,6 +5757,9 @@ $.extend( CZRSkopeMths, {
 
         this._value = to;
         this._dirty = true;
+        if ( true === args.silent ) {
+              return this;
+        }
 
         if ( this._deferreds ) {
               _.each( self._deferreds, function( _prom ) {
@@ -6789,16 +6793,19 @@ $.extend( CZRSkopeMths, {
         getControlSettingId : function( control_id, setting_type ) {
               setting_type = 'default' || setting_type;
               if ( ! api.control.has( control_id ) ) {
-                    throw new Error( 'The requested control_id is not registered in the api yet : ' + control_id );
+                    api.consoleLog( 'getControlSettingId : The requested control_id is not registered in the api yet : ' + control_id );
+                    return control_id;
               }
               if ( ! _.has( api.control( control_id ), 'settings' ) || _.isEmpty( api.control( control_id ).settings ) )
-                return;
+                return control_id;
 
               if ( ! _.has( api.control( control_id ).settings, setting_type ) ) {
-                    throw new Error( 'The requested control_id does not have the requested setting type : ' + control_id + ' , ' + setting_type );
+                    api.consoleLog( 'getControlSettingId : The requested control_id does not have the requested setting type : ' + control_id + ' , ' + setting_type );
+                    return control_id;
               }
               if ( _.isUndefined( api.control( control_id ).settings[setting_type].id ) ) {
-                    throw new Error( 'The requested control_id has no setting id assigned : ' + control_id );
+                    api.consoleLog( 'getControlSettingId : The requested control_id has no setting id assigned : ' + control_id );
+                    return control_id;
               }
               return api.control( control_id ).settings[setting_type].id;
         },
@@ -8604,7 +8611,7 @@ $.extend( CZRItemMths , {
             _model = item_model || item(),
             _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
 
-        _title = api.CZR_Helpers.truncate(_title, 20);
+        _title = api.CZR_Helpers.truncate( _title, 20 );
         $( '.' + module.control.css_attr.item_title , item.container ).text(_title );
         //add a hook here
         api.CZR_Helpers.doActions('after_writeViewTitle', item.container , _model, item );
@@ -9094,7 +9101,7 @@ $.extend( CZRModuleMths, {
                     .fail( function( response ){ api.consoleLog( 'Module : ' + module.id + ' initialize module model failed : ', response ); })
                     .always( function( initialModuleValue ) {
                           //listen to each single module change
-                          module.callbacks.add( function() { return module.moduleReact.apply(module, arguments ); } );
+                          module.callbacks.add( function() { return module.moduleReact.apply( module, arguments ); } );
 
                           //if the module is not registered yet (for example when the module is added by user),
                           //=> push it to the collection of the module-collection control
@@ -11990,6 +11997,7 @@ $.extend( CZRBaseModuleControlMths, {
           }
 
           var module_api_ready = control.prepareModuleForAPI( module );
+
           //instanciate the module with the default constructor
           control.czr_Module.add( module_api_ready.id, new constructor( module_api_ready.id, module_api_ready ) );
 
@@ -12309,7 +12317,14 @@ $.extend( CZRBaseModuleControlMths, {
 
 
 
+
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //cb of control.czr_moduleCollection.callbacks
+  //@data is an optional object. { silent : true }
   moduleCollectionReact : function( to, from, data ) {
         var control = this,
             is_module_added = _.size(to) > _.size(from),
@@ -12347,6 +12362,14 @@ $.extend( CZRBaseModuleControlMths, {
               api(this.id).set( control.filterModuleCollectionBeforeAjax( to ), data );
         }
   },
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 
 
 

@@ -89,7 +89,7 @@ $.extend( CZRSlideModuleMths, {
                             //initialize
                             module.initializeModuleModel( initialConstrucOptions, query_data )
                                   .done( function( newModuleValue ) {
-                                        module.set( newModuleValue );
+                                        module.set( newModuleValue, { silent : true } );
                                         module.refreshItemCollection();
                                   })
                                   .always( function( newModuleValue ) {
@@ -214,6 +214,8 @@ $.extend( CZRSlideModuleMths, {
                     module  = item.module,
                     _model = model || item(),
                     _title = _model.title ? _model.title : serverControlParams.translatedStrings.slideTitle;
+                //if the slide title is set, use it
+                _title = _.isEmpty( _model['slide-title'] ) ? _title : _model['slide-title'];
 
                 _title = api.CZR_Helpers.truncate( _title, 20 );
                 _title = [

@@ -1113,7 +1113,7 @@ $.extend( CZRSkopeBaseMths, {
                         skope_id;
 
                     if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
-                      api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.previewer._new_refresh() method.');
+                      api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.czr_skopeBase.bindAPISettings method.');
                       //return;
                     }
 
@@ -5748,6 +5748,7 @@ $.extend( CZRSkopeMths, {
 
         to = this._setter.apply( this, arguments );
         to = this.validate( to );
+        args = _.extend( { silent : false }, _.isObject( o ) ? o : {} );
 
         // Bail if the sanitized value is null or unchanged.
         if ( null === to || _.isEqual( from, to ) ) {
@@ -5756,6 +5757,9 @@ $.extend( CZRSkopeMths, {
 
         this._value = to;
         this._dirty = true;
+        if ( true === args.silent ) {
+              return this;
+        }
 
         if ( this._deferreds ) {
               _.each( self._deferreds, function( _prom ) {
@@ -6789,16 +6793,19 @@ $.extend( CZRSkopeMths, {
         getControlSettingId : function( control_id, setting_type ) {
               setting_type = 'default' || setting_type;
               if ( ! api.control.has( control_id ) ) {
-                    throw new Error( 'The requested control_id is not registered in the api yet : ' + control_id );
+                    api.consoleLog( 'getControlSettingId : The requested control_id is not registered in the api yet : ' + control_id );
+                    return control_id;
               }
               if ( ! _.has( api.control( control_id ), 'settings' ) || _.isEmpty( api.control( control_id ).settings ) )
-                return;
+                return control_id;
 
               if ( ! _.has( api.control( control_id ).settings, setting_type ) ) {
-                    throw new Error( 'The requested control_id does not have the requested setting type : ' + control_id + ' , ' + setting_type );
+                    api.consoleLog( 'getControlSettingId : The requested control_id does not have the requested setting type : ' + control_id + ' , ' + setting_type );
+                    return control_id;
               }
               if ( _.isUndefined( api.control( control_id ).settings[setting_type].id ) ) {
-                    throw new Error( 'The requested control_id has no setting id assigned : ' + control_id );
+                    api.consoleLog( 'getControlSettingId : The requested control_id has no setting id assigned : ' + control_id );
+                    return control_id;
               }
               return api.control( control_id ).settings[setting_type].id;
         },
@@ -8604,7 +8611,7 @@ $.extend( CZRItemMths , {
             _model = item_model || item(),
             _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
 
-        _title = api.CZR_Helpers.truncate(_title, 20);
+        _title = api.CZR_Helpers.truncate( _title, 20 );
         $( '.' + module.control.css_attr.item_title , item.container ).text(_title );
         //add a hook here
         api.CZR_Helpers.doActions('after_writeViewTitle', item.container , _model, item );
@@ -9094,7 +9101,7 @@ $.extend( CZRModuleMths, {
                     .fail( function( response ){ api.consoleLog( 'Module : ' + module.id + ' initialize module model failed : ', response ); })
                     .always( function( initialModuleValue ) {
                           //listen to each single module change
-                          module.callbacks.add( function() { return module.moduleReact.apply(module, arguments ); } );
+                          module.callbacks.add( function() { return module.moduleReact.apply( module, arguments ); } );
 
                           //if the module is not registered yet (for example when the module is added by user),
                           //=> push it to the collection of the module-collection control
@@ -11990,6 +11997,7 @@ $.extend( CZRBaseModuleControlMths, {
           }
 
           var module_api_ready = control.prepareModuleForAPI( module );
+
           //instanciate the module with the default constructor
           control.czr_Module.add( module_api_ready.id, new constructor( module_api_ready.id, module_api_ready ) );
 
@@ -12309,7 +12317,14 @@ $.extend( CZRBaseModuleControlMths, {
 
 
 
+
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //cb of control.czr_moduleCollection.callbacks
+  //@data is an optional object. { silent : true }
   moduleCollectionReact : function( to, from, data ) {
         var control = this,
             is_module_added = _.size(to) > _.size(from),
@@ -12347,6 +12362,14 @@ $.extend( CZRBaseModuleControlMths, {
               api(this.id).set( control.filterModuleCollectionBeforeAjax( to ), data );
         }
   },
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 
 
 
@@ -14362,16 +14385,20 @@ $.extend( CZRSlideModuleMths, {
           // }
           module.isReady.then( function() {
 
-                      //Refresh the items if the associated setting has no value yet
+                      //Refresh the module default item based on the query infos if the associated setting has no value yet
                       api.czr_wpQueryInfos.bind( function( query_data ) {
-
                             var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
                             if ( ! api.has( _setId ) || ! _.isEmpty( api( _setId )() ) )
                               return;
+
+                            var initialConstrucOptions = $.extend( true, {}, constructorOptions );//detach from the original obj
+
                             //module.refreshItemCollection();
-                            module.initializeModuleModel( constructorOptions, query_data )
+
+                            //initialize
+                            module.initializeModuleModel( initialConstrucOptions, query_data )
                                   .done( function( newModuleValue ) {
-                                        module.set( newModuleValue );
+                                        module.set( newModuleValue, { silent : true } );
                                         module.refreshItemCollection();
                                   })
                                   .always( function( newModuleValue ) {
@@ -14383,15 +14410,27 @@ $.extend( CZRSlideModuleMths, {
 
   },//initialize
 
-  //overrides the default method.
-  //Create a contextual item based on what the server send with 'czr-query-data-ready'
-  //This method is fired when the module is initialized
+  //Overrides the default method.
+  // Fired on module.isReady.done()
+  // Fired on api.czr_wpQueryInfos changes
+  // => this method is always fired by the parent constructor
+
+  //The job of this pre-processing method is to create a contextual item based on what the server send with 'czr-query-data-ready'
+  //This method is fired in the initialize module method
   //and then on each query_data update, if the associated setting has not been set yet, it is fired to get the default contextual item
   //1) image : if post / page, the featured image
   //2) title : several cases @see : hu_set_hph_title()
   //3) subtitle : no subtitle except for home page : the site tagline
   initializeModuleModel : function( constructorOptions, new_data ) {
-        var module = this, dfd = $.Deferred();
+        var module = this,
+            dfd = $.Deferred(),
+            _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+
+        //Bail if the the associated setting is already set
+        if ( ! api.has( _setId ) || ! _.isEmpty( api( _setId )() ) )
+          return dfd.resolve( constructorOptions ).promise();
+
+        //If the setting is not set, then we can set the default item based on the query data
         // if ( ! _.isEmpty( constructorOptions.items ) )
         //   return dfd.resolve( constructorOptions ).promise();
         //Always get the query data from the freshest source
@@ -14426,26 +14465,26 @@ $.extend( CZRSlideModuleMths, {
           ready : function() {
                 var input = this;
                 //update the item title on slide-title change
-                if ( ! input.is_mod_opt ) {
-                      input.bind('slide-title:changed', function() {
-                            input.updateItemTitle();
+                if ( 'slide-title' == input.id ) {
+                      input.bind( function( to ) {
+                            input.updateItemTitle( to );
                       });
                 }
                 api.CZRInput.prototype.ready.call( input);
           },
 
-          //ACTIONS ON slide-title change
-          //Fired on 'slide-title:changed'
+          //ACTIONS ON czr_input('slide-title') change
           //Don't fire in pre item case
-          updateItemTitle : function( _new_val ) {
+          //@return void
+          updateItemTitle : function( _new_title ) {
+
                 var input = this,
                     item = input.input_parent,
-                    is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput;
-
-                var _new_model  = $.extend( true, {}, item() ),
-                    _new_title  = _new_model['slide-title'];
-
-                $.extend( _new_model, { title : _new_title} );
+                    is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput,
+                    _new_model  = $.extend( true, {}, item() );
+                // if ( is_preItemInput )
+                //   return;
+                $.extend( _new_model, { title : _new_title } );
                 item.set( _new_model );
           }
   },//CZRSlidersInputMths
@@ -14481,14 +14520,16 @@ $.extend( CZRSlideModuleMths, {
           //at this stage, the model passed in the obj is up to date
           writeItemViewTitle : function( model ) {
                 var item = this,
-                          module  = item.module,
-                          _model = model || item(),
-                          _title = _model.title ? _model.title : serverControlParams.translatedStrings.slideTitle;
+                    module  = item.module,
+                    _model = model || item(),
+                    _title = _model.title ? _model.title : serverControlParams.translatedStrings.slideTitle;
+                //if the slide title is set, use it
+                _title = _.isEmpty( _model['slide-title'] ) ? _title : _model['slide-title'];
 
-                _title = api.CZR_Helpers.truncate(_title, 25);
+                _title = api.CZR_Helpers.truncate( _title, 20 );
                 _title = [
-                      '<span class="slide-thumb"></span>',
-                      _title,
+                      '<div class="slide-thumb"></div>',
+                      '<div class="slide-title">' + _title + '</div>',,
                 ].join('');
                 wp.media.attachment( _model['slide-background'] ).fetch()
                       .always( function() {
