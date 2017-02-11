@@ -6724,15 +6724,33 @@ $.extend( CZRSkopeMths, {
 
               //Each input instantiated in an item or a modOpt can have a specific transport set.
               //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
-              //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
+              //=> this is optional, if not set, then the transport will be inherited from the the module, which inherits from the control.
               //
               //If the input transport is specifically set to postMessage, then we don't want to send the 'setting' event to the preview
               //=> this will prevent any partial refresh to be triggered if the input control parent is defined has a partial refresh one.
               //=> the input will be sent to preview with module.control.previewer.send( 'czr_input', {...} )
-              if ( _.isObject( data ) && true === data.not_preview_sent ) {
-                    return;
+              //
+              //One exception : if the input transport is set to postMessage but the setting has not been set yet in the api (from is undefined, null, or empty) , we usually need to make an initial refresh
+              //=> typically, the initial refresh can be needed to set the relevant module css id selector that will be used afterwards for the postMessage input preview
+
+              //If we are in an input postMessage situation, the not_preview_sent param has been set in the czr_Input.inputReact method
+              //=> 1) We bail here
+              //=> 2) and we will send a custom event to the preview looking like :
+              //module.control.previewer.send( 'czr_input', {
+              //       set_id        : module.control.id,
+              //       module_id     : module.id,//<= will allow us to target the right dom element on front end
+              //       input_id      : input.id,
+              //       value         : to
+              // });
+
+              //=> if no from (setting not set yet => fall back on defaut transport)
+              if ( ! _.isUndefined( from ) && ! _.isEmpty( from ) && ! _.isNull( from ) ) {
+                    if ( _.isObject( data ) && true === data.not_preview_sent ) {
+                          return;
+                    }
               }
 
+              //don't do anything id we are silent
               if ( ! _.has( data, 'silent' ) || false === data.silent ) {
                     //CORE PREVIEW AS OF WP 4.7+
                     if ( 'postMessage' === transport && ! api.state( 'previewerAlive' ).get() ) {
@@ -7453,6 +7471,7 @@ $.extend( CZRInputMths , {
           module.control.previewer.send( 'czr_input', {
                 set_id        : module.control.id,
                 module_id     : module.id,//<= will allow us to target the right dom element on front end
+                item_id       : input.input_parent.id,//<= can be the mod opt or the item
                 input_id      : input.id,
                 value         : to
           });
@@ -8269,7 +8288,7 @@ $.extend( CZRItemMths , {
                 trigger   : 'click keydown',
                 selector  : [ '.' + item.module.control.css_attr.edit_view_btn, '.' + item.module.control.css_attr.item_title ].join(','),
                 name      : 'edit_view',
-                actions   : ['setViewVisibility']
+                actions   : [ 'setViewVisibility' ]
               }
         ]);
 
@@ -8340,16 +8359,26 @@ $.extend( CZRItemMths , {
 
 
   //React to a single item change
-  //cb of module.czr_Item(item.id).callbacks
-  itemReact : function( to, from ) {
+  //cb of module.czr_Item( item.id ).callbacks
+  //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+  //data looks like :
+  //{
+  //  module : {}
+  //  input_changed     : string input.id
+  //  input_transport   : 'postMessage' or '',
+  //  not_preview_sent  : bool
+  //}
+  itemReact : function( to, from, data ) {
         var item = this,
             module = item.module;
 
-        //update the collection
-        module.updateItemsCollection( {item : to });
+        data = data || {};
 
-        //Always update the view title
-        item.writeItemViewTitle(to);
+        //update the collection
+        module.updateItemsCollection( { item : to, data : data } ).done( function() {
+              //Always update the view title when the item collection has been updated
+              item.writeItemViewTitle( to );
+        });
 
         //send item to the preview. On update only, not on creation.
         // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
@@ -9112,13 +9141,12 @@ $.extend( CZRModuleMths, {
 
                           module.bind('items-collection-populated', function( collection ) {
                                 //listen to item Collection changes
-                                module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply(module, arguments ); } );
+                                module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply( module, arguments ); } );
 
                                 //it can be overridden by a module in its initialize method
                                 if ( module.isMultiItem() ) {
                                       module._makeItemsSortable();
                                 }
-                                //api.consoleLog('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
                           });
 
                           //populate and instantiate the items now when a module is embedded in a regular control
@@ -9168,9 +9196,16 @@ $.extend( CZRModuleMths, {
   },
 
 
-
   //cb of : module.itemCollection.callbacks
-  itemCollectionReact : function( to, from, o ) {
+  //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+  //data looks like :
+  //{
+  //  module : {}
+  //  input_changed     : string input.id
+  //  input_transport   : 'postMessage' or '',
+  //  not_preview_sent  : bool
+  //}
+  itemCollectionReact : function( to, from, data ) {
         var module = this,
             _current_model = module(),
             _new_model = $.extend( true, {}, _current_model );
@@ -9178,12 +9213,12 @@ $.extend( CZRModuleMths, {
         //update the dirtyness state
         module.isDirty.set(true);
         //set the the new items model
-        module.set( _new_model, o || {} );
+        module.set( _new_model, data || {} );
   },
 
 
   //cb of module.callbacks
-  moduleReact : function( to, from, o ) {
+  moduleReact : function( to, from, data ) {
         //cb of : module.callbacks
         var module            = this,
             control           = module.control,
@@ -9196,7 +9231,7 @@ $.extend( CZRModuleMths, {
         //update the collection + pass data
         control.updateModulesCollection( {
               module : $.extend( true, {}, to ),
-              data : o//useful to pass contextual info when a change happens
+              data : data//useful to pass contextual info when a change happens
         } );
 
         // //Always update the view title
@@ -9238,7 +9273,10 @@ $.extend( CZRModuleMths, {
 
 
   //////////////////////////////////
-  ///PREPARE AND INSTANTIATE MODULE OPTION
+  ///MODULE OPTION :
+  ///1) PREPARE
+  ///2) INSTANTIATE
+  ///3) LISTEN TO AND SET PARENT MODULE ON CHANGE
   //////////////////////////////////
   //fired when module isReady
   instantiateModOpt : function() {
@@ -9255,6 +9293,14 @@ $.extend( CZRModuleMths, {
               //update the dirtyness state
               module.isDirty(true);
               //set the the new items model
+              //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+              //data looks like :
+              //{
+              //  module : {}
+              //  input_changed     : string input.id
+              //  input_transport   : 'postMessage' or '',
+              //  not_preview_sent  : bool
+              //}
               module( _new_model, data );
         });
   },
@@ -9484,17 +9530,27 @@ $.extend( CZRModuleMths, {
   //=> the next available id of the item collection
   _getNextItemKeyInCollection : function() {
           var module = this,
-            _max_mod_key = {},
+            _maxItem = {},
             _next_key = 0;
 
           //get the initial key
           //=> if we already have a collection, extract all keys, select the max and increment it.
           //else, key is 0
-          if ( ! _.isEmpty( module.itemCollection() ) ) {
-              _max_mod_key = _.max( module.itemCollection(), function( _mod ) {
-                  return parseInt( _mod.id.replace(/[^\/\d]/g,''), 10 );
-              });
-              _next_key = parseInt( _max_mod_key.id.replace(/[^\/\d]/g,''), 10 ) + 1;
+          if ( _.isEmpty( module.itemCollection() ) )
+            return _next_key;
+          if ( _.isArray( module.itemCollection() ) && 1 === _.size( module.itemCollection() ) ) {
+                _maxItem = module.itemCollection()[0];
+          } else {
+                _maxItem = _.max( module.itemCollection(), function( _item ) {
+                      if ( ! _.isNumber( _item.id.replace(/[^\/\d]/g,'') ) )
+                        return 0;
+                      return parseInt( _item.id.replace( /[^\/\d]/g, '' ), 10 );
+                });
+          }
+
+          //For a single item collection, with an index free id, it might happen that the item is not parsable. Make sure it is. Otherwise, use the default key 0
+          if ( ! _.isUndefined( _maxItem ) && _.isNumber( _maxItem.id.replace(/[^\/\d]/g,'') ) ) {
+                _next_key = parseInt( _maxItem.id.replace(/[^\/\d]/g,''), 10 ) + 1;
           }
           return _next_key;
   },
@@ -9509,25 +9565,50 @@ $.extend( CZRModuleMths, {
   },
 
 
-
-  //@param obj can be { collection : []}, or { item : {} }
-  updateItemsCollection : function( obj ) {
+  //Fired in module.czr_Item.itemReact
+  //@param args can be
+  //{
+  //  collection : [],
+  //  data : data {}
+  //},
+  //
+  //or {
+  //  item : {}
+  //  data : data {}
+  //}
+  //if a collection is provided in the passed args then simply refresh the collection
+  //=> typically used when reordering the collection item with sortable or when a item is removed
+  //
+  //the args.data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+  //data looks like :
+  //{
+  //  module : {}
+  //  input_changed     : string input.id
+  //  input_transport   : 'postMessage' or '',
+  //  not_preview_sent  : bool
+  //}
+  //@return a deferred promise
+  updateItemsCollection : function( args ) {
           var module = this,
-              _current_collection = module.itemCollection();
-              _new_collection = _.clone(_current_collection);
+              _current_collection = module.itemCollection(),
+              _new_collection = _.clone(_current_collection),
+              dfd = $.Deferred();
 
-          //if a collection is provided in the passed obj then simply refresh the collection
+          //if a collection is provided in the passed args then simply refresh the collection
           //=> typically used when reordering the collection item with sortable or when a item is removed
-          if ( _.has( obj, 'collection' ) ) {
+          if ( _.has( args, 'collection' ) ) {
                 //reset the collection
-                module.itemCollection.set( obj.collection );
+                module.itemCollection.set( args.collection );
                 return;
           }
 
-          if ( ! _.has(obj, 'item') ) {
+          if ( ! _.has( args, 'item' ) ) {
               throw new Error('updateItemsCollection, no item provided ' + module.control.id + '. Aborting');
           }
-          var item = _.clone(obj.item);
+          //normalizes with data
+          args = _.extend( { data : {} }, args );
+
+          var item = _.clone( args.item );
 
           //the item already exist in the collection
           if ( _.findWhere( _new_collection, { id : item.id } ) ) {
@@ -9545,7 +9626,9 @@ $.extend( CZRModuleMths, {
           }
 
           //updates the collection value
-          module.itemCollection.set( _new_collection );
+          //=> is listened to by module.itemCollectionReact
+          module.itemCollection.set( _new_collection, args.data );
+          return dfd.resolve( { collection : _new_collection, data : args.data } ).promise();
   },
 
 
@@ -9835,6 +9918,8 @@ $.extend( CZRModuleMths, {
                                   refreshPreview = _.debounce( refreshPreview, 500 );//500ms are enough
                                   refreshPreview();
                             }
+
+                            module.trigger( 'item-collection-sorted' );
                       };
                       module._getSortedDOMItemCollection()
                             .done( function( _collection_ ) {
@@ -14408,6 +14493,13 @@ $.extend( CZRSlideModuleMths, {
 
           });
 
+          //Always write the title on item collection sorted
+          module.bind('item-collection-sorted', function() {
+                module.czr_Item.each( function( _itm_ ){
+                      _itm_.writeItemViewTitle();
+                });
+          });
+
   },//initialize
 
   //Overrides the default method.
@@ -14465,7 +14557,7 @@ $.extend( CZRSlideModuleMths, {
           ready : function() {
                 var input = this;
                 //update the item title on slide-title change
-                if ( 'slide-title' == input.id ) {
+                if ( 'slide-title' === input.id ) {
                       input.bind( function( to ) {
                             input.updateItemTitle( to );
                       });
@@ -14477,7 +14569,6 @@ $.extend( CZRSlideModuleMths, {
           //Don't fire in pre item case
           //@return void
           updateItemTitle : function( _new_title ) {
-
                 var input = this,
                     item = input.input_parent,
                     is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput,
@@ -14485,7 +14576,17 @@ $.extend( CZRSlideModuleMths, {
                 // if ( is_preItemInput )
                 //   return;
                 $.extend( _new_model, { title : _new_title } );
-                item.set( _new_model );
+
+                //This is listened to by module.czr_Item( item.id ).itemReact
+                //the object passed is needed to avoid a refresh
+                item.set(
+                      _new_model,
+                      {
+                            input_changed     : 'title',
+                            input_transport   : 'postMessage',
+                            not_preview_sent  : true//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.} );
+                      }
+                );
           }
   },//CZRSlidersInputMths
 
@@ -14520,25 +14621,64 @@ $.extend( CZRSlideModuleMths, {
           //at this stage, the model passed in the obj is up to date
           writeItemViewTitle : function( model ) {
                 var item = this,
+                    index = 1,
                     module  = item.module,
                     _model = model || item(),
-                    _title = _model.title ? _model.title : serverControlParams.translatedStrings.slideTitle;
+                    _title,
+                    _src = 'not_set';
+
+                //set title with index
+                if ( ! _.isEmpty( _model.title ) ) {
+                      _title = _model.title;
+                } else {
+                      //find the current item index in the collection
+                      var _index = _.findIndex( module.itemCollection(), function( _itm ) {
+                            return _itm.id === item.id;
+                      });
+                      _index = _.isUndefined( _index ) ? index : _index + 1;
+                      _title = [ serverControlParams.translatedStrings.slideTitle, _index ].join( ' ' );
+                }
+
                 //if the slide title is set, use it
                 _title = _.isEmpty( _model['slide-title'] ) ? _title : _model['slide-title'];
 
-                _title = api.CZR_Helpers.truncate( _title, 20 );
+                _title = api.CZR_Helpers.truncate( _title, 15 );
                 _title = [
                       '<div class="slide-thumb"></div>',
                       '<div class="slide-title">' + _title + '</div>',,
                 ].join('');
-                wp.media.attachment( _model['slide-background'] ).fetch()
-                      .always( function() {
-                            var attachment = this;
-                            $( '.' + module.control.css_attr.item_title , item.container ).html( _title );
-                            if ( _.isObject( attachment ) && _.has( attachment, 'attributes' ) && _.has( attachment.attributes, 'sizes' ) ) {
-                                 $( '.slide-thumb', item.container ).append( $('<img/>', { src : this.get('sizes').thumbnail.url, width : 32, height : 32, alt : attachment.attributes.title } ) );
-                            }
-                      });
+
+                var _getThumbSrc = function() {
+                      var dfd = $.Deferred();
+                      //try to set the default src
+                      if ( serverControlParams.slideModuleParams && serverControlParams.slideModuleParams.defaultThumb ) {
+                            _src = serverControlParams.slideModuleParams.defaultThumb;
+                      }
+                      console.log( "_model['slide-background']", _model['slide-background'] );
+                      if ( ! _.isNumber( _model['slide-background'] ) ) {
+                            dfd.resolve( _src );
+                      } else {
+                            console.log("MERDE");
+                            wp.media.attachment( _model['slide-background'] ).fetch()
+                                  .always( function() {
+                                        var attachment = this;
+                                        if ( _.isObject( attachment ) && _.has( attachment, 'attributes' ) && _.has( attachment.attributes, 'sizes' ) ) {
+                                              console.log("ALORS ?", this.get('sizes').thumbnail.url );
+                                              _src = this.get('sizes').thumbnail.url;
+                                              dfd.resolve( _src );
+                                        }
+                                  });
+                      }
+                      return dfd.promise();
+                };
+
+                $( '.' + module.control.css_attr.item_title , item.container ).html( _title );
+                _getThumbSrc().done( function( src ) {
+                      console.log("SRC", src );
+                      if ( 'not_set' != src ) {
+                            $( '.slide-thumb', item.container ).append( $('<img/>', { src : src, width : 32, height : 32, alt : _title } ) );
+                      }
+                });
           }
   }
 });//extends api.CZRDynModule

@@ -177,17 +177,27 @@ $.extend( CZRModuleMths, {
   //=> the next available id of the item collection
   _getNextItemKeyInCollection : function() {
           var module = this,
-            _max_mod_key = {},
+            _maxItem = {},
             _next_key = 0;
 
           //get the initial key
           //=> if we already have a collection, extract all keys, select the max and increment it.
           //else, key is 0
-          if ( ! _.isEmpty( module.itemCollection() ) ) {
-              _max_mod_key = _.max( module.itemCollection(), function( _mod ) {
-                  return parseInt( _mod.id.replace(/[^\/\d]/g,''), 10 );
-              });
-              _next_key = parseInt( _max_mod_key.id.replace(/[^\/\d]/g,''), 10 ) + 1;
+          if ( _.isEmpty( module.itemCollection() ) )
+            return _next_key;
+          if ( _.isArray( module.itemCollection() ) && 1 === _.size( module.itemCollection() ) ) {
+                _maxItem = module.itemCollection()[0];
+          } else {
+                _maxItem = _.max( module.itemCollection(), function( _item ) {
+                      if ( ! _.isNumber( _item.id.replace(/[^\/\d]/g,'') ) )
+                        return 0;
+                      return parseInt( _item.id.replace( /[^\/\d]/g, '' ), 10 );
+                });
+          }
+
+          //For a single item collection, with an index free id, it might happen that the item is not parsable. Make sure it is. Otherwise, use the default key 0
+          if ( ! _.isUndefined( _maxItem ) && _.isNumber( _maxItem.id.replace(/[^\/\d]/g,'') ) ) {
+                _next_key = parseInt( _maxItem.id.replace(/[^\/\d]/g,''), 10 ) + 1;
           }
           return _next_key;
   },
@@ -202,25 +212,50 @@ $.extend( CZRModuleMths, {
   },
 
 
-
-  //@param obj can be { collection : []}, or { item : {} }
-  updateItemsCollection : function( obj ) {
+  //Fired in module.czr_Item.itemReact
+  //@param args can be
+  //{
+  //  collection : [],
+  //  data : data {}
+  //},
+  //
+  //or {
+  //  item : {}
+  //  data : data {}
+  //}
+  //if a collection is provided in the passed args then simply refresh the collection
+  //=> typically used when reordering the collection item with sortable or when a item is removed
+  //
+  //the args.data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+  //data looks like :
+  //{
+  //  module : {}
+  //  input_changed     : string input.id
+  //  input_transport   : 'postMessage' or '',
+  //  not_preview_sent  : bool
+  //}
+  //@return a deferred promise
+  updateItemsCollection : function( args ) {
           var module = this,
-              _current_collection = module.itemCollection();
-              _new_collection = _.clone(_current_collection);
+              _current_collection = module.itemCollection(),
+              _new_collection = _.clone(_current_collection),
+              dfd = $.Deferred();
 
-          //if a collection is provided in the passed obj then simply refresh the collection
+          //if a collection is provided in the passed args then simply refresh the collection
           //=> typically used when reordering the collection item with sortable or when a item is removed
-          if ( _.has( obj, 'collection' ) ) {
+          if ( _.has( args, 'collection' ) ) {
                 //reset the collection
-                module.itemCollection.set( obj.collection );
+                module.itemCollection.set( args.collection );
                 return;
           }
 
-          if ( ! _.has(obj, 'item') ) {
+          if ( ! _.has( args, 'item' ) ) {
               throw new Error('updateItemsCollection, no item provided ' + module.control.id + '. Aborting');
           }
-          var item = _.clone(obj.item);
+          //normalizes with data
+          args = _.extend( { data : {} }, args );
+
+          var item = _.clone( args.item );
 
           //the item already exist in the collection
           if ( _.findWhere( _new_collection, { id : item.id } ) ) {
@@ -238,7 +273,9 @@ $.extend( CZRModuleMths, {
           }
 
           //updates the collection value
-          module.itemCollection.set( _new_collection );
+          //=> is listened to by module.itemCollectionReact
+          module.itemCollection.set( _new_collection, args.data );
+          return dfd.resolve( { collection : _new_collection, data : args.data } ).promise();
   },
 
 

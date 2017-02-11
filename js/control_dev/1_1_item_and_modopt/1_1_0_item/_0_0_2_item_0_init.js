@@ -59,7 +59,7 @@ $.extend( CZRItemMths , {
                 trigger   : 'click keydown',
                 selector  : [ '.' + item.module.control.css_attr.edit_view_btn, '.' + item.module.control.css_attr.item_title ].join(','),
                 name      : 'edit_view',
-                actions   : ['setViewVisibility']
+                actions   : [ 'setViewVisibility' ]
               }
         ]);
 
@@ -130,16 +130,26 @@ $.extend( CZRItemMths , {
 
 
   //React to a single item change
-  //cb of module.czr_Item(item.id).callbacks
-  itemReact : function( to, from ) {
+  //cb of module.czr_Item( item.id ).callbacks
+  //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+  //data looks like :
+  //{
+  //  module : {}
+  //  input_changed     : string input.id
+  //  input_transport   : 'postMessage' or '',
+  //  not_preview_sent  : bool
+  //}
+  itemReact : function( to, from, data ) {
         var item = this,
             module = item.module;
 
-        //update the collection
-        module.updateItemsCollection( {item : to });
+        data = data || {};
 
-        //Always update the view title
-        item.writeItemViewTitle(to);
+        //update the collection
+        module.updateItemsCollection( { item : to, data : data } ).done( function() {
+              //Always update the view title when the item collection has been updated
+              item.writeItemViewTitle( to );
+        });
 
         //send item to the preview. On update only, not on creation.
         // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {

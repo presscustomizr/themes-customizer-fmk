@@ -202,43 +202,62 @@
               } );
 
 
-              //obj is : {
+              //@param args looks like :
+              //{
               //    set_id : this.id,
-              //    model_id : obj.model.id,
+              //    model_id : model.id,
               //    changed_prop : _changed,
-              //    value : obj.model[_changed]
-              // }
-              api.preview.bind( 'sub_setting', function(obj) {
+              //    value : model[_changed]
+              //}
+              api.preview.bind( 'sub_setting', function( args ) {
                     //first get the "nude" option name
-                    var _opt_name = self._get_option_name( obj.set_id );
+                    var _opt_name = self._get_option_name( args.set_id );
 
                     //do we have custom callbacks for this subsetting ?
                     if ( ! _.has(self.subsetting_cbs, _opt_name) )
                       return;
 
                     //do we have a custom callback for this model id ?
-                    if ( ! _.has( self.subsetting_cbs[_opt_name], obj.changed_prop ) )
+                    if ( ! _.has( self.subsetting_cbs[ _opt_name ], args.changed_prop ) )
                       return;
 
                     //execute the cb
-                    self.subsetting_cbs[_opt_name][obj.changed_prop]( obj );
+                    self.subsetting_cbs[ _opt_name ][ args.changed_prop ]( args );
               });
 
+              //@param args looks like :
+              //{
+              //    set_id        : module.control.id,
+              //    module_id     : module.id,//<= will allow us to target the right dom element on front end
+              //    item_id       : input.input_parent.id,//<= can be the mod opt or the item
+              //    input_id      : input.id,
+              //    value         : to
+              //}
+              api.preview.bind( 'czr_input', function( args ) {
+                    var _defaults = {
+                          set_id : '',
+                          module_id : '',
+                          item_id : '',
+                          input_id : '',
+                          value : null
+                    };
 
-              api.preview.bind( 'czr_input', function(obj) {
+                    //normalizes
+                    args = _.extend ( _defaults, args );
+
                     //first get the "nude" option name
-                    var _opt_name = self._get_option_name( obj.set_id );
+                    var _opt_name = self._get_option_name( args.set_id );
 
                     //do we have custom callbacks for this subsetting ?
                     if ( ! _.has( self.input_cbs, _opt_name ) )
                       return;
 
                     //do we have a custom callback for this input id ?
-                    if ( ! _.has( self.input_cbs[_opt_name], obj.input_id ) )
+                    if ( ! _.has( self.input_cbs[ _opt_name ], args.input_id ) )
                       return;
 
                     //execute the cb
-                    self.input_cbs[_opt_name][obj.input_id]( obj );
+                    self.input_cbs[ _opt_name ][ args.input_id ]( args );
               });
         },
 

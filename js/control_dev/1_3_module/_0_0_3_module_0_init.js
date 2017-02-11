@@ -144,13 +144,12 @@ $.extend( CZRModuleMths, {
 
                           module.bind('items-collection-populated', function( collection ) {
                                 //listen to item Collection changes
-                                module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply(module, arguments ); } );
+                                module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply( module, arguments ); } );
 
                                 //it can be overridden by a module in its initialize method
                                 if ( module.isMultiItem() ) {
                                       module._makeItemsSortable();
                                 }
-                                //api.consoleLog('SAVED ITEM COLLECTION OF MODULE ' + module.id + ' IS READY');
                           });
 
                           //populate and instantiate the items now when a module is embedded in a regular control
@@ -200,9 +199,16 @@ $.extend( CZRModuleMths, {
   },
 
 
-
   //cb of : module.itemCollection.callbacks
-  itemCollectionReact : function( to, from, o ) {
+  //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+  //data looks like :
+  //{
+  //  module : {}
+  //  input_changed     : string input.id
+  //  input_transport   : 'postMessage' or '',
+  //  not_preview_sent  : bool
+  //}
+  itemCollectionReact : function( to, from, data ) {
         var module = this,
             _current_model = module(),
             _new_model = $.extend( true, {}, _current_model );
@@ -210,12 +216,12 @@ $.extend( CZRModuleMths, {
         //update the dirtyness state
         module.isDirty.set(true);
         //set the the new items model
-        module.set( _new_model, o || {} );
+        module.set( _new_model, data || {} );
   },
 
 
   //cb of module.callbacks
-  moduleReact : function( to, from, o ) {
+  moduleReact : function( to, from, data ) {
         //cb of : module.callbacks
         var module            = this,
             control           = module.control,
@@ -228,7 +234,7 @@ $.extend( CZRModuleMths, {
         //update the collection + pass data
         control.updateModulesCollection( {
               module : $.extend( true, {}, to ),
-              data : o//useful to pass contextual info when a change happens
+              data : data//useful to pass contextual info when a change happens
         } );
 
         // //Always update the view title
@@ -270,7 +276,10 @@ $.extend( CZRModuleMths, {
 
 
   //////////////////////////////////
-  ///PREPARE AND INSTANTIATE MODULE OPTION
+  ///MODULE OPTION :
+  ///1) PREPARE
+  ///2) INSTANTIATE
+  ///3) LISTEN TO AND SET PARENT MODULE ON CHANGE
   //////////////////////////////////
   //fired when module isReady
   instantiateModOpt : function() {
@@ -287,6 +296,14 @@ $.extend( CZRModuleMths, {
               //update the dirtyness state
               module.isDirty(true);
               //set the the new items model
+              //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+              //data looks like :
+              //{
+              //  module : {}
+              //  input_changed     : string input.id
+              //  input_transport   : 'postMessage' or '',
+              //  not_preview_sent  : bool
+              //}
               module( _new_model, data );
         });
   },

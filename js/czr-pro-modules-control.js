@@ -393,6 +393,13 @@ $.extend( CZRSlideModuleMths, {
 
           });
 
+          //Always write the title on item collection sorted
+          module.bind('item-collection-sorted', function() {
+                module.czr_Item.each( function( _itm_ ){
+                      _itm_.writeItemViewTitle();
+                });
+          });
+
   },//initialize
 
   //Overrides the default method.
@@ -450,7 +457,7 @@ $.extend( CZRSlideModuleMths, {
           ready : function() {
                 var input = this;
                 //update the item title on slide-title change
-                if ( 'slide-title' == input.id ) {
+                if ( 'slide-title' === input.id ) {
                       input.bind( function( to ) {
                             input.updateItemTitle( to );
                       });
@@ -462,7 +469,6 @@ $.extend( CZRSlideModuleMths, {
           //Don't fire in pre item case
           //@return void
           updateItemTitle : function( _new_title ) {
-
                 var input = this,
                     item = input.input_parent,
                     is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput,
@@ -470,7 +476,17 @@ $.extend( CZRSlideModuleMths, {
                 // if ( is_preItemInput )
                 //   return;
                 $.extend( _new_model, { title : _new_title } );
-                item.set( _new_model );
+
+                //This is listened to by module.czr_Item( item.id ).itemReact
+                //the object passed is needed to avoid a refresh
+                item.set(
+                      _new_model,
+                      {
+                            input_changed     : 'title',
+                            input_transport   : 'postMessage',
+                            not_preview_sent  : true//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.} );
+                      }
+                );
           }
   },//CZRSlidersInputMths
 
@@ -505,25 +521,64 @@ $.extend( CZRSlideModuleMths, {
           //at this stage, the model passed in the obj is up to date
           writeItemViewTitle : function( model ) {
                 var item = this,
+                    index = 1,
                     module  = item.module,
                     _model = model || item(),
-                    _title = _model.title ? _model.title : serverControlParams.translatedStrings.slideTitle;
+                    _title,
+                    _src = 'not_set';
+
+                //set title with index
+                if ( ! _.isEmpty( _model.title ) ) {
+                      _title = _model.title;
+                } else {
+                      //find the current item index in the collection
+                      var _index = _.findIndex( module.itemCollection(), function( _itm ) {
+                            return _itm.id === item.id;
+                      });
+                      _index = _.isUndefined( _index ) ? index : _index + 1;
+                      _title = [ serverControlParams.translatedStrings.slideTitle, _index ].join( ' ' );
+                }
+
                 //if the slide title is set, use it
                 _title = _.isEmpty( _model['slide-title'] ) ? _title : _model['slide-title'];
 
-                _title = api.CZR_Helpers.truncate( _title, 20 );
+                _title = api.CZR_Helpers.truncate( _title, 15 );
                 _title = [
                       '<div class="slide-thumb"></div>',
                       '<div class="slide-title">' + _title + '</div>',,
                 ].join('');
-                wp.media.attachment( _model['slide-background'] ).fetch()
-                      .always( function() {
-                            var attachment = this;
-                            $( '.' + module.control.css_attr.item_title , item.container ).html( _title );
-                            if ( _.isObject( attachment ) && _.has( attachment, 'attributes' ) && _.has( attachment.attributes, 'sizes' ) ) {
-                                 $( '.slide-thumb', item.container ).append( $('<img/>', { src : this.get('sizes').thumbnail.url, width : 32, height : 32, alt : attachment.attributes.title } ) );
-                            }
-                      });
+
+                var _getThumbSrc = function() {
+                      var dfd = $.Deferred();
+                      //try to set the default src
+                      if ( serverControlParams.slideModuleParams && serverControlParams.slideModuleParams.defaultThumb ) {
+                            _src = serverControlParams.slideModuleParams.defaultThumb;
+                      }
+                      console.log( "_model['slide-background']", _model['slide-background'] );
+                      if ( ! _.isNumber( _model['slide-background'] ) ) {
+                            dfd.resolve( _src );
+                      } else {
+                            console.log("MERDE");
+                            wp.media.attachment( _model['slide-background'] ).fetch()
+                                  .always( function() {
+                                        var attachment = this;
+                                        if ( _.isObject( attachment ) && _.has( attachment, 'attributes' ) && _.has( attachment.attributes, 'sizes' ) ) {
+                                              console.log("ALORS ?", this.get('sizes').thumbnail.url );
+                                              _src = this.get('sizes').thumbnail.url;
+                                              dfd.resolve( _src );
+                                        }
+                                  });
+                      }
+                      return dfd.promise();
+                };
+
+                $( '.' + module.control.css_attr.item_title , item.container ).html( _title );
+                _getThumbSrc().done( function( src ) {
+                      console.log("SRC", src );
+                      if ( 'not_set' != src ) {
+                            $( '.slide-thumb', item.container ).append( $('<img/>', { src : src, width : 32, height : 32, alt : _title } ) );
+                      }
+                });
           }
   }
 });//extends api.CZRDynModule

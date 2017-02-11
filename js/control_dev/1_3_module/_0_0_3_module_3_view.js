@@ -170,6 +170,8 @@ $.extend( CZRModuleMths, {
                                   refreshPreview = _.debounce( refreshPreview, 500 );//500ms are enough
                                   refreshPreview();
                             }
+
+                            module.trigger( 'item-collection-sorted' );
                       };
                       module._getSortedDOMItemCollection()
                             .done( function( _collection_ ) {
