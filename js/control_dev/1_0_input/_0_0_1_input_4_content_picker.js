@@ -64,13 +64,17 @@ $.extend( CZRInputMths , {
                             }
 
                             //normalize and purge useless select2 fields
+                            //=> skip a possible _custom_ id, used for example in the slider module to set a custom url
                             _.each( _default, function( val, k ){
-                                  if ( ! _.has( _raw_val, k ) || _.isEmpty( _raw_val[k] ) ) {
-                                        api.consoleLog( 'content_picker : missing input param : ' + k );
-                                        return;
+                                  if ( '_custom_' !== _raw_val.id ) {
+                                        if ( ! _.has( _raw_val, k ) || _.isEmpty( _raw_val[ k ] ) ) {
+                                              api.consoleLog( 'content_picker : missing input param : ' + k );
+                                              return;
+                                        }
                                   }
-                                  _val_candidate[k] = _raw_val[k];
+                                  _val_candidate[ k ] = _raw_val[ k ];
                             } );
+                            //set the value now
                             input.set( _val_candidate );
                       }
                 }
@@ -118,11 +122,14 @@ $.extend( CZRInputMths , {
                         return $request;
                       },*/
                       processResults: function ( data, params ) {
+                            //let us remotely set a default option like custom link when initializing the content picker input.
+                            input.defaultContentPickerOption = input.defaultContentPickerOption || [];
+
                             if ( ! data.success )
-                              return { results: [] };
+                              return { results: input.defaultContentPickerOption };
 
                             var items   = data.data.items,
-                                _results = [];
+                                _results = _.clone( input.defaultContentPickerOption );
 
                             _.each( items, function( item ) {
                                   _results.push({

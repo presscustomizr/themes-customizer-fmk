@@ -148,7 +148,7 @@ $.extend( CZRItemMths , {
         //update the collection
         module.updateItemsCollection( { item : to, data : data } ).done( function() {
               //Always update the view title when the item collection has been updated
-              item.writeItemViewTitle( to );
+              item.writeItemViewTitle( to, data );
         });
 
         //send item to the preview. On update only, not on creation.

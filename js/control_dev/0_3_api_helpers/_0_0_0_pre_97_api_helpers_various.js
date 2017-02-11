@@ -285,6 +285,7 @@
 
               //stores the collection
               inputParentInst.inputCollection( dom_inputParentInst_model );
+
               //chain
               return inputParentInst;
         },

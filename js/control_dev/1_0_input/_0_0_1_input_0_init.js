@@ -71,6 +71,18 @@ $.extend( CZRInputMths , {
                     }//was 'updateInput'
                   }
           ];
+
+          //Visibility
+          input.visible = new api.Value( true );
+          input.isReady.done( function() {
+                input.visible.bind( function( visible ) {
+                      if ( visible )
+                        input.container.stop( true, true ).slideDown( 200 );
+                      else
+                        input.container.stop( true, true ).slideUp( 200 );
+                });
+          });
+
     },
 
 

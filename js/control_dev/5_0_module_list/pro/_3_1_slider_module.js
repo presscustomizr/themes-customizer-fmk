@@ -33,24 +33,35 @@ $.extend( CZRSlideModuleMths, {
           module.itemConstructor = api.CZRItem.extend( module.CZRSliderItem || {} );
 
           //declares a default ModOpt model
-          this.defaultModOptModel = {
-              is_mod_opt : true,
-              module_id : module.id,
-              'slider-speed' : 6,
-              'slider-layout' : 'full-width',
-              'lazyload' : 1,
-              'slider-height' : 100
-          };
+          //this.defaultModOptModel = {
+          //     is_mod_opt : true,
+          //     module_id : module.id,
+          //     'slider-speed' : 6,
+          //     'slider-layout' : 'full-width',
+          //     'lazyload' : 1,
+          //     'slider-height' : 100
+          // };
+          this.defaultModOptModel = _.extend(
+                serverControlParams.slideModuleParams.defaultModOpt,
+                {
+                      module_id : module.id
+                }
+          );
+
 
           //declares a default Item model
-          this.defaultItemModel = {
-              id : '',
-              title : '',
-              'slide-background' : '',
-              'slide-title'      : '',
-              'slide-subtitle'   : '',
-              'slide-link'       : ''
-          };
+          // this.defaultItemModel = {
+          //     id : '',
+          //     title : '',
+          //     'slide-background' : '',
+          //     'slide-title'      : '',
+          //     'slide-subtitle'   : '',
+          //     'slide-cta'         : '',
+          //     'slide-link'       : '',
+          //     'slide-custom-link'  : ''
+          // };
+          //The server model includes the slide-src property that is created when rendering the slide in the front tmpl
+          this.defaultItemModel = _.omit( serverControlParams.slideModuleParams.defaultSlideMod, 'slide-src');
 
           //overrides the default success message
           this.itemAddedMessage = serverControlParams.translatedStrings.slideAdded;
@@ -168,6 +179,18 @@ $.extend( CZRSlideModuleMths, {
                             input.updateItemTitle( to );
                       });
                 }
+
+                //add the custom link option to the content picker
+                if ( 'slide-link' == input.id ) {
+                      input.defaultContentPickerOption = [{
+                            id          : '_custom_',
+                            title       : '<span style="font-weight:bold">Set a custom url</span>',//@to_translate
+                            type_label  : '',
+                            object_type : '',
+                            url         : ''
+                      }];
+                }
+
                 api.CZRInput.prototype.ready.call( input);
           },
 
@@ -223,15 +246,80 @@ $.extend( CZRSlideModuleMths, {
 
 
   CZRSliderItem : {
+          //overrides the parent ready
+          ready : function() {
+                var item = this;
+                //wait for the input collection to be populated, and then set the input visibility dependencies
+                item.inputCollection.bind( function( col ) {
+                      if( _.isEmpty( col ) )
+                        return;
+                      item.setSlideInputVisibilityDependencies();
+                });
+                //fire the parent
+                api.CZRItem.prototype.ready.call( item );
+          },
+
+
+          //Fired when the input collection is populated
+          //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
+          setSlideInputVisibilityDependencies : function() {
+                var item = this,
+                    //the slide-link value is an object which has always an id (post id) + other properties like title
+                    _isCustomLink = function( input_val ) {
+                          return _.isObject( input_val ) && '_custom_' === input_val.id;
+                    };
+
+                item.czr_Input.each( function( input ) {
+                      switch( input.id ) {
+                            // case 'slide-title' :
+                            //       //Fire on init
+                            //       item.czr_Input('slide-subtitle').visible( ! _.isEmpty( input() ) );
+
+                            //       //React on change
+                            //       input.bind( function( to ) {
+                            //             item.czr_Input('slide-subtitle').visible( ! _.isEmpty( to ) );
+                            //       });
+                            // break;
+
+                            case 'slide-cta' :
+                                  //Fire on init
+                                  item.czr_Input('slide-link').visible( ! _.isEmpty( input() ) );
+                                  item.czr_Input('slide-custom-link').visible( ! _.isEmpty( input() ) && _isCustomLink( item.czr_Input('slide-link')() ) );
+
+                                  //React on change
+                                  input.bind( function( to ) {
+                                        item.czr_Input('slide-link').visible( ! _.isEmpty( to ) );
+                                        item.czr_Input('slide-custom-link').visible( ! _.isEmpty( to ) && _isCustomLink( item.czr_Input('slide-link')() ) );
+                                  });
+                            break;
+
+                            //the slide-link value is an object which has always an id (post id) + other properties like title
+                            case 'slide-link' :
+                                  //Fire on init
+                                  item.czr_Input('slide-custom-link').visible( _isCustomLink( input() ) );
+                                  //React on change
+                                  input.bind( function( to ) {
+                                        item.czr_Input('slide-custom-link').visible( _isCustomLink( to ) );
+                                  });
+                            break;
+                      }
+                });
+          },
+
           //overrides the default parent method by a custom one
           //at this stage, the model passed in the obj is up to date
-          writeItemViewTitle : function( model ) {
+          writeItemViewTitle : function( model, data ) {
                 var item = this,
                     index = 1,
                     module  = item.module,
                     _model = model || item(),
                     _title,
                     _src = 'not_set';
+
+                //When shall we update the item title ?
+                //=> when the slide title or the thumbnail have been updated
+                if ( _.isObject( data ) && data.input_changed && ! _.contains( ['slide-title', 'slide-background' ], data.input_changed ) )
+                  return;
 
                 //set title with index
                 if ( ! _.isEmpty( _model.title ) ) {
@@ -247,12 +335,11 @@ $.extend( CZRSlideModuleMths, {
 
                 //if the slide title is set, use it
                 _title = _.isEmpty( _model['slide-title'] ) ? _title : _model['slide-title'];
-
                 _title = api.CZR_Helpers.truncate( _title, 15 );
-                _title = [
-                      '<div class="slide-thumb"></div>',
-                      '<div class="slide-title">' + _title + '</div>',,
-                ].join('');
+                // _title = [
+                //       '<div class="slide-thumb"></div>',
+                //       '<div class="slide-title">' + _title + '</div>',,
+                // ].join('');
 
                 var _getThumbSrc = function() {
                       var dfd = $.Deferred();
@@ -260,16 +347,13 @@ $.extend( CZRSlideModuleMths, {
                       if ( serverControlParams.slideModuleParams && serverControlParams.slideModuleParams.defaultThumb ) {
                             _src = serverControlParams.slideModuleParams.defaultThumb;
                       }
-                      console.log( "_model['slide-background']", _model['slide-background'] );
                       if ( ! _.isNumber( _model['slide-background'] ) ) {
                             dfd.resolve( _src );
                       } else {
-                            console.log("MERDE");
                             wp.media.attachment( _model['slide-background'] ).fetch()
                                   .always( function() {
                                         var attachment = this;
                                         if ( _.isObject( attachment ) && _.has( attachment, 'attributes' ) && _.has( attachment.attributes, 'sizes' ) ) {
-                                              console.log("ALORS ?", this.get('sizes').thumbnail.url );
                                               _src = this.get('sizes').thumbnail.url;
                                               dfd.resolve( _src );
                                         }
@@ -278,13 +362,50 @@ $.extend( CZRSlideModuleMths, {
                       return dfd.promise();
                 };
 
-                $( '.' + module.control.css_attr.item_title , item.container ).html( _title );
-                _getThumbSrc().done( function( src ) {
-                      console.log("SRC", src );
-                      if ( 'not_set' != src ) {
-                            $( '.slide-thumb', item.container ).append( $('<img/>', { src : src, width : 32, height : 32, alt : _title } ) );
-                      }
-                });
+
+                var $slideTitleEl = $( '.' + module.control.css_attr.item_title , item.container ).find('.slide-title'),
+                    $slideThumbEl = $( '.' + module.control.css_attr.item_title , item.container ).find( '.slide-thumb');
+
+                //TITLE
+                //always write the title
+                if ( ! $slideTitleEl.length ) {
+                      //remove the default item title
+                      $( '.' + module.control.css_attr.item_title , item.container ).html( '' );
+                      //write the new one
+                      $( '.' + module.control.css_attr.item_title , item.container ).append( $( '<div/>',
+                            {
+                                class : 'slide-title',
+                                html : _title
+                            }
+                      ) );
+                } else {
+                      $slideTitleEl.html( _title );
+                }
+
+                //THUMB
+                //When shall we append the item thumb ?
+                //=>IF the slide-thumb element is not set
+                //=>OR in the case where data have been provided and the input_changed is 'slide-background'
+                var _isBgChange = _.isObject( data ) && data.input_changed && 'slide-background' === data.input_changed;
+
+                if ( 0 === $slideThumbEl.length ) {
+                      _getThumbSrc().done( function( src ) {
+                            if ( 'not_set' != src ) {
+                                  $( '.' + module.control.css_attr.item_title, item.container ).prepend( $('<div/>',
+                                        {
+                                              class : 'slide-thumb',
+                                              html : '<img src="' + src + '" width="32" height="32" alt="' + _title + '" />'
+                                        }
+                                  ));
+                            }
+                      });
+                } else if ( _isBgChange ) {
+                      _getThumbSrc().done( function( src ) {
+                            if ( 'not_set' != src ) {
+                                  $slideThumbEl.html( '<img src="' + src + '" width="32" height="32" alt="' + _title + '" />' );
+                            }
+                      });
+                }
           }
   }
 });
