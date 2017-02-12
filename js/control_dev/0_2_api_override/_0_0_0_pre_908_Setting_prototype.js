@@ -48,6 +48,18 @@
                     }
 
                     if ( 'postMessage' === transport ) {
+                          //Pre setting event with a richer object passed
+                          //=> can be used in a partial refresh scenario to execute actions prior to the actual selective refresh which is triggered on 'setting', just after
+                          setting.previewer.send( 'pre_setting', {
+                                set_id : setting.id,
+                                data   : data,//<= { module_id : 'string', module : {} } which typically includes the module_id and the module model ( items, mod options )
+                                value  : to
+                          });
+
+                          //WP Default
+                          //=> the 'setting' event is used for normal and partial refresh post message actions
+                          //=> the partial refresh is fired on the preview if a partial has been registered for this setting in the php customize API
+                          //=> When a partial has been registered, the "normal" ( => the not partial refresh ones ) postMessage callbacks will be fired before the ajax ones
                           setting.previewer.send( 'setting', [ setting.id, setting() ] );
                     } else if ( 'refresh' === transport ) {
                           setting.previewer.refresh();

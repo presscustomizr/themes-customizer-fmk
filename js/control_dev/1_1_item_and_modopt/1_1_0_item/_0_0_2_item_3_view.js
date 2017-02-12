@@ -264,11 +264,17 @@ $.extend( CZRItemMths , {
               $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, item.container ).first(),
               $_clicked = obj.dom_event;
 
-          //first close all open items views
-          module.closeAllItems();
+          //first close all open items views and dialogs
+          module.closeAllItems().closeAllAlerts();
 
+          //Close Mod opts if any
+          if ( module.hasModOpt() ) {
+                api.czr_ModOptVisible( false );
+          }
+
+          //Close Pre item dialog
           if ( _.has(module, 'preItem') ) {
-              module.preItemExpanded(false);
+                module.preItemExpanded(false);
           }
 
           //then close any other open remove alert in the module containuer
