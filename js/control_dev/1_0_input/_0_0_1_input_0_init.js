@@ -132,7 +132,9 @@ $.extend( CZRInputMths , {
     inputReact : function( to, from, data ) {
             var input = this,
                 _current_input_parent = input.input_parent(),
-                _new_model        = _.clone( _current_input_parent );//initialize it to the current value
+                _new_model        = _.clone( _current_input_parent ),//initialize it to the current value
+                _isPreItemInput = input.is_preItemInput;
+
             //make sure the _new_model is an object and is not empty
             _new_model =  ( ! _.isObject(_new_model) || _.isEmpty(_new_model) ) ? {} : _new_model;
             //set the new val to the changed property
@@ -145,18 +147,19 @@ $.extend( CZRInputMths , {
                   not_preview_sent  : 'postMessage' === input.transport//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
             } );
 
-            if ( ! _.has( input, 'is_preItemInput' ) ) {
+            //Trigger and send specific events when changing a published input item
+            if ( ! _isPreItemInput ) {
                   //inform the input_parent that an input has changed
                   //=> useful to handle dependant reactions between different inputs
                   input.input_parent.trigger( input.id + ':changed', to );
-            }
 
-            //Each input instantiated in an item or a modOpt can have a specific transport set.
-            //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
-            //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
-            //send input to the preview. On update only, not on creation.
-            if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
-                  input._sendInput( to, from );
+                  //Each input instantiated in an item or a modOpt can have a specific transport set.
+                  //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
+                  //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
+                  //send input to the preview. On update only, not on creation.
+                  if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
+                        input._sendInput( to, from );
+                  }
             }
     },
 
