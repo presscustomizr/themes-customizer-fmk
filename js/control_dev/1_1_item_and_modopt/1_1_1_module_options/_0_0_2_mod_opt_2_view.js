@@ -21,6 +21,15 @@ $.extend( CZRModOptMths , {
                                       actions   : function() {
                                             api.czr_ModOptVisible( false );
                                       }
+                                },
+                                //tabs navigation
+                                {
+                                      trigger   : 'click keydown',
+                                      selector  : '.tabs nav li',
+                                      name      : 'tab_nav',
+                                      actions   : function( args ) {
+                                          modOpt.toggleTabVisibility( args );
+                                      }
                                 }
                           ],//actions to execute
                           { dom_el: $_container },//model + dom scope
@@ -31,19 +40,51 @@ $.extend( CZRModOptMths , {
           modOpt_model = modOpt() || modOpt.initial_modOpt_model;//could not be set yet
 
           //renderview content now
-          $.when( modOpt.renderModOptContent( modOpt_model ) ).done( function( $_container ) {
-                //update the $.Deferred state
-                if ( ! _.isUndefined( $_container ) && false !== $_container.length ) {
-                      _setupDOMListeners( $_container );
-                      dfd.resolve( $_container );
-                }
-                else {
-                      throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
-                }
-          });
+          $.when( modOpt.renderModOptContent( modOpt_model ) )
+                .done( function( $_container ) {
+                      //update the $.Deferred state
+                      if ( ! _.isUndefined( $_container ) && false !== $_container.length ) {
+                            _setupDOMListeners( $_container );
+                            dfd.resolve( $_container );
+                      }
+                      else {
+                            throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
+                      }
+                })
+                .then( function() {
+                      //the modOpt.container is now available
+                      //Setup the tabs navigation
+                      //=> Make sure the first tab is the current visible one
+                      $( '.tabs nav li', modOpt.container ).first().addClass( 'tab-current' );
+                      $( 'section', modOpt.container ).first().addClass( 'content-current' );
+
+                      //set the layout class based on the number of tabs
+                      var _nb = $( '.tabs nav li', modOpt.container ).length;
+                      $( '.tabs nav li', modOpt.container ).each( function() {
+                            $(this).addClass( _nb > 0 ? 'cols-' + _nb : '' );
+                      });
+                });
+
           return dfd.promise();
   },
 
+
+  toggleTabVisibility : function( args ) {
+        var modOpt = this,
+            tabs = $( modOpt.container ).find('li'),
+            content_items = $( modOpt.container ).find('section'),
+            tabIdSwitchedTo = $( args.dom_event.currentTarget, args.dom_el ).attr('data-tab-id');
+
+        $( '.tabs nav li', modOpt.container ).each( function() {
+                $(this).removeClass('tab-current');
+        });
+        $( modOpt.container ).find('li[data-tab-id="' + tabIdSwitchedTo + '"]').addClass('tab-current');
+
+        $( 'section', modOpt.container ).each( function() {
+                $(this).removeClass('content-current');
+        });
+        $( modOpt.container ).find('section[id="' + tabIdSwitchedTo + '"]').addClass('content-current');
+  },
 
 
   //renders saved modOpt views and attach event handlers

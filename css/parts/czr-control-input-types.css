@@ -531,7 +531,7 @@ body.czr-customize-content_editor-pane-resize #customize-preview:before {
 }
 
 .rangeslider__fill {
-  background: #00ff00;
+  background: #3b8dbd;
   position: absolute;
 }
 .rangeslider--horizontal .rangeslider__fill {
@@ -565,8 +565,9 @@ body.czr-customize-content_editor-pane-resize #customize-preview:before {
   border-radius: 50%;
   line-height: 42px;
   text-align: center;
-  color: #404040;
-  font-size: 15px;
+  color: #000000;
+  font-size: 13px;
+  font-weight: bold;
 }
 
 .rangeslider__handle:after {

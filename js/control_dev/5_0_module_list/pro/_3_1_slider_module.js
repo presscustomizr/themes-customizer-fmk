@@ -18,8 +18,8 @@ $.extend( CZRSlideModuleMths, {
           this.slider_layouts = { 'full-width' : 'Full Width', boxed : 'Boxed' };
 
           //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUTS
-          module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputMths || {} );
-          module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputMths || {} );
+          module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputCtor || {} );
+          module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputCtor || {} );
 
           //SET THE CONTENT PICKER OPTIONS
           $.extend( module.inputOptions, {
@@ -29,8 +29,9 @@ $.extend( CZRSlideModuleMths, {
                 }
           });
 
-          //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
-          module.itemConstructor = api.CZRItem.extend( module.CZRSliderItem || {} );
+          //EXTEND THE DEFAULT CONSTRUCTORS FOR ITEMS AND MODOPTS
+          module.itemConstructor = api.CZRItem.extend( module.CZRSliderItemCtor || {} );
+          module.modOptConstructor = api.CZRModOpt.extend( module.CZRSliderModOptCtor || {} );
 
           //declares a default ModOpt model
           //this.defaultModOptModel = {
@@ -170,7 +171,9 @@ $.extend( CZRSlideModuleMths, {
   },
 
 
-  CZRSliderInputMths : {
+
+
+  CZRSliderInputCtor : {
           ready : function() {
                 var input = this;
                 //update the item title on slide-title change
@@ -220,7 +223,8 @@ $.extend( CZRSlideModuleMths, {
   },//CZRSlidersInputMths
 
 
-  CZRSliderModOptInputMths : {
+
+  CZRSliderModOptInputCtor : {
           //overrides the default method
           setupSelect : function() {
                 var input      = this,
@@ -245,7 +249,10 @@ $.extend( CZRSlideModuleMths, {
   },//CZRSlidersInputMths
 
 
-  CZRSliderItem : {
+
+
+
+  CZRSliderItemCtor : {
           //overrides the parent ready
           ready : function() {
                 var item = this;
@@ -253,7 +260,7 @@ $.extend( CZRSlideModuleMths, {
                 item.inputCollection.bind( function( col ) {
                       if( _.isEmpty( col ) )
                         return;
-                      item.setSlideInputVisibilityDependencies();
+                      item.setInputVisibilityDeps();
                 });
                 //fire the parent
                 api.CZRItem.prototype.ready.call( item );
@@ -262,7 +269,7 @@ $.extend( CZRSlideModuleMths, {
 
           //Fired when the input collection is populated
           //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
-          setSlideInputVisibilityDependencies : function() {
+          setInputVisibilityDeps : function() {
                 var item = this,
                     //the slide-link value is an object which has always an id (post id) + other properties like title
                     _isCustomLink = function( input_val ) {
@@ -407,5 +414,48 @@ $.extend( CZRSlideModuleMths, {
                       });
                 }
           }
+  },//CZRSliderItemCtor
+
+
+
+  CZRSliderModOptCtor : {
+        ready: function() {
+              var modOpt = this;
+              //wait for the input collection to be populated, and then set the input visibility dependencies
+              modOpt.inputCollection.bind( function( col ) {
+                    if( _.isEmpty( col ) )
+                      return;
+                    modOpt.setModOptInputVisibilityDeps();
+              });
+              //fire the parent
+              api.CZRModOpt.prototype.ready.call( modOpt );
+        },
+
+
+        //Fired when the input collection is populated
+        //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
+        setModOptInputVisibilityDeps : function() {
+              var modOpt = this,
+                  _isChecked = function( v ) {
+                        return 0 !== v && '0' !== v && false !== v && 'off' !== v;
+                  };
+
+              modOpt.czr_Input.each( function( input ) {
+                    switch( input.id ) {
+                          case 'autoplay' :
+                                //Fire on init
+                                modOpt.czr_Input('slider-speed').visible( _isChecked( input() ) );
+                                modOpt.czr_Input('pause-on-hover').visible( _isChecked( input() ) );
+
+                                //React on change
+                                input.bind( function( to ) {
+                                      modOpt.czr_Input('slider-speed').visible( _isChecked( to ) );
+                                      modOpt.czr_Input('pause-on-hover').visible( _isChecked( to ) );
+                                });
+                          break;
+                    }
+              });
+        }
+
   }
 });
