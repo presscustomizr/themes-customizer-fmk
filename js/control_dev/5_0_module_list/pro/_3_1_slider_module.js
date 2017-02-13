@@ -15,7 +15,7 @@ $.extend( CZRSlideModuleMths, {
                 modOptInputList : 'czr-module-slide-mod-opt-input-list'
           } );
 
-          this.slider_layouts = { 'full-width' : 'Full Width', boxed : 'Boxed' };
+          this.sliderSkins = serverControlParams.slideModuleParams.sliderSkins;
 
           //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUTS
           module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputCtor || {} );
@@ -38,7 +38,6 @@ $.extend( CZRSlideModuleMths, {
           //     is_mod_opt : true,
           //     module_id : module.id,
           //     'slider-speed' : 6,
-          //     'slider-layout' : 'full-width',
           //     'lazyload' : 1,
           //     'slider-height' : 100
           // };
@@ -230,21 +229,21 @@ $.extend( CZRSlideModuleMths, {
                 var input      = this,
                     modOpt      = input.input_parent,
                     module     = input.module,
-                    _slider_layouts   = module.slider_layouts,//{}
+                    _sliderSkins   = module.sliderSkins,//{}
                     _model = modOpt();
 
                 //generates the options
-                _.each( _slider_layouts , function( _layout_name , _k ) {
+                _.each( _sliderSkins , function( _layout_name , _k ) {
                       var _attributes = {
                                 value : _k,
                                 html: _layout_name
                           };
-                      if ( _k == _model['slider-layout'] ) {
+                      if ( _k == _model['skin'] ) {
                             $.extend( _attributes, { selected : "selected" } );
                       }
-                      $( 'select[data-type="slider-layout"]', input.container ).append( $('<option>', _attributes) );
+                      $( 'select[data-type="skin"]', input.container ).append( $('<option>', _attributes) );
                 });
-                $( 'select[data-type="slider-layout"]', input.container ).selecter();
+                $( 'select[data-type="skin"]', input.container ).selecter();
         }
   },//CZRSlidersInputMths
 

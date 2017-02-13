@@ -176,6 +176,7 @@ $.extend( CZRInputMths , {
           module.control.previewer.send( 'czr_input', {
                 set_id        : module.control.id,
                 module_id     : module.id,//<= will allow us to target the right dom element on front end
+                module        : { items : $.extend( true, {}, module().items) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
                 item_id       : input.input_parent.id,//<= can be the mod opt or the item
                 input_id      : input.id,
                 value         : to
