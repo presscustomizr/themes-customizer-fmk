@@ -51,9 +51,24 @@
               }
         });
 
-        //PARTIAL REFRESHS => stores and observes the partials sent by the preview
-        api.previewer.bind( 'czr-partial-refresh', function( data ) {
+        //PARTIAL REFRESHS => stores and observes the partials data sent by the preview
+        api.previewer.bind( 'czr-partial-refresh-data', function( data ) {
               api.czr_partials.set( data );
+        });
+
+        //PARTIAL REFRESHS : React on partial refresh done
+        // @data : { set_id : api setting id }
+        api.previewer.bind( 'czr-partial-refresh-done', function( data ) {
+              if ( ! _.has( data, 'set_id' ) )
+                return;
+              var setId = api.CZR_Helpers.build_setId( data.set_id );
+              if ( ! api.has( setId ) )
+                return;
+              //inform the control
+              var ctrlId = api.CZR_Helpers.getControlSettingId( setId );
+              if ( ! api.control.has( ctrlId ) )
+                return;
+              api.control( ctrlId ).trigger( 'czr-partial-refresh-done' );
         });
   });//api.bind('ready')
 })( wp.customize , jQuery, _ );

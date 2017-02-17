@@ -184,7 +184,7 @@
                   )
             );
             api.preview.send(
-                  'czr-partial-refresh',
+                  'czr-partial-refresh-data',
                   typeof( undefined ) === typeof( _customizePartialRefreshExports ) ? {} : _customizePartialRefreshExports.partials
             );
 
@@ -290,6 +290,15 @@
 
                     //execute the cb
                     self.input_cbs[ _opt_name ][ args.input_id ]( args );
+              });
+
+              //Inform the panel each time a partial refresh has been done
+              //=> this will allow us to execute post partial refresh actions
+              api.selectiveRefresh.bind( 'partial-content-rendered', function( params ) {
+                      if ( ! _.has( params, 'partial' ) || ! _.has( params.partial, 'id' ) )
+                        return;
+                      var _shortOptName = params.partial.id;
+                      api.preview.send( 'czr-partial-refresh-done', { set_id : self._build_setId( params.partial.id ) } );
               });
         },
 

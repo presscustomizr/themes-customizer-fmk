@@ -6712,13 +6712,38 @@ $.extend( CZRSkopeMths, {
 (function (api, $, _) {
   //PREPARE THE SKOPE AWARE PREVIEWER
   if ( serverControlParams.isSkopOn ) {
-        //var _old_preview = api.Setting.prototype.preview;
-        api.Setting.prototype.preview = function( to, from , data ) {
-              var setting = this, transport;
-                  transport = setting.transport;
+        //@return void()
+        //Changed the core to specify that the setting preview is actually a deferred callback
+        //=> allows us to use syntax like :
+        //api( setId ).set( new_value ).done( function() { execute actions when all the setting callbacks have been done })
+        api.Setting.prototype.initialize = function( id, value, options ) {
+              var setting = this;
+              api.Value.prototype.initialize.call( setting, value, options );
 
-              if ( _.has( api, 'czr_isPreviewerSkopeAware' ) && 'pending' == api.czr_isPreviewerSkopeAware.state() )
-                this.previewer.refresh();
+              setting.id = id;
+              setting.transport = setting.transport || 'refresh';
+              setting._dirty = options.dirty || false;
+              setting.notifications = new api.Values({ defaultConstructor: api.Notification });
+
+              // Whenever the setting's value changes, refresh the preview.
+              // the deferred can be used in moduleCollectionReact to execute actions after the module has been set.
+              setting.bind( function( to, from , data ) {
+                    return setting.preview( to, from , data );
+              }, { deferred : true } );
+        };
+
+
+        //var _old_preview = api.Setting.prototype.preview;
+        //@return a deferred promise
+        api.Setting.prototype.preview = function( to, from , data ) {
+              var setting = this, transport, dfd = $.Deferred();
+
+              transport = setting.transport;
+
+              if ( _.has( api, 'czr_isPreviewerSkopeAware' ) && 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
+                    this.previewer.refresh();
+                    return dfd.resolve( arguments ).promise();
+              }
               //as soon as the previewer is setup, let's behave as usual
               //=> but don't refresh when silently updating
 
@@ -6738,15 +6763,17 @@ $.extend( CZRSkopeMths, {
               //=> 2) and we will send a custom event to the preview looking like :
               //module.control.previewer.send( 'czr_input', {
               //       set_id        : module.control.id,
+              //       module        : { items : $.extend( true, {}, module().items) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
               //       module_id     : module.id,//<= will allow us to target the right dom element on front end
               //       input_id      : input.id,
+              //       input_parent_id : input.input_parent.id,//<= can be the mod opt or the item
               //       value         : to
               // });
 
               //=> if no from (setting not set yet => fall back on defaut transport)
               if ( ! _.isUndefined( from ) && ! _.isEmpty( from ) && ! _.isNull( from ) ) {
                     if ( _.isObject( data ) && true === data.not_preview_sent ) {
-                          return;
+                          return dfd.resolve( arguments ).promise();
                     }
               }
 
@@ -6758,11 +6785,29 @@ $.extend( CZRSkopeMths, {
                     }
 
                     if ( 'postMessage' === transport ) {
+                          //Pre setting event with a richer object passed
+                          //=> can be used in a partial refresh scenario to execute actions prior to the actual selective refresh which is triggered on 'setting', just after
+                          setting.previewer.send( 'pre_setting', {
+                                set_id : setting.id,
+                                data   : data,//<= { module_id : 'string', module : {} } which typically includes the module_id and the module model ( items, mod options )
+                                value  : to
+                          });
+
+                          //WP Default
+                          //=> the 'setting' event is used for normal and partial refresh post message actions
+                          //=> the partial refresh is fired on the preview if a partial has been registered for this setting in the php customize API
+                          //=> When a partial has been registered, the "normal" ( => the not partial refresh ones ) postMessage callbacks will be fired before the ajax ones
                           setting.previewer.send( 'setting', [ setting.id, setting() ] );
+
+                          dfd.resolve( arguments );
+
                     } else if ( 'refresh' === transport ) {
-                          setting.previewer.refresh();
+                          setting.previewer.refresh().always( function() {
+                                dfd.resolve( arguments );
+                          });
                     }
               }
+              return dfd.promise();
         };
   }
 
@@ -7042,6 +7087,7 @@ $.extend( CZRSkopeMths, {
               $( '.' + module.control.css_attr.sub_set_wrapper, inputParentInst.container).each( function( _index ) {
                     var _id = $(this).find('[data-type]').attr( 'data-type' ),
                         _value = _.has( inputParentInst_model, _id ) ? inputParentInst_model[ _id ] : '';
+
                     //skip if no valid input data-type is found in this node
                     if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
                           api.consoleLog( 'setupInputCollectionFromDOM : missing data-type for ' + module.id );
@@ -7081,6 +7127,7 @@ $.extend( CZRSkopeMths, {
 
               //stores the collection
               inputParentInst.inputCollection( dom_inputParentInst_model );
+
               //chain
               return inputParentInst;
         },
@@ -7118,7 +7165,39 @@ $.extend( CZRSkopeMths, {
                     api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
               });
 
+        },
+
+
+        //COLORS
+        hexToRgb : function( hex ) {
+              // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+              var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+              try{
+                  hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+                      return r + r + g + g + b + b;
+                  });
+              } catch(e) {
+                  api.consoleLog('Error in Helpers::hexToRgb');
+                  return hex;
+              }
+
+              var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec( hex );
+              result = result ? [
+                    parseInt(result[1], 16),//r
+                    parseInt(result[2], 16),//g
+                    parseInt(result[3], 16)//b
+              ] : [];
+              return 'rgb(' + result.join(',') + ')';
+        },
+
+        rgbToHex : function ( r, g, b ) {
+              var componentToHex = function(c) {
+                    var hex = c.toString(16);
+                    return hex.length == 1 ? "0" + hex : hex;
+              };
+              return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
         }
+
   });//$.extend
 
 
@@ -7303,9 +7382,24 @@ $.extend( CZRSkopeMths, {
               }
         });
 
-        //PARTIAL REFRESHS => stores and observes the partials sent by the preview
-        api.previewer.bind( 'czr-partial-refresh', function( data ) {
+        //PARTIAL REFRESHS => stores and observes the partials data sent by the preview
+        api.previewer.bind( 'czr-partial-refresh-data', function( data ) {
               api.czr_partials.set( data );
+        });
+
+        //PARTIAL REFRESHS : React on partial refresh done
+        // @data : { set_id : api setting id }
+        api.previewer.bind( 'czr-partial-refresh-done', function( data ) {
+              if ( ! _.has( data, 'set_id' ) )
+                return;
+              var setId = api.CZR_Helpers.build_setId( data.set_id );
+              if ( ! api.has( setId ) )
+                return;
+              //inform the control
+              var ctrlId = api.CZR_Helpers.getControlSettingId( setId );
+              if ( ! api.control.has( ctrlId ) )
+                return;
+              api.control( ctrlId ).trigger( 'czr-partial-refresh-done' );
         });
   });//api.bind('ready')
 })( wp.customize , jQuery, _ );var CZRInputMths = CZRInputMths || {};
@@ -7381,6 +7475,18 @@ $.extend( CZRInputMths , {
                     }//was 'updateInput'
                   }
           ];
+
+          //Visibility
+          input.visible = new api.Value( true );
+          input.isReady.done( function() {
+                input.visible.bind( function( visible ) {
+                      if ( visible )
+                        input.container.stop( true, true ).slideDown( 200 );
+                      else
+                        input.container.stop( true, true ).slideUp( 200 );
+                });
+          });
+
     },
 
 
@@ -7430,7 +7536,9 @@ $.extend( CZRInputMths , {
     inputReact : function( to, from, data ) {
             var input = this,
                 _current_input_parent = input.input_parent(),
-                _new_model        = _.clone( _current_input_parent );//initialize it to the current value
+                _new_model        = _.clone( _current_input_parent ),//initialize it to the current value
+                _isPreItemInput = input.is_preItemInput;
+
             //make sure the _new_model is an object and is not empty
             _new_model =  ( ! _.isObject(_new_model) || _.isEmpty(_new_model) ) ? {} : _new_model;
             //set the new val to the changed property
@@ -7443,45 +7551,26 @@ $.extend( CZRInputMths , {
                   not_preview_sent  : 'postMessage' === input.transport//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
             } );
 
-            if ( ! _.has( input, 'is_preItemInput' ) ) {
+            //Trigger and send specific events when changing a published input item
+            if ( ! _isPreItemInput ) {
                   //inform the input_parent that an input has changed
                   //=> useful to handle dependant reactions between different inputs
                   input.input_parent.trigger( input.id + ':changed', to );
-            }
 
-            //Each input instantiated in an item or a modOpt can have a specific transport set.
-            //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
-            //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
-            //send input to the preview. On update only, not on creation.
-            if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
-                  input._sendInput( to, from );
+                  //Each input instantiated in an item or a modOpt can have a specific transport set.
+                  //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
+                  //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
+                  //send input to the preview. On update only, not on creation.
+                  if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
+                        input.module.sendInputToPreview( {
+                              input_id        : input.id,
+                              input_parent_id : input.input_parent.id,
+                              to              : to,
+                              from            : from
+                        } );
+                  }
             }
     },
-
-
-    //The idea is to send only the currently modified item instead of the entire collection
-    //the entire collection is sent anyway on api(setId).set( value ), and accessible in the preview via api(setId).bind( fn( to) )
-    _sendInput : function( to, from ) {
-          var input = this,
-              module = input.module;
-
-          if ( _.isEqual( to, from ) )
-            return;
-
-          module.control.previewer.send( 'czr_input', {
-                set_id        : module.control.id,
-                module_id     : module.id,//<= will allow us to target the right dom element on front end
-                item_id       : input.input_parent.id,//<= can be the mod opt or the item
-                input_id      : input.id,
-                value         : to
-          });
-
-          //add a hook here
-          module.trigger( 'input_sent', { input : to , dom_el: input.container } );
-    },
-
-
-
 
 
     /*-----------------------------------------
@@ -7490,7 +7579,9 @@ $.extend( CZRInputMths , {
     setupColorPicker : function() {
         var input  = this;
 
-        input.container.find('input').wpColorPicker( {
+        input.container.find('input').iris( {
+            palettes: true,
+            hide:false,
             change : function( e, o ) {
                   //if the input val is not updated here, it's not detected right away.
                   //weird
@@ -7499,7 +7590,8 @@ $.extend( CZRInputMths , {
                   //input.container.find('[data-type]').trigger('colorpickerchange');
 
                   //synchronizes with the original input
-                  $(this).val( $(this).wpColorPicker('color') ).trigger('colorpickerchange').trigger('change');
+                  //OLD => $(this).val( $(this).wpColorPicker('color') ).trigger('colorpickerchange').trigger('change');
+                  $(this).val( o.color.toString() ).trigger('colorpickerchange').trigger('change');
             }
         });
     },
@@ -7847,13 +7939,17 @@ $.extend( CZRInputMths , {
                             }
 
                             //normalize and purge useless select2 fields
+                            //=> skip a possible _custom_ id, used for example in the slider module to set a custom url
                             _.each( _default, function( val, k ){
-                                  if ( ! _.has( _raw_val, k ) || _.isEmpty( _raw_val[k] ) ) {
-                                        api.consoleLog( 'content_picker : missing input param : ' + k );
-                                        return;
+                                  if ( '_custom_' !== _raw_val.id ) {
+                                        if ( ! _.has( _raw_val, k ) || _.isEmpty( _raw_val[ k ] ) ) {
+                                              api.consoleLog( 'content_picker : missing input param : ' + k );
+                                              return;
+                                        }
                                   }
-                                  _val_candidate[k] = _raw_val[k];
+                                  _val_candidate[ k ] = _raw_val[ k ];
                             } );
+                            //set the value now
                             input.set( _val_candidate );
                       }
                 }
@@ -7901,11 +7997,14 @@ $.extend( CZRInputMths , {
                         return $request;
                       },*/
                       processResults: function ( data, params ) {
+                            //let us remotely set a default option like custom link when initializing the content picker input.
+                            input.defaultContentPickerOption = input.defaultContentPickerOption || [];
+
                             if ( ! data.success )
-                              return { results: [] };
+                              return { results: input.defaultContentPickerOption };
 
                             var items   = data.data.items,
-                                _results = [];
+                                _results = _.clone( input.defaultContentPickerOption );
 
                             _.each( items, function( item ) {
                                   _results.push({
@@ -8377,7 +8476,7 @@ $.extend( CZRItemMths , {
         //update the collection
         module.updateItemsCollection( { item : to, data : data } ).done( function() {
               //Always update the view title when the item collection has been updated
-              item.writeItemViewTitle( to );
+              item.writeItemViewTitle( to, data );
         });
 
         //send item to the preview. On update only, not on creation.
@@ -8715,11 +8814,17 @@ $.extend( CZRItemMths , {
               $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, item.container ).first(),
               $_clicked = obj.dom_event;
 
-          //first close all open items views
-          module.closeAllItems();
+          //first close all open items views and dialogs
+          module.closeAllItems().closeAllAlerts();
 
+          //Close Mod opts if any
+          if ( module.hasModOpt() ) {
+                api.czr_ModOptVisible( false );
+          }
+
+          //Close Pre item dialog
           if ( _.has(module, 'preItem') ) {
-              module.preItemExpanded(false);
+                module.preItemExpanded(false);
           }
 
           //then close any other open remove alert in the module containuer
@@ -8814,6 +8919,9 @@ $.extend( CZRModOptMths , {
         //MOD OPT VISIBLE REACT
         api.czr_ModOptVisible.bind( function( visible ) {
               if ( visible ) {
+                    //first close all open remove dialogs
+                    modOpt.module.closeAllAlerts();
+
                     modOpt.modOptWrapperViewSetup( _initial_model ).done( function( $_container ) {
                           modOpt.container = $_container;
                           try {
@@ -8912,6 +9020,15 @@ $.extend( CZRModOptMths , {
                                       actions   : function() {
                                             api.czr_ModOptVisible( false );
                                       }
+                                },
+                                //tabs navigation
+                                {
+                                      trigger   : 'click keydown',
+                                      selector  : '.tabs nav li',
+                                      name      : 'tab_nav',
+                                      actions   : function( args ) {
+                                          modOpt.toggleTabVisibility( args );
+                                      }
                                 }
                           ],//actions to execute
                           { dom_el: $_container },//model + dom scope
@@ -8922,19 +9039,51 @@ $.extend( CZRModOptMths , {
           modOpt_model = modOpt() || modOpt.initial_modOpt_model;//could not be set yet
 
           //renderview content now
-          $.when( modOpt.renderModOptContent( modOpt_model ) ).done( function( $_container ) {
-                //update the $.Deferred state
-                if ( ! _.isUndefined( $_container ) && false !== $_container.length ) {
-                      _setupDOMListeners( $_container );
-                      dfd.resolve( $_container );
-                }
-                else {
-                      throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
-                }
-          });
+          $.when( modOpt.renderModOptContent( modOpt_model ) )
+                .done( function( $_container ) {
+                      //update the $.Deferred state
+                      if ( ! _.isUndefined( $_container ) && false !== $_container.length ) {
+                            _setupDOMListeners( $_container );
+                            dfd.resolve( $_container );
+                      }
+                      else {
+                            throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
+                      }
+                })
+                .then( function() {
+                      //the modOpt.container is now available
+                      //Setup the tabs navigation
+                      //=> Make sure the first tab is the current visible one
+                      $( '.tabs nav li', modOpt.container ).first().addClass( 'tab-current' );
+                      $( 'section', modOpt.container ).first().addClass( 'content-current' );
+
+                      //set the layout class based on the number of tabs
+                      var _nb = $( '.tabs nav li', modOpt.container ).length;
+                      $( '.tabs nav li', modOpt.container ).each( function() {
+                            $(this).addClass( _nb > 0 ? 'cols-' + _nb : '' );
+                      });
+                });
+
           return dfd.promise();
   },
 
+
+  toggleTabVisibility : function( args ) {
+        var modOpt = this,
+            tabs = $( modOpt.container ).find('li'),
+            content_items = $( modOpt.container ).find('section'),
+            tabIdSwitchedTo = $( args.dom_event.currentTarget, args.dom_el ).attr('data-tab-id');
+
+        $( '.tabs nav li', modOpt.container ).each( function() {
+                $(this).removeClass('tab-current');
+        });
+        $( modOpt.container ).find('li[data-tab-id="' + tabIdSwitchedTo + '"]').addClass('tab-current');
+
+        $( 'section', modOpt.container ).each( function() {
+                $(this).removeClass('content-current');
+        });
+        $( modOpt.container ).find('section[id="' + tabIdSwitchedTo + '"]').addClass('content-current');
+  },
 
 
   //renders saved modOpt views and attach event handlers
@@ -9348,8 +9497,80 @@ $.extend( CZRModuleMths, {
   //Returns the default modOpt defined in initialize
   //Each chid class can override the default item and the following method
   getDefaultModOptModel : function( id ) {
-          var module = this;
-          return $.extend( _.clone( module.defaultModOptModel ), { is_mod_opt : true } );
+        var module = this;
+        return $.extend( _.clone( module.defaultModOptModel ), { is_mod_opt : true } );
+  },
+
+
+  //The idea is to send only the currently modified item instead of the entire collection
+  //the entire collection is sent anyway on api(setId).set( value ), and accessible in the preview via api(setId).bind( fn( to) )
+  //This method can be called on input change and on czr-partial-refresh-done
+  //{
+  //  input_id :
+  //  input_parent_id :
+  //  is_mod_opt :
+  //  to :
+  //  from :
+  //}
+  sendInputToPreview : function( args ) {
+        var module = this;
+        //normalizes the args
+        args = _.extend(
+          {
+                input_id        : '',
+                input_parent_id : '',//<= can be the mod opt or an item
+                to              : null,
+                from            : null
+          } , args );
+
+        if ( _.isEqual( args.to, args.from ) )
+          return;
+
+        //This is listened to by the preview frame
+        module.control.previewer.send( 'czr_input', {
+              set_id        : api.CZR_Helpers.getControlSettingId( module.control.id ),
+              module_id     : module.id,//<= will allow us to target the right dom element on front end
+              module        : { items : $.extend( true, {}, module().items) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
+              input_parent_id : args.input_parent_id,//<= can be the mod opt or the item
+              input_id      : args.input_id,
+              value         : args.to
+        });
+
+        //add a hook here
+        module.trigger( 'input_sent', { input : args.to , dom_el: module.container } );
+  },
+
+
+  //@return void()
+  //Fired in base control initialize, only for module type controls
+  //This method can be called when don't have input instances available
+  //=> typically when reordering items, mod options and items are closed, therefore there's no input instances.
+  //=> the input id are being retrieved from the input parent models : items and mod options.
+  sendModuleInputsToPreview : function() {
+        var module = this,
+            _sendInputData = function() {
+                  var inputParent = this,//this is the input parent : item or modOpt
+                      inputParentModel = $.extend( true, {}, inputParent() );
+                  //we don't need to send the id, which is never an input, but generated by the api.
+                  inputParentModel = _.omit( inputParentModel, 'id' );
+
+                  _.each( inputParentModel, function( inputVal, inputId ) {
+                        module.sendInputToPreview( {
+                              input_id : inputId,
+                              input_parent_id : inputParent.id,
+                              to : inputVal,
+                              from : null
+                        });
+                  });
+            };
+
+        module.czr_Item.each( function( _itm_ ) {
+              _sendInputData.call( _itm_ );
+        });
+
+        if ( module.hasModOpt() ) {
+              _sendInputData.call( module.czr_ModOpt );
+        }
   }
 });//$.extend//CZRBaseControlMths//MULTI CONTROL CLASS
 //extends api.CZRBaseControl
@@ -10531,7 +10752,7 @@ $.extend( CZRSocialModuleMths, {
                                 //weird
                                 //is there a "change complete" kind of event for iris ?
                                 //hack to reset the color to default...@todo => use another color picker.
-                                if ( _.has(o, 'color') && 16777215 == o.color._color )
+                                if ( _.has( o, 'color') && 16777215 == o.color._color )
                                   $(this).val( serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)' );
                                 else
                                   $(this).val( o.color.toString() );
@@ -11755,6 +11976,19 @@ $.extend( CZRBaseControlMths, {
           //add a shortcut to the css properties declared in the php controls
           control.css_attr = _.has( serverControlParams , 'css_attr') ? serverControlParams.css_attr : {};
           api.Control.prototype.initialize.call( control, id, options );
+
+          //When a partial refresh is done we need to send back all postMessage input to the preview
+          //=> makes sure that all post message inputs not yet saved in db are properly applied
+          control.bind( 'czr-partial-refresh-done', function() {
+                if ( _.has( control, 'czr_moduleCollection' ) ) {
+                      _.each( control.czr_moduleCollection(), function( _mod_ ) {
+                            if ( ! control.czr_Module( _mod_.id ) )
+                              return;
+
+                            control.czr_Module( _mod_.id ).sendModuleInputsToPreview();
+                      });
+                }
+          });
   },
 
   //@return void()
@@ -12430,7 +12664,9 @@ $.extend( CZRBaseModuleControlMths, {
 
         //is there a passed module param ?
         //if so prepare it for DB
+        //if a module is provided, we also want to pass its id to the preview => can be used to target specific selectors in a partial refresh scenario
         if ( _.isObject( data  ) && _.has( data, 'module' ) ) {
+              data.module_id = data.module.id;
               data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
         }
 
@@ -12444,7 +12680,9 @@ $.extend( CZRBaseModuleControlMths, {
         else {
               //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
               //if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
-              api(this.id).set( control.filterModuleCollectionBeforeAjax( to ), data );
+              api(this.id)
+                    .set( control.filterModuleCollectionBeforeAjax( to ), data )
+                    .done( function( to, from, o ) {});
         }
   },
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14409,11 +14647,11 @@ $.extend( CZRSlideModuleMths, {
                 modOptInputList : 'czr-module-slide-mod-opt-input-list'
           } );
 
-          this.slider_layouts = { 'full-width' : 'Full Width', boxed : 'Boxed' };
+          this.sliderSkins = serverControlParams.slideModuleParams.sliderSkins;
 
           //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUTS
-          module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputMths || {} );
-          module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputMths || {} );
+          module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputCtor || {} );
+          module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputCtor || {} );
 
           //SET THE CONTENT PICKER OPTIONS
           $.extend( module.inputOptions, {
@@ -14423,28 +14661,39 @@ $.extend( CZRSlideModuleMths, {
                 }
           });
 
-          //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
-          module.itemConstructor = api.CZRItem.extend( module.CZRSliderItem || {} );
+          //EXTEND THE DEFAULT CONSTRUCTORS FOR ITEMS AND MODOPTS
+          module.itemConstructor = api.CZRItem.extend( module.CZRSliderItemCtor || {} );
+          module.modOptConstructor = api.CZRModOpt.extend( module.CZRSliderModOptCtor || {} );
 
           //declares a default ModOpt model
-          this.defaultModOptModel = {
-              is_mod_opt : true,
-              module_id : module.id,
-              'slider-speed' : 6,
-              'slider-layout' : 'full-width',
-              'lazyload' : 1,
-              'slider-height' : 100
-          };
+          //this.defaultModOptModel = {
+          //     is_mod_opt : true,
+          //     module_id : module.id,
+          //     'slider-speed' : 6,
+          //     'lazyload' : 1,
+          //     'slider-height' : 100
+          // };
+          this.defaultModOptModel = _.extend(
+                serverControlParams.slideModuleParams.defaultModOpt,
+                {
+                      module_id : module.id
+                }
+          );
+
 
           //declares a default Item model
-          this.defaultItemModel = {
-              id : '',
-              title : '',
-              'slide-background' : '',
-              'slide-title'      : '',
-              'slide-subtitle'   : '',
-              'slide-link'       : ''
-          };
+          // this.defaultItemModel = {
+          //     id : '',
+          //     title : '',
+          //     'slide-background' : '',
+          //     'slide-title'      : '',
+          //     'slide-subtitle'   : '',
+          //     'slide-cta'         : '',
+          //     'slide-link'       : '',
+          //     'slide-custom-link'  : ''
+          // };
+          //The server model includes the slide-src property that is created when rendering the slide in the front tmpl
+          this.defaultItemModel = _.omit( serverControlParams.slideModuleParams.defaultSlideMod, 'slide-src');
 
           //overrides the default success message
           this.itemAddedMessage = serverControlParams.translatedStrings.slideAdded;
@@ -14552,8 +14801,73 @@ $.extend( CZRSlideModuleMths, {
 
   },
 
+  ///////////////////////////////////////////////////////////////////
+  /// MODULE SPECIFIC INPUTS METHOD USED FOR BOTH ITEMS AND MOD OPTS
+  //////////////////////////////////////////
+  //this is an item or a modOpt
+  slideModSetupSelect : function() {
+        if ( 'skin' != this.id && 'slide-skin' != this.id )
+          return;
 
-  CZRSliderInputMths : {
+        var input      = this,
+            input_parent  = input.input_parent,
+            module     = input.module,
+            _sliderSkins  = module.sliderSkins,//{}
+            _model = input_parent();
+
+        //generates the options
+        _.each( _sliderSkins , function( _layout_name , _k ) {
+              var _attributes = {
+                        value : _k,
+                        html: _layout_name
+                  };
+              if ( _k == _model[ input.id ] ) {
+                    $.extend( _attributes, { selected : "selected" } );
+              }
+              $( 'select[data-type="' + input.id + '"]', input.container ).append( $('<option>', _attributes) );
+        });
+        $( 'select[data-type="' + input.id + '"]', input.container ).selecter();
+  },
+
+
+  //Save color as rgb
+  //this can be an item or a mod opt
+  slideModSetupColorPicker : function() {
+      var input  = this,
+          input_parent = input.input_parent,
+          _model = input_parent();
+
+      input.container.find('input').iris( {
+          palettes: true,
+          hide:false,
+          change : function( e, o ) {
+                //if the input val is not updated here, it's not detected right away.
+                //weird
+                //is there a "change complete" kind of event for iris ?
+                //$(this).val($(this).wpColorPicker('color'));
+                //input.container.find('[data-type]').trigger('colorpickerchange');
+
+                var _rgb = api.CZR_Helpers.hexToRgb( o.color.toString() ),
+                    _isCorrectRgb = _.isString( _rgb ) && -1 !== _rgb.indexOf('rgb(');
+
+                if ( ! _isCorrectRgb )
+                  _rgb = "rgb(34,34,34)";//force to dark skin if incorrect
+
+                //synchronizes with the original input
+                $(this).val( _rgb ).trigger('colorpickerchange').trigger('change');
+          }
+      });
+  },
+
+
+
+
+
+
+  ///////////////////////////////////////////////////////////
+  /// CONSTRUCTORS
+  //////////////////////////////////////////
+  CZRSliderInputCtor : {
           ready : function() {
                 var input = this;
                 //update the item title on slide-title change
@@ -14562,7 +14876,29 @@ $.extend( CZRSlideModuleMths, {
                             input.updateItemTitle( to );
                       });
                 }
+
+                //add the custom link option to the content picker
+                if ( 'slide-link' == input.id ) {
+                      input.defaultContentPickerOption = [{
+                            id          : '_custom_',
+                            title       : '<span style="font-weight:bold">Set a custom url</span>',//@to_translate
+                            type_label  : '',
+                            object_type : '',
+                            url         : ''
+                      }];
+                }
+
                 api.CZRInput.prototype.ready.call( input);
+          },
+
+          //overrides the default method
+          setupSelect : function() {
+                return this.module.slideModSetupSelect.call( this );
+          },
+
+          //Save color as rgb
+          setupColorPicker : function() {
+              return this.module.slideModSetupColorPicker.call( this );
           },
 
           //ACTIONS ON czr_input('slide-title') change
@@ -14591,41 +14927,131 @@ $.extend( CZRSlideModuleMths, {
   },//CZRSlidersInputMths
 
 
-  CZRSliderModOptInputMths : {
-          //overrides the default method
-          setupSelect : function() {
-                var input      = this,
-                    modOpt      = input.input_parent,
-                    module     = input.module,
-                    _slider_layouts   = module.slider_layouts,//{}
-                    _model = modOpt();
 
-                //generates the options
-                _.each( _slider_layouts , function( _layout_name , _k ) {
-                      var _attributes = {
-                                value : _k,
-                                html: _layout_name
-                          };
-                      if ( _k == _model['slider-layout'] ) {
-                            $.extend( _attributes, { selected : "selected" } );
-                      }
-                      $( 'select[data-type="slider-layout"]', input.container ).append( $('<option>', _attributes) );
+  CZRSliderModOptInputCtor : {
+        //overrides the default method
+        setupSelect : function() {
+              return this.module.slideModSetupSelect.call( this );
+        },
+
+        //Save color as rgb
+        setupColorPicker : function() {
+            return this.module.slideModSetupColorPicker.call( this );
+        },
+  },//CZRSliderModOptInputCtor
+
+
+
+
+
+  CZRSliderItemCtor : {
+          //overrides the parent ready
+          ready : function() {
+                var item = this;
+                //wait for the input collection to be populated, and then set the input visibility dependencies
+                item.inputCollection.bind( function( col ) {
+                      if( _.isEmpty( col ) )
+                        return;
+                      item.setInputVisibilityDeps();
                 });
-                $( 'select[data-type="slider-layout"]', input.container ).selecter();
-        }
-  },//CZRSlidersInputMths
+                //fire the parent
+                api.CZRItem.prototype.ready.call( item );
+          },
 
+          //Fired when the input collection is populated
+          //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
+          setInputVisibilityDeps : function() {
+                var item = this,
+                    //the slide-link value is an object which has always an id (post id) + other properties like title
+                    _isCustomLink = function( input_val ) {
+                          return _.isObject( input_val ) && '_custom_' === input_val.id;
+                    },
+                    _isChecked = function( v ) {
+                          return 0 !== v && '0' !== v && false !== v && 'off' !== v;
+                    },
+                    _isCustom = function( val ) {
+                          return 'custom' == val;
+                    };
 
-  CZRSliderItem : {
+                item.czr_Input.each( function( input ) {
+                      switch( input.id ) {
+                            // case 'slide-title' :
+                            //       //Fire on init
+                            //       item.czr_Input('slide-subtitle').visible( ! _.isEmpty( input() ) );
+
+                            //       //React on change
+                            //       input.bind( function( to ) {
+                            //             item.czr_Input('slide-subtitle').visible( ! _.isEmpty( to ) );
+                            //       });
+                            // break;
+
+                            case 'slide-cta' :
+                                  //Fire on init
+                                  item.czr_Input('slide-link').visible( ! _.isEmpty( input() ) );
+                                  item.czr_Input('slide-custom-link').visible( ! _.isEmpty( input() ) && _isCustomLink( item.czr_Input('slide-link')() ) );
+
+                                  //React on change
+                                  input.bind( function( to ) {
+                                        item.czr_Input('slide-link').visible( ! _.isEmpty( to ) );
+                                        item.czr_Input('slide-custom-link').visible( ! _.isEmpty( to ) && _isCustomLink( item.czr_Input('slide-link')() ) );
+                                  });
+                            break;
+
+                            //the slide-link value is an object which has always an id (post id) + other properties like title
+                            case 'slide-link' :
+                                  //Fire on init
+                                  item.czr_Input('slide-custom-link').visible( _isCustomLink( input() ) );
+                                  //React on change
+                                  input.bind( function( to ) {
+                                        item.czr_Input('slide-custom-link').visible( _isCustomLink( to ) );
+                                  });
+                            break;
+
+                            case 'slide-use-custom-skin' :
+                                  //Fire on init
+                                  item.czr_Input('slide-skin').visible( _isChecked( input() ) );
+                                  item.czr_Input('slide-skin-color').visible( _isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                  item.czr_Input('slide-opacity').visible( _isChecked( input() ) );
+                                  item.czr_Input('slide-text-color').visible( _isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+
+                                  //React on change
+                                  input.bind( function( to ) {
+                                        item.czr_Input('slide-skin').visible( _isChecked( to ) );
+                                        item.czr_Input('slide-skin-color').visible( _isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                        item.czr_Input('slide-opacity').visible( _isChecked( to ) );
+                                        item.czr_Input('slide-text-color').visible( _isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                  });
+                            break;
+
+                            case 'slide-skin' :
+                                  //Fire on init
+                                  item.czr_Input('slide-skin-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+                                  item.czr_Input('slide-text-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+
+                                  //React on change
+                                  input.bind( function( to ) {
+                                        item.czr_Input('slide-skin-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                        item.czr_Input('slide-text-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                  });
+                            break;
+                      }
+                });
+          },
+
           //overrides the default parent method by a custom one
           //at this stage, the model passed in the obj is up to date
-          writeItemViewTitle : function( model ) {
+          writeItemViewTitle : function( model, data ) {
                 var item = this,
                     index = 1,
                     module  = item.module,
                     _model = model || item(),
                     _title,
                     _src = 'not_set';
+
+                //When shall we update the item title ?
+                //=> when the slide title or the thumbnail have been updated
+                if ( _.isObject( data ) && data.input_changed && ! _.contains( ['slide-title', 'slide-background' ], data.input_changed ) )
+                  return;
 
                 //set title with index
                 if ( ! _.isEmpty( _model.title ) ) {
@@ -14641,12 +15067,11 @@ $.extend( CZRSlideModuleMths, {
 
                 //if the slide title is set, use it
                 _title = _.isEmpty( _model['slide-title'] ) ? _title : _model['slide-title'];
-
                 _title = api.CZR_Helpers.truncate( _title, 15 );
-                _title = [
-                      '<div class="slide-thumb"></div>',
-                      '<div class="slide-title">' + _title + '</div>',,
-                ].join('');
+                // _title = [
+                //       '<div class="slide-thumb"></div>',
+                //       '<div class="slide-title">' + _title + '</div>',,
+                // ].join('');
 
                 var _getThumbSrc = function() {
                       var dfd = $.Deferred();
@@ -14654,16 +15079,13 @@ $.extend( CZRSlideModuleMths, {
                       if ( serverControlParams.slideModuleParams && serverControlParams.slideModuleParams.defaultThumb ) {
                             _src = serverControlParams.slideModuleParams.defaultThumb;
                       }
-                      console.log( "_model['slide-background']", _model['slide-background'] );
                       if ( ! _.isNumber( _model['slide-background'] ) ) {
                             dfd.resolve( _src );
                       } else {
-                            console.log("MERDE");
                             wp.media.attachment( _model['slide-background'] ).fetch()
                                   .always( function() {
                                         var attachment = this;
                                         if ( _.isObject( attachment ) && _.has( attachment, 'attributes' ) && _.has( attachment.attributes, 'sizes' ) ) {
-                                              console.log("ALORS ?", this.get('sizes').thumbnail.url );
                                               _src = this.get('sizes').thumbnail.url;
                                               dfd.resolve( _src );
                                         }
@@ -14672,14 +15094,109 @@ $.extend( CZRSlideModuleMths, {
                       return dfd.promise();
                 };
 
-                $( '.' + module.control.css_attr.item_title , item.container ).html( _title );
-                _getThumbSrc().done( function( src ) {
-                      console.log("SRC", src );
-                      if ( 'not_set' != src ) {
-                            $( '.slide-thumb', item.container ).append( $('<img/>', { src : src, width : 32, height : 32, alt : _title } ) );
-                      }
-                });
+
+                var $slideTitleEl = $( '.' + module.control.css_attr.item_title , item.container ).find('.slide-title'),
+                    $slideThumbEl = $( '.' + module.control.css_attr.item_title , item.container ).find( '.slide-thumb');
+
+                //TITLE
+                //always write the title
+                if ( ! $slideTitleEl.length ) {
+                      //remove the default item title
+                      $( '.' + module.control.css_attr.item_title , item.container ).html( '' );
+                      //write the new one
+                      $( '.' + module.control.css_attr.item_title , item.container ).append( $( '<div/>',
+                            {
+                                class : 'slide-title',
+                                html : _title
+                            }
+                      ) );
+                } else {
+                      $slideTitleEl.html( _title );
+                }
+
+                //THUMB
+                //When shall we append the item thumb ?
+                //=>IF the slide-thumb element is not set
+                //=>OR in the case where data have been provided and the input_changed is 'slide-background'
+                var _isBgChange = _.isObject( data ) && data.input_changed && 'slide-background' === data.input_changed;
+
+                if ( 0 === $slideThumbEl.length ) {
+                      _getThumbSrc().done( function( src ) {
+                            if ( 'not_set' != src ) {
+                                  $( '.' + module.control.css_attr.item_title, item.container ).prepend( $('<div/>',
+                                        {
+                                              class : 'slide-thumb',
+                                              html : '<img src="' + src + '" width="32" height="32" alt="' + _title + '" />'
+                                        }
+                                  ));
+                            }
+                      });
+                } else if ( _isBgChange ) {
+                      _getThumbSrc().done( function( src ) {
+                            if ( 'not_set' != src ) {
+                                  $slideThumbEl.html( '<img src="' + src + '" width="32" height="32" alt="' + _title + '" />' );
+                            }
+                      });
+                }
           }
+  },//CZRSliderItemCtor
+
+
+
+  CZRSliderModOptCtor : {
+        ready: function() {
+              var modOpt = this;
+              //wait for the input collection to be populated, and then set the input visibility dependencies
+              modOpt.inputCollection.bind( function( col ) {
+                    if( _.isEmpty( col ) )
+                      return;
+                    modOpt.setModOptInputVisibilityDeps();
+              });
+              //fire the parent
+              api.CZRModOpt.prototype.ready.call( modOpt );
+        },
+
+
+        //Fired when the input collection is populated
+        //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
+        setModOptInputVisibilityDeps : function() {
+              var modOpt = this,
+                  _isChecked = function( v ) {
+                        return 0 !== v && '0' !== v && false !== v && 'off' !== v;
+                  };
+
+              modOpt.czr_Input.each( function( input ) {
+                    switch( input.id ) {
+                          case 'autoplay' :
+                                //Fire on init
+                                modOpt.czr_Input('slider-speed').visible( _isChecked( input() ) );
+                                modOpt.czr_Input('pause-on-hover').visible( _isChecked( input() ) );
+
+                                //React on change
+                                input.bind( function( to ) {
+                                      modOpt.czr_Input('slider-speed').visible( _isChecked( to ) );
+                                      modOpt.czr_Input('pause-on-hover').visible( _isChecked( to ) );
+                                });
+                          break;
+                          case 'skin' :
+                                var _isCustom = function( val ) {
+                                      return 'custom' == val;
+                                };
+
+                                //Fire on init
+                                modOpt.czr_Input('skin-custom-color').visible( _isCustom( input() ) );
+                                modOpt.czr_Input('text-custom-color').visible( _isCustom( input() ) );
+
+                                //React on change
+                                input.bind( function( to ) {
+                                      modOpt.czr_Input('skin-custom-color').visible( _isCustom( to ) );
+                                      modOpt.czr_Input('text-custom-color').visible( _isCustom( to ) );
+                                });
+                          break;
+                    }
+              });
+        }
+
   }
 });//extends api.CZRDynModule
 

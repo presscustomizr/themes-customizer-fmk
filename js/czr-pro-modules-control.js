@@ -309,11 +309,11 @@ $.extend( CZRSlideModuleMths, {
                 modOptInputList : 'czr-module-slide-mod-opt-input-list'
           } );
 
-          this.slider_layouts = { 'full-width' : 'Full Width', boxed : 'Boxed' };
+          this.sliderSkins = serverControlParams.slideModuleParams.sliderSkins;
 
           //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUTS
-          module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputMths || {} );
-          module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputMths || {} );
+          module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputCtor || {} );
+          module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputCtor || {} );
 
           //SET THE CONTENT PICKER OPTIONS
           $.extend( module.inputOptions, {
@@ -323,28 +323,39 @@ $.extend( CZRSlideModuleMths, {
                 }
           });
 
-          //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
-          module.itemConstructor = api.CZRItem.extend( module.CZRSliderItem || {} );
+          //EXTEND THE DEFAULT CONSTRUCTORS FOR ITEMS AND MODOPTS
+          module.itemConstructor = api.CZRItem.extend( module.CZRSliderItemCtor || {} );
+          module.modOptConstructor = api.CZRModOpt.extend( module.CZRSliderModOptCtor || {} );
 
           //declares a default ModOpt model
-          this.defaultModOptModel = {
-              is_mod_opt : true,
-              module_id : module.id,
-              'slider-speed' : 6,
-              'slider-layout' : 'full-width',
-              'lazyload' : 1,
-              'slider-height' : 100
-          };
+          //this.defaultModOptModel = {
+          //     is_mod_opt : true,
+          //     module_id : module.id,
+          //     'slider-speed' : 6,
+          //     'lazyload' : 1,
+          //     'slider-height' : 100
+          // };
+          this.defaultModOptModel = _.extend(
+                serverControlParams.slideModuleParams.defaultModOpt,
+                {
+                      module_id : module.id
+                }
+          );
+
 
           //declares a default Item model
-          this.defaultItemModel = {
-              id : '',
-              title : '',
-              'slide-background' : '',
-              'slide-title'      : '',
-              'slide-subtitle'   : '',
-              'slide-link'       : ''
-          };
+          // this.defaultItemModel = {
+          //     id : '',
+          //     title : '',
+          //     'slide-background' : '',
+          //     'slide-title'      : '',
+          //     'slide-subtitle'   : '',
+          //     'slide-cta'         : '',
+          //     'slide-link'       : '',
+          //     'slide-custom-link'  : ''
+          // };
+          //The server model includes the slide-src property that is created when rendering the slide in the front tmpl
+          this.defaultItemModel = _.omit( serverControlParams.slideModuleParams.defaultSlideMod, 'slide-src');
 
           //overrides the default success message
           this.itemAddedMessage = serverControlParams.translatedStrings.slideAdded;
@@ -452,8 +463,73 @@ $.extend( CZRSlideModuleMths, {
 
   },
 
+  ///////////////////////////////////////////////////////////////////
+  /// MODULE SPECIFIC INPUTS METHOD USED FOR BOTH ITEMS AND MOD OPTS
+  //////////////////////////////////////////
+  //this is an item or a modOpt
+  slideModSetupSelect : function() {
+        if ( 'skin' != this.id && 'slide-skin' != this.id )
+          return;
 
-  CZRSliderInputMths : {
+        var input      = this,
+            input_parent  = input.input_parent,
+            module     = input.module,
+            _sliderSkins  = module.sliderSkins,//{}
+            _model = input_parent();
+
+        //generates the options
+        _.each( _sliderSkins , function( _layout_name , _k ) {
+              var _attributes = {
+                        value : _k,
+                        html: _layout_name
+                  };
+              if ( _k == _model[ input.id ] ) {
+                    $.extend( _attributes, { selected : "selected" } );
+              }
+              $( 'select[data-type="' + input.id + '"]', input.container ).append( $('<option>', _attributes) );
+        });
+        $( 'select[data-type="' + input.id + '"]', input.container ).selecter();
+  },
+
+
+  //Save color as rgb
+  //this can be an item or a mod opt
+  slideModSetupColorPicker : function() {
+      var input  = this,
+          input_parent = input.input_parent,
+          _model = input_parent();
+
+      input.container.find('input').iris( {
+          palettes: true,
+          hide:false,
+          change : function( e, o ) {
+                //if the input val is not updated here, it's not detected right away.
+                //weird
+                //is there a "change complete" kind of event for iris ?
+                //$(this).val($(this).wpColorPicker('color'));
+                //input.container.find('[data-type]').trigger('colorpickerchange');
+
+                var _rgb = api.CZR_Helpers.hexToRgb( o.color.toString() ),
+                    _isCorrectRgb = _.isString( _rgb ) && -1 !== _rgb.indexOf('rgb(');
+
+                if ( ! _isCorrectRgb )
+                  _rgb = "rgb(34,34,34)";//force to dark skin if incorrect
+
+                //synchronizes with the original input
+                $(this).val( _rgb ).trigger('colorpickerchange').trigger('change');
+          }
+      });
+  },
+
+
+
+
+
+
+  ///////////////////////////////////////////////////////////
+  /// CONSTRUCTORS
+  //////////////////////////////////////////
+  CZRSliderInputCtor : {
           ready : function() {
                 var input = this;
                 //update the item title on slide-title change
@@ -462,7 +538,29 @@ $.extend( CZRSlideModuleMths, {
                             input.updateItemTitle( to );
                       });
                 }
+
+                //add the custom link option to the content picker
+                if ( 'slide-link' == input.id ) {
+                      input.defaultContentPickerOption = [{
+                            id          : '_custom_',
+                            title       : '<span style="font-weight:bold">Set a custom url</span>',//@to_translate
+                            type_label  : '',
+                            object_type : '',
+                            url         : ''
+                      }];
+                }
+
                 api.CZRInput.prototype.ready.call( input);
+          },
+
+          //overrides the default method
+          setupSelect : function() {
+                return this.module.slideModSetupSelect.call( this );
+          },
+
+          //Save color as rgb
+          setupColorPicker : function() {
+              return this.module.slideModSetupColorPicker.call( this );
           },
 
           //ACTIONS ON czr_input('slide-title') change
@@ -491,41 +589,131 @@ $.extend( CZRSlideModuleMths, {
   },//CZRSlidersInputMths
 
 
-  CZRSliderModOptInputMths : {
-          //overrides the default method
-          setupSelect : function() {
-                var input      = this,
-                    modOpt      = input.input_parent,
-                    module     = input.module,
-                    _slider_layouts   = module.slider_layouts,//{}
-                    _model = modOpt();
 
-                //generates the options
-                _.each( _slider_layouts , function( _layout_name , _k ) {
-                      var _attributes = {
-                                value : _k,
-                                html: _layout_name
-                          };
-                      if ( _k == _model['slider-layout'] ) {
-                            $.extend( _attributes, { selected : "selected" } );
-                      }
-                      $( 'select[data-type="slider-layout"]', input.container ).append( $('<option>', _attributes) );
+  CZRSliderModOptInputCtor : {
+        //overrides the default method
+        setupSelect : function() {
+              return this.module.slideModSetupSelect.call( this );
+        },
+
+        //Save color as rgb
+        setupColorPicker : function() {
+            return this.module.slideModSetupColorPicker.call( this );
+        },
+  },//CZRSliderModOptInputCtor
+
+
+
+
+
+  CZRSliderItemCtor : {
+          //overrides the parent ready
+          ready : function() {
+                var item = this;
+                //wait for the input collection to be populated, and then set the input visibility dependencies
+                item.inputCollection.bind( function( col ) {
+                      if( _.isEmpty( col ) )
+                        return;
+                      item.setInputVisibilityDeps();
                 });
-                $( 'select[data-type="slider-layout"]', input.container ).selecter();
-        }
-  },//CZRSlidersInputMths
+                //fire the parent
+                api.CZRItem.prototype.ready.call( item );
+          },
 
+          //Fired when the input collection is populated
+          //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
+          setInputVisibilityDeps : function() {
+                var item = this,
+                    //the slide-link value is an object which has always an id (post id) + other properties like title
+                    _isCustomLink = function( input_val ) {
+                          return _.isObject( input_val ) && '_custom_' === input_val.id;
+                    },
+                    _isChecked = function( v ) {
+                          return 0 !== v && '0' !== v && false !== v && 'off' !== v;
+                    },
+                    _isCustom = function( val ) {
+                          return 'custom' == val;
+                    };
 
-  CZRSliderItem : {
+                item.czr_Input.each( function( input ) {
+                      switch( input.id ) {
+                            // case 'slide-title' :
+                            //       //Fire on init
+                            //       item.czr_Input('slide-subtitle').visible( ! _.isEmpty( input() ) );
+
+                            //       //React on change
+                            //       input.bind( function( to ) {
+                            //             item.czr_Input('slide-subtitle').visible( ! _.isEmpty( to ) );
+                            //       });
+                            // break;
+
+                            case 'slide-cta' :
+                                  //Fire on init
+                                  item.czr_Input('slide-link').visible( ! _.isEmpty( input() ) );
+                                  item.czr_Input('slide-custom-link').visible( ! _.isEmpty( input() ) && _isCustomLink( item.czr_Input('slide-link')() ) );
+
+                                  //React on change
+                                  input.bind( function( to ) {
+                                        item.czr_Input('slide-link').visible( ! _.isEmpty( to ) );
+                                        item.czr_Input('slide-custom-link').visible( ! _.isEmpty( to ) && _isCustomLink( item.czr_Input('slide-link')() ) );
+                                  });
+                            break;
+
+                            //the slide-link value is an object which has always an id (post id) + other properties like title
+                            case 'slide-link' :
+                                  //Fire on init
+                                  item.czr_Input('slide-custom-link').visible( _isCustomLink( input() ) );
+                                  //React on change
+                                  input.bind( function( to ) {
+                                        item.czr_Input('slide-custom-link').visible( _isCustomLink( to ) );
+                                  });
+                            break;
+
+                            case 'slide-use-custom-skin' :
+                                  //Fire on init
+                                  item.czr_Input('slide-skin').visible( _isChecked( input() ) );
+                                  item.czr_Input('slide-skin-color').visible( _isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                  item.czr_Input('slide-opacity').visible( _isChecked( input() ) );
+                                  item.czr_Input('slide-text-color').visible( _isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+
+                                  //React on change
+                                  input.bind( function( to ) {
+                                        item.czr_Input('slide-skin').visible( _isChecked( to ) );
+                                        item.czr_Input('slide-skin-color').visible( _isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                        item.czr_Input('slide-opacity').visible( _isChecked( to ) );
+                                        item.czr_Input('slide-text-color').visible( _isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                  });
+                            break;
+
+                            case 'slide-skin' :
+                                  //Fire on init
+                                  item.czr_Input('slide-skin-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+                                  item.czr_Input('slide-text-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+
+                                  //React on change
+                                  input.bind( function( to ) {
+                                        item.czr_Input('slide-skin-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                        item.czr_Input('slide-text-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                  });
+                            break;
+                      }
+                });
+          },
+
           //overrides the default parent method by a custom one
           //at this stage, the model passed in the obj is up to date
-          writeItemViewTitle : function( model ) {
+          writeItemViewTitle : function( model, data ) {
                 var item = this,
                     index = 1,
                     module  = item.module,
                     _model = model || item(),
                     _title,
                     _src = 'not_set';
+
+                //When shall we update the item title ?
+                //=> when the slide title or the thumbnail have been updated
+                if ( _.isObject( data ) && data.input_changed && ! _.contains( ['slide-title', 'slide-background' ], data.input_changed ) )
+                  return;
 
                 //set title with index
                 if ( ! _.isEmpty( _model.title ) ) {
@@ -541,12 +729,11 @@ $.extend( CZRSlideModuleMths, {
 
                 //if the slide title is set, use it
                 _title = _.isEmpty( _model['slide-title'] ) ? _title : _model['slide-title'];
-
                 _title = api.CZR_Helpers.truncate( _title, 15 );
-                _title = [
-                      '<div class="slide-thumb"></div>',
-                      '<div class="slide-title">' + _title + '</div>',,
-                ].join('');
+                // _title = [
+                //       '<div class="slide-thumb"></div>',
+                //       '<div class="slide-title">' + _title + '</div>',,
+                // ].join('');
 
                 var _getThumbSrc = function() {
                       var dfd = $.Deferred();
@@ -554,16 +741,13 @@ $.extend( CZRSlideModuleMths, {
                       if ( serverControlParams.slideModuleParams && serverControlParams.slideModuleParams.defaultThumb ) {
                             _src = serverControlParams.slideModuleParams.defaultThumb;
                       }
-                      console.log( "_model['slide-background']", _model['slide-background'] );
                       if ( ! _.isNumber( _model['slide-background'] ) ) {
                             dfd.resolve( _src );
                       } else {
-                            console.log("MERDE");
                             wp.media.attachment( _model['slide-background'] ).fetch()
                                   .always( function() {
                                         var attachment = this;
                                         if ( _.isObject( attachment ) && _.has( attachment, 'attributes' ) && _.has( attachment.attributes, 'sizes' ) ) {
-                                              console.log("ALORS ?", this.get('sizes').thumbnail.url );
                                               _src = this.get('sizes').thumbnail.url;
                                               dfd.resolve( _src );
                                         }
@@ -572,14 +756,109 @@ $.extend( CZRSlideModuleMths, {
                       return dfd.promise();
                 };
 
-                $( '.' + module.control.css_attr.item_title , item.container ).html( _title );
-                _getThumbSrc().done( function( src ) {
-                      console.log("SRC", src );
-                      if ( 'not_set' != src ) {
-                            $( '.slide-thumb', item.container ).append( $('<img/>', { src : src, width : 32, height : 32, alt : _title } ) );
-                      }
-                });
+
+                var $slideTitleEl = $( '.' + module.control.css_attr.item_title , item.container ).find('.slide-title'),
+                    $slideThumbEl = $( '.' + module.control.css_attr.item_title , item.container ).find( '.slide-thumb');
+
+                //TITLE
+                //always write the title
+                if ( ! $slideTitleEl.length ) {
+                      //remove the default item title
+                      $( '.' + module.control.css_attr.item_title , item.container ).html( '' );
+                      //write the new one
+                      $( '.' + module.control.css_attr.item_title , item.container ).append( $( '<div/>',
+                            {
+                                class : 'slide-title',
+                                html : _title
+                            }
+                      ) );
+                } else {
+                      $slideTitleEl.html( _title );
+                }
+
+                //THUMB
+                //When shall we append the item thumb ?
+                //=>IF the slide-thumb element is not set
+                //=>OR in the case where data have been provided and the input_changed is 'slide-background'
+                var _isBgChange = _.isObject( data ) && data.input_changed && 'slide-background' === data.input_changed;
+
+                if ( 0 === $slideThumbEl.length ) {
+                      _getThumbSrc().done( function( src ) {
+                            if ( 'not_set' != src ) {
+                                  $( '.' + module.control.css_attr.item_title, item.container ).prepend( $('<div/>',
+                                        {
+                                              class : 'slide-thumb',
+                                              html : '<img src="' + src + '" width="32" height="32" alt="' + _title + '" />'
+                                        }
+                                  ));
+                            }
+                      });
+                } else if ( _isBgChange ) {
+                      _getThumbSrc().done( function( src ) {
+                            if ( 'not_set' != src ) {
+                                  $slideThumbEl.html( '<img src="' + src + '" width="32" height="32" alt="' + _title + '" />' );
+                            }
+                      });
+                }
           }
+  },//CZRSliderItemCtor
+
+
+
+  CZRSliderModOptCtor : {
+        ready: function() {
+              var modOpt = this;
+              //wait for the input collection to be populated, and then set the input visibility dependencies
+              modOpt.inputCollection.bind( function( col ) {
+                    if( _.isEmpty( col ) )
+                      return;
+                    modOpt.setModOptInputVisibilityDeps();
+              });
+              //fire the parent
+              api.CZRModOpt.prototype.ready.call( modOpt );
+        },
+
+
+        //Fired when the input collection is populated
+        //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
+        setModOptInputVisibilityDeps : function() {
+              var modOpt = this,
+                  _isChecked = function( v ) {
+                        return 0 !== v && '0' !== v && false !== v && 'off' !== v;
+                  };
+
+              modOpt.czr_Input.each( function( input ) {
+                    switch( input.id ) {
+                          case 'autoplay' :
+                                //Fire on init
+                                modOpt.czr_Input('slider-speed').visible( _isChecked( input() ) );
+                                modOpt.czr_Input('pause-on-hover').visible( _isChecked( input() ) );
+
+                                //React on change
+                                input.bind( function( to ) {
+                                      modOpt.czr_Input('slider-speed').visible( _isChecked( to ) );
+                                      modOpt.czr_Input('pause-on-hover').visible( _isChecked( to ) );
+                                });
+                          break;
+                          case 'skin' :
+                                var _isCustom = function( val ) {
+                                      return 'custom' == val;
+                                };
+
+                                //Fire on init
+                                modOpt.czr_Input('skin-custom-color').visible( _isCustom( input() ) );
+                                modOpt.czr_Input('text-custom-color').visible( _isCustom( input() ) );
+
+                                //React on change
+                                input.bind( function( to ) {
+                                      modOpt.czr_Input('skin-custom-color').visible( _isCustom( to ) );
+                                      modOpt.czr_Input('text-custom-color').visible( _isCustom( to ) );
+                                });
+                          break;
+                    }
+              });
+        }
+
   }
 });//extends api.CZRDynModule
 

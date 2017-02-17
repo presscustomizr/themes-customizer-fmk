@@ -329,7 +329,7 @@ $.extend( CZRSocialModuleMths, {
                                 //weird
                                 //is there a "change complete" kind of event for iris ?
                                 //hack to reset the color to default...@todo => use another color picker.
-                                if ( _.has(o, 'color') && 16777215 == o.color._color )
+                                if ( _.has( o, 'color') && 16777215 == o.color._color )
                                   $(this).val( serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)' );
                                 else
                                   $(this).val( o.color.toString() );

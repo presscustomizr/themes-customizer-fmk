@@ -2,13 +2,38 @@
 (function (api, $, _) {
   //PREPARE THE SKOPE AWARE PREVIEWER
   if ( serverControlParams.isSkopOn ) {
-        //var _old_preview = api.Setting.prototype.preview;
-        api.Setting.prototype.preview = function( to, from , data ) {
-              var setting = this, transport;
-                  transport = setting.transport;
+        //@return void()
+        //Changed the core to specify that the setting preview is actually a deferred callback
+        //=> allows us to use syntax like :
+        //api( setId ).set( new_value ).done( function() { execute actions when all the setting callbacks have been done })
+        api.Setting.prototype.initialize = function( id, value, options ) {
+              var setting = this;
+              api.Value.prototype.initialize.call( setting, value, options );
 
-              if ( _.has( api, 'czr_isPreviewerSkopeAware' ) && 'pending' == api.czr_isPreviewerSkopeAware.state() )
-                this.previewer.refresh();
+              setting.id = id;
+              setting.transport = setting.transport || 'refresh';
+              setting._dirty = options.dirty || false;
+              setting.notifications = new api.Values({ defaultConstructor: api.Notification });
+
+              // Whenever the setting's value changes, refresh the preview.
+              // the deferred can be used in moduleCollectionReact to execute actions after the module has been set.
+              setting.bind( function( to, from , data ) {
+                    return setting.preview( to, from , data );
+              }, { deferred : true } );
+        };
+
+
+        //var _old_preview = api.Setting.prototype.preview;
+        //@return a deferred promise
+        api.Setting.prototype.preview = function( to, from , data ) {
+              var setting = this, transport, dfd = $.Deferred();
+
+              transport = setting.transport;
+
+              if ( _.has( api, 'czr_isPreviewerSkopeAware' ) && 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
+                    this.previewer.refresh();
+                    return dfd.resolve( arguments ).promise();
+              }
               //as soon as the previewer is setup, let's behave as usual
               //=> but don't refresh when silently updating
 
@@ -28,15 +53,17 @@
               //=> 2) and we will send a custom event to the preview looking like :
               //module.control.previewer.send( 'czr_input', {
               //       set_id        : module.control.id,
+              //       module        : { items : $.extend( true, {}, module().items) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
               //       module_id     : module.id,//<= will allow us to target the right dom element on front end
               //       input_id      : input.id,
+              //       input_parent_id : input.input_parent.id,//<= can be the mod opt or the item
               //       value         : to
               // });
 
               //=> if no from (setting not set yet => fall back on defaut transport)
               if ( ! _.isUndefined( from ) && ! _.isEmpty( from ) && ! _.isNull( from ) ) {
                     if ( _.isObject( data ) && true === data.not_preview_sent ) {
-                          return;
+                          return dfd.resolve( arguments ).promise();
                     }
               }
 
@@ -61,10 +88,16 @@
                           //=> the partial refresh is fired on the preview if a partial has been registered for this setting in the php customize API
                           //=> When a partial has been registered, the "normal" ( => the not partial refresh ones ) postMessage callbacks will be fired before the ajax ones
                           setting.previewer.send( 'setting', [ setting.id, setting() ] );
+
+                          dfd.resolve( arguments );
+
                     } else if ( 'refresh' === transport ) {
-                          setting.previewer.refresh();
+                          setting.previewer.refresh().always( function() {
+                                dfd.resolve( arguments );
+                          });
                     }
               }
+              return dfd.promise();
         };
   }
 

@@ -158,36 +158,15 @@ $.extend( CZRInputMths , {
                   //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
                   //send input to the preview. On update only, not on creation.
                   if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
-                        input._sendInput( to, from );
+                        input.module.sendInputToPreview( {
+                              input_id        : input.id,
+                              input_parent_id : input.input_parent.id,
+                              to              : to,
+                              from            : from
+                        } );
                   }
             }
     },
-
-
-    //The idea is to send only the currently modified item instead of the entire collection
-    //the entire collection is sent anyway on api(setId).set( value ), and accessible in the preview via api(setId).bind( fn( to) )
-    _sendInput : function( to, from ) {
-          var input = this,
-              module = input.module;
-
-          if ( _.isEqual( to, from ) )
-            return;
-
-          module.control.previewer.send( 'czr_input', {
-                set_id        : module.control.id,
-                module_id     : module.id,//<= will allow us to target the right dom element on front end
-                module        : { items : $.extend( true, {}, module().items) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
-                item_id       : input.input_parent.id,//<= can be the mod opt or the item
-                input_id      : input.id,
-                value         : to
-          });
-
-          //add a hook here
-          module.trigger( 'input_sent', { input : to , dom_el: input.container } );
-    },
-
-
-
 
 
     /*-----------------------------------------
@@ -196,7 +175,9 @@ $.extend( CZRInputMths , {
     setupColorPicker : function() {
         var input  = this;
 
-        input.container.find('input').wpColorPicker( {
+        input.container.find('input').iris( {
+            palettes: true,
+            hide:false,
             change : function( e, o ) {
                   //if the input val is not updated here, it's not detected right away.
                   //weird
@@ -205,7 +186,8 @@ $.extend( CZRInputMths , {
                   //input.container.find('[data-type]').trigger('colorpickerchange');
 
                   //synchronizes with the original input
-                  $(this).val( $(this).wpColorPicker('color') ).trigger('colorpickerchange').trigger('change');
+                  //OLD => $(this).val( $(this).wpColorPicker('color') ).trigger('colorpickerchange').trigger('change');
+                  $(this).val( o.color.toString() ).trigger('colorpickerchange').trigger('change');
             }
         });
     },

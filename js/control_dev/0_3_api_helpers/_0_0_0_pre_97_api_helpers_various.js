@@ -246,6 +246,7 @@
               $( '.' + module.control.css_attr.sub_set_wrapper, inputParentInst.container).each( function( _index ) {
                     var _id = $(this).find('[data-type]').attr( 'data-type' ),
                         _value = _.has( inputParentInst_model, _id ) ? inputParentInst_model[ _id ] : '';
+
                     //skip if no valid input data-type is found in this node
                     if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
                           api.consoleLog( 'setupInputCollectionFromDOM : missing data-type for ' + module.id );
@@ -323,7 +324,39 @@
                     api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
               });
 
+        },
+
+
+        //COLORS
+        hexToRgb : function( hex ) {
+              // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+              var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+              try{
+                  hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+                      return r + r + g + g + b + b;
+                  });
+              } catch(e) {
+                  api.consoleLog('Error in Helpers::hexToRgb');
+                  return hex;
+              }
+
+              var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec( hex );
+              result = result ? [
+                    parseInt(result[1], 16),//r
+                    parseInt(result[2], 16),//g
+                    parseInt(result[3], 16)//b
+              ] : [];
+              return 'rgb(' + result.join(',') + ')';
+        },
+
+        rgbToHex : function ( r, g, b ) {
+              var componentToHex = function(c) {
+                    var hex = c.toString(16);
+                    return hex.length == 1 ? "0" + hex : hex;
+              };
+              return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
         }
+
   });//$.extend
 
 

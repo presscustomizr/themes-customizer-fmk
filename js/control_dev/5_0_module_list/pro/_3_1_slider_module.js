@@ -169,9 +169,72 @@ $.extend( CZRSlideModuleMths, {
 
   },
 
+  ///////////////////////////////////////////////////////////////////
+  /// MODULE SPECIFIC INPUTS METHOD USED FOR BOTH ITEMS AND MOD OPTS
+  //////////////////////////////////////////
+  //this is an item or a modOpt
+  slideModSetupSelect : function() {
+        if ( 'skin' != this.id && 'slide-skin' != this.id )
+          return;
+
+        var input      = this,
+            input_parent  = input.input_parent,
+            module     = input.module,
+            _sliderSkins  = module.sliderSkins,//{}
+            _model = input_parent();
+
+        //generates the options
+        _.each( _sliderSkins , function( _layout_name , _k ) {
+              var _attributes = {
+                        value : _k,
+                        html: _layout_name
+                  };
+              if ( _k == _model[ input.id ] ) {
+                    $.extend( _attributes, { selected : "selected" } );
+              }
+              $( 'select[data-type="' + input.id + '"]', input.container ).append( $('<option>', _attributes) );
+        });
+        $( 'select[data-type="' + input.id + '"]', input.container ).selecter();
+  },
+
+
+  //Save color as rgb
+  //this can be an item or a mod opt
+  slideModSetupColorPicker : function() {
+      var input  = this,
+          input_parent = input.input_parent,
+          _model = input_parent();
+
+      input.container.find('input').iris( {
+          palettes: true,
+          hide:false,
+          change : function( e, o ) {
+                //if the input val is not updated here, it's not detected right away.
+                //weird
+                //is there a "change complete" kind of event for iris ?
+                //$(this).val($(this).wpColorPicker('color'));
+                //input.container.find('[data-type]').trigger('colorpickerchange');
+
+                var _rgb = api.CZR_Helpers.hexToRgb( o.color.toString() ),
+                    _isCorrectRgb = _.isString( _rgb ) && -1 !== _rgb.indexOf('rgb(');
+
+                if ( ! _isCorrectRgb )
+                  _rgb = "rgb(34,34,34)";//force to dark skin if incorrect
+
+                //synchronizes with the original input
+                $(this).val( _rgb ).trigger('colorpickerchange').trigger('change');
+          }
+      });
+  },
 
 
 
+
+
+
+  ///////////////////////////////////////////////////////////
+  /// CONSTRUCTORS
+  //////////////////////////////////////////
   CZRSliderInputCtor : {
           ready : function() {
                 var input = this;
@@ -194,6 +257,16 @@ $.extend( CZRSlideModuleMths, {
                 }
 
                 api.CZRInput.prototype.ready.call( input);
+          },
+
+          //overrides the default method
+          setupSelect : function() {
+                return this.module.slideModSetupSelect.call( this );
+          },
+
+          //Save color as rgb
+          setupColorPicker : function() {
+              return this.module.slideModSetupColorPicker.call( this );
           },
 
           //ACTIONS ON czr_input('slide-title') change
@@ -224,28 +297,16 @@ $.extend( CZRSlideModuleMths, {
 
 
   CZRSliderModOptInputCtor : {
-          //overrides the default method
-          setupSelect : function() {
-                var input      = this,
-                    modOpt      = input.input_parent,
-                    module     = input.module,
-                    _sliderSkins   = module.sliderSkins,//{}
-                    _model = modOpt();
+        //overrides the default method
+        setupSelect : function() {
+              return this.module.slideModSetupSelect.call( this );
+        },
 
-                //generates the options
-                _.each( _sliderSkins , function( _layout_name , _k ) {
-                      var _attributes = {
-                                value : _k,
-                                html: _layout_name
-                          };
-                      if ( _k == _model['skin'] ) {
-                            $.extend( _attributes, { selected : "selected" } );
-                      }
-                      $( 'select[data-type="skin"]', input.container ).append( $('<option>', _attributes) );
-                });
-                $( 'select[data-type="skin"]', input.container ).selecter();
-        }
-  },//CZRSlidersInputMths
+        //Save color as rgb
+        setupColorPicker : function() {
+            return this.module.slideModSetupColorPicker.call( this );
+        },
+  },//CZRSliderModOptInputCtor
 
 
 
@@ -265,7 +326,6 @@ $.extend( CZRSlideModuleMths, {
                 api.CZRItem.prototype.ready.call( item );
           },
 
-
           //Fired when the input collection is populated
           //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
           setInputVisibilityDeps : function() {
@@ -273,6 +333,12 @@ $.extend( CZRSlideModuleMths, {
                     //the slide-link value is an object which has always an id (post id) + other properties like title
                     _isCustomLink = function( input_val ) {
                           return _.isObject( input_val ) && '_custom_' === input_val.id;
+                    },
+                    _isChecked = function( v ) {
+                          return 0 !== v && '0' !== v && false !== v && 'off' !== v;
+                    },
+                    _isCustom = function( val ) {
+                          return 'custom' == val;
                     };
 
                 item.czr_Input.each( function( input ) {
@@ -306,6 +372,34 @@ $.extend( CZRSlideModuleMths, {
                                   //React on change
                                   input.bind( function( to ) {
                                         item.czr_Input('slide-custom-link').visible( _isCustomLink( to ) );
+                                  });
+                            break;
+
+                            case 'slide-use-custom-skin' :
+                                  //Fire on init
+                                  item.czr_Input('slide-skin').visible( _isChecked( input() ) );
+                                  item.czr_Input('slide-skin-color').visible( _isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                  item.czr_Input('slide-opacity').visible( _isChecked( input() ) );
+                                  item.czr_Input('slide-text-color').visible( _isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+
+                                  //React on change
+                                  input.bind( function( to ) {
+                                        item.czr_Input('slide-skin').visible( _isChecked( to ) );
+                                        item.czr_Input('slide-skin-color').visible( _isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                        item.czr_Input('slide-opacity').visible( _isChecked( to ) );
+                                        item.czr_Input('slide-text-color').visible( _isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                  });
+                            break;
+
+                            case 'slide-skin' :
+                                  //Fire on init
+                                  item.czr_Input('slide-skin-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+                                  item.czr_Input('slide-text-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+
+                                  //React on change
+                                  input.bind( function( to ) {
+                                        item.czr_Input('slide-skin-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                        item.czr_Input('slide-text-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
                                   });
                             break;
                       }
@@ -450,6 +544,21 @@ $.extend( CZRSlideModuleMths, {
                                 input.bind( function( to ) {
                                       modOpt.czr_Input('slider-speed').visible( _isChecked( to ) );
                                       modOpt.czr_Input('pause-on-hover').visible( _isChecked( to ) );
+                                });
+                          break;
+                          case 'skin' :
+                                var _isCustom = function( val ) {
+                                      return 'custom' == val;
+                                };
+
+                                //Fire on init
+                                modOpt.czr_Input('skin-custom-color').visible( _isCustom( input() ) );
+                                modOpt.czr_Input('text-custom-color').visible( _isCustom( input() ) );
+
+                                //React on change
+                                input.bind( function( to ) {
+                                      modOpt.czr_Input('skin-custom-color').visible( _isCustom( to ) );
+                                      modOpt.czr_Input('text-custom-color').visible( _isCustom( to ) );
                                 });
                           break;
                     }

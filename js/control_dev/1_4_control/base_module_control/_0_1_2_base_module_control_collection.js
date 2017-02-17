@@ -152,7 +152,9 @@ $.extend( CZRBaseModuleControlMths, {
         else {
               //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
               //if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
-              api(this.id).set( control.filterModuleCollectionBeforeAjax( to ), data );
+              api(this.id)
+                    .set( control.filterModuleCollectionBeforeAjax( to ), data )
+                    .done( function( to, from, o ) {});
         }
   },
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
