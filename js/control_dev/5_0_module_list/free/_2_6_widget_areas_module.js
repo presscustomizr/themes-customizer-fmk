@@ -340,7 +340,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                   //this is fired just after the itemWrapperViewSetupApiListeners
                   //=> add a callback to refresh the availability status of the locations in the select location picker
                   //add a state listener on expansion change
-                  item.czr_ItemState.callbacks.add( function( to, from ) {
+                  item.viewState.callbacks.add( function( to, from ) {
                         if ( -1 == to.indexOf('expanded') )//can take the expanded_noscroll value !
                           return;
                         //don't try to invoke the input instances before the content is actually rendered
@@ -782,7 +782,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           }, 150 ) );
 
           //Close all views on widget panel expansion/clos
-          module.closeAllItems().closeAllAlerts();
+          module.closeAllItems().closeRemoveDialogs();
           //Close preItem dialog box if exists
           if ( _.has( module, 'preItemExpanded' ) )
             module.preItemExpanded.set(false);
@@ -810,7 +810,7 @@ $.extend( CZRWidgetAreaModuleMths, {
             container.scrollTop( 0 );
           }
 
-          module.closeAllItems().closeAllAlerts();
+          module.closeAllItems().closeRemoveDialogs();
 
           content.slideToggle();
   },

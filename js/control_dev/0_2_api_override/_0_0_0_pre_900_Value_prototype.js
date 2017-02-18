@@ -1,7 +1,7 @@
 
 (function (api, $, _) {
-  if ( ! serverControlParams.isSkopOn )
-    return;
+  // if ( ! serverControlParams.isSkopOn )
+  //   return;
   /*****************************************************************************
   * A "CONTEXT AWARE" SET METHD
   *****************************************************************************/
@@ -22,13 +22,13 @@
 
         // Bail if the sanitized value is null or unchanged.
         if ( null === to || _.isEqual( from, to ) ) {
-          return this;
+              return dfd.resolveWith( self, [ to, from, o ] ).promise();
         }
 
         this._value = to;
         this._dirty = true;
         if ( true === args.silent ) {
-              return this;
+              return dfd.resolveWith( self, [ to, from, o ] ).promise();
         }
 
         if ( this._deferreds ) {

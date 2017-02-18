@@ -25,7 +25,7 @@ $.extend( CZRSektionMths, {
               module.closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
           } else {
               module.czr_Item.each( function( _sektion ){
-                  _sektion.czr_ItemState.set( 'expanded' != _sektion.czr_ItemState() ? 'expanded_noscroll' : 'expanded' );
+                  _sektion.viewState.set( 'expanded' != _sektion.viewState() ? 'expanded_noscroll' : 'expanded' );
               });
           }
     },

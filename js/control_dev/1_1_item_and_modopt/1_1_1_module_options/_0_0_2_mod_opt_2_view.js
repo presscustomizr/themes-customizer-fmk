@@ -109,10 +109,11 @@ $.extend( CZRModOptMths , {
 
           var _ctrlLabel = '';
           try {
-                    _ctrlLabel = 'Options for ' + module.control.params.label;//@to_translate
-              } catch(e) {
-                    _ctrlLabel = 'Settings';//@to_translate
-              }
+                _ctrlLabel = 'Options for ' + module.control.params.label;//@to_translate
+          } catch( er ) {
+                api.errorLog( 'In renderModOptContent : ' + er );
+                _ctrlLabel = 'Settings';//@to_translate
+          }
 
           $('#widgets-left').after( $( '<div/>', {
                 class : module.control.css_attr.mod_opt_wrapper,

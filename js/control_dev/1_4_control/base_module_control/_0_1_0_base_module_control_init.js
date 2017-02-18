@@ -51,7 +51,7 @@ $.extend( CZRBaseModuleControlMths, {
           //close any open item and dialog boxes on section expansion
           api.section( control.section() ).expanded.bind(function(to) {
                 control.czr_Module.each( function( _mod ){
-                      _mod.closeAllItems().closeAllAlerts();
+                      _mod.closeAllItems().closeRemoveDialogs();
                       if ( _.has( _mod, 'preItem' ) ) {
                             _mod.preItemExpanded(false);
                       }
@@ -88,7 +88,10 @@ $.extend( CZRBaseModuleControlMths, {
 
                       //adds it to the collection
                       //=> it will be fired ready usually when the control section is expanded
-                      control.instantiateModule( _mod, {} );
+                      try { control.instantiateModule( _mod, {} ); } catch( er ) {
+                            api.errorLog( 'Failed to instantiate module ' + _mod.id + ' ' + er );
+                            return;
+                      }
 
                       //adds the module name to the control container element
                       control.container.attr('data-module', _mod.id );
@@ -100,9 +103,17 @@ $.extend( CZRBaseModuleControlMths, {
 
           //LISTEN TO MODULE CANDIDATES ADDED BY USERS
           control.bind( 'user-module-candidate', function( _module ) {
+                var module;
                 //instanciate + fire ready()
                 //=> the module will be added in the collection on isReady.done()
-                control.instantiateModule( _module, {} ).ready( _module.is_added_by_user ); //module, constructor
+                try {
+                      module = control.instantiateModule( _module, {} ); //module, constructor
+                } catch( er ) {
+                      api.errorLog( 'Failed to instantiate module ' + _module.id + ' ' + er );
+                      return;
+                }
+                //If everything went fine, fires ready
+                module.ready( _module.is_added_by_user );
           });
   },
 

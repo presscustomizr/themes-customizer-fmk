@@ -249,9 +249,9 @@ $.extend( CZRSektionMths, {
 
           module.czr_Item.each( function( _sektion ){
                 if ( _clicked_sektion_id != _sektion.id ) {
-                    _sektion.czr_ItemState.set( 'closed');
+                    _sektion.viewState.set( 'closed');
                 } else {
-                    _sektion.czr_ItemState.set( 'expanded' != _sektion.czr_ItemState() ? 'expanded_noscroll' : 'expanded' );
+                    _sektion.viewState.set( 'expanded' != _sektion.viewState() ? 'expanded_noscroll' : 'expanded' );
                 }
           });
   }

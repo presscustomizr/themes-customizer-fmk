@@ -1,7 +1,8 @@
 
 (function ( api, $, _ ) {
-      //Extends all constructors with the events manager
+      //Extends some constructors with the events manager
       $.extend( CZRBaseControlMths, api.Events );
+      $.extend( api.Control.prototype, api.Events );//ensures that the default WP control constructor is extended as well
       $.extend( CZRModuleMths, api.Events );
       $.extend( CZRItemMths, api.Events );
       $.extend( CZRModOptMths, api.Events );

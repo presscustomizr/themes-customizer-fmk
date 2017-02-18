@@ -178,7 +178,6 @@ $.extend( CZRModuleMths, {
   ready : function() {
         var module = this;
         module.isReady.resolve();
-        api.consoleLog('MODULE READY IN BASE MODULE CLASS : ', module.id );
   },
 
 

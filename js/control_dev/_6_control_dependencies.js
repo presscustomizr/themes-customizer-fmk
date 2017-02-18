@@ -46,7 +46,11 @@
                 }
                 api.czr_activeSectionId.bind( function( section_id ) {
                       if ( ! _.isEmpty( section_id ) && api.section.has( section_id ) ) {
-                            self.setServiDependencies( section_id );
+                            try {
+                                  self.setServiDependencies( section_id );
+                            } catch( er ) {
+                                  api.errorLog( 'In api.CZR_ctrlDependencies : ' + er );
+                            }
                       }
                 });
 
@@ -64,10 +68,18 @@
                                   section_id : target_source.target,
                                   refresh : false
                             } ).then( function() {
-                                  self.setServiDependencies( target_source.target, target_source.source );
+                                  try {
+                                        self.setServiDependencies( target_source.target, target_source.source );
+                                  } catch( er ) {
+                                        api.errorLog( 'On awaken-section, ctrl deps : ' + er );
+                                  }
                             });
                       } else {
-                            self.setServiDependencies( target_source.target, target_source.source );
+                            try {
+                                  self.setServiDependencies( target_source.target, target_source.source );
+                            } catch( er ) {
+                                  api.errorLog( 'On awaken-section, ctrl deps : ' + er );
+                            }
                       }
                 });
 
@@ -87,7 +99,7 @@
                 refresh = refresh || false;
 
                 if ( _.isUndefined( targetSectionId ) || ! api.section.has( targetSectionId ) ) {
-                  throw new Error( 'Control Dependencies : the targetSectionId is missing or not registered : ' + targetSectionId );
+                      throw new Error( 'Control Dependencies : the targetSectionId is missing or not registered : ' + targetSectionId );
                 }
 
                 //Assign a visibility state deferred to the target section
@@ -114,8 +126,8 @@
                       //Attempt to normalize the params
                       try {
                             params = self._prepareDominusParams( params );
-                      } catch( e ) {
-                            api.consoleLog( 'prepareDominus Params error : ' + e );
+                      } catch( er ) {
+                            api.errorLog( 'prepareDominus Params error : ' + e );
                             return;
                       }
 

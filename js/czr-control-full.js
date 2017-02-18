@@ -3,7 +3,8 @@ window.addEventListener=window.addEventListener||function(a,b){window.attachEven
 Date.now||(Date.now=function(){return(new Date).getTime()}),/*! Object.create monkey patch ie8 http://stackoverflow.com/a/18020326 */
 Object.create||(Object.create=function(a,b){function c(){}if("undefined"!=typeof b)throw"The multiple-argument version of Object.create is not provided by this browser and cannot be shimmed.";return c.prototype=a,new c}),/*! https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter */
 Array.prototype.filter||(Array.prototype.filter=function(a){"use strict";if(void 0===this||null===this)throw new TypeError;var b=Object(this),c=b.length>>>0;if("function"!=typeof a)throw new TypeError;for(var d=[],e=arguments.length>=2?arguments[1]:void 0,f=0;f<c;f++)if(f in b){var g=b[f];a.call(e,g,f,b)&&d.push(g)}return d}),/*! map was added to the ECMA-262 standard in the 5th edition */
-Array.prototype.map||(Array.prototype.map=function(a,b){var c,d,e;if(null===this)throw new TypeError(" this is null or not defined");var f=Object(this),g=f.length>>>0;if("function"!=typeof a)throw new TypeError(a+" is not a function");for(arguments.length>1&&(c=b),d=new Array(g),e=0;e<g;){var h,i;e in f&&(h=f[e],i=a.call(c,h,e,f),d[e]=i),e++}return d});/*! iCheck v1.0.1 by Damir Sultanov, http://git.io/arlzeA, MIT Licensed */
+Array.prototype.map||(Array.prototype.map=function(a,b){var c,d,e;if(null===this)throw new TypeError(" this is null or not defined");var f=Object(this),g=f.length>>>0;if("function"!=typeof a)throw new TypeError(a+" is not a function");for(arguments.length>1&&(c=b),d=new Array(g),e=0;e<g;){var h,i;e in f&&(h=f[e],i=a.call(c,h,e,f),d[e]=i),e++}return d}),/*! Array.from was added to the ECMA-262 standard in the 6th edition (ES2015) */
+Array.from||(Array.from=function(){var a=Object.prototype.toString,b=function(b){return"function"==typeof b||"[object Function]"===a.call(b)},c=function(a){var b=Number(a);return isNaN(b)?0:0!==b&&isFinite(b)?(b>0?1:-1)*Math.floor(Math.abs(b)):b},d=Math.pow(2,53)-1,e=function(a){var b=c(a);return Math.min(Math.max(b,0),d)};return function(a){var c=this,d=Object(a);if(null==a)throw new TypeError("Array.from requires an array-like object - not null or undefined");var f,g=arguments.length>1?arguments[1]:void 0;if("undefined"!=typeof g){if(!b(g))throw new TypeError("Array.from: when provided, the second argument must be a function");arguments.length>2&&(f=arguments[2])}for(var h,i=e(d.length),j=b(c)?Object(new c(i)):new Array(i),k=0;k<i;)h=d[k],g?j[k]="undefined"==typeof f?g(h,k):g.call(f,h,k):j[k]=h,k+=1;return j.length=i,j}}());/*! iCheck v1.0.1 by Damir Sultanov, http://git.io/arlzeA, MIT Licensed */
 if ( 'function' != typeof(jQuery.fn.iCheck) ) {
   !function(a){function b(a,b,e){var f=a[0],g=/er/.test(e)?p:/bl/.test(e)?n:l,h=e==q?{checked:f[l],disabled:f[n],indeterminate:"true"==a.attr(p)||"false"==a.attr(o)}:f[g];if(/^(ch|di|in)/.test(e)&&!h)c(a,g);else if(/^(un|en|de)/.test(e)&&h)d(a,g);else if(e==q)for(g in h)h[g]?c(a,g,!0):d(a,g,!0);else b&&"toggle"!=e||(b||a[u]("ifClicked"),h?f[r]!==k&&d(a,g):c(a,g))}function c(b,c,e){var q=b[0],u=b.parent(),v=c==l,x=c==p,y=c==n,z=x?o:v?m:"enabled",A=f(b,z+g(q[r])),B=f(b,c+g(q[r]));if(!0!==q[c]){if(!e&&c==l&&q[r]==k&&q.name){var C=b.closest("form"),D='input[name="'+q.name+'"]',D=C.length?C.find(D):a(D);D.each(function(){this!==q&&a(this).data(i)&&d(a(this),c)})}x?(q[c]=!0,q[l]&&d(b,l,"force")):(e||(q[c]=!0),v&&q[p]&&d(b,p,!1)),h(b,v,c,e)}q[n]&&f(b,w,!0)&&u.find("."+j).css(w,"default"),u[s](B||f(b,c)||""),y?u.attr("aria-disabled","true"):u.attr("aria-checked",x?"mixed":"true"),u[t](A||f(b,z)||"")}function d(a,b,c){var d=a[0],e=a.parent(),i=b==l,k=b==p,q=b==n,u=k?o:i?m:"enabled",v=f(a,u+g(d[r])),x=f(a,b+g(d[r]));!1!==d[b]&&((k||!c||"force"==c)&&(d[b]=!1),h(a,i,u,c)),!d[n]&&f(a,w,!0)&&e.find("."+j).css(w,"pointer"),e[t](x||f(a,b)||""),q?e.attr("aria-disabled","false"):e.attr("aria-checked","false"),e[s](v||f(a,u)||"")}function e(b,c){b.data(i)&&(b.parent().html(b.attr("style",b.data(i).s||"")),c&&b[u](c),b.off(".i").unwrap(),a(v+'[for="'+b[0].id+'"]').add(b.closest(v)).off(".i"))}function f(a,b,c){return a.data(i)?a.data(i).o[b+(c?"":"Class")]:void 0}function g(a){return a.charAt(0).toUpperCase()+a.slice(1)}function h(a,b,c,d){d||(b&&a[u]("ifToggled"),a[u]("ifChanged")[u]("if"+g(c)))}var i="iCheck",j=i+"-helper",k="radio",l="checked",m="un"+l,n="disabled",o="determinate",p="in"+o,q="update",r="type",s="addClass",t="removeClass",u="trigger",v="label",w="cursor",x=/ipad|iphone|ipod|android|blackberry|windows phone|opera mini|silk/i.test(navigator.userAgent);a.fn[i]=function(f,g){var h='input[type="checkbox"], input[type="'+k+'"]',m=a(),o=function(b){b.each(function(){var b=a(this);m=b.is(h)?m.add(b):m.add(b.find(h))})};if(/^(check|uncheck|toggle|indeterminate|determinate|disable|enable|update|destroy)$/i.test(f))return f=f.toLowerCase(),o(this),m.each(function(){var c=a(this);"destroy"==f?e(c,"ifDestroyed"):b(c,!0,f),a.isFunction(g)&&g()});if("object"!=typeof f&&f)return this;var w=a.extend({checkedClass:l,disabledClass:n,indeterminateClass:p,labelHover:!0,aria:!1},f),y=w.handle,z=w.hoverClass||"hover",A=w.focusClass||"focus",B=w.activeClass||"active",C=!!w.labelHover,D=w.labelHoverClass||"hover",E=0|(""+w.increaseArea).replace("%","");return("checkbox"==y||y==k)&&(h='input[type="'+y+'"]'),-50>E&&(E=-50),o(this),m.each(function(){var f=a(this);e(f);var g=this,h=g.id,m=-E+"%",o=100+2*E+"%",o={position:"absolute",top:m,left:m,display:"block",width:o,height:o,margin:0,padding:0,background:"#fff",border:0,opacity:0},m=x?{position:"absolute",visibility:"hidden"}:E?o:{position:"absolute",opacity:0},p="checkbox"==g[r]?w.checkboxClass||"icheckbox":w.radioClass||"i"+k,y=a(v+'[for="'+h+'"]').add(f.closest(v)),F=!!w.aria,G=i+"-"+Math.random().toString(36).substr(2,6),H='<div class="'+p+'" '+(F?'role="'+g[r]+'" ':"");F&&y.each(function(){H+='aria-labelledby="',this.id?H+=this.id:(this.id=G,H+=G),H+='"'}),H=f.wrap(H+"/>")[u]("ifCreated").parent().append(w.insert),o=a('<ins class="'+j+'"/>').css(o).appendTo(H),f.data(i,{o:w,s:f.attr("style")}).css(m),w.inheritClass&&H[s](g.className||""),w.inheritID&&h&&H.attr("id",i+"-"+h),"static"==H.css("position")&&H.css("position","relative"),b(f,!0,q),y.length&&y.on("click.i mouseover.i mouseout.i touchbegin.i touchend.i",function(c){var d=c[r],e=a(this);if(!g[n]){if("click"==d){if(a(c.target).is("a"))return;b(f,!1,!0)}else C&&(/ut|nd/.test(d)?(H[t](z),e[t](D)):(H[s](z),e[s](D)));if(!x)return!1;c.stopPropagation()}}),f.on("click.i focus.i blur.i keyup.i keydown.i keypress.i",function(a){var b=a[r];return a=a.keyCode,"click"==b?!1:"keydown"==b&&32==a?(g[r]==k&&g[l]||(g[l]?d(f,l):c(f,l)),!1):("keyup"==b&&g[r]==k?!g[l]&&c(f,l):/us|ur/.test(b)&&H["blur"==b?t:s](A),void 0)}),o.on("click mousedown mouseup mouseover mouseout touchbegin.i touchend.i",function(a){var c=a[r],d=/wn|up/.test(c)?B:z;if(!g[n]){if("click"==c?b(f,!1,!0):(/wn|er|in/.test(c)?H[s](d):H[t](d+" "+B),y.length&&C&&d==z&&y[/ut|nd/.test(c)?t:s](D)),!x)return!1;a.stopPropagation()}})})}}(window.jQuery||window.Zepto);
 }
@@ -39,7 +40,7 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
 var api = api || wp.customize, $ = $ || jQuery;
 (function (api, $, _) {
       //Dev mode aware and IE compatible api.consoleLog()
-      api.consoleLog = function( isError ) {
+      api.consoleLog = function() {
             // if ( ! serverControlParams.isDevMode )
             //   return;
             //fix for IE, because console is only defined when in F12 debugging mode in IE
@@ -51,6 +52,20 @@ var api = api || wp.customize, $ = $ || jQuery;
             var _styled = [
                 '%c ' + _toArr,
                 'background: #008ec2; color: white; display: block;',
+            ];
+            console.log.apply( console, _styled );
+      };
+
+      api.errorLog = function( ) {
+            //fix for IE, because console is only defined when in F12 debugging mode in IE
+            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
+              return;
+
+            var _toArr = Array.from( arguments );
+            _toArr = _toArr.join(' ');
+            var _styled = [
+                '%c ' + _toArr,
+                'background: #ff0016; color: white; display: block;',
             ];
             console.log.apply( console, _styled );
       };
@@ -253,10 +268,10 @@ var api = api || wp.customize, $ = $ || jQuery;
                 _render = function() {
                       var dfd = $.Deferred();
                       try {
-                          _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
-                      }
-                      catch(e) {
-                          throw new Error('Error when parsing the the reset skope template : ' + e );//@to_translate
+                            _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
+                      } catch( er ) {
+                            api.errorLog( 'In toggleSkopeLoadPane : error when parsing the the reset skope template : ' + er );//@to_translate
+                            dfd.resolve( false );
                       }
                       $.when( $('#customize-preview').after( $( _tmpl ) ) )
                             .always( function() {
@@ -626,7 +641,11 @@ $.extend( CZRSkopeBaseMths, {
                       api.czr_CrtlDependenciesReady.then( function() {
                             if ( ! _.isUndefined( api.czr_activeSectionId() ) && ! _.isEmpty( api.czr_activeSectionId() ) ) {
                                   //SET VISIBILITIES
-                                  api.czr_ctrlDependencies.setServiDependencies( api.czr_activeSectionId(), null, true );//target sec id, source sec id, refresh
+                                  try {
+                                        api.czr_ctrlDependencies.setServiDependencies( api.czr_activeSectionId(), null, true );//target sec id, source sec id, refresh
+                                  } catch( er ) {
+                                        api.errorLog( 'On skope-switched : ' + er );
+                                  }
                             }
                       });
                       //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
@@ -1085,9 +1104,9 @@ $.extend( CZRSkopeBaseMths, {
 
             try {
                   _tmpl =  wp.template( 'czr-top-note' )( { title : _title } );
-            }
-            catch(e) {
-                  throw new Error('Error when parsing the the top note template : ' + e );//@to_translate
+            } catch( er ) {
+                  api.errorLog( 'Error when parsing the the top note template : ' + er );//@to_translate
+                  return false;
             }
             $('#customize-preview').after( $( _tmpl ) );
             $('.czr-note-message', '#czr-top-note').html( _message );
@@ -3651,8 +3670,9 @@ $.extend( CZRSkopeBaseMths, {
               };
           try {
                 _tmpl =  wp.template('czr-reset-control')( _tmpl_data );
-          } catch(e) {
-                throw new Error('Error when parsing the the reset control template : ' + e );//@to_translate
+          } catch( er ) {
+                api.errorLog( 'Error when parsing the the reset control template : ' + er );//@to_translate
+                return { container : false, is_authorized : false };
           }
 
           $('.customize-control-title', ctrl.container).first().after( $( _tmpl ) );
@@ -5116,16 +5136,21 @@ $.extend( CZRSkopeMths, {
           var skope = this;
 
           //EMBED THE SKOPE VIEW : EMBED AND STORE THE CONTAINER
-          $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
-              if ( false !== $_container.length ) {
-                  //paint it
-                  $_container.css('background-color', skope.color );
-                  skope.container = $_container;
-                  skope.embedded.resolve( $_container );
-              } else {
-                  skope.embedded.reject();
-              }
-          });
+          try {
+                $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
+                      if ( false !== $_container.length ) {
+                            //paint it
+                            $_container.css('background-color', skope.color );
+                            skope.container = $_container;
+                            skope.embedded.resolve( $_container );
+                      } else {
+                            skope.embedded.reject();
+                      }
+                });
+          } catch( er ) {
+                api.errorLog( "In skope base : " + er );
+                skope.embedded.reject();
+          }
     },
 
 
@@ -5407,10 +5432,10 @@ $.extend( CZRSkopeMths, {
               throw new Error('The skope switcher wrapper is not printed, the skope can not be embedded.');
           }
           try {
-            _tmpl =  wp.template('czr-skope')( _.extend( skope_model, { el : skope.el } ) );
-          }
-          catch(e) {
-            throw new Error('Error when parsing the template of a skope' + e );
+                _tmpl =  wp.template('czr-skope')( _.extend( skope_model, { el : skope.el } ) );
+          } catch( er ) {
+                api.errorLog( 'Error when parsing the template of a skope' + er );
+                return false;
           }
 
           $('.czr-skopes-wrapper', '#customize-header-actions').append( $( _tmpl ) );
@@ -5463,16 +5488,16 @@ $.extend( CZRSkopeMths, {
           }
 
           try {
-            _tmpl =  wp.template( 'czr-skope-pane' )(
-                _.extend( skope_model, {
-                      el : skope.el,
-                      warning_message : warning_message,
-                      success_message : success_message
-                } )
-            );
-          }
-          catch(e) {
-            throw new Error('Error when parsing the the reset skope template : ' + e );//@to_translate
+                _tmpl =  wp.template( 'czr-skope-pane' )(
+                      _.extend( skope_model, {
+                            el : skope.el,
+                            warning_message : warning_message,
+                            success_message : success_message
+                      } )
+                );
+          } catch( er ) {
+                api.errorLog( 'Error when parsing the the reset skope template : ' + er );//@to_translate
+                return false;
           }
 
           $('#customize-preview').after( $( _tmpl ) );
@@ -5730,8 +5755,8 @@ $.extend( CZRSkopeMths, {
     }
   } );//$.extend(
 (function (api, $, _) {
-  if ( ! serverControlParams.isSkopOn )
-    return;
+  // if ( ! serverControlParams.isSkopOn )
+  //   return;
   /*****************************************************************************
   * A "CONTEXT AWARE" SET METHD
   *****************************************************************************/
@@ -5752,13 +5777,13 @@ $.extend( CZRSkopeMths, {
 
         // Bail if the sanitized value is null or unchanged.
         if ( null === to || _.isEqual( from, to ) ) {
-          return this;
+              return dfd.resolveWith( self, [ to, from, o ] ).promise();
         }
 
         this._value = to;
         this._dirty = true;
         if ( true === args.silent ) {
-              return this;
+              return dfd.resolveWith( self, [ to, from, o ] ).promise();
         }
 
         if ( this._deferreds ) {
@@ -7172,13 +7197,13 @@ $.extend( CZRSkopeMths, {
         hexToRgb : function( hex ) {
               // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
               var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-              try{
-                  hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-                      return r + r + g + g + b + b;
-                  });
-              } catch(e) {
-                  api.consoleLog('Error in Helpers::hexToRgb');
-                  return hex;
+              try {
+                    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+                        return r + r + g + g + b + b;
+                    });
+              } catch( er ) {
+                    api.errorLog( 'Error in Helpers::hexToRgb : ' + er );
+                    return hex;
               }
 
               var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec( hex );
@@ -7234,7 +7259,8 @@ $.extend( CZRSkopeMths, {
                 //loop on the event map and map the relevant callbacks by event name
                 _.map( event_map , function( _event ) {
                       if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
-                        throw new Error( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
+                            api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
+                            return;
                       }
                       //LISTEN TO THE DOM => USES EVENT DELEGATION
                       obj.dom_el.on( _event.trigger , _event.selector, function( e, event_params ) {
@@ -7251,10 +7277,10 @@ $.extend( CZRSkopeMths, {
 
                             //always get the latest model from the collection
                             if ( _.has(_obj, 'model') && _.has( _obj.model, 'id') ) {
-                              if ( _.has(instance, 'get') )
-                                _obj.model = instance();
-                              else
-                                _obj.model = instance.getModel( _obj.model.id );
+                                  if ( _.has( instance, 'get' ) )
+                                    _obj.model = instance();
+                                  else
+                                    _obj.model = instance.getModel( _obj.model.id );
                             }
 
                             //always add the event obj to the passed obj
@@ -7264,16 +7290,23 @@ $.extend( CZRSkopeMths, {
                             //add the event param => useful for triggered event
                             $.extend( _obj, event_params );
 
-
-
                             //SETUP THE EMITTERS
                             //inform the container that something has happened
                             //pass the model and the current dom_el
-                            control.executeEventActionChain( _obj, instance );
+                            //the model is always passed as parameter
+                            if ( ! _.has( _obj, 'event' ) || ! _.has( _obj.event, 'actions' ) ) {
+                                  api.errorLog( 'executeEventActionChain : missing obj.event or obj.event.actions' );
+                                  return;
+                            }
+                            try {
+                                  control.executeEventActionChain( _obj, instance );
+                            } catch( er ) {
+                                  api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + _obj.event.actions );
+                                  api.errorLog( 'Error : ' + er );
+                            }
                       });//.on()
-
                 });//_.map()
-        },
+        },//setupDomListeners
 
 
 
@@ -7281,50 +7314,45 @@ $.extend( CZRSkopeMths, {
         //NOTE : the obj.event must alway be defined
         executeEventActionChain : function( obj, instance ) {
                 var control = this;
-                //the model is always passed as parameter
-                if ( ! _.has( obj, 'event' ) || ! _.has( obj.event, 'actions' ) ) {
-                  throw new Error('executeEventActionChain : No obj.event or no obj.event.actions properties found');
-                }
 
                 //if the actions param is a anonymous function, fire it and stop there
-                if ( 'function' === typeof(obj.event.actions) )
-                  return obj.event.actions(obj);
+                if ( 'function' === typeof( obj.event.actions ) )
+                  return obj.event.actions.call( instance, obj );
 
                 //execute the various actions required
                 //first normalizes the provided actions into an array of callback methods
                 //then loop on the array and fire each cb if exists
-                if ( ! _.isArray(obj.event.actions) )
+                if ( ! _.isArray( obj.event.actions ) )
                   obj.event.actions = [ obj.event.actions ];
 
                 //if one of the callbacks returns false, then we break the loop
                 //=> allows us to stop a chain of callbacks if a condition is not met
                 var _break = false;
                 _.map( obj.event.actions, function( _cb ) {
+                      if ( _break )
+                        return;
 
-                  if ( _break )
-                    return;
+                      if ( 'function' != typeof( instance[ _cb ] ) ) {
+                            throw new Error( 'executeEventActionChain : the action : ' + _cb + ' has not been found when firing event : ' + obj.event.selector );
+                      }
 
-                  if ( 'function' != typeof( instance[_cb] ) ) {
-                    throw new Error( 'executeEventActionChain : the action : ' + _cb + ' has not been found when firing event : ' + obj.event.selector );
-                  }
+                      //allow other actions to be bound before
+                      //=> we don't want the event in the object here => we use the one in the event map if set
+                      //=> otherwise will loop infinitely because triggering always the same cb from obj.event.actions[_cb]
+                      //=> the dom element shall be get from the passed obj and fall back to the controler container.
+                      var $_dom_el = ( _.has(obj, 'dom_el') && -1 != obj.dom_el.length ) ? obj.dom_el : control.container;
 
-                  //allow other actions to be bound before
-                  //=> we don't want the event in the object here => we use the one in the event map if set
-                  //=> otherwise will loop infinitely because triggering always the same cb from obj.event.actions[_cb]
-                  //=> the dom element shall be get from the passed obj and fall back to the controler container.
-                  var $_dom_el = ( _.has(obj, 'dom_el') && -1 != obj.dom_el.length ) ? obj.dom_el : control.container;
+                      $_dom_el.trigger( 'before_' + _cb, _.omit( obj, 'event' ) );
 
-                  $_dom_el.trigger('before_' + _cb, _.omit( obj, 'event') );
+                      //executes the _cb and stores the result in a local var
+                      var _cb_return = instance[ _cb ].call( instance, obj );
+                      //shall we stop the action chain here ?
+                      if ( false === _cb_return )
+                        _break = true;
 
-                    //executes the _cb and stores the result in a local var
-                    var _cb_return = instance[_cb](obj);
-                    //shall we stop the action chain here ?
-                    if ( false === _cb_return )
-                      _break = true;
-
-                  //allow other actions to be bound after
-                  //=> we don't want the event in the object here => we use the one in the event map if set
-                  $_dom_el.trigger('after_' + _cb, _.omit( obj, 'event') );
+                      //allow other actions to be bound after
+                      //=> we don't want the event in the object here => we use the one in the event map if set
+                      $_dom_el.trigger('after_' + _cb, _.omit( obj, 'event' ) );
 
                 });//_.map
         }
@@ -8353,6 +8381,12 @@ $.extend( CZRItemMths , {
         item.contentContainer = null;//will store the item content $ dom element
         item.inputCollection = new api.Value({});
 
+        //VIEW STATES FOR ITEM AND REMOVE DIALOG
+        //viewState stores the current expansion status of a given view => one value by created by item.id
+        //viewState can take 3 values : expanded, expanded_noscroll (=> used on view creation), closed
+        item.viewState = new api.Value( 'closed' );
+        item.removeDialogVisible = new api.Value( false );
+
         //input.options = options;
         //write the options as properties, name is included
         $.extend( item, options || {} );
@@ -8370,24 +8404,28 @@ $.extend( CZRItemMths , {
         item.userEventMap = new api.Value( [
               //toggles remove view alert
               {
-                trigger   : 'click keydown',
-                selector  : [ '.' + item.module.control.css_attr.display_alert_btn, '.' + item.module.control.css_attr.cancel_alert_btn ].join(','),
-                name      : 'toggle_remove_alert',
-                actions   : ['toggleRemoveAlertVisibility']
+                    trigger   : 'click keydown',
+                    selector  : [ '.' + item.module.control.css_attr.display_alert_btn, '.' + item.module.control.css_attr.cancel_alert_btn ].join(','),
+                    name      : 'toggle_remove_alert',
+                    actions   : function() {
+                          var _isVisible = this.removeDialogVisible();
+                          this.module.closeRemoveDialogs();
+                          this.removeDialogVisible( ! _isVisible );
+                    }
               },
               //removes item and destroys its view
               {
-                trigger   : 'click keydown',
-                selector  : '.' + item.module.control.css_attr.remove_view_btn,
-                name      : 'remove_item',
-                actions   : ['removeItem']
+                    trigger   : 'click keydown',
+                    selector  : '.' + item.module.control.css_attr.remove_view_btn,
+                    name      : 'remove_item',
+                    actions   : ['removeItem']
               },
               //edit view
               {
-                trigger   : 'click keydown',
-                selector  : [ '.' + item.module.control.css_attr.edit_view_btn, '.' + item.module.control.css_attr.item_title ].join(','),
-                name      : 'edit_view',
-                actions   : [ 'setViewVisibility' ]
+                    trigger   : 'click keydown',
+                    selector  : [ '.' + item.module.control.css_attr.edit_view_btn, '.' + item.module.control.css_attr.item_title ].join(','),
+                    name      : 'edit_view',
+                    actions   : [ 'setViewVisibility' ]
               }
         ]);
 
@@ -8426,8 +8464,10 @@ $.extend( CZRItemMths , {
                     //create the collection of inputs if needed
                     //first time or after a removal
                     if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) ) {
-                          try { api.CZR_Helpers.setupInputCollectionFromDOM.call( item ); } catch(e) {
-                                api.consoleLog( e );
+                          try {
+                                api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
+                          } catch( er ) {
+                                api.errorLog( 'In item.isReady.done : ' + er );
                           }
                     }
               });
@@ -8576,91 +8616,146 @@ $.extend( CZRItemMths , {
   //define the item view DOM event map
   //bind actions when the item is embedded
   itemWrapperViewSetup : function( item_model ) {
-          var item = this,
-              module = this.module;
+        var item = this,
+            module = this.module;
 
-          item_model = item() || item.initial_item_model;//could not be set yet
+        item_model = item() || item.initial_item_model;//could not be set yet
 
-          //czr_ItemState stores the current expansion status of a given view => one value by created by item.id
-          //czr_ItemState can take 3 values : expanded, expanded_noscroll (=> used on view creation), closed
-          item.czr_ItemState = new api.Value( 'closed');
-
-          //always write the title
-          item.writeItemViewTitle();
+        //always write the title
+        item.writeItemViewTitle();
 
 
-          //When do we render the item content ?
-          //If this is a multi-item module, let's render each item content when they are expanded.
-          //In the case of a single item module, we can render the item content now.
-          var _updateItemContentDeferred = function( $_content, to, from ) {
-                //update the $.Deferred state
-                if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                    item.trigger( 'contentRendered' );
-                    item.contentContainer = $_content;
-                    item.toggleItemExpansion( to, from );
-                }
-                else {
-                    throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
-                }
-          };
+        //When do we render the item content ?
+        //If this is a multi-item module, let's render each item content when they are expanded.
+        //In the case of a single item module, we can render the item content now.
+        var _updateItemContentDeferred = function( $_content, to, from ) {
+              //update the $.Deferred state
+              if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
+                  item.trigger( 'contentRendered' );
+                  item.contentContainer = $_content;
+                  item.toggleItemExpansion( to, from );
+              }
+              else {
+                  throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
+              }
+        };
 
-          if ( item.module.isMultiItem() ) {
-                item.czr_ItemState.callbacks.add( function( to, from ) {
-                      //czr_ItemState can take 3 states : expanded, expanded_noscroll, closed
-                      var _isExpanded = -1 !== to.indexOf('expanded');
-                      if ( _isExpanded ) {
-                            //item already rendered ?
-                            if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
-                                  //toggle on view state change
-                                  item.toggleItemExpansion(to, from );
-                            } else {
-                                  $.when( item.renderItemContent( item() || item.initial_item_model ) ).done( function( $_item_content ) {
-                                        //introduce a small delay to give some times to the modules to be printed.
-                                        //@todo : needed ?
-                                        _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
-                                        _updateItemContentDeferred( $_item_content, to, from );
-                                  });
-                            }
-                      } else {
-                            //toggle on view state change
-                            item.toggleItemExpansion( to, from ).done( function() {
-                                  if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
-                                        item.trigger( 'beforeContenRemoved' );
-                                        //Removes DOM input nodes
-                                        $( '.' + module.control.css_attr.item_content, item.container ).children().each( function() {
-                                              $(this).remove();
-                                        });
-                                        //clean any other content like a commented html markup
-                                        $( '.' + module.control.css_attr.item_content, item.container ).html('');
-                                        //reset the contentContainer property
-                                        item.contentContainer = null;
-                                        //will remove the input collection values
-                                        item.trigger( 'contentRemoved' );
-                                  }
-                            });
-                      }
-                });
-          } else {
-                //react to the item state changes
-                item.czr_ItemState.callbacks.add( function( to, from ) {
-                    //toggle on view state change
-                    item.toggleItemExpansion.apply(item, arguments );
-                });
+        if ( item.module.isMultiItem() ) {
+              item.viewState.callbacks.add( function( to, from ) {
+                    //viewState can take 3 states : expanded, expanded_noscroll, closed
+                    var _isExpanded = -1 !== to.indexOf('expanded');
+                    if ( _isExpanded ) {
+                          //item already rendered ?
+                          if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
+                                //toggle on view state change
+                                item.toggleItemExpansion(to, from );
+                          } else {
+                                $.when( item.renderItemContent( item() || item.initial_item_model ) ).done( function( $_item_content ) {
+                                      //introduce a small delay to give some times to the modules to be printed.
+                                      //@todo : needed ?
+                                      _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
+                                      _updateItemContentDeferred( $_item_content, to, from );
+                                });
+                          }
+                    } else {
+                          //toggle on view state change
+                          item.toggleItemExpansion( to, from ).done( function() {
+                                if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
+                                      item.trigger( 'beforeContenRemoved' );
+                                      //Removes DOM input nodes
+                                      $( '.' + module.control.css_attr.item_content, item.container ).children().each( function() {
+                                            $(this).remove();
+                                      });
+                                      //clean any other content like a commented html markup
+                                      $( '.' + module.control.css_attr.item_content, item.container ).html('');
+                                      //reset the contentContainer property
+                                      item.contentContainer = null;
+                                      //will remove the input collection values
+                                      item.trigger( 'contentRemoved' );
+                                }
+                          });
+                    }
+              });
+        } else {
+              //react to the item state changes
+              item.viewState.callbacks.add( function( to, from ) {
+                  //toggle on view state change
+                  item.toggleItemExpansion.apply(item, arguments );
+              });
 
-                //renderview content now for a single item module
-                $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
-                      _updateItemContentDeferred( $_item_content, true );
-                      //item.czr_ItemState.set('expanded');
-                });
-          }
+              //renderview content now for a single item module
+              $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
+                    _updateItemContentDeferred( $_item_content, true );
+                    //item.viewState.set('expanded');
+              });
+        }
 
-          //DOM listeners for the user action in item view wrapper
-          api.CZR_Helpers.setupDOMListeners(
-                item.userEventMap(),//actions to execute
-                { model:item_model, dom_el:item.container },//model + dom scope
-                item //instance where to look for the cb methods
-          );
-  },
+        //DOM listeners for the user action in item view wrapper
+        api.CZR_Helpers.setupDOMListeners(
+              item.userEventMap(),//actions to execute
+              { model:item_model, dom_el:item.container },//model + dom scope
+              item //instance where to look for the cb methods
+        );
+
+        //Listen to the remove dialog state
+        item.removeDialogVisible.bind( function( visible ) {
+              var module = item.module,
+                  $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, item.container ).first();
+
+              //first close all open items views and dialogs
+              if ( visible )
+                module.closeAllItems();
+
+              //Close Mod opts if any
+              if ( visible && module.hasModOpt() ) {
+                    api.czr_ModOptVisible( false );
+              }
+
+              //Close Pre item dialog
+              if ( visible && _.has( module, 'preItem' ) ) {
+                    module.preItemExpanded(false);
+              }
+
+              //then close any other open remove dialog in the item container
+              $('.' + module.control.css_attr.remove_alert_wrapper, item.container ).not( $_alert_el ).each( function() {
+                    if ( $(this).hasClass( 'open' ) ) {
+                          $(this).slideToggle( {
+                                duration : 200,
+                                done : function() {
+                                      $(this).toggleClass('open' , false );
+                                      //deactivate the icons
+                                      $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass( 'active' , false );
+                                }
+                          } );
+                    }
+              });
+
+              //print the html if dialod is expanded
+              if ( visible ) {
+                    //do we have an html template and a control container?
+                    if ( ! wp.template( module.AlertPart )  || ! item.container ) {
+                          api.consoleLog( 'No removal alert template available for items in module :' + module.id );
+                          return;
+                    }
+
+                    $_alert_el.html( wp.template( module.AlertPart )( { title : ( item().title || item.id ) } ) );
+              }
+
+              //Slide it
+              var _slideComplete = function( visible ) {
+                    $_alert_el.toggleClass( 'open' , visible );
+                    //set the active class of the clicked icon
+                    item.container.find('.' + module.control.css_attr.display_alert_btn ).toggleClass( 'active', visible );
+                    //adjust scrolling to display the entire dialog block
+                    if ( visible )
+                      module._adjustScrollExpandedBlock( item.container );
+              };
+              if ( visible )
+                $_alert_el.stop( true, true ).slideDown( 200, function() { _slideComplete( visible ); } );
+              else
+                $_alert_el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
+        });//item.removeDialogVisible.bind()
+  },//itemWrapperViewSetup
 
 
   //the view wrapper has been rendered by WP
@@ -8754,114 +8849,59 @@ $.extend( CZRItemMths , {
           var item = this,
               module = this.module;
           if ( is_added_by_user ) {
-                item.czr_ItemState.set( 'expanded_noscroll' );
+                item.viewState.set( 'expanded_noscroll' );
           } else {
                 module.closeAllItems( item.id );
                 if ( _.has(module, 'preItem') ) {
                   module.preItemExpanded.set(false);
                 }
-                item.czr_ItemState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
+                item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
           }
   },
 
 
   _getViewState : function() {
-          return -1 == this.czr_ItemState().indexOf('expanded') ? 'closed' : 'expanded';
+          return -1 == this.viewState().indexOf('expanded') ? 'closed' : 'expanded';
   },
 
 
-  //callback of item.czr_ItemState.callbacks
+  //callback of item.viewState.callbacks
+  //viewState can take 3 states : expanded, expanded_noscroll, closed
   toggleItemExpansion : function( status, from, duration ) {
-          var item = this,
-              module = this.module,
-              dfd = $.Deferred();
+        var visible = 'closed' != status,
+            item = this,
+            module = this.module,
+            $el = $( '.' + module.control.css_attr.item_content , item.container ).first(),
+            dfd = $.Deferred(),
+            _slideComplete = function( visible ) {
+                  item.container.toggleClass( 'open' , visible );
+                  //close all remove dialogs
+                  if ( visible )
+                    module.closeRemoveDialogs();
 
-          //slide Toggle and toggle the 'open' class
-          $( '.' + module.control.css_attr.item_content , item.container ).first().slideToggle( {
-                duration : duration || 200,
-                done : function() {
-                      var _is_expanded = 'closed' != status;
-                      item.container.toggleClass('open' , _is_expanded );
+                  //toggle the icon activate class depending on the status
+                  //switch icon
+                  var $_edit_icon = $el.siblings().find('.' + module.control.css_attr.edit_view_btn );
 
-                      //close all alerts
-                      module.closeAllAlerts();
+                  $_edit_icon.toggleClass('active' , visible );
+                  if ( visible )
+                    $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.translatedStrings.close );
+                  else
+                    $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.translatedStrings.edit );
 
-                      //toggle the icon activate class depending on the status
-                      //switch icon
-                      var $_edit_icon = $(this).siblings().find('.' + module.control.css_attr.edit_view_btn );
+                  //scroll to the currently expanded view
+                  if ( 'expanded' == status )
+                    module._adjustScrollExpandedBlock( item.container );
 
-                      $_edit_icon.toggleClass('active' , _is_expanded );
-                      if ( _is_expanded )
-                        $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.translatedStrings.close );
-                      else
-                        $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.translatedStrings.edit );
+                  dfd.resolve();
+            };
 
-                      //scroll to the currently expanded view
-                      if ( 'expanded' == status )
-                        module._adjustScrollExpandedBlock( item.container );
-                      dfd.resolve();
-                }//done callback
-        } );
+        if ( visible )
+          $el.stop( true, true ).slideDown( duration || 200, function() { _slideComplete( visible ); } );
+        else
+          $el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
+
         return dfd.promise();
-  },
-
-
-  //toggles the visibility of the Remove View Block
-  //@param : obj = { event : {}, model : {}, view : ${} }
-  toggleRemoveAlertVisibility : function(obj) {
-          var item = this,
-              module = this.module,
-              $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, item.container ).first(),
-              $_clicked = obj.dom_event;
-
-          //first close all open items views and dialogs
-          module.closeAllItems().closeAllAlerts();
-
-          //Close Mod opts if any
-          if ( module.hasModOpt() ) {
-                api.czr_ModOptVisible( false );
-          }
-
-          //Close Pre item dialog
-          if ( _.has(module, 'preItem') ) {
-                module.preItemExpanded(false);
-          }
-
-          //then close any other open remove alert in the module containuer
-          $('.' + module.control.css_attr.remove_alert_wrapper, item.container ).not($_alert_el).each( function() {
-                if ( $(this).hasClass('open') ) {
-                      $(this).slideToggle( {
-                            duration : 200,
-                            done : function() {
-                                  $(this).toggleClass('open' , false );
-                                  //deactivate the icons
-                                  $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass('active' , false );
-                            }
-                      } );
-                }
-          });
-
-          //print the html
-          //do we have an html template and a control container?
-          if ( ! wp.template( module.AlertPart )  || ! item.container ) {
-              throw new Error( 'No removal alert template available for items in module :' + module.id );
-          }
-
-          $_alert_el.html( wp.template( module.AlertPart )( { title : ( item().title || item.id ) } ) );
-
-          //toggle it
-          $_alert_el.slideToggle( {
-                duration : 200,
-                done : function() {
-                      var _is_open = ! $(this).hasClass('open') && $(this).is(':visible');
-                      $(this).toggleClass('open' , _is_open );
-                      //set the active class of the clicked icon
-                      $( obj.dom_el ).find('.' + module.control.css_attr.display_alert_btn).toggleClass( 'active', _is_open );
-                      //adjust scrolling to display the entire dialog block
-                      if ( _is_open )
-                        module._adjustScrollExpandedBlock( item.container );
-                }
-          } );
   },
 
 
@@ -8874,8 +8914,7 @@ $.extend( CZRItemMths , {
               }
           });
   },
-});//$.extend
-//extends api.Value
+});//$.extend//extends api.Value
 //options:
 // module : module,
 // initial_modOpt_model : modOpt, can contains the already db saved values
@@ -8919,8 +8958,8 @@ $.extend( CZRModOptMths , {
         //MOD OPT VISIBLE REACT
         api.czr_ModOptVisible.bind( function( visible ) {
               if ( visible ) {
-                    //first close all open remove dialogs
-                    modOpt.module.closeAllAlerts();
+                    //first close all opened remove dialogs
+                    modOpt.module.closeRemoveDialogs();
 
                     modOpt.modOptWrapperViewSetup( _initial_model ).done( function( $_container ) {
                           modOpt.container = $_container;
@@ -9108,10 +9147,11 @@ $.extend( CZRModOptMths , {
 
           var _ctrlLabel = '';
           try {
-                    _ctrlLabel = 'Options for ' + module.control.params.label;//@to_translate
-              } catch(e) {
-                    _ctrlLabel = 'Settings';//@to_translate
-              }
+                _ctrlLabel = 'Options for ' + module.control.params.label;//@to_translate
+          } catch( er ) {
+                api.errorLog( 'In renderModOptContent : ' + er );
+                _ctrlLabel = 'Settings';//@to_translate
+          }
 
           $('#widgets-left').after( $( '<div/>', {
                 class : module.control.css_attr.mod_opt_wrapper,
@@ -9324,7 +9364,6 @@ $.extend( CZRModuleMths, {
   ready : function() {
         var module = this;
         module.isReady.resolve();
-        api.consoleLog('MODULE READY IN BASE MODULE CLASS : ', module.id );
   },
 
 
@@ -10057,8 +10096,8 @@ $.extend( CZRModuleMths, {
 
           _.each( _filtered_collection, function( _item ) {
                 if ( module.czr_Item.has(_item.id) && 'expanded' == module.czr_Item(_item.id)._getViewState(_item.id) )
-                  module.czr_Item(_item.id).czr_ItemState.set( 'closed' ); // => will fire the cb toggleItemExpansion
-           } );
+                  module.czr_Item( _item.id ).viewState.set( 'closed' ); // => will fire the cb toggleItemExpansion
+          } );
           return this;
   },
 
@@ -10090,20 +10129,27 @@ $.extend( CZRModuleMths, {
 
   //close alert wrapper
   //+ deactivate the icon
-  closeAllAlerts : function() {
+  closeRemoveDialogs : function() {
           var module = this;
-          $('.' + module.control.css_attr.remove_alert_wrapper, module.container ).each( function() {
-                if ( $(this).hasClass('open') ) {
-                      $(this).slideToggle( {
-                            duration : 100,
-                            done : function() {
-                              $(this).toggleClass('open' , false );
-                              //deactivate the icons
-                              $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass('active' , false );
-                            }
-                      } );
-                }
+          if ( ! _.isArray( module.itemCollection() ) )
+            return;
+
+          module.czr_Item.each( function( _item_ ) {
+                _item_.removeDialogVisible( false );
           });
+
+          // $('.' + module.control.css_attr.remove_alert_wrapper, module.container ).each( function() {
+          //       if ( $(this).hasClass('open') ) {
+          //             $(this).slideToggle( {
+          //                   duration : 100,
+          //                   done : function() {
+          //                     $(this).toggleClass('open' , false );
+          //                     //deactivate the icons
+          //                     $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass('active' , false );
+          //                   }
+          //             } );
+          //       }
+          // });
           return this;
   },
 
@@ -10129,7 +10175,7 @@ $.extend( CZRModuleMths, {
                                   module.preItemExpanded.set(false);
                             }
 
-                            module.closeAllItems().closeAllAlerts();
+                            module.closeAllItems().closeRemoveDialogs();
 
                             //refreshes the preview frame  :
                             //1) only needed if transport is postMessage, because is triggered by wp otherwise
@@ -10193,14 +10239,14 @@ $.extend( CZRDynModuleMths, {
                     trigger   : 'click keydown',
                     selector  : [ '.' + module.control.css_attr.open_pre_add_btn, '.' + module.control.css_attr.cancel_pre_add_btn ].join(','),
                     name      : 'pre_add_item',
-                    actions   : [ 'closeAllItems', 'closeAllAlerts', 'renderPreItemView','setPreItemViewVisibility' ],
+                    actions   : [ 'closeAllItems', 'closeRemoveDialogs', 'renderPreItemView','setPreItemViewVisibility' ],
                 },
                 //add new item
                 {
                     trigger   : 'click keydown',
                     selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
                     name      : 'add_item',
-                    actions   : [ 'closeAllAlerts', 'closeAllItems', 'addItem' ],
+                    actions   : [ 'closeRemoveDialogs', 'closeAllItems', 'addItem' ],
                 }
           ]);//module.userEventMap
   },
@@ -10211,7 +10257,6 @@ $.extend( CZRDynModuleMths, {
   //=> right after the module is instantiated.
   ready : function() {
           var module = this;
-          api.consoleLog( 'MODULE READY IN DYN MODULE CLASS : ', module.id );
           //Setup the module event listeners
           module.setupDOMListeners( module.userEventMap() , { dom_el : module.container } );
 
@@ -11161,7 +11206,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                   //this is fired just after the itemWrapperViewSetupApiListeners
                   //=> add a callback to refresh the availability status of the locations in the select location picker
                   //add a state listener on expansion change
-                  item.czr_ItemState.callbacks.add( function( to, from ) {
+                  item.viewState.callbacks.add( function( to, from ) {
                         if ( -1 == to.indexOf('expanded') )//can take the expanded_noscroll value !
                           return;
                         //don't try to invoke the input instances before the content is actually rendered
@@ -11603,7 +11648,7 @@ $.extend( CZRWidgetAreaModuleMths, {
           }, 150 ) );
 
           //Close all views on widget panel expansion/clos
-          module.closeAllItems().closeAllAlerts();
+          module.closeAllItems().closeRemoveDialogs();
           //Close preItem dialog box if exists
           if ( _.has( module, 'preItemExpanded' ) )
             module.preItemExpanded.set(false);
@@ -11631,7 +11676,7 @@ $.extend( CZRWidgetAreaModuleMths, {
             container.scrollTop( 0 );
           }
 
-          module.closeAllItems().closeAllAlerts();
+          module.closeAllItems().closeRemoveDialogs();
 
           content.slideToggle();
   },
@@ -12049,7 +12094,7 @@ $.extend( CZRBaseModuleControlMths, {
           //close any open item and dialog boxes on section expansion
           api.section( control.section() ).expanded.bind(function(to) {
                 control.czr_Module.each( function( _mod ){
-                      _mod.closeAllItems().closeAllAlerts();
+                      _mod.closeAllItems().closeRemoveDialogs();
                       if ( _.has( _mod, 'preItem' ) ) {
                             _mod.preItemExpanded(false);
                       }
@@ -12086,7 +12131,10 @@ $.extend( CZRBaseModuleControlMths, {
 
                       //adds it to the collection
                       //=> it will be fired ready usually when the control section is expanded
-                      control.instantiateModule( _mod, {} );
+                      try { control.instantiateModule( _mod, {} ); } catch( er ) {
+                            api.errorLog( 'Failed to instantiate module ' + _mod.id + ' ' + er );
+                            return;
+                      }
 
                       //adds the module name to the control container element
                       control.container.attr('data-module', _mod.id );
@@ -12098,9 +12146,17 @@ $.extend( CZRBaseModuleControlMths, {
 
           //LISTEN TO MODULE CANDIDATES ADDED BY USERS
           control.bind( 'user-module-candidate', function( _module ) {
+                var module;
                 //instanciate + fire ready()
                 //=> the module will be added in the collection on isReady.done()
-                control.instantiateModule( _module, {} ).ready( _module.is_added_by_user ); //module, constructor
+                try {
+                      module = control.instantiateModule( _module, {} ); //module, constructor
+                } catch( er ) {
+                      api.errorLog( 'Failed to instantiate module ' + _module.id + ' ' + er );
+                      return;
+                }
+                //If everything went fine, fires ready
+                module.ready( _module.is_added_by_user );
           });
   },
 
@@ -13143,14 +13199,14 @@ $.extend( CZRMultiModuleControlMths, {
               module.control.syncSektionModule().closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
 
               // if ( is_added_by_user ) {
-              //   item.czr_ItemState.set( 'expanded_noscroll' );
+              //   item.viewState.set( 'expanded_noscroll' );
               // } else {
               //   module.closeAllItems( item.id );
               //   if ( _.has(module, 'preItem') ) {
               //     module.preItemExpanded.set( false );
               //   }
               //   }
-              //   item.czr_ItemState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
+              //   item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
               // }
         },
 
@@ -13190,7 +13246,7 @@ $.extend( CZRMultiModuleControlMths, {
                           // => 2) re-instantiate each input
                           // module.czr_Item.each ( function( item ) {
                           //       if ( ! item.module.isMultiItem() )
-                          //           item.czr_ItemState.set('expanded');
+                          //           item.viewState.set('expanded');
                           //       if ( 'resolved' == item.embedded.state() ) {
                           //           $.when( item.renderItemWrapper() ).done( function( $_item_container ) {
                           //               item.container = $_item_container;
@@ -13200,7 +13256,7 @@ $.extend( CZRMultiModuleControlMths, {
                           //               });
 
                           //               if ( ! item.module.isMultiItem() )
-                          //                   item.czr_ItemState.set('expanded');
+                          //                   item.viewState.set('expanded');
                           //           });
 
                           //       }
@@ -13211,7 +13267,7 @@ $.extend( CZRMultiModuleControlMths, {
                     }
                     else {
                           module.czr_Item.each ( function( item ) {
-                                item.czr_ItemState.set('closed');
+                                item.viewState.set('closed');
                                 item._destroyView( 0 );
                                 //api.CZR_Helpers.removeInputCollection.call( item );
                                 module.czr_Item.remove( item.id );
@@ -13264,7 +13320,7 @@ $.extend( CZRMultiModuleControlMths, {
                         }
 
                         //close all alerts
-                        //module.closeAllAlerts();
+                        //module.closeRemoveDialogs();
 
                         //toggle the icon activate class depending on the status
                         //switch icon
@@ -13615,8 +13671,9 @@ $.extend( CZRLayoutSelectMths , {
   },
 });//$.extend
 (function ( api, $, _ ) {
-      //Extends all constructors with the events manager
+      //Extends some constructors with the events manager
       $.extend( CZRBaseControlMths, api.Events );
+      $.extend( api.Control.prototype, api.Events );//ensures that the default WP control constructor is extended as well
       $.extend( CZRModuleMths, api.Events );
       $.extend( CZRItemMths, api.Events );
       $.extend( CZRModOptMths, api.Events );
@@ -13770,7 +13827,11 @@ $.extend( CZRLayoutSelectMths , {
                 }
                 api.czr_activeSectionId.bind( function( section_id ) {
                       if ( ! _.isEmpty( section_id ) && api.section.has( section_id ) ) {
-                            self.setServiDependencies( section_id );
+                            try {
+                                  self.setServiDependencies( section_id );
+                            } catch( er ) {
+                                  api.errorLog( 'In api.CZR_ctrlDependencies : ' + er );
+                            }
                       }
                 });
 
@@ -13788,10 +13849,18 @@ $.extend( CZRLayoutSelectMths , {
                                   section_id : target_source.target,
                                   refresh : false
                             } ).then( function() {
-                                  self.setServiDependencies( target_source.target, target_source.source );
+                                  try {
+                                        self.setServiDependencies( target_source.target, target_source.source );
+                                  } catch( er ) {
+                                        api.errorLog( 'On awaken-section, ctrl deps : ' + er );
+                                  }
                             });
                       } else {
-                            self.setServiDependencies( target_source.target, target_source.source );
+                            try {
+                                  self.setServiDependencies( target_source.target, target_source.source );
+                            } catch( er ) {
+                                  api.errorLog( 'On awaken-section, ctrl deps : ' + er );
+                            }
                       }
                 });
 
@@ -13811,7 +13880,7 @@ $.extend( CZRLayoutSelectMths , {
                 refresh = refresh || false;
 
                 if ( _.isUndefined( targetSectionId ) || ! api.section.has( targetSectionId ) ) {
-                  throw new Error( 'Control Dependencies : the targetSectionId is missing or not registered : ' + targetSectionId );
+                      throw new Error( 'Control Dependencies : the targetSectionId is missing or not registered : ' + targetSectionId );
                 }
 
                 //Assign a visibility state deferred to the target section
@@ -13838,8 +13907,8 @@ $.extend( CZRLayoutSelectMths , {
                       //Attempt to normalize the params
                       try {
                             params = self._prepareDominusParams( params );
-                      } catch( e ) {
-                            api.consoleLog( 'prepareDominus Params error : ' + e );
+                      } catch( er ) {
+                            api.errorLog( 'prepareDominus Params error : ' + e );
                             return;
                       }
 
@@ -15501,9 +15570,9 @@ $.extend( CZRSektionMths, {
 
           module.czr_Item.each( function( _sektion ){
                 if ( _clicked_sektion_id != _sektion.id ) {
-                    _sektion.czr_ItemState.set( 'closed');
+                    _sektion.viewState.set( 'closed');
                 } else {
-                    _sektion.czr_ItemState.set( 'expanded' != _sektion.czr_ItemState() ? 'expanded_noscroll' : 'expanded' );
+                    _sektion.viewState.set( 'expanded' != _sektion.viewState() ? 'expanded_noscroll' : 'expanded' );
                 }
           });
   }
@@ -16085,7 +16154,7 @@ $.extend( CZRSektionMths, {
         //react to drag events
         module.modsDragInstance.on('drag', function( el, source ){
                 module.czr_Item.each( function( _sektion ){
-                      _sektion.czr_ItemState.set( 'expanded' != _sektion.czr_ItemState() ? 'expanded_noscroll' : 'expanded' );
+                      _sektion.viewState.set( 'expanded' != _sektion.viewState() ? 'expanded_noscroll' : 'expanded' );
                 });
         }).on('dragend', function( el, source ){
                 // module.czr_Item.each( function( _sektion ){
@@ -16119,7 +16188,7 @@ $.extend( CZRSektionMths, {
         //       if ( $(container).hasClass('czr-dragula-fake-container') ) {
         //           //get the sekItem id
         //           _target_sekId = $(container).closest('[data-id]').attr('data-id');
-        //           module.czr_Item(_target_sekId).czr_ItemState.set('expanded_noscroll');
+        //           module.czr_Item(_target_sekId).viewState.set('expanded_noscroll');
         //       }
         // });
 
@@ -16232,7 +16301,7 @@ $.extend( CZRSektionMths, {
               module.closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
           } else {
               module.czr_Item.each( function( _sektion ){
-                  _sektion.czr_ItemState.set( 'expanded' != _sektion.czr_ItemState() ? 'expanded_noscroll' : 'expanded' );
+                  _sektion.viewState.set( 'expanded' != _sektion.viewState() ? 'expanded_noscroll' : 'expanded' );
               });
           }
     },
@@ -16565,9 +16634,13 @@ $.extend( CZRSektionMths, {
     toggleSekSettingsPanel : function( obj ) {
           var module = this;
           if ( 'pending' == api.czrSekSettingsPanelEmbedded.state() ) {
-              $.when( module.renderSekSettingsPanel() ).done( function(){
-                  api.czrSekSettingsPanelEmbedded.resolve();
-              });
+                try {
+                      $.when( module.renderSekSettingsPanel() ).done( function() {
+                            api.czrSekSettingsPanelEmbedded.resolve();
+                      });
+                } catch( er ) {
+                      api.errorLog( 'In toggleSekSettingsPanel : ' + er );
+                }
           }
           //close the module panel if needed
           api.czrModulePanelState.set( false );
@@ -16589,13 +16662,13 @@ $.extend( CZRSektionMths, {
               _tmpl = '';
           //do we have template script?
           if ( 0 === $( '#tmpl-czr-sektion-settings-panel' ).length ) {
-            throw new Error('No template found to render the sektion setting panel' );
+                throw new Error('No template found to render the sektion setting panel' );
           }
           try {
-            _tmpl = wp.template( 'czr-sektion-settings-panel' )();
-          }
-          catch(e) {
-            throw new Error('Error when parsing the template of the sektion setting panel' + e );
+                _tmpl = wp.template( 'czr-sektion-settings-panel' )();
+          } catch( er ) {
+                api.errorLog( 'Error when parsing the template of the sektion setting panel' + er );
+                return;
           }
           $('#widgets-left').after( $( _tmpl ) );
 

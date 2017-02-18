@@ -11,10 +11,10 @@ $.extend( CZRSkopeMths, {
               throw new Error('The skope switcher wrapper is not printed, the skope can not be embedded.');
           }
           try {
-            _tmpl =  wp.template('czr-skope')( _.extend( skope_model, { el : skope.el } ) );
-          }
-          catch(e) {
-            throw new Error('Error when parsing the template of a skope' + e );
+                _tmpl =  wp.template('czr-skope')( _.extend( skope_model, { el : skope.el } ) );
+          } catch( er ) {
+                api.errorLog( 'Error when parsing the template of a skope' + er );
+                return false;
           }
 
           $('.czr-skopes-wrapper', '#customize-header-actions').append( $( _tmpl ) );
@@ -67,16 +67,16 @@ $.extend( CZRSkopeMths, {
           }
 
           try {
-            _tmpl =  wp.template( 'czr-skope-pane' )(
-                _.extend( skope_model, {
-                      el : skope.el,
-                      warning_message : warning_message,
-                      success_message : success_message
-                } )
-            );
-          }
-          catch(e) {
-            throw new Error('Error when parsing the the reset skope template : ' + e );//@to_translate
+                _tmpl =  wp.template( 'czr-skope-pane' )(
+                      _.extend( skope_model, {
+                            el : skope.el,
+                            warning_message : warning_message,
+                            success_message : success_message
+                      } )
+                );
+          } catch( er ) {
+                api.errorLog( 'Error when parsing the the reset skope template : ' + er );//@to_translate
+                return false;
           }
 
           $('#customize-preview').after( $( _tmpl ) );

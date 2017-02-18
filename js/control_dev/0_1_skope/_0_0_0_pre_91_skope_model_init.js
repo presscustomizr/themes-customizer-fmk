@@ -129,16 +129,21 @@ $.extend( CZRSkopeMths, {
           var skope = this;
 
           //EMBED THE SKOPE VIEW : EMBED AND STORE THE CONTAINER
-          $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
-              if ( false !== $_container.length ) {
-                  //paint it
-                  $_container.css('background-color', skope.color );
-                  skope.container = $_container;
-                  skope.embedded.resolve( $_container );
-              } else {
-                  skope.embedded.reject();
-              }
-          });
+          try {
+                $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
+                      if ( false !== $_container.length ) {
+                            //paint it
+                            $_container.css('background-color', skope.color );
+                            skope.container = $_container;
+                            skope.embedded.resolve( $_container );
+                      } else {
+                            skope.embedded.reject();
+                      }
+                });
+          } catch( er ) {
+                api.errorLog( "In skope base : " + er );
+                skope.embedded.reject();
+          }
     },
 
 

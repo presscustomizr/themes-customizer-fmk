@@ -223,14 +223,14 @@ $.extend( CZRMultiModuleControlMths, {
               module.control.syncSektionModule().closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
 
               // if ( is_added_by_user ) {
-              //   item.czr_ItemState.set( 'expanded_noscroll' );
+              //   item.viewState.set( 'expanded_noscroll' );
               // } else {
               //   module.closeAllItems( item.id );
               //   if ( _.has(module, 'preItem') ) {
               //     module.preItemExpanded.set( false );
               //   }
               //   }
-              //   item.czr_ItemState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
+              //   item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
               // }
         },
 
@@ -270,7 +270,7 @@ $.extend( CZRMultiModuleControlMths, {
                           // => 2) re-instantiate each input
                           // module.czr_Item.each ( function( item ) {
                           //       if ( ! item.module.isMultiItem() )
-                          //           item.czr_ItemState.set('expanded');
+                          //           item.viewState.set('expanded');
                           //       if ( 'resolved' == item.embedded.state() ) {
                           //           $.when( item.renderItemWrapper() ).done( function( $_item_container ) {
                           //               item.container = $_item_container;
@@ -280,7 +280,7 @@ $.extend( CZRMultiModuleControlMths, {
                           //               });
 
                           //               if ( ! item.module.isMultiItem() )
-                          //                   item.czr_ItemState.set('expanded');
+                          //                   item.viewState.set('expanded');
                           //           });
 
                           //       }
@@ -291,7 +291,7 @@ $.extend( CZRMultiModuleControlMths, {
                     }
                     else {
                           module.czr_Item.each ( function( item ) {
-                                item.czr_ItemState.set('closed');
+                                item.viewState.set('closed');
                                 item._destroyView( 0 );
                                 //api.CZR_Helpers.removeInputCollection.call( item );
                                 module.czr_Item.remove( item.id );
@@ -344,7 +344,7 @@ $.extend( CZRMultiModuleControlMths, {
                         }
 
                         //close all alerts
-                        //module.closeAllAlerts();
+                        //module.closeRemoveDialogs();
 
                         //toggle the icon activate class depending on the status
                         //switch icon

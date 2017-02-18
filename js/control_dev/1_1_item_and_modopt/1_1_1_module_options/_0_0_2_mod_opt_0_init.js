@@ -42,8 +42,8 @@ $.extend( CZRModOptMths , {
         //MOD OPT VISIBLE REACT
         api.czr_ModOptVisible.bind( function( visible ) {
               if ( visible ) {
-                    //first close all open remove dialogs
-                    modOpt.module.closeAllAlerts();
+                    //first close all opened remove dialogs
+                    modOpt.module.closeRemoveDialogs();
 
                     modOpt.modOptWrapperViewSetup( _initial_model ).done( function( $_container ) {
                           modOpt.container = $_container;

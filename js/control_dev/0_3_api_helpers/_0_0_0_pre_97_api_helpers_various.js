@@ -331,13 +331,13 @@
         hexToRgb : function( hex ) {
               // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
               var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-              try{
-                  hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-                      return r + r + g + g + b + b;
-                  });
-              } catch(e) {
-                  api.consoleLog('Error in Helpers::hexToRgb');
-                  return hex;
+              try {
+                    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+                        return r + r + g + g + b + b;
+                    });
+              } catch( er ) {
+                    api.errorLog( 'Error in Helpers::hexToRgb : ' + er );
+                    return hex;
               }
 
               var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec( hex );

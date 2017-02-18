@@ -34,14 +34,14 @@ $.extend( CZRDynModuleMths, {
                     trigger   : 'click keydown',
                     selector  : [ '.' + module.control.css_attr.open_pre_add_btn, '.' + module.control.css_attr.cancel_pre_add_btn ].join(','),
                     name      : 'pre_add_item',
-                    actions   : [ 'closeAllItems', 'closeAllAlerts', 'renderPreItemView','setPreItemViewVisibility' ],
+                    actions   : [ 'closeAllItems', 'closeRemoveDialogs', 'renderPreItemView','setPreItemViewVisibility' ],
                 },
                 //add new item
                 {
                     trigger   : 'click keydown',
                     selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
                     name      : 'add_item',
-                    actions   : [ 'closeAllAlerts', 'closeAllItems', 'addItem' ],
+                    actions   : [ 'closeRemoveDialogs', 'closeAllItems', 'addItem' ],
                 }
           ]);//module.userEventMap
   },
@@ -52,7 +52,6 @@ $.extend( CZRDynModuleMths, {
   //=> right after the module is instantiated.
   ready : function() {
           var module = this;
-          api.consoleLog( 'MODULE READY IN DYN MODULE CLASS : ', module.id );
           //Setup the module event listeners
           module.setupDOMListeners( module.userEventMap() , { dom_el : module.container } );
 

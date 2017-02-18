@@ -6,9 +6,13 @@ $.extend( CZRSektionMths, {
     toggleSekSettingsPanel : function( obj ) {
           var module = this;
           if ( 'pending' == api.czrSekSettingsPanelEmbedded.state() ) {
-              $.when( module.renderSekSettingsPanel() ).done( function(){
-                  api.czrSekSettingsPanelEmbedded.resolve();
-              });
+                try {
+                      $.when( module.renderSekSettingsPanel() ).done( function() {
+                            api.czrSekSettingsPanelEmbedded.resolve();
+                      });
+                } catch( er ) {
+                      api.errorLog( 'In toggleSekSettingsPanel : ' + er );
+                }
           }
           //close the module panel if needed
           api.czrModulePanelState.set( false );
@@ -30,13 +34,13 @@ $.extend( CZRSektionMths, {
               _tmpl = '';
           //do we have template script?
           if ( 0 === $( '#tmpl-czr-sektion-settings-panel' ).length ) {
-            throw new Error('No template found to render the sektion setting panel' );
+                throw new Error('No template found to render the sektion setting panel' );
           }
           try {
-            _tmpl = wp.template( 'czr-sektion-settings-panel' )();
-          }
-          catch(e) {
-            throw new Error('Error when parsing the template of the sektion setting panel' + e );
+                _tmpl = wp.template( 'czr-sektion-settings-panel' )();
+          } catch( er ) {
+                api.errorLog( 'Error when parsing the template of the sektion setting panel' + er );
+                return;
           }
           $('#widgets-left').after( $( _tmpl ) );
 

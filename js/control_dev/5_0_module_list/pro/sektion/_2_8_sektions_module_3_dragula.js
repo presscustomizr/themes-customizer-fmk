@@ -46,7 +46,7 @@ $.extend( CZRSektionMths, {
         //react to drag events
         module.modsDragInstance.on('drag', function( el, source ){
                 module.czr_Item.each( function( _sektion ){
-                      _sektion.czr_ItemState.set( 'expanded' != _sektion.czr_ItemState() ? 'expanded_noscroll' : 'expanded' );
+                      _sektion.viewState.set( 'expanded' != _sektion.viewState() ? 'expanded_noscroll' : 'expanded' );
                 });
         }).on('dragend', function( el, source ){
                 // module.czr_Item.each( function( _sektion ){
@@ -80,7 +80,7 @@ $.extend( CZRSektionMths, {
         //       if ( $(container).hasClass('czr-dragula-fake-container') ) {
         //           //get the sekItem id
         //           _target_sekId = $(container).closest('[data-id]').attr('data-id');
-        //           module.czr_Item(_target_sekId).czr_ItemState.set('expanded_noscroll');
+        //           module.czr_Item(_target_sekId).viewState.set('expanded_noscroll');
         //       }
         // });
 

@@ -8,7 +8,7 @@ var czr_debug = {
 var api = api || wp.customize, $ = $ || jQuery;
 (function (api, $, _) {
       //Dev mode aware and IE compatible api.consoleLog()
-      api.consoleLog = function( isError ) {
+      api.consoleLog = function() {
             // if ( ! serverControlParams.isDevMode )
             //   return;
             //fix for IE, because console is only defined when in F12 debugging mode in IE
@@ -20,6 +20,20 @@ var api = api || wp.customize, $ = $ || jQuery;
             var _styled = [
                 '%c ' + _toArr,
                 'background: #008ec2; color: white; display: block;',
+            ];
+            console.log.apply( console, _styled );
+      };
+
+      api.errorLog = function( ) {
+            //fix for IE, because console is only defined when in F12 debugging mode in IE
+            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
+              return;
+
+            var _toArr = Array.from( arguments );
+            _toArr = _toArr.join(' ');
+            var _styled = [
+                '%c ' + _toArr,
+                'background: #ff0016; color: white; display: block;',
             ];
             console.log.apply( console, _styled );
       };
@@ -222,10 +236,10 @@ var api = api || wp.customize, $ = $ || jQuery;
                 _render = function() {
                       var dfd = $.Deferred();
                       try {
-                          _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
-                      }
-                      catch(e) {
-                          throw new Error('Error when parsing the the reset skope template : ' + e );//@to_translate
+                            _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
+                      } catch( er ) {
+                            api.errorLog( 'In toggleSkopeLoadPane : error when parsing the the reset skope template : ' + er );//@to_translate
+                            dfd.resolve( false );
                       }
                       $.when( $('#customize-preview').after( $( _tmpl ) ) )
                             .always( function() {

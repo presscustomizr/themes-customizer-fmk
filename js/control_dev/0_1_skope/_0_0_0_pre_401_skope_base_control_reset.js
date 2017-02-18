@@ -120,8 +120,9 @@ $.extend( CZRSkopeBaseMths, {
               };
           try {
                 _tmpl =  wp.template('czr-reset-control')( _tmpl_data );
-          } catch(e) {
-                throw new Error('Error when parsing the the reset control template : ' + e );//@to_translate
+          } catch( er ) {
+                api.errorLog( 'Error when parsing the the reset control template : ' + er );//@to_translate
+                return { container : false, is_authorized : false };
           }
 
           $('.customize-control-title', ctrl.container).first().after( $( _tmpl ) );

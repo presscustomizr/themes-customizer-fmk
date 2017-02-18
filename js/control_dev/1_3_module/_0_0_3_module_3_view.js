@@ -88,8 +88,8 @@ $.extend( CZRModuleMths, {
 
           _.each( _filtered_collection, function( _item ) {
                 if ( module.czr_Item.has(_item.id) && 'expanded' == module.czr_Item(_item.id)._getViewState(_item.id) )
-                  module.czr_Item(_item.id).czr_ItemState.set( 'closed' ); // => will fire the cb toggleItemExpansion
-           } );
+                  module.czr_Item( _item.id ).viewState.set( 'closed' ); // => will fire the cb toggleItemExpansion
+          } );
           return this;
   },
 
@@ -121,20 +121,27 @@ $.extend( CZRModuleMths, {
 
   //close alert wrapper
   //+ deactivate the icon
-  closeAllAlerts : function() {
+  closeRemoveDialogs : function() {
           var module = this;
-          $('.' + module.control.css_attr.remove_alert_wrapper, module.container ).each( function() {
-                if ( $(this).hasClass('open') ) {
-                      $(this).slideToggle( {
-                            duration : 100,
-                            done : function() {
-                              $(this).toggleClass('open' , false );
-                              //deactivate the icons
-                              $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass('active' , false );
-                            }
-                      } );
-                }
+          if ( ! _.isArray( module.itemCollection() ) )
+            return;
+
+          module.czr_Item.each( function( _item_ ) {
+                _item_.removeDialogVisible( false );
           });
+
+          // $('.' + module.control.css_attr.remove_alert_wrapper, module.container ).each( function() {
+          //       if ( $(this).hasClass('open') ) {
+          //             $(this).slideToggle( {
+          //                   duration : 100,
+          //                   done : function() {
+          //                     $(this).toggleClass('open' , false );
+          //                     //deactivate the icons
+          //                     $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass('active' , false );
+          //                   }
+          //             } );
+          //       }
+          // });
           return this;
   },
 
@@ -160,7 +167,7 @@ $.extend( CZRModuleMths, {
                                   module.preItemExpanded.set(false);
                             }
 
-                            module.closeAllItems().closeAllAlerts();
+                            module.closeAllItems().closeRemoveDialogs();
 
                             //refreshes the preview frame  :
                             //1) only needed if transport is postMessage, because is triggered by wp otherwise

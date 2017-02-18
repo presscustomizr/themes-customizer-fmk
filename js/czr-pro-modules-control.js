@@ -1163,9 +1163,9 @@ $.extend( CZRSektionMths, {
 
           module.czr_Item.each( function( _sektion ){
                 if ( _clicked_sektion_id != _sektion.id ) {
-                    _sektion.czr_ItemState.set( 'closed');
+                    _sektion.viewState.set( 'closed');
                 } else {
-                    _sektion.czr_ItemState.set( 'expanded' != _sektion.czr_ItemState() ? 'expanded_noscroll' : 'expanded' );
+                    _sektion.viewState.set( 'expanded' != _sektion.viewState() ? 'expanded_noscroll' : 'expanded' );
                 }
           });
   }
@@ -1747,7 +1747,7 @@ $.extend( CZRSektionMths, {
         //react to drag events
         module.modsDragInstance.on('drag', function( el, source ){
                 module.czr_Item.each( function( _sektion ){
-                      _sektion.czr_ItemState.set( 'expanded' != _sektion.czr_ItemState() ? 'expanded_noscroll' : 'expanded' );
+                      _sektion.viewState.set( 'expanded' != _sektion.viewState() ? 'expanded_noscroll' : 'expanded' );
                 });
         }).on('dragend', function( el, source ){
                 // module.czr_Item.each( function( _sektion ){
@@ -1781,7 +1781,7 @@ $.extend( CZRSektionMths, {
         //       if ( $(container).hasClass('czr-dragula-fake-container') ) {
         //           //get the sekItem id
         //           _target_sekId = $(container).closest('[data-id]').attr('data-id');
-        //           module.czr_Item(_target_sekId).czr_ItemState.set('expanded_noscroll');
+        //           module.czr_Item(_target_sekId).viewState.set('expanded_noscroll');
         //       }
         // });
 
@@ -1894,7 +1894,7 @@ $.extend( CZRSektionMths, {
               module.closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
           } else {
               module.czr_Item.each( function( _sektion ){
-                  _sektion.czr_ItemState.set( 'expanded' != _sektion.czr_ItemState() ? 'expanded_noscroll' : 'expanded' );
+                  _sektion.viewState.set( 'expanded' != _sektion.viewState() ? 'expanded_noscroll' : 'expanded' );
               });
           }
     },
@@ -2227,9 +2227,13 @@ $.extend( CZRSektionMths, {
     toggleSekSettingsPanel : function( obj ) {
           var module = this;
           if ( 'pending' == api.czrSekSettingsPanelEmbedded.state() ) {
-              $.when( module.renderSekSettingsPanel() ).done( function(){
-                  api.czrSekSettingsPanelEmbedded.resolve();
-              });
+                try {
+                      $.when( module.renderSekSettingsPanel() ).done( function() {
+                            api.czrSekSettingsPanelEmbedded.resolve();
+                      });
+                } catch( er ) {
+                      api.errorLog( 'In toggleSekSettingsPanel : ' + er );
+                }
           }
           //close the module panel if needed
           api.czrModulePanelState.set( false );
@@ -2251,13 +2255,13 @@ $.extend( CZRSektionMths, {
               _tmpl = '';
           //do we have template script?
           if ( 0 === $( '#tmpl-czr-sektion-settings-panel' ).length ) {
-            throw new Error('No template found to render the sektion setting panel' );
+                throw new Error('No template found to render the sektion setting panel' );
           }
           try {
-            _tmpl = wp.template( 'czr-sektion-settings-panel' )();
-          }
-          catch(e) {
-            throw new Error('Error when parsing the template of the sektion setting panel' + e );
+                _tmpl = wp.template( 'czr-sektion-settings-panel' )();
+          } catch( er ) {
+                api.errorLog( 'Error when parsing the template of the sektion setting panel' + er );
+                return;
           }
           $('#widgets-left').after( $( _tmpl ) );
 

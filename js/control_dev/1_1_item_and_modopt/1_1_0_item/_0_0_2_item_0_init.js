@@ -25,6 +25,12 @@ $.extend( CZRItemMths , {
         item.contentContainer = null;//will store the item content $ dom element
         item.inputCollection = new api.Value({});
 
+        //VIEW STATES FOR ITEM AND REMOVE DIALOG
+        //viewState stores the current expansion status of a given view => one value by created by item.id
+        //viewState can take 3 values : expanded, expanded_noscroll (=> used on view creation), closed
+        item.viewState = new api.Value( 'closed' );
+        item.removeDialogVisible = new api.Value( false );
+
         //input.options = options;
         //write the options as properties, name is included
         $.extend( item, options || {} );
@@ -42,24 +48,28 @@ $.extend( CZRItemMths , {
         item.userEventMap = new api.Value( [
               //toggles remove view alert
               {
-                trigger   : 'click keydown',
-                selector  : [ '.' + item.module.control.css_attr.display_alert_btn, '.' + item.module.control.css_attr.cancel_alert_btn ].join(','),
-                name      : 'toggle_remove_alert',
-                actions   : ['toggleRemoveAlertVisibility']
+                    trigger   : 'click keydown',
+                    selector  : [ '.' + item.module.control.css_attr.display_alert_btn, '.' + item.module.control.css_attr.cancel_alert_btn ].join(','),
+                    name      : 'toggle_remove_alert',
+                    actions   : function() {
+                          var _isVisible = this.removeDialogVisible();
+                          this.module.closeRemoveDialogs();
+                          this.removeDialogVisible( ! _isVisible );
+                    }
               },
               //removes item and destroys its view
               {
-                trigger   : 'click keydown',
-                selector  : '.' + item.module.control.css_attr.remove_view_btn,
-                name      : 'remove_item',
-                actions   : ['removeItem']
+                    trigger   : 'click keydown',
+                    selector  : '.' + item.module.control.css_attr.remove_view_btn,
+                    name      : 'remove_item',
+                    actions   : ['removeItem']
               },
               //edit view
               {
-                trigger   : 'click keydown',
-                selector  : [ '.' + item.module.control.css_attr.edit_view_btn, '.' + item.module.control.css_attr.item_title ].join(','),
-                name      : 'edit_view',
-                actions   : [ 'setViewVisibility' ]
+                    trigger   : 'click keydown',
+                    selector  : [ '.' + item.module.control.css_attr.edit_view_btn, '.' + item.module.control.css_attr.item_title ].join(','),
+                    name      : 'edit_view',
+                    actions   : [ 'setViewVisibility' ]
               }
         ]);
 
@@ -98,8 +108,10 @@ $.extend( CZRItemMths , {
                     //create the collection of inputs if needed
                     //first time or after a removal
                     if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) ) {
-                          try { api.CZR_Helpers.setupInputCollectionFromDOM.call( item ); } catch(e) {
-                                api.consoleLog( e );
+                          try {
+                                api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
+                          } catch( er ) {
+                                api.errorLog( 'In item.isReady.done : ' + er );
                           }
                     }
               });
