@@ -20,7 +20,6 @@
             czr_social_module : {
                   mthds : CZRSocialModuleMths,
                   crud : true,
-                  sortable : true,
                   name : 'Social Icons',
                   has_mod_opt : true
             },

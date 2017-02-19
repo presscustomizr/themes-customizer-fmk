@@ -155,6 +155,7 @@ $.extend( CZRSlideModuleMths, {
               constructorOptions.items = [
                     $.extend( _default, {
                           'id' : 'default_item_' + module.id,
+                          'is_default' : true,
                           'slide-background' : ( ! _.isEmpty( _query_data.post_thumbnail_id ) ) ? _query_data.post_thumbnail_id : '',
                           'slide-title' : ! _.isEmpty( _query_data.post_title )? _query_data.post_title : '',
                           'slide-subtitle' : ! _.isEmpty( _query_data.subtitle ) ? _query_data.subtitle : ''
