@@ -70,6 +70,16 @@ $.extend( CZRItemMths , {
                     selector  : [ '.' + item.module.control.css_attr.edit_view_btn, '.' + item.module.control.css_attr.item_title ].join(','),
                     name      : 'edit_view',
                     actions   : [ 'setViewVisibility' ]
+              },
+              //tabs navigation
+              {
+                    trigger   : 'click keydown',
+                    selector  : '.tabs nav li',
+                    name      : 'tab_nav',
+                    actions   : function( args ) {
+                          //toggleTabVisibility is defined in the module ctor and its this is the item or the modOpt
+                          this.module.toggleTabVisibility.call( this, args );
+                    }
               }
         ]);
 
@@ -110,6 +120,10 @@ $.extend( CZRItemMths , {
                     if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) ) {
                           try {
                                 api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
+                                //the item.container is now available
+                                //Setup the tabs navigation
+                                //setupTabNav is defined in the module ctor and its this is the item or the modOpt
+                                item.module.setupTabNav.call( item );
                           } catch( er ) {
                                 api.errorLog( 'In item.isReady.done : ' + er );
                           }
@@ -138,7 +152,6 @@ $.extend( CZRItemMths , {
   ready : function() {
         this.isReady.resolve();
   },
-
 
 
   //React to a single item change

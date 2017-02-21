@@ -485,9 +485,13 @@ body.czr-editing-modopt .czr-mod-opt-wrapper {
 }
 
 
+
+/**************************************
 /* MODULE OPTIONS : TABS NAVIGATION  */
+/*************************************/
 .tabs {
   position: relative;
+  display: none;
   overflow: hidden;
   margin: 0 auto;
   width: 100%;
@@ -502,6 +506,7 @@ body.czr-editing-modopt .czr-mod-opt-wrapper {
 
 .tabs nav ul {
   position: relative;
+  overflow: hidden;
   display: -ms-flexbox;
   display: -webkit-flex;
   display: -moz-flex;
@@ -570,7 +575,35 @@ body.czr-editing-modopt .czr-mod-opt-wrapper {
   outline: none;
 }
 
+li.tab-current::after, li.tab-current::before {
+    content: '';
+    height: 100%;
+    position: absolute;
+    -webkit-box-shadow: 4px 0px 15px 0px rgba(37, 37, 37, 0.63);
+    box-shadow: 4px 0px 15px 0px rgba(37, 37, 37, 0.63);
+    top: 0;
+    width: 0px;
+    right: 0px;
+    z-index: 4;
+    width: 100%;
+}
 
+li.tab-current::before{
+    left: 0;
+    -webkit-box-shadow: 0px 0px 15px 4px rgba(37, 37, 37, 0.63);
+    box-shadow: 0px 0px 15px 4px rgba(37, 37, 37, 0.63);
+}
+
+li.tab-inactive::after {
+    content: '';
+    width: 100%;
+    position: absolute;
+    height: 2px;
+    bottom: -7px;
+    left: 0;
+    -webkit-box-shadow: 4px 0px 15px 0px rgba(119, 119, 119, 0.58);;
+    box-shadow: 4px 0px 15px 0px rgba(0, 0, 0, 0.86);;
+}
 
 /* Content */
 .content-wrap {
@@ -612,6 +645,10 @@ section .czr-sub-set:first-child {
   border: 1px solid rgba(40,44,42,0.1);
 }
 
+.czr-items-wrapper .tabs-style-topline nav li {
+  border: none;
+}
+
 .tabs-style-topline nav li:not(:last-child) {
   border-right: none;
 }
@@ -631,6 +668,9 @@ section .czr-sub-set:first-child {
   transition: color 0.2s;
   text-decoration: none;
 }
+.czr-items-wrapper .tabs-style-topline nav a {
+  background: rgba(40, 44, 42, 0.45);
+}
 
 .tabs-style-topline nav a:hover,
 .tabs-style-topline nav a:focus {
@@ -642,6 +682,10 @@ section .czr-sub-set:first-child {
   box-shadow: inset 0 3px 0 #ffffff;
   color: #ffffff;
   text-decoration: underline;
+}
+
+.czr-items-wrapper .tabs-style-topline nav li.tab-current a {
+  color: #000;
 }
 
 .tabs-style-topline .icon::before {

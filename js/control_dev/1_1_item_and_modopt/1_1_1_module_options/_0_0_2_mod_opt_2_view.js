@@ -28,7 +28,8 @@ $.extend( CZRModOptMths , {
                                       selector  : '.tabs nav li',
                                       name      : 'tab_nav',
                                       actions   : function( args ) {
-                                          modOpt.toggleTabVisibility( args );
+                                            //toggleTabVisibility is defined in the module ctor and its this is the item or the modOpt
+                                            this.module.toggleTabVisibility.call( this, args );
                                       }
                                 }
                           ],//actions to execute
@@ -54,36 +55,11 @@ $.extend( CZRModOptMths , {
                 .then( function() {
                       //the modOpt.container is now available
                       //Setup the tabs navigation
-                      //=> Make sure the first tab is the current visible one
-                      $( '.tabs nav li', modOpt.container ).first().addClass( 'tab-current' );
-                      $( 'section', modOpt.container ).first().addClass( 'content-current' );
-
-                      //set the layout class based on the number of tabs
-                      var _nb = $( '.tabs nav li', modOpt.container ).length;
-                      $( '.tabs nav li', modOpt.container ).each( function() {
-                            $(this).addClass( _nb > 0 ? 'cols-' + _nb : '' );
-                      });
+                      //setupTabNav is defined in the module ctor and its this is the item or the modOpt
+                      modOpt.module.setupTabNav.call( modOpt );
                 });
 
           return dfd.promise();
-  },
-
-
-  toggleTabVisibility : function( args ) {
-        var modOpt = this,
-            tabs = $( modOpt.container ).find('li'),
-            content_items = $( modOpt.container ).find('section'),
-            tabIdSwitchedTo = $( args.dom_event.currentTarget, args.dom_el ).attr('data-tab-id');
-
-        $( '.tabs nav li', modOpt.container ).each( function() {
-                $(this).removeClass('tab-current');
-        });
-        $( modOpt.container ).find('li[data-tab-id="' + tabIdSwitchedTo + '"]').addClass('tab-current');
-
-        $( 'section', modOpt.container ).each( function() {
-                $(this).removeClass('content-current');
-        });
-        $( modOpt.container ).find('section[id="' + tabIdSwitchedTo + '"]').addClass('content-current');
   },
 
 
