@@ -14,7 +14,8 @@ $.extend( CZRSkopeBaseMths, {
     reactWhenSkopeSyncedDone : function( server_params ) {
           var self = this, dfd = $.Deferred();
           if ( ! _.has( server_params, 'czr_skopes' ) || _.isEmpty( server_params.czr_skopes ) ) {
-                throw new Error( 'Missing skope data after refresh', server_params );
+                api.errorLog( 'Missing skope data after refresh', server_params );
+                return dfd.resolve().promise();
           }
           //API DIRTYNESS UPDATE
           if ( ! api.czr_dirtyness() ) {

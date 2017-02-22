@@ -9,14 +9,21 @@
                 params
           );
 
+          var previewer = this, dfd = $.Deferred();
+
+          //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
+          //=> that's why we check it here again before doing anything else
+          if ( ! serverControlParams.isSkopOn ) {
+                return dfd.resolve().promise();
+          }
+
           if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
                 api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.previewer._new_refresh() method.');
           }
-          var previewer = this, dfd = $.Deferred();
 
           //if too early, then let's fall back on core
           if ( ! _.has( api, 'czr_activeSkopeId') ) {
-                if ( 'pending' == api.czr_skopeReady.state() ) {
+                if ( 'resolved' != api.czr_skopeReady.state() ) {
                       api.czr_skopeReady.done( function() {
                             _new_refresh.apply( api.previewer, params );
                       });

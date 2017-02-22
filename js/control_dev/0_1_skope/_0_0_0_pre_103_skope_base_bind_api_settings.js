@@ -17,8 +17,13 @@ $.extend( CZRSkopeBaseMths, {
                     var setId = this.id,
                         skope_id;
 
+                    //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
+                    //=> that's why we check it here again before doing anything else
+                    if ( ! serverControlParams.isSkopOn )
+                      return;
+
                     if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
-                      api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.czr_skopeBase.bindAPISettings method.');
+                      api.errorLog( 'The api.czr_activeSkopeId() is undefined in the api.czr_skopeBase.bindAPISettings method.');
                       //return;
                     }
 

@@ -132,9 +132,8 @@ $.extend( CZRSkopeBaseMths, {
                       .done( function( _updatedSetIds ) {
                             api.previewer.refresh()
                                   .always( function() {
-                                        api.trigger( 'skope-switched', to, from );
-                                        dfd.resolve();
-                                        api.state('switching-skope')( false );
+                                        dfd.resolve( _updatedSetIds );
+                                        api.state( 'switching-skope' )( false );
                                   });
                       });
           };

@@ -170,24 +170,36 @@ var api = api || wp.customize, $ = $ || jQuery;
                   api.czr_skopeBase   = new api.CZR_skopeBase();
                   api.czr_skopeSave   = new api.CZR_skopeSave();
                   api.czr_skopeReset  = new api.CZR_skopeReset();
-                  api.trigger('czr-skope-started');
-                  api.czr_skopeReady.done( function() {
-                        api.trigger('czr-skope-ready');
-                  });
-                  //Make sure the loading icon panel is destroyed after a moment
-                  //Typically if there was a problem in the WP js API and the skope could not be initialized
-                  setTimeout( function() {
-                      if ( 'pending' == api.czr_skopeReady.state() )  {
-                            //This top note will be rendered 20s and self closed if not closed before by the user
-                            api.czr_skopeBase.toggleTopNote( true, {
-                                  title : 'There was a problem when trying to load the customizer.',//@to_translate
-                                  message : 'Please open your <a href="http://docs.presscustomizr.com/article/272-inspect-your-webpages-in-your-browser-with-the-development-tools" target="_blank">browser debug tool</a>, and report any error message (in red) printed in the javascript console in the <a href="https://wordpress.org/support/theme/hueman" target="_blank">Hueman theme forum</a>.',//@to_translate
-                                  selfCloseAfter : 40000
-                            });
 
-                            api.czr_isLoadingSkope( false );
-                      }
-                  }, 30000);
+                  api.trigger('czr-skope-started');
+
+                  api.czr_skopeReady
+                        .done( function() {
+                              api.trigger('czr-skope-ready');
+                        })
+                        .fail( function( error ) {
+                              api.errorLog( 'Skope could not be instantiated : ' + error );
+                              serverControlParams.isSkopOn = false;
+                              api.czr_isLoadingSkope( false );
+                        });
+
+                  //If skope was properly instantiated but there's another problem occuring after, display a self closing top notification after 30 s
+                  if ( 'rejected' != api.czr_skopeReady.state() ) {
+                        //Make sure the loading icon panel is destroyed after a moment
+                        //Typically if there was a problem in the WP js API and the skope could not be initialized
+                        setTimeout( function() {
+                            if ( 'pending' == api.czr_skopeReady.state() )  {
+                                  //This top note will be rendered 20s and self closed if not closed before by the user
+                                  api.czr_skopeBase.toggleTopNote( true, {
+                                        title : 'There was a problem when trying to load the customizer.',//@to_translate
+                                        message : 'Please open your <a href="http://docs.presscustomizr.com/article/272-inspect-your-webpages-in-your-browser-with-the-development-tools" target="_blank">browser debug tool</a>, and report any error message (in red) printed in the javascript console in the <a href="https://wordpress.org/support/theme/hueman" target="_blank">Hueman theme forum</a>.',//@to_translate
+                                        selfCloseAfter : 40000
+                                  });
+
+                                  api.czr_isLoadingSkope( false );
+                            }
+                        }, 30000);
+                  }
             }
 
             //let's set a lower autosave interval ( default is 60000 ms )

@@ -2586,12 +2586,12 @@ h2.czr-current-skope-title {
     width: 90%;
     font-size: 12px;
     line-height: 18px;
-    color: #357315;
+    color: #0029ff;
     top: -6px;
     position: relative;
 }
 .notice-visible .czr-toggle-title-notice {
-  color: #357315;
+  color: #0029ff;
 }
 .notice-visible .czr-skope-inherits-from {
   opacity: 1;
@@ -3077,7 +3077,7 @@ body.czr-resetting-skope #czr-skope-pane .czr-spinner-wrapper {
 
 /* CONTROL INFOS */
 .customize-control .czr-skope-notice {
-  color: #357315;
+  color: #0029ff;
 }
 
 .czr-toggle-notice {
@@ -3091,7 +3091,7 @@ body.czr-resetting-skope #czr-skope-pane .czr-spinner-wrapper {
   display: none;
 }
 .czr-notice-visible .czr-toggle-notice, .czr-toggle-notice:hover {
-  color: #357315;
+  color: #0029ff;
 }
 
 

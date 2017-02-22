@@ -27,10 +27,16 @@
         //    opt_name : string
         // }
         api.previewer.query =  function( queryVars ) {
+              //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
+              //=> that's why we check it here again before doing anything else
+              if ( ! serverControlParams.isSkopOn ) {
+                    return _coreQuery.apply( this );
+              }
+
               //IS SKOP ON
               //falls back to WP core treatment if skope is not on or if the requested skope is not registered
               if ( ! _.has( api, 'czr_skope') ) {
-                    api.consoleLog('QUERY : SKOPE IS NOT ON. FALLING BACK ON CORE QUERY');
+                    api.consoleLog('QUERY : SKOPE IS NOT FULLY READY YEY. FALLING BACK ON CORE QUERY');
                     return _coreQuery.apply( this );
               }
 

@@ -38,7 +38,7 @@ $.extend( CZRSkopeBaseMths, {
 
 
     //fired when a control notice is expanded
-    updateCtrlSkpNot : function( controlIdCandidates ) {
+    updateCtrlSkpNot : function( controlIdCandidates, visible ) {
            var self = this,
               controlIds = _.isArray(controlIdCandidates) ? controlIdCandidates : [controlIdCandidates],
               _isSkoped = function( setId ) {
@@ -56,7 +56,7 @@ $.extend( CZRSkopeBaseMths, {
                     /// CASE 0 : not skoped
                     if ( ! _isSkoped( setId ) ) {
                           _html.push( [
-                                "This option is always customized site wide and can't be reset.",//@to_translate
+                                "This option is always customized sitewide and can't be reset.",//@to_translate
                           ].join(' ') );
                           return _html.join(' | ');
                     }
@@ -71,46 +71,59 @@ $.extend( CZRSkopeBaseMths, {
                           if ( _isCustomized ) {
                                 if ( 'global' == api.czr_skope( _inheritedFromSkopeId )().skope ) {
                                       _html.push( [
-                                            'Customized. Will be published site wide.',//@to_translate
+                                            'Customized. Will be applied sitewide once published.',//@to_translate
                                       ].join(' ') );
                                 } else {
                                     _html.push( [
-                                          'Customized. Will be published for :',//@to_translate
-                                          api.czr_skope( _inheritedFromSkopeId )().title
+                                          'Customized. Will be applied to',//@to_translate
+                                          '<strong>' + api.czr_skope( _inheritedFromSkopeId )().ctx_title + '.' + '</strong>',
+                                          'once published.'
                                     ].join(' ') );
                                 }
                           } else {
                                 if ( _hasDBVal ) {
                                       if ( 'global' == api.czr_skope( _inheritedFromSkopeId )().skope ) {
                                             _html.push( [
-                                                  'Customized and published site wide.',//@to_translate
+                                                  'Customized and applied sitewide.',//@to_translate
                                             ].join(' ') );
                                       } else {
                                             _html.push( [
-                                                  'Customized and published for :',//@to_translate
-                                                  api.czr_skope( _inheritedFromSkopeId )().title
+                                                  'Customized and applied to',//@to_translate
+                                                  '<strong>' + api.czr_skope( _inheritedFromSkopeId )().ctx_title + '.' + '</strong>'
                                             ].join(' ') );
                                       }
                                 } else {
-                                      _html.push( 'Default website value published site wide.' );//@to_translate
+                                      _html.push( 'Default website value applied sitewide.' );//@to_translate
                                 }
                           }
                     }
 
 
                     /////////////////////
-                    /// CASE 2
+                    /// CASE 2 : Skope is different than global, there is an inheritance
                     if ( _inheritedFromSkopeId !== _currentSkopeId && api.czr_skope.has( _inheritedFromSkopeId ) ) {
                           //is the setId customized in the current skope ?
                           _isCustomized = ! _.isUndefined( api.czr_skope( _inheritedFromSkopeId ).dirtyValues()[setId] );
                           _hasDBVal     = ! _.isUndefined( api.czr_skope( _inheritedFromSkopeId ).dbValues()[setId] );
                           if ( ! _isCustomized && ! _hasDBVal ) {
-                                _html.push( 'Default website value' );//@to_translate
+                                _html.push(
+                                      [
+                                            'Default website value.',
+                                            'You can customize this specifically for',
+                                            '<strong>' + api.czr_skope( _currentSkopeId )().ctx_title + '.' + '</strong>'
+                                      ].join(' ')
+                                );//@to_translate
                           } else {
-                                _html.push( 'Inherited from : ' + self.buildSkopeLink( _inheritedFromSkopeId ) );//@to_translate
+                                _html.push(
+                                      [
+                                            'Currently inherited from',
+                                            self.buildSkopeLink( _inheritedFromSkopeId ) + '.',
+                                            'You can customize this specifically for',
+                                            '<strong>' + api.czr_skope( _currentSkopeId )().ctx_title + '.' + '</strong>'
+                                      ].join(' ')
+                                );//@to_translate
                           }
                     }
-
 
 
                     /////////////////////
@@ -121,24 +134,28 @@ $.extend( CZRSkopeBaseMths, {
                           _isCustomized = ! _.isUndefined( api.czr_skope( _overridedBySkopeId ).dirtyValues()[setId] );
 
                           _html.push( [
-                                ! _isCustomized ? 'The value currently published for' : 'The value that will be published for',//@to_translate
-                                api.czr_skope( _localSkopeId )().title,
-                                ! _isCustomized ? 'is set in scope :' : 'is customized in scope :',//@to_translate
+                                ! _isCustomized ? 'The value currently applied to' : 'The value that will be applied to',//@to_translate
+                                '<strong>' + api.czr_skope( _localSkopeId )().ctx_title + '</strong>',
+                                ! _isCustomized ? 'is set in' : 'is customized in',//@to_translate
                                 self.buildSkopeLink( _overridedBySkopeId ),
-                                ! _isCustomized ? ', because it has a higher priority than this one.' : ', and will override this one once published because it has a higher priority.',//@to_translate
+                                'which has a higher priority than',
+                                '<strong>' + api.czr_skope( _currentSkopeId )().title + '.' + '</strong>'
+                                //@to_translate
                           ].join(' ') );
                     }
 
                     return _html.join(' | ');
-              };
+              };//_generateControlNotice
+
 
           _.each( controlIds, function( _id ) {
                 api.control.when( _id, function() {
                       var ctrl = api.control( _id ),
-                          setId = api.CZR_Helpers.getControlSettingId( _id );//get the relevant setting_id for this control
+                          setId = api.CZR_Helpers.getControlSettingId( _id ),//get the relevant setting_id for this control
+                          _visible = _.isUndefined( visible ) ? ( ctrl.czr_states && ctrl.czr_states( 'noticeVisible' )() ) : visible;
 
                       //Bail here if the ctrl notice is not set to visible
-                      if ( ! _.has( ctrl, 'czr_states' ) || ! ctrl.czr_states('noticeVisible')() )
+                      if ( ! _visible  )
                         return;
 
                       ctrl.deferred.embedded.then( function() {
@@ -148,7 +165,12 @@ $.extend( CZRSkopeBaseMths, {
                             if ( ! $noticeContainer || ! $noticeContainer.length || _.isUndefined( _localSkopeId ) )
                               return;
 
-                            _html = _generateControlNotice( setId, _localSkopeId );
+                            try {
+                                  _html = _generateControlNotice( setId, _localSkopeId );
+                            } catch ( er ) {
+                                  api.errorLog( '_generateControlNotice : ' + er );
+                            }
+
 
                             var $skopeNoticeEl = $( '.czr-skope-notice', $noticeContainer );
                             if ( $skopeNoticeEl.length ) {
@@ -161,7 +183,34 @@ $.extend( CZRSkopeBaseMths, {
                       });
                 });
           });
+    },//updateCtrlSkpNot
+
+    // Utility
+    // @return bool
+    // @param ctrlId = string
+    // When do we display the ctrl notice ?
+    // 1) When the current skope is not global
+    // 2) when the current skope is global AND is overriden by a local or group skope
+    isCtrlNoticeVisible : function( ctrlId ) {
+          if ( ! api.control.has( ctrlId ) )
+            return false;
+
+          var self = this,
+              setId = api.CZR_Helpers.getControlSettingId( ctrlId ),//get the relevant setting_id for this control
+              _currentSkopeId  = api.czr_activeSkopeId(),
+              _overridedBySkopeId  = self.getAppliedPrioritySkopeId( setId, _currentSkopeId ),
+              _isSkoped = function( setId ) {
+                    return setId && self.isSettingSkopeEligible( setId );
+              };//filter only eligible ctrlIds
+
+          if ( 'global' != api.czr_skope( _currentSkopeId )().skope ) {
+                return true;
+          } else if ( _overridedBySkopeId !== _currentSkopeId && api.czr_skope.has( _overridedBySkopeId ) ) {
+                return true;
+          }
+          return false;
     },
+
 
     //@return void()
     removeCtrlSkpNot : function( controlIdCandidates ) {

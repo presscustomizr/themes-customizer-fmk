@@ -66,6 +66,13 @@
                 //     });
                 // };
 
+            //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
+            //=> that's why we check it here again before doing anything else
+            if ( ! serverControlParams.isSkopOn ) {
+                  return _original_requestChangesetUpdate();
+            }
+
+
             //MAKES SURE THAT A CHANGESET POST ID EXISTS
             //=> add a dummy_change to global if if ( 0 === api._lastSavedRevision || _.isEmpty( api.state( 'changesetStatus' )() ) )
             //

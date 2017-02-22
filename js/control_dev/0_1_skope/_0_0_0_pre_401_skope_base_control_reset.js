@@ -141,8 +141,8 @@ $.extend( CZRSkopeBaseMths, {
               ctrl = api.control( ctrlId ),
               skope_id = api.czr_activeSkopeId(),
               reset_method = ctrl.czr_states( 'isDirty' )() ? '_resetControlDirtyness' : '_resetControlAPIVal',
-              _setResetDialogVisibility = function( ctrl, val ) {
-                    val = _.isUndefined( val ) ? false : val;//@todo why this ?
+              _setResetDialogVisibility = function() {
+                    var ctrl = this;//<= fired with .call( ctrlInstance )
                     ctrl.czr_states( 'resetVisible' )( false );
                     ctrl.czr_states( 'isResetting' )( false);
                     ctrl.container.removeClass('czr-resetting-control');
@@ -152,25 +152,28 @@ $.extend( CZRSkopeBaseMths, {
                               api.czr_skopeBase.processSilentUpdates( { candidates : ctrlId, refresh : false } )
                                     .fail( function() { api.consoleLog( 'Silent update failed after resetting control : ' + ctrlId ); } )
                                     .done( function() {
-                                          $.when( $('.czr-crtl-reset-dialog', ctrl.container ).fadeOut('300') ).done( function() {
-                                                $.when( $('.czr-reset-success', ctrl.container ).fadeIn('300') ).done( function( $_el ) {
-                                                      _.delay( function() {
-                                                            $.when( $_el.fadeOut('300') ).done( function() {
-                                                                  _setResetDialogVisibility( ctrl );
-                                                                  self.setupActiveSkopedControls( { controls : [ ctrlId ] } );
-                                                                  //Display informations after reset
-                                                                 _.delay( function() {
-                                                                        ctrl.czr_states( 'noticeVisible' )(true);
-                                                                  }, 300 );
-                                                                  _.delay( function() {
-                                                                        ctrl.czr_states( 'noticeVisible' )(false);
-                                                                  }, 4000 );
-                                                            });
-                                                      }, 1000 );
+                                          api.control.when( ctrlId, function() {
+                                                //the control instance might have changed if it has been re-rendered.
+                                                //=> make sure we grab the new one
+                                                var ctrl = api.control( ctrlId );
+                                                $.when( $('.czr-crtl-reset-dialog', ctrl.container ).fadeOut('300') ).done( function() {
+                                                      $.when( $('.czr-reset-success', ctrl.container ).fadeIn('300') ).done( function( $_el ) {
+                                                            _.delay( function() {
+                                                                  $.when( $_el.fadeOut('300') ).done( function() {
+                                                                        self.setupActiveSkopedControls( { controls : [ ctrlId ] } ).done( function() {
+                                                                              if ( ctrl.czr_states ) {
+                                                                                    _setResetDialogVisibility.call( ctrl );
+                                                                                    ctrl.czr_states( 'noticeVisible' )( self.isCtrlNoticeVisible( ctrlId ) );
+                                                                              }
+                                                                        });
+                                                                  });
+                                                            }, 500 );
+                                                      });
                                                 });
                                           });
-                                    });
-                    };
+                                    });//done()
+                    };//_silentUpdate
+
                     //Specific case for global :
                     //After a published value reset (not a dirty reset),
                     //we need to re-synchronize the api.settings.settings with the default theme options values
@@ -187,7 +190,7 @@ $.extend( CZRSkopeBaseMths, {
                                 // }
                                 api.previewer.refresh()
                                       .fail( function( refresh_data ) {
-                                            api.consoleLog('SETTING RESET REFRESH FAILED', refresh_data );
+                                            api.errorLog('Setting reset refresh failed.', refresh_data );
                                       })
                                       .done( function( refresh_data ) {
                                             if ( 'global' == api.czr_skope( skope_id )().skope && '_resetControlAPIVal' == reset_method ) {
@@ -224,11 +227,12 @@ $.extend( CZRSkopeBaseMths, {
                             _updateAPI( ctrlId );
                       })
                       .fail( function( r ) {
+                              api.errorLog( 'Reset failed', r );
                               $.when( $('.czr-crtl-reset-dialog', ctrl.container ).fadeOut('300') ).done( function() {
                                     $.when( $('.czr-reset-fail', ctrl.container ).fadeIn('300') ).done( function() {
                                           $('.czr-reset-fail', ctrl.container ).append('<p>' + r + '</p>');
                                           _.delay( function() {
-                                                _setResetDialogVisibility( ctrl );
+                                                _setResetDialogVisibility.call( ctrl );
                                                 self.setupActiveSkopedControls( { controls : [ ctrlId ] } );
                                           }, 2000 );
                                     });

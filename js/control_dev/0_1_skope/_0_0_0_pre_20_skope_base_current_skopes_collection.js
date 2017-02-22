@@ -7,6 +7,24 @@ $.extend( CZRSkopeBaseMths, {
     // 1) check if the server sends the same saved values
     // 2) update the skope db properties with the latests saved ones
     //
+    //A skope candidate is structured this way :
+    //{
+    // changeset : Object
+    // color:"rgb(255, 255, 255)"
+    // db:Object
+    // dyn_type:"option"
+    // has_db_val:true
+    // id:""
+    // is_forced:false
+    // is_primary:true
+    // is_winner:false
+    // level:"_all_"
+    // long_title:"Site wide options"
+    // obj_id:""
+    // opt_name:"hu_theme_options"
+    // skope:"global"
+    // title:"Site wide options"
+    //}
     //@see api_overrides
     updateSkopeCollection : function( sent_collection, sent_channel ) {
           //api.consoleLog('UPDATE SKOPE COLLECTION', sent_collection, sent_channel );
@@ -35,11 +53,30 @@ $.extend( CZRSkopeBaseMths, {
           }
 
           //set the new collection of current skopes
+          //=> this will instantiate the not instantiated skopes
           api.czr_currentSkopesCollection( _api_ready_collection );
     },
 
 
-
+    //@param skope_candidate
+    ////A skope candidate is structured this way :
+    //{
+    // changeset : Object
+    // color:"rgb(255, 255, 255)"
+    // db:Object
+    // dyn_type:"option"
+    // has_db_val:true
+    // id:""
+    // is_forced:false
+    // is_primary:true
+    // is_winner:false
+    // level:"_all_"
+    // long_title:"Site wide options"
+    // obj_id:""
+    // opt_name:"hu_theme_options"
+    // skope:"global"
+    // title:"Site wide options"
+    //}
     prepareSkopeForAPI : function( skope_candidate ) {
           if ( ! _.isObject( skope_candidate ) ) {
               throw new Error('prepareSkopeForAPI : a skope must be an object to be API ready');
@@ -56,9 +93,15 @@ $.extend( CZRSkopeBaseMths, {
                             }
                             api_ready_skope[_key] = _candidate_val;
                       break;
-                        case 'long_title' :
+                      case 'long_title' :
                             if ( ! _.isString( _candidate_val ) ) {
                                 throw new Error('prepareSkopeForAPI : a skope title property must a string');
+                            }
+                            api_ready_skope[_key] = _candidate_val;
+                      break;
+                      case 'ctx_title' :
+                            if ( ! _.isString( _candidate_val ) ) {
+                                throw new Error('prepareSkopeForAPI : a skope context title property must a string');
                             }
                             api_ready_skope[_key] = _candidate_val;
                       break;
@@ -159,79 +202,96 @@ $.extend( CZRSkopeBaseMths, {
           //=>on init, instantiate them all
           //=>on refresh, instantiate the new ones and remove the non relevant
           var _to_instantiate = [];
-          var _to_remove = [];
-          var _to_update = [];
+              _to_remove = [];
+              _to_update = [];
+              _instantiateAndEmbed = function( _candidates_ ) {
+                    //Instantiate the new skopes
+                    //api.consoleLog('SKOPES TO INSTANTIATE?', _to_instantiate );
+                    _.each( _candidates_, function( _skope ) {
+                          _skope = $.extend( true, {}, _skope );//use a cloned skop to instantiate : @todo : do we still need that ?
+                          api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
+                    });
 
-          //TO INSTANTIATE
+                    //Then embed the not ready ones
+                    //=> we need to do that after the instantiaion of the entire new collection, because a skope instance my need to get other skope instances when embedded
+                    _.each( _candidates_, function( _skope ) {
+                          //fire this right after instantiation for the views (we need the model instances in the views)
+                          if ( ! api.czr_skope.has( _skope.id ) ) {
+                              throw new Error( 'Skope id : ' + _skope.id + ' has not been instantiated.');
+                          }
+                          if ( 'pending' == api.czr_skope( _skope.id ).isReady.state() ) {
+                                api.czr_skope( _skope.id ).ready();
+                          }
+                    });
+              };
+
+          //BUILD THE CANDIDATES TO INSTANTIATE
           _.each( _new_collection, function( _sent_skope ) {
                 if ( ! api.czr_skope.has( _sent_skope.id  ) )
                   _to_instantiate.push( _sent_skope );
           });
 
-          //Instantiate the new skopes
-          //api.consoleLog('SKOPES TO INSTANTIATE?', _to_instantiate );
-          _.each( _to_instantiate, function( _skope ) {
-                _skope = $.extend( true, {}, _skope );//use a cloned skop to instantiate : @todo : do we still need that ?
-                api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
-          });
+          //TRY TO INSTANTIATE
+          try {
+                _instantiateAndEmbed( _to_instantiate );
+          } catch( er ) {
+                api.errorLog( "currentSkopesCollectionReact : " + er );
+                return dfd.resolve().promise();
+          }
 
-          //Then embed the not ready ones
-          //=> we need to do that after the instantiaion of the entire new collection, because a skope instance my need to get other skope instances when embedded
-          _.each( _to_instantiate, function( _skope ) {
-                //fire this right after instantiation for the views (we need the model instances in the views)
-                if ( ! api.czr_skope.has( _skope.id ) ) {
-                    throw new Error( 'Skope id : ' + _skope.id + ' has not been instantiated.');
-                }
-                if ( 'pending' == api.czr_skope( _skope.id ).isReady.state() ) {
-                      api.czr_skope( _skope.id ).ready();
-                }
-          });
 
-          //SET THE CONTEXTUALLY ACTIVE SKOPES VISIBILITY AND LAYOUT
+          //SET THE CONTEXTUALLY ACTIVE SKOPES VISIBILITY AND LAYOUT WHEN skopeReady and skopeWrapperEmbedded
           //Which skopes are visible ?
           //=> the ones sent by the preview
-          var _activeSkopeNum = _.size( _new_collection ),
-              _setLayoutClass = function( _skp_instance ) {
-                    //remove previous layout class
-                    var _newClasses = _skp_instance.container.attr('class').split(' ');
-                    _.each( _skp_instance.container.attr('class').split(' '), function( _c ) {
-                          if ( 'width-' == _c.substring( 0, 6) ) {
-                                _newClasses = _.without( _newClasses, _c );
-                          }
-                    });
-                    $.when( _skp_instance.container.attr('class', _newClasses.join(' ') ) )
-                          .done( function() {
-                                //set new layout class
-                                _skp_instance.container.addClass( 'width-' + ( Math.round( 100 / _activeSkopeNum ) ) );
+          var _setActiveAndLayout = function() {
+                var _activeSkopeNum = _.size( _new_collection ),
+                    _setLayoutClass = function( _skp_instance ) {
+                          //remove previous layout class
+                          var _newClasses = _skp_instance.container.attr('class').split(' ');
+                          _.each( _skp_instance.container.attr('class').split(' '), function( _c ) {
+                                if ( 'width-' == _c.substring( 0, 6) ) {
+                                      _newClasses = _.without( _newClasses, _c );
+                                }
                           });
-              };
-          api.czr_skope.each( function( _skp_instance ){
-                if ( _.isUndefined( _.findWhere( _new_collection, { id : _skp_instance().id } ) ) ) {
-                      _skp_instance.visible( false );
-                      _skp_instance.isReady.then( function() {
-                            _skp_instance.container.toggleClass( 'active-collection', false );
-                      });
-                }
-                else {
-                      _skp_instance.visible( true );
-                      var _activeSkpDomPostProcess = function() {
-                            _setLayoutClass( _skp_instance );
-                            _skp_instance.container.toggleClass( 'active-collection', true );
-                      };
-                      if ( 'pending' == _skp_instance.isReady.state() ) {
+                          $.when( _skp_instance.container.attr('class', _newClasses.join(' ') ) )
+                                .done( function() {
+                                      //set new layout class
+                                      _skp_instance.container.addClass( 'width-' + ( Math.round( 100 / _activeSkopeNum ) ) );
+                                });
+                    };
+                api.czr_skope.each( function( _skp_instance ) {
+                      if ( _.isUndefined( _.findWhere( _new_collection, { id : _skp_instance().id } ) ) ) {
+                            _skp_instance.visible( false );
                             _skp_instance.isReady.then( function() {
-                                  _activeSkpDomPostProcess();
+                                  _skp_instance.container.toggleClass( 'active-collection', false );
                             });
-                      } else {
-                            _activeSkpDomPostProcess();
                       }
-                }
-          } );
+                      else {
+                            _skp_instance.visible( true );
+                            var _activeSkpDomPostProcess = function() {
+                                  _setLayoutClass( _skp_instance );
+                                  _skp_instance.container.toggleClass( 'active-collection', true );
+                            };
+                            if ( 'pending' == _skp_instance.isReady.state() ) {
+                                  _skp_instance.isReady.then( function() {
+                                        _activeSkpDomPostProcess();
+                                  });
+                            } else {
+                                  _activeSkpDomPostProcess();
+                            }
+                      }
+                } );
+          };
+
+          //SET THE CONTEXTUALLY ACTIVE SKOPES VISIBILITY AND LAYOUT WHEN skopeReady and skopeWrapperEmbedded
+          self.skopeWrapperEmbedded.then( function() {
+                _setActiveAndLayout();
+          });
 
           //ON INITIAL COLLECTION POPULATE, RESOLVE THE DEFERRED STATE
           //=> this way we can defer earlier actions.
           //For example when autofocus is requested, the section might be expanded before the initial skope collection is sent from the preview.
-          if ( _.isEmpty(from) && ! _.isEmpty(to) )
+          if ( _.isEmpty( from ) && ! _.isEmpty( to ) )
             api.czr_initialSkopeCollectionPopulated.resolve();
 
           //MAKE SURE TO SYNCHRONIZE api.settings.settings with the current global skope updated db values

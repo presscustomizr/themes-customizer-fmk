@@ -40,7 +40,7 @@ $.extend( CZRSkopeBaseMths, {
 
           var self = this,
               _doReactPrevious = function( previous_sec_id ) {
-                    //COLLAPSE ANY RESET DIALOG OR CTRL NOTICE PREVIOUSLY EXPANDED
+                    //COLLAPSE ANY RESET DIALOG
                     var controls = api.CZR_Helpers.getSectionControlIds( previous_sec_id  );
                     _.each( controls, function( ctrlId ) {
                           if ( ! api.has( ctrlId ) || _.isUndefined( api.control( ctrlId ) ) )
@@ -48,7 +48,7 @@ $.extend( CZRSkopeBaseMths, {
                           var ctrl = api.control( ctrlId );
                           if ( ! _.has( ctrl, 'czr_states' ) )
                             return;
-                          ctrl.czr_states( 'noticeVisible' )( false );
+
                           ctrl.czr_states( 'resetVisible' )( false );
                     });
               },
@@ -68,6 +68,26 @@ $.extend( CZRSkopeBaseMths, {
                                 // self.processSilentUpdates( { candidates : _update_candidates } );
                                 // //add control single reset + observable values
                                 // self.setupActiveSkopedControls();
+
+                                //Always display the notice when skope is not global
+                                //=> let user understand where the setting value is coming from
+                                var _setupSectionCtrlNotices = function() {
+                                      var controls = api.CZR_Helpers.getSectionControlIds( active_sec_id );
+                                      _.each( controls, function( ctrlId ) {
+                                            if ( ! api.has( ctrlId ) || _.isUndefined( api.control( ctrlId ) ) )
+                                              return;
+                                            var ctrl = api.control( ctrlId );
+                                            if ( ! _.has( ctrl, 'czr_states' ) )
+                                              return;
+                                            ctrl.czr_states( 'noticeVisible' )( self.isCtrlNoticeVisible( ctrlId ) );
+                                      });
+                                };
+
+                                //Setup ctrol notices after a delay
+                                //=>the delay is needed for controls that have been re-rendered.
+                                _.delay( function() {
+                                      _setupSectionCtrlNotices();
+                                }, 700 );
 
                                 //Sidebar Widget specific
                                 if ( ! self.isExcludedSidebarsWidgets() ) {
@@ -132,7 +152,10 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_initialSkopeCollectionPopulated.then( function() {
                 api.section.when( active_sec_id , function( active_section ) {
                       active_section.deferred.embedded.then( function() {
-                            _doReactActive( active_section, active_sec_id );
+                            try { _doReactActive( active_section, active_sec_id ); } catch( er ) {
+                                  api.errorLog( 'activeSectionReact => _doReactActive : ' + er );
+                            }
+
                       });
                 });
                 if ( ! _.isEmpty( previous_sec_id ) && api.section.has( previous_sec_id ) ) {

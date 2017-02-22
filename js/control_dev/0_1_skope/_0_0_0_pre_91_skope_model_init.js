@@ -90,8 +90,26 @@ $.extend( CZRSkopeMths, {
                 return _.contains( [ 'db', 'changeset', 'has_db_val' ], _key );
           } ) );
 
+
+
+
+
           ////////////////////////////////////////////////////
-          /// EMBED AND SETUP OBSERVABLE VALUES LISTENERS
+          /// SETUP SKOPE OBSERVABLE VALUES LISTENERS
+          /// => skope embedded dependants
+          ////////////////////////////////////////////////////
+          skope.setupObservableViewValuesCallbacks();
+
+          //Now that the values are listened to. Let's set some initial values
+          skope.dirtyness( ! _.isEmpty( constructor_options.changeset ) );
+          skope.hasDBValues( ! _.isEmpty( constructor_options.db ) );
+          skope.winner( constructor_options.is_winner );
+
+
+
+
+          ////////////////////////////////////////////////////
+          /// EMBED + SETUP DOM LISTENERS
           ////////////////////////////////////////////////////
           skope.embedded
                 .fail( function() {
@@ -101,49 +119,37 @@ $.extend( CZRSkopeMths, {
                       //api.consoleLog('SKOPE : '  + skope().id + ' EMBEDDED');
                       //Setup the user event listeners
                       skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
-                      //hide when this skope is not in the current skopes list
-                      skope.visible.bind( function( is_visible ){
-                            skope.container.toggle( is_visible );
-                      });
-
-                      //How does the view react to model changes ?
-                      //When active :
-                      //1) add a green point to the view box
-                      //2) disable the switch-to icon
-                      skope.active.callbacks.add(function() { return skope.activeStateReact.apply(skope, arguments ); } );
-                      skope.dirtyness.callbacks.add(function() { return skope.dirtynessReact.apply(skope, arguments ); } );
-                      skope.hasDBValues.callbacks.add(function() { return skope.hasDBValuesReact.apply(skope, arguments ); } );
-                      skope.winner.callbacks.add(function() { return skope.winnerReact.apply(skope, arguments ); } );
-
-
-                      skope.dirtyness( ! _.isEmpty( constructor_options.changeset ) );
-                      skope.hasDBValues( ! _.isEmpty( constructor_options.db ) );
-                      skope.winner( constructor_options.is_winner );
 
                       skope.isReady.resolve();
                 });
-    },
+
+    },//initialize
+
+
 
     //this skope model is instantiated at this point.
     ready : function() {
           var skope = this;
-
-          //EMBED THE SKOPE VIEW : EMBED AND STORE THE CONTAINER
-          try {
-                $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
-                      if ( false !== $_container.length ) {
-                            //paint it
-                            $_container.css('background-color', skope.color );
-                            skope.container = $_container;
-                            skope.embedded.resolve( $_container );
-                      } else {
-                            skope.embedded.reject();
-                      }
-                });
-          } catch( er ) {
-                api.errorLog( "In skope base : " + er );
-                skope.embedded.reject();
-          }
+          //WAIT FOR THE SKOPE WRAPPER TO BE EMBEDDED
+          //=> The skope wrapper is embedded when api.czr_skopeReady.state() == 'resolved'
+          api.czr_skopeBase.skopeWrapperEmbedded.done( function() {
+                //EMBED THE SKOPE VIEW : EMBED AND STORE THE CONTAINER
+                try {
+                      $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
+                            if ( false !== $_container.length ) {
+                                  //paint it
+                                  $_container.css('background-color', skope.color );
+                                  skope.container = $_container;
+                                  skope.embedded.resolve( $_container );
+                            } else {
+                                  skope.embedded.reject();
+                            }
+                      });
+                } catch( er ) {
+                      api.errorLog( "In skope base : " + er );
+                      skope.embedded.reject();
+                }
+          });
     },
 
 
@@ -301,21 +307,83 @@ $.extend( CZRSkopeMths, {
 
 
 
+
     /*****************************************************************************
     * VALUES CALLBACKS WHEN SKOPE EMBEDDED AND READY
+    * => The skope container exists at this stage
     *****************************************************************************/
-    //cb of skope.active.callbacks
-    activeStateReact : function(to, from){
+    //@fired in initiliaze
+    setupObservableViewValuesCallbacks : function() {
           var skope = this;
-          skope.container.toggleClass('inactive').toggleClass('active', to);
+          //hide when this skope is not in the current skopes list
+          skope.visible.bind( function( is_visible ){
+                if ( 'pending' == skope.embedded.state() ) {
+                      skope.embedded.done( function() {
+                            skope.container.toggle( is_visible );
+                      });
+                } else {
+                      skope.container.toggle( is_visible );
+                }
+
+          });
+
+          //How does the view react to model changes ?
+          //When active :
+          //1) add a green point to the view box
+          //2) disable the switch-to icon
+          skope.active.bind( function() {
+                if ( 'pending' == skope.embedded.state() ) {
+                      skope.embedded.done( function() {
+                            skope.activeStateReact.apply( skope, arguments );
+                      });
+                } else {
+                      skope.activeStateReact.apply( skope, arguments );
+                }
+          });
+
+          skope.dirtyness.bind( function() {
+                if ( 'pending' == skope.embedded.state() ) {
+                      skope.embedded.done( function() {
+                            skope.dirtynessReact.apply( skope, arguments );
+                      });
+                } else {
+                      skope.dirtynessReact.apply( skope, arguments );
+                }
+          });
+
+          skope.hasDBValues.bind( function() {
+                if ( 'pending' == skope.embedded.state() ) {
+                      skope.embedded.done( function() {
+                            skope.hasDBValuesReact.apply( skope, arguments );
+                      });
+                } else {
+                      skope.hasDBValuesReact.apply( skope, arguments );
+                }
+          });
+
+          skope.winner.bind( function() {
+                if ( 'pending' == skope.embedded.state() ) {
+                      skope.embedded.done( function() {
+                            skope.winnerReact.apply( skope, arguments );
+                      });
+                } else {
+                      skope.winnerReact.apply( skope, arguments );
+                }
+          });
+    },//setupObservableViewValuesCallbacks
+
+    //cb of skope.active.callbacks
+    activeStateReact : function( to, from ){
+          var skope = this;
+          skope.container.toggleClass('inactive', ! to ).toggleClass( 'active', to );
           //api.consoleLog('in the view : listen for scope state change', this.name, to, from );
           $('.czr-scope-switch', skope.container).toggleClass('fa-toggle-on', to).toggleClass('fa-toggle-off', !to);
     },
 
     //cb of skope.dirtyness.callbacks
-    dirtynessReact : function(to, from) {
+    dirtynessReact : function( to, from ) {
           var skope = this;
-          $.when( this.container.toggleClass( 'dirty', to) ).done( function() {
+          $.when( this.container.toggleClass( 'dirty', to ) ).done( function() {
               if ( to )
                 $( '.czr-scope-reset', skope.container).fadeIn('slow').attr('title', [ 'Reset the current customizations for', skope().title ].join(' ') );//@to_translate
               else if ( ! skope.hasDBValues() )
@@ -336,7 +404,7 @@ $.extend( CZRSkopeMths, {
                           ].join(' ') );//@to_translate
               }
               else if ( ! skope.dirtyness() ) {
-                    $( '.czr-scope-reset', skope.container).fadeOut('fast');
+                    $( '.czr-scope-reset', skope.container ).fadeOut('fast');
               }
           });
     },

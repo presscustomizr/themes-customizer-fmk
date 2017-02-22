@@ -61,7 +61,7 @@ $.extend( CZRSkopeBaseMths, {
 
           //silently update the settings of a the currently active section() to the values of the current skope
           //silentlyUpdateSettings returns a promise.
-          if ( 'pending' == api.czr_skopeReady.state() ) {
+          if ( 'resolved' != api.czr_skopeReady.state() ) {
                 dfd.resolve( [] );
                 api.czr_skopeReady.done( function() {
                       _enjoyTheSilence();

@@ -14,10 +14,12 @@
               //Skope is ready when :
               //1) the initial skopes collection has been populated
               //2) the initial skope has been switched to
-              api.czr_skopeReady.done( function() {
-                    api.czr_ctrlDependencies = new api.CZR_ctrlDependencies();
-                    api.czr_CrtlDependenciesReady.resolve();
-              });
+              if ( 'resolved' != api.czr_skopeReady.state() ) {
+                    api.czr_skopeReady.done( function() {
+                          api.czr_ctrlDependencies = new api.CZR_ctrlDependencies();
+                          api.czr_CrtlDependenciesReady.resolve();
+                    });
+              }
         } else {
               api.czr_ctrlDependencies = new api.CZR_ctrlDependencies();
               api.czr_CrtlDependenciesReady.resolve();
