@@ -3061,6 +3061,7 @@ body.czr-top-note-open #czr-top-note {
 
 #czr-skope-pane h2 {
   color: #fff;
+  line-height: 1.5em;
 }
 body.czr-skope-pane-open #czr-skope-pane {
   top: 0;

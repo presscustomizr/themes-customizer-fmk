@@ -179,7 +179,7 @@ $.extend( CZRInputMths , {
   },
 
   getUploaderLabels : function() {
-        var _ts = serverControlParams.translatedStrings,
+        var _ts = serverControlParams.i18n,
             _map = {
             'select'      : _ts.select_image,
             'change'      : _ts.change_image,

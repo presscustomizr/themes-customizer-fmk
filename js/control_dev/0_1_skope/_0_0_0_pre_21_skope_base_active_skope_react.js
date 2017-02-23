@@ -29,7 +29,7 @@ $.extend( CZRSkopeBaseMths, {
                 api.czr_activeSkopeId( self.getGlobalSkopeId() );
                 api.czr_serverNotification({
                       status:'success',
-                      message : [ _title , 'can only be customized site wide.' ].join(' ')
+                      message : [ _title , 'can only be customized sitewide.' ].join(' ')
                 });
                 return dfd.resolve().promise();
           };
@@ -37,7 +37,7 @@ $.extend( CZRSkopeBaseMths, {
                 api.czr_serverNotification({
                       status:'success',
                       message : [
-                            'Widgets are created site wide.'//@to_translate
+                            'Widgets are created sitewide.'//@to_translate
                       ].join(' ')
                 });
                 //return dfd.resolve().promise();// _switchBack( api.panel( api.czr_activePanelId() ).params.title );
@@ -52,7 +52,7 @@ $.extend( CZRSkopeBaseMths, {
                 api.czr_serverNotification({
                       status:'success',
                       message : [
-                            'Menus are created site wide.'//@to_translate
+                            'Menus are created sitewide.'//@to_translate
                       ].join(' ')
                 });
                 //_switchBack( api.section( api.czr_activeSectionId() ).params.title );

@@ -143,10 +143,10 @@ $.extend( CZRSkopeBaseMths, {
                         resp = 'Server Error';
                   }
             } else if ( ! resp ) {
-                  resp = '0' === _r ? 'Not logged in.' : _r;//@to_translate
+                  resp = '0' === _r ? 'Not logged in.' : _r;
             } else if ( '-1' === _r ) {
               // Back-compat in case any other check_ajax_referer() call is dying
-                  resp = 'Identification issue detected, please refresh your page.';//@to_translate
+                  resp = 'Identification issue detected, please refresh your page.';
             }
             return resp;
       }

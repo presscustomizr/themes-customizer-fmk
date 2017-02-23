@@ -76,7 +76,6 @@ $.extend( CZRSkopeBaseMths, {
           var self = this,
               ctrl = api.control( ctrlId ),
               setId = api.CZR_Helpers.getControlSettingId( ctrlId ),
-
               _tmpl = '',
               warning_message,
               success_message,
@@ -87,25 +86,24 @@ $.extend( CZRSkopeBaseMths, {
                     if ( ! _.contains( serverControlParams.themeSettingList, api.CZR_Helpers.getOptionName( setId ) ) )
                       return true;
                     return false;
-              })();
+              })(),
+              _currentSkopeModel = api.czr_skope( api.czr_activeSkopeId() )();
 
           if ( ctrl.czr_states( 'isDirty' )() ) {
                 warning_message = [
-                    'Please confirm that you want to reset your current customizations for this option in ',//@to_translate
-                    api.czr_skope( api.czr_activeSkopeId() )().title,
-                    '.',
-                ].join('');
-                success_message = 'Your customizations have been reset.';//@to_translate
+                      'global' == _currentSkopeModel.skope ? serverControlParams.i18n.skope['Please confirm that you want to reset your current customizations for this option'] : serverControlParams.i18n.skope['Please confirm that you want to reset your current customizations for this option in'],
+                      'global' == _currentSkopeModel.skope ? serverControlParams.i18n.skope['sitewide'] : _currentSkopeModel.ctx_title
+                ].join(' ');
+                success_message = serverControlParams.i18n.skope['Your customizations have been reset'];
           } else {
-                if ( isWPSetting && 'global' == api.czr_skope( api.czr_activeSkopeId() )().skope ) {
-                      warning_message = 'This WordPress setting can not be reset site wide.';//@to_translate
+                if ( isWPSetting && 'global' == _currentSkopeModel.skope ) {
+                      warning_message = serverControlParams.i18n.skope['This WordPress setting can not be reset sitewide'];
                 } else {
                       warning_message = [
-                          'Please confirm that you want to reset this option in ',//@to_translate
-                          api.czr_skope( api.czr_activeSkopeId() )().title,
-                          '.'
-                      ].join('');//@to_translate
-                      success_message = 'The options have been reset.';//@to_translate
+                          'global' == _currentSkopeModel.skope ? serverControlParams.i18n.skope['Please confirm that you want to reset this option'] : serverControlParams.i18n.skope['Please confirm that you want to reset this option in'],
+                          'global' == _currentSkopeModel.skope ? serverControlParams.i18n.skope['sitewide'] : _currentSkopeModel.ctx_title
+                      ].join(' ');
+                      success_message = serverControlParams.i18n.skope['The option has been reset'];
                 }
           }
 
@@ -115,14 +113,14 @@ $.extend( CZRSkopeBaseMths, {
           //3) setting not dirty => db reset
           var is_authorized = ! ( isWPSetting && 'global' == api.czr_skope( api.czr_activeSkopeId() )().skope && ! ctrl.czr_states( 'isDirty' )() ),
               _tmpl_data = {
-                    warning_message : warning_message,
-                    success_message : success_message,
+                    warning_message : warning_message + '.',
+                    success_message : success_message + '.',
                     is_authorized : is_authorized
               };
           try {
                 _tmpl =  wp.template('czr-reset-control')( _tmpl_data );
           } catch( er ) {
-                api.errorLog( 'Error when parsing the the reset control template : ' + er );//@to_translate
+                api.errorLog( 'Error when parsing the the reset control template : ' + er );
                 return { container : false, is_authorized : false };
           }
 

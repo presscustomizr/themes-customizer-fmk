@@ -64,7 +64,7 @@ $.extend( CZRSlideModuleMths, {
             this.defaultItemModel = _.omit( serverControlParams.slideModuleParams.defaultSlideMod, 'slide-src');
 
             //overrides the default success message
-            this.itemAddedMessage = serverControlParams.translatedStrings.slideAdded;
+            this.itemAddedMessage = serverControlParams.i18n.slideAdded;
             //fired ready :
             //1) on section expansion
             //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled
@@ -430,7 +430,7 @@ $.extend( CZRSlideModuleMths, {
                                 return _itm.id === item.id;
                           });
                           _index = _.isUndefined( _index ) ? index : _index + 1;
-                          _title = [ serverControlParams.translatedStrings.slideTitle, _index ].join( ' ' );
+                          _title = [ serverControlParams.i18n.slideTitle, _index ].join( ' ' );
                     }
 
                     //if the slide title is set, use it

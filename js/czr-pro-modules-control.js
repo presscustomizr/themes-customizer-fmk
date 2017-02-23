@@ -30,7 +30,7 @@ $.extend( CZRFeaturedPageModuleMths, {
             };
 
             //overrides the default success message
-            this.itemAddedMessage = serverControlParams.translatedStrings.featuredPageAdded;
+            this.itemAddedMessage = serverControlParams.i18n.featuredPageAdded;
             api.section( module.control.section() ).expanded.bind(function(to) {
                   if ( 'resolved' == module.isReady.state() )
                         return;
@@ -204,9 +204,9 @@ $.extend( CZRFeaturedPageModuleMths, {
             addResetDefaultButton : function( $_template_params ) {
                     var input        = this,
                         item         = input.input_parent,
-                        buttonLabel  = serverControlParams.translatedStrings.featuredPageImgReset,
-                        successMess  = serverControlParams.translatedStrings.featuredPageResetSucc,
-                        errMess      = serverControlParams.translatedStrings.featuredPageResetErr,
+                        buttonLabel  = serverControlParams.i18n.featuredPageImgReset,
+                        successMess  = serverControlParams.i18n.featuredPageResetSucc,
+                        errMess      = serverControlParams.i18n.featuredPageResetErr,
                         messages     = '<div class="fpimage-reset-messages" style="clear:both"><p class="success" style="display:none">'+successMess+'</p><p class="warning" style="display:none">'+errMess+'</p></div>';
 
                     $('.actions', input.container)
@@ -262,7 +262,7 @@ $.extend( CZRFeaturedPageModuleMths, {
                   var item = this,
                             module  = item.module,
                             _model = model || item(),
-                            _title = _model.title ? _model.title : serverControlParams.translatedStrings.featuredPageTitle;
+                            _title = _model.title ? _model.title : serverControlParams.i18n.featuredPageTitle;
 
                   _title = api.CZR_Helpers.truncate(_title, 25);
                   $( '.' + module.control.css_attr.item_title , item.container ).html( _title );
@@ -357,7 +357,7 @@ $.extend( CZRSlideModuleMths, {
             this.defaultItemModel = _.omit( serverControlParams.slideModuleParams.defaultSlideMod, 'slide-src');
 
             //overrides the default success message
-            this.itemAddedMessage = serverControlParams.translatedStrings.slideAdded;
+            this.itemAddedMessage = serverControlParams.i18n.slideAdded;
             //fired ready :
             //1) on section expansion
             //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled
@@ -723,7 +723,7 @@ $.extend( CZRSlideModuleMths, {
                                 return _itm.id === item.id;
                           });
                           _index = _.isUndefined( _index ) ? index : _index + 1;
-                          _title = [ serverControlParams.translatedStrings.slideTitle, _index ].join( ' ' );
+                          _title = [ serverControlParams.i18n.slideTitle, _index ].join( ' ' );
                     }
 
                     //if the slide title is set, use it

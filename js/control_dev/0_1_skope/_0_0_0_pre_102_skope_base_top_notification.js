@@ -89,7 +89,7 @@ $.extend( CZRSkopeBaseMths, {
             try {
                   _tmpl =  wp.template( 'czr-top-note' )( { title : _title } );
             } catch( er ) {
-                  api.errorLog( 'Error when parsing the the top note template : ' + er );//@to_translate
+                  api.errorLog( 'Error when parsing the the top note template : ' + er );
                   return false;
             }
             $('#customize-preview').after( $( _tmpl ) );

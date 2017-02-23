@@ -117,7 +117,7 @@ $.extend( CZRSkopeBaseMths, {
                           var _switchBack = function( _title ) {
                                 api.czr_serverNotification({
                                       status:'success',
-                                      message : [ _title, 'can only be customized site wide.' ].join(' ')//@to_translate
+                                      message : [ _title, serverControlParams.i18n.skope['can only be customized sitewide.'] ].join(' ')
                                 });
                                 api.czr_activeSkopeId( self.getGlobalSkopeId() );
                           };
@@ -134,7 +134,7 @@ $.extend( CZRSkopeBaseMths, {
                                       api.czr_serverNotification({
                                             status:'success',
                                             message : [
-                                                  'Menus are created site wide.'//@to_translate
+                                                  serverControlParams.i18n.skope['Menus are created sitewide.']
                                             ].join(' ')
                                       });
                                       //_switchBack( api.section( active_sec_id ).params.title );
@@ -177,7 +177,7 @@ $.extend( CZRSkopeBaseMths, {
                 var _switchBack = function( _title ) {
                       api.czr_serverNotification({
                             status:'success',
-                            message : [ _title, 'can only be customized site wide.' ].join(' ')
+                            message : [ _title, serverControlParams.i18n.skope['can only be customized sitewide.'] ].join(' ')
                       });
                       api.czr_activeSkopeId( self.getGlobalSkopeId() );
                 };
@@ -189,7 +189,7 @@ $.extend( CZRSkopeBaseMths, {
                                   api.czr_serverNotification({
                                         status:'success',
                                         message : [
-                                              'Widgets are created site wide.'//@to_translate
+                                              serverControlParams.i18n.skope['Widgets are created sitewide.']
                                         ].join(' ')
                                   });
                                   //_switchBack( api.panel( active_panel_id ).params.title );

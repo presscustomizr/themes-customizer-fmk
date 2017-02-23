@@ -1,7 +1,7 @@
 
 ( function (api, $, _) {
       var $_nav_section_container,
-          translatedStrings = serverControlParams.translatedStrings || {};
+          i18n = serverControlParams.i18n || {};
 
       api.czr_CrtlDependenciesReady = $.Deferred();
 
@@ -467,7 +467,7 @@
                       return;
 
                     var _oldDes     = api.control('site_icon').params.description;
-                        _newDes     = ['<strong>' , translatedStrings.faviconNote || '' , '</strong><br/><br/>' ].join('') + _oldDes;
+                        _newDes     = ['<strong>' , i18n.faviconNote || '' , '</strong><br/><br/>' ].join('') + _oldDes;
 
                     //on api ready
                     self._printFaviconNote(_newDes );

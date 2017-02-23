@@ -397,7 +397,7 @@ $.extend( CZRSkopeMths, {
                       $( '.czr-scope-reset', skope.container)
                             .fadeIn( 'slow')
                             .attr( 'title', [
-                                  'global' == skope().skope ? 'Reset the theme options published site wide' : 'Reset your website published options for',//@to_translate
+                                  'global' == skope().skope ? 'Reset the theme options published sitewide' : 'Reset your website published options for',//@to_translate
                                   'global' == skope().skope ? '' : skope().title
                             ].join(' ') );//@to_translate
                 }

@@ -23,7 +23,7 @@ $.extend( CZRDynModuleMths, {
               //module.itemConstructor = api.CZRItem.extend( module.CZRItemDynamicMths || {} );
 
               //default success message when item added
-              module.itemAddedMessage = serverControlParams.translatedStrings.successMessage;
+              module.itemAddedMessage = serverControlParams.i18n.successMessage;
 
               ////////////////////////////////////////////////////
               /// MODULE DOM EVENT MAP

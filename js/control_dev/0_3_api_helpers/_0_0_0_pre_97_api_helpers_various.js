@@ -39,7 +39,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             var _searchtext = text.replace( / /g, '+'),
                 _url = [ serverControlParams.docURL, 'search?query=', _searchtext ].join('');
             return [
-              '<a href="' + _url + '" title="' + serverControlParams.translatedStrings.readDocumentation + '" target="_blank">',
+              '<a href="' + _url + '" title="' + serverControlParams.i18n.readDocumentation + '" target="_blank">',
               ' ',
               '<span class="fa fa-question-circle-o"></span>'
             ].join('');

@@ -190,7 +190,7 @@ $.extend( CZRSocialModuleMths, {
               };
 
               //overrides the default success message
-              this.itemAddedMessage = serverControlParams.translatedStrings.socialLinkAdded;
+              this.itemAddedMessage = serverControlParams.i18n.socialLinkAdded;
 
               //fired ready :
               //1) on section expansion
@@ -240,7 +240,7 @@ $.extend( CZRSocialModuleMths, {
                 _new_color = item.czr_Input('social-color')();
 
               //add text follow us... to the title
-              _new_title = [ serverControlParams.translatedStrings.followUs, _new_title].join(' ');
+              _new_title = [ serverControlParams.i18n.followUs, _new_title].join(' ');
 
               if ( is_preItem ) {
                     _new_model = $.extend( _new_model, { title : _new_title, 'social-color' : _new_color } );
@@ -281,7 +281,7 @@ $.extend( CZRSocialModuleMths, {
 
                     //=> add the select text in the pre Item case
                     if ( is_preItem ) {
-                          socialList = _.union( [ serverControlParams.translatedStrings.selectSocialIcon ], socialList );
+                          socialList = _.union( [ serverControlParams.i18n.selectSocialIcon ], socialList );
                     }
 
                     //generates the options

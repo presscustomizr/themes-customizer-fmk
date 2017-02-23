@@ -45,34 +45,30 @@ $.extend( CZRSkopeMths, {
 
             if ( skope.dirtyness() ) {
                   warning_message = [
-                        'Please confirm that you want to reset your current customizations for : ',//@to_translate
-                        skope().title,
-                        '.'
-                  ].join('');
+                        'Please confirm that you want to reset your current ( not published ) customizations for',//@to_translate
+                        skope().ctx_title
+                  ].join(' ');
                   success_message = [
-                        'Your customizations have been reset for ',//@to_translate
-                        skope().title,
-                        '.'
-                  ].join('');
+                        'Your customizations have been reset for',//@to_translate
+                        skope().ctx_title
+                  ].join(' ');
             } else {
                   warning_message = [
-                        'Please confirm that you want to reset your published customizations to defaults for : ',//@to_translate
-                        skope().title,
-                        '.'
-                  ].join('');
+                        'global' == skope().skope ? 'Please confirm that you want to reset your sitewide published customizations. Note : this will not reset the customizations made in other option scopes' : 'Please confirm that you want to reset your published customizations for',//@to_translate
+                        'global' == skope().skope ? '' : skope().ctx_title
+                  ].join(' ');
                   success_message = [
-                        'The options have been reset to defaults for ',//@to_translate
-                        skope().title,
-                        '.'
-                  ].join('');
+                        'Your published customizations have been reset for',//@to_translate
+                        skope().title
+                  ].join(' ');
             }
 
             try {
                   _tmpl =  wp.template( 'czr-skope-pane' )(
                         _.extend( skope_model, {
                               el : skope.el,
-                              warning_message : warning_message,
-                              success_message : success_message
+                              warning_message : warning_message + '.',
+                              success_message : success_message + '.'
                         } )
                   );
             } catch( er ) {

@@ -42,14 +42,14 @@ $.extend( CZRWidgetAreaModuleMths, {
               //declares a default model
               module.defaultItemModel = {
                       id : '',
-                      title : serverControlParams.translatedStrings.widgetZone,
+                      title : serverControlParams.i18n.widgetZone,
                       contexts : _.without( _.keys(module.contexts), '_all_' ),//the server list of contexts is an object, we only need the keys, whitout _all_
                       locations : [ module.serverParams.defaultWidgetLocation ],
                       description : ''
               };
 
               //overrides the default success message
-              this.itemAddedMessage = serverControlParams.translatedStrings.widgetZoneAdded;
+              this.itemAddedMessage = serverControlParams.i18n.widgetZoneAdded;
 
               //Observe and react to sidebar insights from the preview frame
               // SIDEBAR INSIGHTS => stores and observes the sidebars and widgets settings sent by the preview */
@@ -250,7 +250,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                           if (! state.id) { return state.text; }
                           if (  _.contains(available_locs, state.element.value) ) { return state.text; }
                           var $state = $(
-                            '<span class="czr-unavailable-location fa fa-ban" title="' + serverControlParams.translatedStrings.unavailableLocation + '">&nbsp;&nbsp;' + state.text + '</span>'
+                            '<span class="czr-unavailable-location fa fa-ban" title="' + serverControlParams.i18n.unavailableLocation + '">&nbsp;&nbsp;' + state.text + '</span>'
                           );
                           return $state;
                     }
@@ -407,9 +407,9 @@ $.extend( CZRWidgetAreaModuleMths, {
                     }
 
                     //Translated strings
-                    var _locationText = serverControlParams.translatedStrings.locations,
-                        _contextText = serverControlParams.translatedStrings.contexts,
-                        _notsetText = serverControlParams.translatedStrings.notset;
+                    var _locationText = serverControlParams.i18n.locations,
+                        _contextText = serverControlParams.i18n.contexts,
+                        _notsetText = serverControlParams.i18n.notset;
 
                     _locations = _.isEmpty( _locations ) ? '<span style="font-weight: bold;">' + _notsetText + '</span>' : _locations.join(', ');
                     _contexts = _.isEmpty( _contexts ) ? '<span style="font-weight: bold;">' + _notsetText + '</span>' : _contexts.join(', ');
@@ -848,7 +848,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                                 module.getViewEl( _model.id ).addClass('inactive');
                                 if ( ! module.getViewEl( _model.id ).find('.czr-inactive-alert').length ) {
                                       module.getViewEl( _model.id ).find('.czr-item-title').append(
-                                        $('<span/>', {class : "czr-inactive-alert", html : " [ " + serverControlParams.translatedStrings.inactiveWidgetZone + " ]" })
+                                        $('<span/>', {class : "czr-inactive-alert", html : " [ " + serverControlParams.i18n.inactiveWidgetZone + " ]" })
                                       );
                                 }
                           }
@@ -974,8 +974,8 @@ $.extend( CZRWidgetAreaModuleMths, {
               var $_alert_el = $view.find('.czr-location-alert');
               if ( ! $_alert_el.length ) {
                     var _html = [
-                      '<span>' + serverControlParams.translatedStrings.locationWarning + '</span>',
-                      api.CZR_Helpers.getDocSearchLink( serverControlParams.translatedStrings.locationWarning ),
+                      '<span>' + serverControlParams.i18n.locationWarning + '</span>',
+                      api.CZR_Helpers.getDocSearchLink( serverControlParams.i18n.locationWarning ),
                     ].join('');
 
                     $_alert_el = $('<div/>', {

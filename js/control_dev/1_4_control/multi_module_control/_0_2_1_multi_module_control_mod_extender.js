@@ -353,9 +353,9 @@ $.extend( CZRMultiModuleControlMths, {
 
                             // $_edit_icon.toggleClass('active' , expanded );
                             // if ( expanded )
-                            //   $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.translatedStrings.close );
+                            //   $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.i18n.close );
                             // else
-                            //   $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.translatedStrings.edit );
+                            //   $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.i18n.edit );
 
                             //scroll to the currently expanded view
                             if ( expanded )

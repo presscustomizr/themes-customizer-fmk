@@ -5,10 +5,12 @@ $.extend( CZRSkopeBaseMths, {
 
     getAppliedPrioritySkopeId : function( setId, skope_id ) {
           if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
-              throw new Error('getAppliedPrioritySkopeId : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+                api.errorLog( 'getAppliedPrioritySkopeId : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+                return skope_id;
           }
           if ( ! api.czr_skope.has( skope_id ) ) {
-              throw new Error('getAppliedPrioritySkopeId : the requested skope id is not registered : ' + skope_id );
+                api.errorLog( 'getAppliedPrioritySkopeId : the requested skope id is not registered : ' + skope_id );
+                return skope_id;
           }
 
           //Are we already in the 'local' skope ?
@@ -43,35 +45,36 @@ $.extend( CZRSkopeBaseMths, {
                 //do we have a db val stored ?
                 var _skope_db_val = self._getDBSettingVal( setId, _skp_id);
                 if ( _skope_db_val != '_no_db_val' ) {
-                  return skope_model.id;
+                      return skope_model.id;
                 }
                 //if we are already in the final 'local' skope, then let's return its value
                 else if( 'global' == skope_model.skope ) {
-                  // if ( _.isNull(initial_val) ) {
-                  //   throw new Error('INITIAL VAL IS NULL FOR SETTING ' + setId + ' CHECK IF IT HAS BEEN DYNAMICALLY ADDED. IF SO, THERE SHOULD BE A DIRTY TO GRAB');
-                  // }
-                  return skope_model.id;
+                      // if ( _.isNull(initial_val) ) {
+                      //   throw new Error('INITIAL VAL IS NULL FOR SETTING ' + setId + ' CHECK IF IT HAS BEEN DYNAMICALLY ADDED. IF SO, THERE SHOULD BE A DIRTY TO GRAB');
+                      // }
+                      return skope_model.id;
                 }
                 else {
-                  //if not dirty and no db val, then let's recursively apply the inheritance
-                  return '___' != val_candidate ? skope_model.title : _salmonToMatch( self._getParentSkopeId( skope_model ) );
+                      //if not dirty and no db val, then let's recursively apply the inheritance
+                      return '___' != val_candidate ? skope_model.title : _salmonToMatch( self._getParentSkopeId( skope_model ) );
                 }
           };
           return _salmonToMatch( _local_skope_id );
     },
 
-    //@return the skope title from which a setting id inherits its current value
+    //@return string : the skope title from which a setting id inherits its current value
     getOverridenSkopeTitles : function() {
           var skope_id = skope_id || api.czr_activeSkopeId();
           if ( ! api.czr_skope.has( skope_id ) ) {
-                throw new Error('getInheritedSkopeTitles : the requested skope id is not registered : ' + skope_id );
+                api.errorLog( 'getInheritedSkopeTitles : the requested skope id is not registered : ' + skope_id );
+                return '';
           }
            //Are we already in the 'local' skope ?
           var self = this,
               _local_skope_id = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
 
           if ( _.isUndefined( _local_skope_id ) || skope_id == _local_skope_id )
-            return;
+            return '';
 
           //start from local and do the salmon
           var _salmonToMatch = function( _skp_id, _skp_ids ) {
@@ -86,17 +89,19 @@ $.extend( CZRSkopeBaseMths, {
 
           return _.map( _salmonToMatch( _local_skope_id ), function( id ) {
                 return self.buildSkopeLink( id );
-          }).join(' and ');//@to_translate
+          }).join( ' ' + serverControlParams.i18n.skope['and'] + ' ' );
     },
 
 
     //@return the skope title from which a setting id inherits its current value
     getInheritedSkopeId : function( setId, skope_id ) {
           if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
-              throw new Error('getInheritedSkopeId : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+                api.errorLog( 'getInheritedSkopeId : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+                return skope_id;
           }
           if ( ! api.czr_skope.has( skope_id ) ) {
-              throw new Error('getInheritedSkopeId : the requested skope id is not registered : ' + skope_id );
+                api.errorLog( 'getInheritedSkopeId : the requested skope id is not registered : ' + skope_id );
+                return skope_id;
           }
 
           var self = this,
@@ -139,10 +144,12 @@ $.extend( CZRSkopeBaseMths, {
 
 
     //@return the skope title from which a setting id inherits its current value
+    //@return string
     getInheritedSkopeTitles : function( skope_id, skope_ids ) {
           skope_id = skope_id || api.czr_activeSkopeId();
           if ( ! api.czr_skope.has( skope_id ) ) {
-                throw new Error('getInheritedSkopeTitles : the requested skope id is not registered : ' + skope_id );
+                api.errorLog( 'getInheritedSkopeTitles : the requested skope id is not registered : ' + skope_id );
+                return '';
           }
           skope_ids = skope_ids || [];
           var self = this,
@@ -156,15 +163,16 @@ $.extend( CZRSkopeBaseMths, {
 
           return _.map( skope_ids, function( id ) {
                 return self.buildSkopeLink( id );
-          }).join(' and ');//@to_translate
+          }).join(' ' + serverControlParams.i18n.skope['and'] + ' ');
     },
 
-
+    //@return string
     buildSkopeLink : function( skope_id ) {
           if ( ! api.czr_skope.has( skope_id ) ) {
-                throw new Error('buildSkopeLink : the requested skope id is not registered : ' + skope_id );
+                api.errorLog( 'buildSkopeLink : the requested skope id is not registered : ' + skope_id );
+                return '';
           }
-          var _link_title = "Switch to scope : " + api.czr_skope( skope_id )().title;//@to_translate
+          var _link_title = [ serverControlParams.i18n.skope['Switch to scope'], api.czr_skope( skope_id )().title ].join(' : ');
           return [
                 '<span class="czr-skope-switch" title=" ' + _link_title + '" data-skope-id="' + skope_id + '">',
                 api.czr_skope( skope_id )().title,
@@ -180,10 +188,12 @@ $.extend( CZRSkopeBaseMths, {
     //@return an api setting value
     getSkopeSettingVal : function( setId, skope_id ) {
           if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
-              throw new Error('getSkopeSettingVal : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+                api.errorLog( 'getSkopeSettingVal : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+                return null;
           }
           if ( ! api.czr_skope.has( skope_id ) ) {
-              throw new Error('getSkopeSettingVal : the requested skope id is not registered : ' + skope_id );
+                api.errorLog( 'getSkopeSettingVal : the requested skope id is not registered : ' + skope_id );
+                return null;
           }
 
           var self = this,

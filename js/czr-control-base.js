@@ -66,8 +66,8 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
       };
       //Dev mode aware and IE compatible api.consoleLog()
       api.consoleLog = function() {
-            // if ( ! serverControlParams.isDevMode )
-            //   return;
+            if ( ! serverControlParams.isDevMode )
+              return;
             //fix for IE, because console is only defined when in F12 debugging mode in IE
             if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
               return;
@@ -1131,10 +1131,10 @@ $.extend( CZRSkopeBaseMths, {
                         resp = 'Server Error';
                   }
             } else if ( ! resp ) {
-                  resp = '0' === _r ? 'Not logged in.' : _r;//@to_translate
+                  resp = '0' === _r ? 'Not logged in.' : _r;
             } else if ( '-1' === _r ) {
               // Back-compat in case any other check_ajax_referer() call is dying
-                  resp = 'Identification issue detected, please refresh your page.';//@to_translate
+                  resp = 'Identification issue detected, please refresh your page.';
             }
             return resp;
       }
@@ -1230,7 +1230,7 @@ $.extend( CZRSkopeBaseMths, {
             try {
                   _tmpl =  wp.template( 'czr-top-note' )( { title : _title } );
             } catch( er ) {
-                  api.errorLog( 'Error when parsing the the top note template : ' + er );//@to_translate
+                  api.errorLog( 'Error when parsing the the top note template : ' + er );
                   return false;
             }
             $('#customize-preview').after( $( _tmpl ) );
@@ -1519,7 +1519,7 @@ $.extend( CZRSkopeBaseMths, {
                           var _switchBack = function( _title ) {
                                 api.czr_serverNotification({
                                       status:'success',
-                                      message : [ _title, 'can only be customized site wide.' ].join(' ')//@to_translate
+                                      message : [ _title, serverControlParams.i18n.skope['can only be customized sitewide.'] ].join(' ')
                                 });
                                 api.czr_activeSkopeId( self.getGlobalSkopeId() );
                           };
@@ -1536,7 +1536,7 @@ $.extend( CZRSkopeBaseMths, {
                                       api.czr_serverNotification({
                                             status:'success',
                                             message : [
-                                                  'Menus are created site wide.'//@to_translate
+                                                  serverControlParams.i18n.skope['Menus are created sitewide.']
                                             ].join(' ')
                                       });
                                       //_switchBack( api.section( active_sec_id ).params.title );
@@ -1579,7 +1579,7 @@ $.extend( CZRSkopeBaseMths, {
                 var _switchBack = function( _title ) {
                       api.czr_serverNotification({
                             status:'success',
-                            message : [ _title, 'can only be customized site wide.' ].join(' ')
+                            message : [ _title, serverControlParams.i18n.skope['can only be customized sitewide.'] ].join(' ')
                       });
                       api.czr_activeSkopeId( self.getGlobalSkopeId() );
                 };
@@ -1591,7 +1591,7 @@ $.extend( CZRSkopeBaseMths, {
                                   api.czr_serverNotification({
                                         status:'success',
                                         message : [
-                                              'Widgets are created site wide.'//@to_translate
+                                              serverControlParams.i18n.skope['Widgets are created sitewide.']
                                         ].join(' ')
                                   });
                                   //_switchBack( api.panel( active_panel_id ).params.title );
@@ -2124,10 +2124,12 @@ $.extend( CZRSkopeBaseMths, {
 
     getAppliedPrioritySkopeId : function( setId, skope_id ) {
           if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
-              throw new Error('getAppliedPrioritySkopeId : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+                api.errorLog( 'getAppliedPrioritySkopeId : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+                return skope_id;
           }
           if ( ! api.czr_skope.has( skope_id ) ) {
-              throw new Error('getAppliedPrioritySkopeId : the requested skope id is not registered : ' + skope_id );
+                api.errorLog( 'getAppliedPrioritySkopeId : the requested skope id is not registered : ' + skope_id );
+                return skope_id;
           }
 
           //Are we already in the 'local' skope ?
@@ -2162,35 +2164,36 @@ $.extend( CZRSkopeBaseMths, {
                 //do we have a db val stored ?
                 var _skope_db_val = self._getDBSettingVal( setId, _skp_id);
                 if ( _skope_db_val != '_no_db_val' ) {
-                  return skope_model.id;
+                      return skope_model.id;
                 }
                 //if we are already in the final 'local' skope, then let's return its value
                 else if( 'global' == skope_model.skope ) {
-                  // if ( _.isNull(initial_val) ) {
-                  //   throw new Error('INITIAL VAL IS NULL FOR SETTING ' + setId + ' CHECK IF IT HAS BEEN DYNAMICALLY ADDED. IF SO, THERE SHOULD BE A DIRTY TO GRAB');
-                  // }
-                  return skope_model.id;
+                      // if ( _.isNull(initial_val) ) {
+                      //   throw new Error('INITIAL VAL IS NULL FOR SETTING ' + setId + ' CHECK IF IT HAS BEEN DYNAMICALLY ADDED. IF SO, THERE SHOULD BE A DIRTY TO GRAB');
+                      // }
+                      return skope_model.id;
                 }
                 else {
-                  //if not dirty and no db val, then let's recursively apply the inheritance
-                  return '___' != val_candidate ? skope_model.title : _salmonToMatch( self._getParentSkopeId( skope_model ) );
+                      //if not dirty and no db val, then let's recursively apply the inheritance
+                      return '___' != val_candidate ? skope_model.title : _salmonToMatch( self._getParentSkopeId( skope_model ) );
                 }
           };
           return _salmonToMatch( _local_skope_id );
     },
 
-    //@return the skope title from which a setting id inherits its current value
+    //@return string : the skope title from which a setting id inherits its current value
     getOverridenSkopeTitles : function() {
           var skope_id = skope_id || api.czr_activeSkopeId();
           if ( ! api.czr_skope.has( skope_id ) ) {
-                throw new Error('getInheritedSkopeTitles : the requested skope id is not registered : ' + skope_id );
+                api.errorLog( 'getInheritedSkopeTitles : the requested skope id is not registered : ' + skope_id );
+                return '';
           }
            //Are we already in the 'local' skope ?
           var self = this,
               _local_skope_id = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
 
           if ( _.isUndefined( _local_skope_id ) || skope_id == _local_skope_id )
-            return;
+            return '';
 
           //start from local and do the salmon
           var _salmonToMatch = function( _skp_id, _skp_ids ) {
@@ -2205,17 +2208,19 @@ $.extend( CZRSkopeBaseMths, {
 
           return _.map( _salmonToMatch( _local_skope_id ), function( id ) {
                 return self.buildSkopeLink( id );
-          }).join(' and ');//@to_translate
+          }).join( ' ' + serverControlParams.i18n.skope['and'] + ' ' );
     },
 
 
     //@return the skope title from which a setting id inherits its current value
     getInheritedSkopeId : function( setId, skope_id ) {
           if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
-              throw new Error('getInheritedSkopeId : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+                api.errorLog( 'getInheritedSkopeId : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+                return skope_id;
           }
           if ( ! api.czr_skope.has( skope_id ) ) {
-              throw new Error('getInheritedSkopeId : the requested skope id is not registered : ' + skope_id );
+                api.errorLog( 'getInheritedSkopeId : the requested skope id is not registered : ' + skope_id );
+                return skope_id;
           }
 
           var self = this,
@@ -2258,10 +2263,12 @@ $.extend( CZRSkopeBaseMths, {
 
 
     //@return the skope title from which a setting id inherits its current value
+    //@return string
     getInheritedSkopeTitles : function( skope_id, skope_ids ) {
           skope_id = skope_id || api.czr_activeSkopeId();
           if ( ! api.czr_skope.has( skope_id ) ) {
-                throw new Error('getInheritedSkopeTitles : the requested skope id is not registered : ' + skope_id );
+                api.errorLog( 'getInheritedSkopeTitles : the requested skope id is not registered : ' + skope_id );
+                return '';
           }
           skope_ids = skope_ids || [];
           var self = this,
@@ -2275,15 +2282,16 @@ $.extend( CZRSkopeBaseMths, {
 
           return _.map( skope_ids, function( id ) {
                 return self.buildSkopeLink( id );
-          }).join(' and ');//@to_translate
+          }).join(' ' + serverControlParams.i18n.skope['and'] + ' ');
     },
 
-
+    //@return string
     buildSkopeLink : function( skope_id ) {
           if ( ! api.czr_skope.has( skope_id ) ) {
-                throw new Error('buildSkopeLink : the requested skope id is not registered : ' + skope_id );
+                api.errorLog( 'buildSkopeLink : the requested skope id is not registered : ' + skope_id );
+                return '';
           }
-          var _link_title = "Switch to scope : " + api.czr_skope( skope_id )().title;//@to_translate
+          var _link_title = [ serverControlParams.i18n.skope['Switch to scope'], api.czr_skope( skope_id )().title ].join(' : ');
           return [
                 '<span class="czr-skope-switch" title=" ' + _link_title + '" data-skope-id="' + skope_id + '">',
                 api.czr_skope( skope_id )().title,
@@ -2299,10 +2307,12 @@ $.extend( CZRSkopeBaseMths, {
     //@return an api setting value
     getSkopeSettingVal : function( setId, skope_id ) {
           if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
-              throw new Error('getSkopeSettingVal : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+                api.errorLog( 'getSkopeSettingVal : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
+                return null;
           }
           if ( ! api.czr_skope.has( skope_id ) ) {
-              throw new Error('getSkopeSettingVal : the requested skope id is not registered : ' + skope_id );
+                api.errorLog( 'getSkopeSettingVal : the requested skope id is not registered : ' + skope_id );
+                return null;
           }
 
           var self = this,
@@ -2812,7 +2822,7 @@ $.extend( CZRSkopeBaseMths, {
                 api.czr_activeSkopeId( self.getGlobalSkopeId() );
                 api.czr_serverNotification({
                       status:'success',
-                      message : [ _title , 'can only be customized site wide.' ].join(' ')
+                      message : [ _title , 'can only be customized sitewide.' ].join(' ')
                 });
                 return dfd.resolve().promise();
           };
@@ -2820,7 +2830,7 @@ $.extend( CZRSkopeBaseMths, {
                 api.czr_serverNotification({
                       status:'success',
                       message : [
-                            'Widgets are created site wide.'//@to_translate
+                            'Widgets are created sitewide.'//@to_translate
                       ].join(' ')
                 });
                 //return dfd.resolve().promise();// _switchBack( api.panel( api.czr_activePanelId() ).params.title );
@@ -2835,7 +2845,7 @@ $.extend( CZRSkopeBaseMths, {
                 api.czr_serverNotification({
                       status:'success',
                       message : [
-                            'Menus are created site wide.'//@to_translate
+                            'Menus are created sitewide.'//@to_translate
                       ].join(' ')
                 });
                 //_switchBack( api.section( api.czr_activeSectionId() ).params.title );
@@ -3868,7 +3878,6 @@ $.extend( CZRSkopeBaseMths, {
           var self = this,
               ctrl = api.control( ctrlId ),
               setId = api.CZR_Helpers.getControlSettingId( ctrlId ),
-
               _tmpl = '',
               warning_message,
               success_message,
@@ -3879,25 +3888,24 @@ $.extend( CZRSkopeBaseMths, {
                     if ( ! _.contains( serverControlParams.themeSettingList, api.CZR_Helpers.getOptionName( setId ) ) )
                       return true;
                     return false;
-              })();
+              })(),
+              _currentSkopeModel = api.czr_skope( api.czr_activeSkopeId() )();
 
           if ( ctrl.czr_states( 'isDirty' )() ) {
                 warning_message = [
-                    'Please confirm that you want to reset your current customizations for this option in ',//@to_translate
-                    api.czr_skope( api.czr_activeSkopeId() )().title,
-                    '.',
-                ].join('');
-                success_message = 'Your customizations have been reset.';//@to_translate
+                      'global' == _currentSkopeModel.skope ? serverControlParams.i18n.skope['Please confirm that you want to reset your current customizations for this option'] : serverControlParams.i18n.skope['Please confirm that you want to reset your current customizations for this option in'],
+                      'global' == _currentSkopeModel.skope ? serverControlParams.i18n.skope['sitewide'] : _currentSkopeModel.ctx_title
+                ].join(' ');
+                success_message = serverControlParams.i18n.skope['Your customizations have been reset'];
           } else {
-                if ( isWPSetting && 'global' == api.czr_skope( api.czr_activeSkopeId() )().skope ) {
-                      warning_message = 'This WordPress setting can not be reset site wide.';//@to_translate
+                if ( isWPSetting && 'global' == _currentSkopeModel.skope ) {
+                      warning_message = serverControlParams.i18n.skope['This WordPress setting can not be reset sitewide'];
                 } else {
                       warning_message = [
-                          'Please confirm that you want to reset this option in ',//@to_translate
-                          api.czr_skope( api.czr_activeSkopeId() )().title,
-                          '.'
-                      ].join('');//@to_translate
-                      success_message = 'The options have been reset.';//@to_translate
+                          'global' == _currentSkopeModel.skope ? serverControlParams.i18n.skope['Please confirm that you want to reset this option'] : serverControlParams.i18n.skope['Please confirm that you want to reset this option in'],
+                          'global' == _currentSkopeModel.skope ? serverControlParams.i18n.skope['sitewide'] : _currentSkopeModel.ctx_title
+                      ].join(' ');
+                      success_message = serverControlParams.i18n.skope['The option has been reset'];
                 }
           }
 
@@ -3907,14 +3915,14 @@ $.extend( CZRSkopeBaseMths, {
           //3) setting not dirty => db reset
           var is_authorized = ! ( isWPSetting && 'global' == api.czr_skope( api.czr_activeSkopeId() )().skope && ! ctrl.czr_states( 'isDirty' )() ),
               _tmpl_data = {
-                    warning_message : warning_message,
-                    success_message : success_message,
+                    warning_message : warning_message + '.',
+                    success_message : success_message + '.',
                     is_authorized : is_authorized
               };
           try {
                 _tmpl =  wp.template('czr-reset-control')( _tmpl_data );
           } catch( er ) {
-                api.errorLog( 'Error when parsing the the reset control template : ' + er );//@to_translate
+                api.errorLog( 'Error when parsing the the reset control template : ' + er );
                 return { container : false, is_authorized : false };
           }
 
@@ -5698,7 +5706,7 @@ $.extend( CZRSkopeMths, {
                       $( '.czr-scope-reset', skope.container)
                             .fadeIn( 'slow')
                             .attr( 'title', [
-                                  'global' == skope().skope ? 'Reset the theme options published site wide' : 'Reset your website published options for',//@to_translate
+                                  'global' == skope().skope ? 'Reset the theme options published sitewide' : 'Reset your website published options for',//@to_translate
                                   'global' == skope().skope ? '' : skope().title
                             ].join(' ') );//@to_translate
                 }
@@ -5827,34 +5835,30 @@ $.extend( CZRSkopeMths, {
 
             if ( skope.dirtyness() ) {
                   warning_message = [
-                        'Please confirm that you want to reset your current customizations for : ',//@to_translate
-                        skope().title,
-                        '.'
-                  ].join('');
+                        'Please confirm that you want to reset your current ( not published ) customizations for',//@to_translate
+                        skope().ctx_title
+                  ].join(' ');
                   success_message = [
-                        'Your customizations have been reset for ',//@to_translate
-                        skope().title,
-                        '.'
-                  ].join('');
+                        'Your customizations have been reset for',//@to_translate
+                        skope().ctx_title
+                  ].join(' ');
             } else {
                   warning_message = [
-                        'Please confirm that you want to reset your published customizations to defaults for : ',//@to_translate
-                        skope().title,
-                        '.'
-                  ].join('');
+                        'global' == skope().skope ? 'Please confirm that you want to reset your sitewide published customizations. Note : this will not reset the customizations made in other option scopes' : 'Please confirm that you want to reset your published customizations for',//@to_translate
+                        'global' == skope().skope ? '' : skope().ctx_title
+                  ].join(' ');
                   success_message = [
-                        'The options have been reset to defaults for ',//@to_translate
-                        skope().title,
-                        '.'
-                  ].join('');
+                        'Your published customizations have been reset for',//@to_translate
+                        skope().title
+                  ].join(' ');
             }
 
             try {
                   _tmpl =  wp.template( 'czr-skope-pane' )(
                         _.extend( skope_model, {
                               el : skope.el,
-                              warning_message : warning_message,
-                              success_message : success_message
+                              warning_message : warning_message + '.',
+                              success_message : success_message + '.'
                         } )
                   );
             } catch( er ) {
@@ -7285,7 +7289,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             var _searchtext = text.replace( / /g, '+'),
                 _url = [ serverControlParams.docURL, 'search?query=', _searchtext ].join('');
             return [
-              '<a href="' + _url + '" title="' + serverControlParams.translatedStrings.readDocumentation + '" target="_blank">',
+              '<a href="' + _url + '" title="' + serverControlParams.i18n.readDocumentation + '" target="_blank">',
               ' ',
               '<span class="fa fa-question-circle-o"></span>'
             ].join('');
@@ -8297,7 +8301,7 @@ $.extend( CZRInputMths , {
   },
 
   getUploaderLabels : function() {
-        var _ts = serverControlParams.translatedStrings,
+        var _ts = serverControlParams.i18n,
             _map = {
             'select'      : _ts.select_image,
             'change'      : _ts.change_image,
@@ -8772,7 +8776,7 @@ $.extend( CZRInputMths , {
       czrSetToggleButtonText : function( $_expanded ) {
               var input = this;
 
-              input.toggleButton.text( serverControlParams.translatedStrings[ ! $_expanded ? 'textEditorOpen' : 'textEditorClose' ] );
+              input.toggleButton.text( serverControlParams.i18n[ ! $_expanded ? 'textEditorOpen' : 'textEditorClose' ] );
       }
 });//$.extend
 })( wp.customize , jQuery, _ );//extends api.Value
@@ -9321,9 +9325,9 @@ $.extend( CZRItemMths , {
 
                       $_edit_icon.toggleClass('active' , visible );
                       if ( visible )
-                        $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.translatedStrings.close );
+                        $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.i18n.close );
                       else
-                        $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.translatedStrings.edit );
+                        $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.i18n.edit );
 
                       //scroll to the currently expanded view
                       if ( 'expanded' == status )
@@ -10702,7 +10706,7 @@ $.extend( CZRDynModuleMths, {
               //module.itemConstructor = api.CZRItem.extend( module.CZRItemDynamicMths || {} );
 
               //default success message when item added
-              module.itemAddedMessage = serverControlParams.translatedStrings.successMessage;
+              module.itemAddedMessage = serverControlParams.i18n.successMessage;
 
               ////////////////////////////////////////////////////
               /// MODULE DOM EVENT MAP
@@ -11132,7 +11136,7 @@ $.extend( CZRSocialModuleMths, {
               };
 
               //overrides the default success message
-              this.itemAddedMessage = serverControlParams.translatedStrings.socialLinkAdded;
+              this.itemAddedMessage = serverControlParams.i18n.socialLinkAdded;
 
               //fired ready :
               //1) on section expansion
@@ -11182,7 +11186,7 @@ $.extend( CZRSocialModuleMths, {
                 _new_color = item.czr_Input('social-color')();
 
               //add text follow us... to the title
-              _new_title = [ serverControlParams.translatedStrings.followUs, _new_title].join(' ');
+              _new_title = [ serverControlParams.i18n.followUs, _new_title].join(' ');
 
               if ( is_preItem ) {
                     _new_model = $.extend( _new_model, { title : _new_title, 'social-color' : _new_color } );
@@ -11223,7 +11227,7 @@ $.extend( CZRSocialModuleMths, {
 
                     //=> add the select text in the pre Item case
                     if ( is_preItem ) {
-                          socialList = _.union( [ serverControlParams.translatedStrings.selectSocialIcon ], socialList );
+                          socialList = _.union( [ serverControlParams.i18n.selectSocialIcon ], socialList );
                     }
 
                     //generates the options
@@ -11381,14 +11385,14 @@ $.extend( CZRWidgetAreaModuleMths, {
               //declares a default model
               module.defaultItemModel = {
                       id : '',
-                      title : serverControlParams.translatedStrings.widgetZone,
+                      title : serverControlParams.i18n.widgetZone,
                       contexts : _.without( _.keys(module.contexts), '_all_' ),//the server list of contexts is an object, we only need the keys, whitout _all_
                       locations : [ module.serverParams.defaultWidgetLocation ],
                       description : ''
               };
 
               //overrides the default success message
-              this.itemAddedMessage = serverControlParams.translatedStrings.widgetZoneAdded;
+              this.itemAddedMessage = serverControlParams.i18n.widgetZoneAdded;
 
               //Observe and react to sidebar insights from the preview frame
               // SIDEBAR INSIGHTS => stores and observes the sidebars and widgets settings sent by the preview */
@@ -11589,7 +11593,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                           if (! state.id) { return state.text; }
                           if (  _.contains(available_locs, state.element.value) ) { return state.text; }
                           var $state = $(
-                            '<span class="czr-unavailable-location fa fa-ban" title="' + serverControlParams.translatedStrings.unavailableLocation + '">&nbsp;&nbsp;' + state.text + '</span>'
+                            '<span class="czr-unavailable-location fa fa-ban" title="' + serverControlParams.i18n.unavailableLocation + '">&nbsp;&nbsp;' + state.text + '</span>'
                           );
                           return $state;
                     }
@@ -11746,9 +11750,9 @@ $.extend( CZRWidgetAreaModuleMths, {
                     }
 
                     //Translated strings
-                    var _locationText = serverControlParams.translatedStrings.locations,
-                        _contextText = serverControlParams.translatedStrings.contexts,
-                        _notsetText = serverControlParams.translatedStrings.notset;
+                    var _locationText = serverControlParams.i18n.locations,
+                        _contextText = serverControlParams.i18n.contexts,
+                        _notsetText = serverControlParams.i18n.notset;
 
                     _locations = _.isEmpty( _locations ) ? '<span style="font-weight: bold;">' + _notsetText + '</span>' : _locations.join(', ');
                     _contexts = _.isEmpty( _contexts ) ? '<span style="font-weight: bold;">' + _notsetText + '</span>' : _contexts.join(', ');
@@ -12187,7 +12191,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                                 module.getViewEl( _model.id ).addClass('inactive');
                                 if ( ! module.getViewEl( _model.id ).find('.czr-inactive-alert').length ) {
                                       module.getViewEl( _model.id ).find('.czr-item-title').append(
-                                        $('<span/>', {class : "czr-inactive-alert", html : " [ " + serverControlParams.translatedStrings.inactiveWidgetZone + " ]" })
+                                        $('<span/>', {class : "czr-inactive-alert", html : " [ " + serverControlParams.i18n.inactiveWidgetZone + " ]" })
                                       );
                                 }
                           }
@@ -12313,8 +12317,8 @@ $.extend( CZRWidgetAreaModuleMths, {
               var $_alert_el = $view.find('.czr-location-alert');
               if ( ! $_alert_el.length ) {
                     var _html = [
-                      '<span>' + serverControlParams.translatedStrings.locationWarning + '</span>',
-                      api.CZR_Helpers.getDocSearchLink( serverControlParams.translatedStrings.locationWarning ),
+                      '<span>' + serverControlParams.i18n.locationWarning + '</span>',
+                      api.CZR_Helpers.getDocSearchLink( serverControlParams.i18n.locationWarning ),
                     ].join('');
 
                     $_alert_el = $('<div/>', {
@@ -13787,9 +13791,9 @@ $.extend( CZRMultiModuleControlMths, {
 
                             // $_edit_icon.toggleClass('active' , expanded );
                             // if ( expanded )
-                            //   $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.translatedStrings.close );
+                            //   $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.i18n.close );
                             // else
-                            //   $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.translatedStrings.edit );
+                            //   $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.i18n.edit );
 
                             //scroll to the currently expanded view
                             if ( expanded )
@@ -14242,7 +14246,7 @@ $.extend( CZRLayoutSelectMths , {
 })( wp.customize, jQuery, _ );
 ( function (api, $, _) {
       var $_nav_section_container,
-          translatedStrings = serverControlParams.translatedStrings || {};
+          i18n = serverControlParams.i18n || {};
 
       api.czr_CrtlDependenciesReady = $.Deferred();
 
@@ -14708,7 +14712,7 @@ $.extend( CZRLayoutSelectMths , {
                       return;
 
                     var _oldDes     = api.control('site_icon').params.description;
-                        _newDes     = ['<strong>' , translatedStrings.faviconNote || '' , '</strong><br/><br/>' ].join('') + _oldDes;
+                        _newDes     = ['<strong>' , i18n.faviconNote || '' , '</strong><br/><br/>' ].join('') + _oldDes;
 
                     //on api ready
                     self._printFaviconNote(_newDes );
