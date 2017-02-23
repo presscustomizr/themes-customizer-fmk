@@ -1,6 +1,5 @@
 
 (function ( api, $, _ ) {
-
 //provides a description of each module
       //=> will determine :
       //1) how to initialize the module model. If not crud, then the initial item(s) model shall be provided
@@ -40,5 +39,4 @@
                   name : 'WP Text Editor'
             }
       });
-
 })( wp.customize, jQuery, _ );

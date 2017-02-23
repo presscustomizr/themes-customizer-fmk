@@ -1,5 +1,5 @@
 
-(function ( api, $, _ ) {
+( function ( api, $, _ ) {
       //Extends some constructors with the events manager
       $.extend( CZRBaseControlMths, api.Events );
       $.extend( api.Control.prototype, api.Events );//ensures that the default WP control constructor is extended as well
@@ -107,5 +107,4 @@
             password : '',
             range_slider : 'setupRangeSlider'
       });
-
 })( wp.customize, jQuery, _ );

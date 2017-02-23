@@ -1,5 +1,6 @@
 
 var CZRSkopeResetMths = CZRSkopeResetMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeResetMths, {
       initialize: function() {
             var self = this;
@@ -121,22 +122,6 @@ $.extend( CZRSkopeResetMths, {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       //args : {
       //  is_setting : false,
       //  is_skope : false,
@@ -243,3 +228,4 @@ $.extend( CZRSkopeResetMths, {
             return dfd.promise();
       }
 });//$.extend
+})( wp.customize , jQuery, _ );

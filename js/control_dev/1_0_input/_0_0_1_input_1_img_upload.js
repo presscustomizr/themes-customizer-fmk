@@ -1,4 +1,5 @@
 var CZRInputMths = CZRInputMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRInputMths , {
     setupImageUploader : function() {
           var input        = this,
@@ -200,3 +201,4 @@ $.extend( CZRInputMths , {
         return _map;
   }
 });//$.extend
+})( wp.customize , jQuery, _ );

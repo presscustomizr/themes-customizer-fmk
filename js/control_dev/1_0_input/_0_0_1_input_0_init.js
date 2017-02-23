@@ -12,6 +12,7 @@ var CZRInputMths = CZRInputMths || {};
 // type : $(this).attr('data-input-type'),
 // is_mod_opt : bool,
 // is_preItemInput : bool
+( function ( api, $, _ ) {
 $.extend( CZRInputMths , {
     initialize: function( name, options ) {
           if ( _.isUndefined( options.input_parent ) || _.isEmpty(options.input_parent) ) {
@@ -269,3 +270,4 @@ $.extend( CZRInputMths , {
               });
         }
 });//$.extend
+})( wp.customize , jQuery, _ );

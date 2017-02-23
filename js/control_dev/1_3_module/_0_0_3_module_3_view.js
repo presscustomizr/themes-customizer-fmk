@@ -4,9 +4,10 @@
 //Setup the collection of items
 //renders the module view
 //Listen to items collection changes and update the control setting
-var CZRModuleMths = CZRModuleMths || {};
-$.extend( CZRModuleMths, {
 
+var CZRModuleMths = CZRModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRModuleMths, {
       //fired on module.isReady.done()
       //the module.container is set. Either as the control.container or the single module wrapper in a sektion
       renderModuleParts : function() {
@@ -255,3 +256,4 @@ $.extend( CZRModuleMths, {
             );
       }
 });//$.extend
+})( wp.customize , jQuery, _ );

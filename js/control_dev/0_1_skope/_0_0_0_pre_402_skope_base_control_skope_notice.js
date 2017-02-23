@@ -4,6 +4,7 @@
 * THE SKOPE BASE OBJECT
 *****************************************************************************/
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
     //fired when a section is expanded
@@ -235,3 +236,4 @@ $.extend( CZRSkopeBaseMths, {
           });
     }
 });//$.extend()
+})( wp.customize , jQuery, _ );

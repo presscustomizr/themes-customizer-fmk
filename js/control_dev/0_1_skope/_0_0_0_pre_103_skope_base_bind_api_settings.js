@@ -1,5 +1,6 @@
 
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+(function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * WORDPRESS API ACTIONS ON INIT
@@ -73,3 +74,4 @@ $.extend( CZRSkopeBaseMths, {
           }
     }
 });//$.extend()
+})( wp.customize , jQuery, _ );

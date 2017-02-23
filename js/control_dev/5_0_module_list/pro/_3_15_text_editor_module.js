@@ -1,7 +1,7 @@
 //extends api.CZRDynModule
 
 var CZRTextEditorModuleMths = CZRTextEditorModuleMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRTextEditorModuleMths, {
   initialize: function( id, options ) {
           var module = this;
@@ -50,4 +50,5 @@ $.extend( CZRTextEditorModuleMths, {
   CZRTextEditorItem : {
 
   },
-});
+});//extend
+})( wp.customize , jQuery, _ );

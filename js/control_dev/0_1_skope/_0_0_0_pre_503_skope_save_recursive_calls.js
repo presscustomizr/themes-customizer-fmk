@@ -1,5 +1,6 @@
 
 var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeSaveMths, {
       //PROCESS SUBMISSIONS
       //ALWAYS FIRE THE GLOBAL SKOPE WHEN ALL OTHER SKOPES HAVE BEEN DONE.
@@ -165,6 +166,7 @@ $.extend( CZRSkopeSaveMths, {
             return dfd.promise();
       }
 });//$.extend
+})( wp.customize , jQuery, _ );
 
 
 

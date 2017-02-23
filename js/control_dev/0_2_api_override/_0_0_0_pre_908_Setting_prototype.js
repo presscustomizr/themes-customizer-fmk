@@ -1,5 +1,5 @@
 
-(function (api, $, _) {
+( function ( api, $, _ ) {
       //PREPARE THE SKOPE AWARE PREVIEWER
 
       //@return void()
@@ -108,5 +108,4 @@
 
             return dfd.promise();
       };//api.Setting.prototype.preview
-
 })( wp.customize , jQuery, _ );

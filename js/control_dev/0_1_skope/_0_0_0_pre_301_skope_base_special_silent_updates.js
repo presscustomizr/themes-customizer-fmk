@@ -1,5 +1,6 @@
 
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * SILENT ACTIONS for czr_module_type on skope switch
@@ -170,3 +171,4 @@ $.extend( CZRSkopeBaseMths, {
           return dfd.promise();
     }
 });//$.extend
+})( wp.customize , jQuery, _ );

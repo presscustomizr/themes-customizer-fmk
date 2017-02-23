@@ -1,6 +1,7 @@
 
 
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
       //fired in skopeBase initialize
       initWidgetSidebarSpecifics : function() {
@@ -53,4 +54,5 @@ $.extend( CZRSkopeBaseMths, {
             _debounced = _.debounce( _debounced, 500 );
             _debounced();
       }
-} );//$.extend(
+} );//$.extend
+})( wp.customize , jQuery, _ );

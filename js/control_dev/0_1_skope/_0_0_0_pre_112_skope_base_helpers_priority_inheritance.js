@@ -1,5 +1,6 @@
 
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
     getAppliedPrioritySkopeId : function( setId, skope_id ) {
@@ -291,3 +292,4 @@ $.extend( CZRSkopeBaseMths, {
     }
 
 });//$.extend
+})( wp.customize , jQuery, _ );

@@ -1,6 +1,6 @@
 
-
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+(function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
       //can be call directly, but is also a callback of api.czr_topNoteVisible, fired on skope base initialize
@@ -97,3 +97,4 @@ $.extend( CZRSkopeBaseMths, {
             return $( '#czr-top-note' );
       }
 });//$.extend()
+})( wp.customize , jQuery, _);

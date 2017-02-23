@@ -1,5 +1,5 @@
 
-(function (api, $, _) {
+( function ( api, $, _ ) {
       if ( ! serverControlParams.isSkopOn || ! api.czr_isChangeSetOn() )
         return;
 
@@ -295,5 +295,4 @@
 
             return deferred.promise();
       };
-
 })( wp.customize , jQuery, _ );

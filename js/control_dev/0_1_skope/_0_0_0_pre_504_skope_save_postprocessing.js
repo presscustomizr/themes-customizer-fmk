@@ -1,5 +1,6 @@
 
 var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeSaveMths, {
       //Fired when all submissions are done and the preview has been refreshed
       //@param {} skopesServerData looks like :
@@ -80,3 +81,4 @@ $.extend( CZRSkopeSaveMths, {
             api.czr_skopeBase.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
       }
 });//$.extend
+})( wp.customize , jQuery, _ );

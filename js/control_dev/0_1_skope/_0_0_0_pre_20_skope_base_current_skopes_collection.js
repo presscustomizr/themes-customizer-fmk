@@ -1,5 +1,6 @@
 
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
     //Fired on 'czr-skopes-synced' triggered by the preview, each time the preview is refreshed.
@@ -367,3 +368,4 @@ $.extend( CZRSkopeBaseMths, {
           return dfd.resolve().promise();
     }
 });//$.extend
+})( wp.customize , jQuery, _ );

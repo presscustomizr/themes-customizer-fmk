@@ -1,5 +1,6 @@
 
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
     //declared in initialize
@@ -215,3 +216,4 @@ $.extend( CZRSkopeBaseMths, {
           });
     }
 });//$.extend
+})( wp.customize , jQuery, _ );

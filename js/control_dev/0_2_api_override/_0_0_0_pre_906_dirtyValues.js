@@ -1,5 +1,5 @@
 
-(function (api, $, _) {
+( function ( api, $, _ ) {
       if ( ! serverControlParams.isSkopOn )
         return;
 

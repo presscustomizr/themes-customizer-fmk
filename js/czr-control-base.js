@@ -37,319 +37,319 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
       stack: []
 };
 
-var api = api || wp.customize, $ = $ || jQuery;
-(function ( api, $, _ ) {
-//@return [] for console method
-//@bgCol @textCol are hex colors
-//@arguments : the original console arguments
-var _prettyPrintLog = function( args ) {
-      var _defaults = {
-            bgCol : '#5ed1f5',
-            textCol : '#000',
-            consoleArguments : []
+//var api = api || wp.customize, $ = $ || jQuery;
+( function ( api, $, _ ) {
+      //@return [] for console method
+      //@bgCol @textCol are hex colors
+      //@arguments : the original console arguments
+      var _prettyPrintLog = function( args ) {
+            var _defaults = {
+                  bgCol : '#5ed1f5',
+                  textCol : '#000',
+                  consoleArguments : []
+            };
+            args = _.extend( _defaults, args );
+
+            var _toArr = Array.from( args.consoleArguments );
+
+            //if the array to print is not composed exclusively of strings, then let's stringify it
+            //else join()
+            if ( ! _.isEmpty( _.filter( _toArr, function( it ) { return ! _.isString( it ); } ) ) ) {
+                  _toArr =  JSON.stringify( _toArr );
+            } else {
+                  _toArr = _toArr.join(' ');
+            }
+            return [
+                  '%c ' + _toArr,
+                  [ 'background:' + args.bgCol, 'color:' + args.textCol, 'display: block;' ].join(';')
+            ];
       };
-      args = _.extend( _defaults, args );
+      //Dev mode aware and IE compatible api.consoleLog()
+      api.consoleLog = function() {
+            // if ( ! serverControlParams.isDevMode )
+            //   return;
+            //fix for IE, because console is only defined when in F12 debugging mode in IE
+            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
+              return;
 
-      var _toArr = Array.from( args.consoleArguments );
+            console.log.apply( console, _prettyPrintLog( { consoleArguments : arguments } ) );
+      };
 
-      //if the array to print is not composed exclusively of strings, then let's stringify it
-      //else join()
-      if ( ! _.isEmpty( _.filter( _toArr, function( it ) { return ! _.isString( it ); } ) ) ) {
-            _toArr =  JSON.stringify( _toArr );
-      } else {
-            _toArr = _toArr.join(' ');
-      }
-      return [
-            '%c ' + _toArr,
-            [ 'background:' + args.bgCol, 'color:' + args.textCol, 'display: block;' ].join(';')
-      ];
-};
-//Dev mode aware and IE compatible api.consoleLog()
-api.consoleLog = function() {
-      // if ( ! serverControlParams.isDevMode )
-      //   return;
-      //fix for IE, because console is only defined when in F12 debugging mode in IE
-      if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
-        return;
+      api.errorLog = function() {
+            //fix for IE, because console is only defined when in F12 debugging mode in IE
+            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
+              return;
 
-      console.log.apply( console, _prettyPrintLog( { consoleArguments : arguments } ) );
-};
+            console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : arguments } ) );
+      };
 
-api.errorLog = function() {
-      //fix for IE, because console is only defined when in F12 debugging mode in IE
-      if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
-        return;
+      api.czr_isSkopOn = function() {
+            return serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
+      };
 
-      console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : arguments } ) );
-};
-
-api.czr_isSkopOn = function() {
-      return serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
-};
-
-api.czr_isChangeSetOn = function() {
-      return serverControlParams.isChangeSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
-};
+      api.czr_isChangeSetOn = function() {
+            return serverControlParams.isChangeSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
+      };
 
 
 
-/*****************************************************************************
-* DEFINE SOME USEFUL OBSERVABLE VALUES
-*****************************************************************************/
-//STORE THE CURRENTLY ACTIVE SECTION AND PANELS IN AN OBSERVABLE VALUE
-//BIND EXISTING AND FUTURE SECTIONS AND PANELS
-api.czr_activeSectionId = new api.Value('');
-api.czr_activePanelId = new api.Value('');
+      /*****************************************************************************
+      * DEFINE SOME USEFUL OBSERVABLE VALUES
+      *****************************************************************************/
+      //STORE THE CURRENTLY ACTIVE SECTION AND PANELS IN AN OBSERVABLE VALUE
+      //BIND EXISTING AND FUTURE SECTIONS AND PANELS
+      api.czr_activeSectionId = new api.Value('');
+      api.czr_activePanelId = new api.Value('');
 
-/*****************************************************************************
-* OBSERVE UBIQUE CONTROL'S SECTIONS EXPANSION
-*****************************************************************************/
-if ( 'function' === typeof api.Section ) {
-      //move controls back and forth in declared ubique sections
-      //=> implemented in the customizr theme for the social links boolean visibility controls ( socials in header, sidebar, footer )
-      api.control.bind( 'add', function( _ctrl ) {
-            if ( _ctrl.params.ubq_section && _ctrl.params.ubq_section.section ) {
-                  //save original state
-                  _ctrl.params.original_priority = _ctrl.params.priority;
-                  _ctrl.params.original_section  = _ctrl.params.section;
+      /*****************************************************************************
+      * OBSERVE UBIQUE CONTROL'S SECTIONS EXPANSION
+      *****************************************************************************/
+      if ( 'function' === typeof api.Section ) {
+            //move controls back and forth in declared ubique sections
+            //=> implemented in the customizr theme for the social links boolean visibility controls ( socials in header, sidebar, footer )
+            api.control.bind( 'add', function( _ctrl ) {
+                  if ( _ctrl.params.ubq_section && _ctrl.params.ubq_section.section ) {
+                        //save original state
+                        _ctrl.params.original_priority = _ctrl.params.priority;
+                        _ctrl.params.original_section  = _ctrl.params.section;
 
-                  api.section.when( _ctrl.params.ubq_section.section, function( _section_instance ) {
-                          _section_instance.expanded.bind( function( expanded ) {
-                                if ( expanded ) {
-                                      if ( _ctrl.params.ubq_section.priority ) {
-                                            _ctrl.priority( _ctrl.params.ubq_section.priority );
+                        api.section.when( _ctrl.params.ubq_section.section, function( _section_instance ) {
+                                _section_instance.expanded.bind( function( expanded ) {
+                                      if ( expanded ) {
+                                            if ( _ctrl.params.ubq_section.priority ) {
+                                                  _ctrl.priority( _ctrl.params.ubq_section.priority );
+                                            }
+                                            _ctrl.section( _ctrl.params.ubq_section.section );
                                       }
-                                      _ctrl.section( _ctrl.params.ubq_section.section );
-                                }
-                                else {
-                                      _ctrl.priority( _ctrl.params.original_priority );
-                                      _ctrl.section( _ctrl.params.original_section );
-                                }
-                          });
+                                      else {
+                                            _ctrl.priority( _ctrl.params.original_priority );
+                                            _ctrl.section( _ctrl.params.original_section );
+                                      }
+                                });
 
-                  } );
-            }
-      });
-}
-
-/*****************************************************************************
-* CLOSE THE MOD OPTION PANEL ( if exists ) ON : section change, panel change, skope switch
-*****************************************************************************/
-//@return void()
-var _closeModOpt = function() {
-      if ( ! _.has( api, 'czr_ModOptVisible') )
-        return;
-      api.czr_ModOptVisible(false);
-};
-api.czr_activeSectionId.bind( _closeModOpt );
-api.czr_activePanelId.bind( _closeModOpt );
-
-/*****************************************************************************
-* OBSERVE SECTIONS AND PANEL EXPANSION
-* /store the current expanded section and panel
-*****************************************************************************/
-api.bind('ready', function() {
-      if ( 'function' != typeof api.Section ) {
-        throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
+                        } );
+                  }
+            });
       }
-      var _storeCurrentSection = function( expanded, section_id ) {
-            api.czr_activeSectionId( expanded ? section_id : '' );
-      };
-      api.section.each( function( _sec ) {
-            _sec.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, _sec.id ); } );
-      });
-      api.section.bind( 'add', function( section_instance ) {
-            api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
-            section_instance.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, section_instance.id ); } );
-      });
 
-      var _storeCurrentPanel = function( expanded, panel_id ) {
-            api.czr_activePanelId( expanded ? panel_id : '' );
-            //if the expanded panel id becomes empty (typically when switching back to the root panel), make sure that no section is set as currently active
-            //=> fixes the problem of add_menu section staying expanded when switching back to another panel
-            if ( _.isEmpty( api.czr_activePanelId() ) ) {
-                  api.czr_activeSectionId( '' );
+      /*****************************************************************************
+      * CLOSE THE MOD OPTION PANEL ( if exists ) ON : section change, panel change, skope switch
+      *****************************************************************************/
+      //@return void()
+      var _closeModOpt = function() {
+            if ( ! _.has( api, 'czr_ModOptVisible') )
+              return;
+            api.czr_ModOptVisible(false);
+      };
+      api.czr_activeSectionId.bind( _closeModOpt );
+      api.czr_activePanelId.bind( _closeModOpt );
+
+      /*****************************************************************************
+      * OBSERVE SECTIONS AND PANEL EXPANSION
+      * /store the current expanded section and panel
+      *****************************************************************************/
+      api.bind('ready', function() {
+            if ( 'function' != typeof api.Section ) {
+              throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
             }
-      };
-      api.panel.each( function( _panel ) {
-            _panel.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, _panel.id ); } );
-      });
-      api.panel.bind( 'add', function( panel_instance ) {
-            panel_instance.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, panel_instance.id ); } );
-      });
-});
-
-//SET THE ACTIVE STATE OF THE THEMES SECTION BASED ON WHAT THE SERVER SENT
-api.bind('ready', function() {
-      var _do = function() {
-            api.section('themes').active.bind( function( active ) {
-                  if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
-                    return;
-                  api.section('themes').active(false);
-                  //reset the callbacks
-                  api.section('themes').active.callbacks = $.Callbacks();
+            var _storeCurrentSection = function( expanded, section_id ) {
+                  api.czr_activeSectionId( expanded ? section_id : '' );
+            };
+            api.section.each( function( _sec ) {
+                  _sec.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, _sec.id ); } );
             });
-      };
-      if ( api.section.has( 'themes') )
-          _do();
-      else
-          api.section.when( 'themes', function( _s ) {
-                _do();
-          });
-});
-
-
-/*****************************************************************************
-* FIRE SKOPE ON READY
-*****************************************************************************/
-//this promise will be resolved when
-//1) the initial skopes collection has been populated
-//2) the initial skope has been switched to
-api.czr_skopeReady = $.Deferred();
-api.bind( 'ready' , function() {
-      if ( serverControlParams.isSkopOn ) {
-            api.czr_isLoadingSkope  = new api.Value( false );
-            api.czr_isLoadingSkope.bind( function( loading ) {
-                  toggleSkopeLoadPane( loading );
+            api.section.bind( 'add', function( section_instance ) {
+                  api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
+                  section_instance.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, section_instance.id ); } );
             });
-            api.czr_skopeBase   = new api.CZR_skopeBase();
-            api.czr_skopeSave   = new api.CZR_skopeSave();
-            api.czr_skopeReset  = new api.CZR_skopeReset();
 
-            api.trigger('czr-skope-started');
+            var _storeCurrentPanel = function( expanded, panel_id ) {
+                  api.czr_activePanelId( expanded ? panel_id : '' );
+                  //if the expanded panel id becomes empty (typically when switching back to the root panel), make sure that no section is set as currently active
+                  //=> fixes the problem of add_menu section staying expanded when switching back to another panel
+                  if ( _.isEmpty( api.czr_activePanelId() ) ) {
+                        api.czr_activeSectionId( '' );
+                  }
+            };
+            api.panel.each( function( _panel ) {
+                  _panel.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, _panel.id ); } );
+            });
+            api.panel.bind( 'add', function( panel_instance ) {
+                  panel_instance.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, panel_instance.id ); } );
+            });
+      });
 
-            api.czr_skopeReady
-                  .done( function() {
-                        api.trigger('czr-skope-ready');
-                  })
-                  .fail( function( error ) {
-                        api.errorLog( 'Skope could not be instantiated : ' + error );
-                        serverControlParams.isSkopOn = false;
-                        api.czr_isLoadingSkope( false );
+      //SET THE ACTIVE STATE OF THE THEMES SECTION BASED ON WHAT THE SERVER SENT
+      api.bind('ready', function() {
+            var _do = function() {
+                  api.section('themes').active.bind( function( active ) {
+                        if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
+                          return;
+                        api.section('themes').active(false);
+                        //reset the callbacks
+                        api.section('themes').active.callbacks = $.Callbacks();
                   });
+            };
+            if ( api.section.has( 'themes') )
+                _do();
+            else
+                api.section.when( 'themes', function( _s ) {
+                      _do();
+                });
+      });
 
-            //If skope was properly instantiated but there's another problem occuring after, display a self closing top notification after 30 s
-            if ( 'rejected' != api.czr_skopeReady.state() ) {
-                  //Make sure the loading icon panel is destroyed after a moment
-                  //Typically if there was a problem in the WP js API and the skope could not be initialized
-                  setTimeout( function() {
-                      if ( 'pending' == api.czr_skopeReady.state() )  {
-                            //This top note will be rendered 20s and self closed if not closed before by the user
-                            api.czr_skopeBase.toggleTopNote( true, {
-                                  title : 'There was a problem when trying to load the customizer.',//@to_translate
-                                  message : 'Please open your <a href="http://docs.presscustomizr.com/article/272-inspect-your-webpages-in-your-browser-with-the-development-tools" target="_blank">browser debug tool</a>, and report any error message (in red) printed in the javascript console in the <a href="https://wordpress.org/support/theme/hueman" target="_blank">Hueman theme forum</a>.',//@to_translate
-                                  selfCloseAfter : 40000
+
+      /*****************************************************************************
+      * FIRE SKOPE ON READY
+      *****************************************************************************/
+      //this promise will be resolved when
+      //1) the initial skopes collection has been populated
+      //2) the initial skope has been switched to
+      api.czr_skopeReady = $.Deferred();
+      api.bind( 'ready' , function() {
+            if ( serverControlParams.isSkopOn ) {
+                  api.czr_isLoadingSkope  = new api.Value( false );
+                  api.czr_isLoadingSkope.bind( function( loading ) {
+                        toggleSkopeLoadPane( loading );
+                  });
+                  api.czr_skopeBase   = new api.CZR_skopeBase();
+                  api.czr_skopeSave   = new api.CZR_skopeSave();
+                  api.czr_skopeReset  = new api.CZR_skopeReset();
+
+                  api.trigger('czr-skope-started');
+
+                  api.czr_skopeReady
+                        .done( function() {
+                              api.trigger('czr-skope-ready');
+                        })
+                        .fail( function( error ) {
+                              api.errorLog( 'Skope could not be instantiated : ' + error );
+                              serverControlParams.isSkopOn = false;
+                              api.czr_isLoadingSkope( false );
+                        });
+
+                  //If skope was properly instantiated but there's another problem occuring after, display a self closing top notification after 30 s
+                  if ( 'rejected' != api.czr_skopeReady.state() ) {
+                        //Make sure the loading icon panel is destroyed after a moment
+                        //Typically if there was a problem in the WP js API and the skope could not be initialized
+                        setTimeout( function() {
+                            if ( 'pending' == api.czr_skopeReady.state() )  {
+                                  //This top note will be rendered 20s and self closed if not closed before by the user
+                                  api.czr_skopeBase.toggleTopNote( true, {
+                                        title : 'There was a problem when trying to load the customizer.',//@to_translate
+                                        message : 'Please open your <a href="http://docs.presscustomizr.com/article/272-inspect-your-webpages-in-your-browser-with-the-development-tools" target="_blank">browser debug tool</a>, and report any error message (in red) printed in the javascript console in the <a href="https://wordpress.org/support/theme/hueman" target="_blank">Hueman theme forum</a>.',//@to_translate
+                                        selfCloseAfter : 40000
+                                  });
+
+                                  api.czr_isLoadingSkope( false );
+                            }
+                        }, 30000);
+                  }
+            }
+
+            //let's set a lower autosave interval ( default is 60000 ms )
+            if ( serverControlParams.isChangeSetOn ) {
+                  api.settings.timeouts.changesetAutoSave = 10000;
+            }
+      } );
+
+      //INCLUDE THE REVISION COUNT IF WP < 4.7
+      if ( ! _.has( api, '_latestRevision') ) {
+            /**
+             * Current change count.
+             */
+            api._latestRevision = 0;
+
+            /**
+             * Latest revisions associated with the updated setting.
+             */
+            api._latestSettingRevisions = {};
+
+            /*
+             * Keep track of the revision associated with each updated setting so that
+             * requestChangesetUpdate knows which dirty settings to include. Also, once
+             * ready is triggered and all initial settings have been added, increment
+             * revision for each newly-created initially-dirty setting so that it will
+             * also be included in changeset update requests.
+             */
+            api.bind( 'change', function incrementChangedSettingRevision( setting ) {
+                  api._latestRevision += 1;
+                  api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+            } );
+            api.bind( 'ready', function() {
+                  api.bind( 'add', function incrementCreatedSettingRevision( setting ) {
+                        if ( setting._dirty ) {
+                              api._latestRevision += 1;
+                              api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+                        }
+                  } );
+            } );
+      }
+
+      //@fired before skopeReady
+      var toggleSkopeLoadPane = function( loading ) {
+            loading = _.isUndefined( loading ) ? true : loading;
+            var self = this, $skopeLoadingPanel,
+                _render = function() {
+                      var dfd = $.Deferred();
+                      try {
+                            _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
+                      } catch( er ) {
+                            api.errorLog( 'In toggleSkopeLoadPane : error when parsing the the reset skope template : ' + er );//@to_translate
+                            dfd.resolve( false );
+                      }
+                      $.when( $('#customize-preview').after( $( _tmpl ) ) )
+                            .always( function() {
+                                  dfd.resolve( $( '#czr-skope-pane' ) );
                             });
 
-                            api.czr_isLoadingSkope( false );
-                      }
-                  }, 30000);
+                      return dfd.promise();
+                },
+                _destroy = function() {
+                      _.delay( function() {
+                            $.when( $('body').removeClass('czr-skope-pane-open') ).done( function() {
+                                  _.delay( function() {
+                                        $.when( $('body').removeClass('czr-skop-loading') ).done( function() {
+                                              if ( false !== $( '#czr-skope-pane' ).length ) {
+                                                    setTimeout( function() {
+                                                          $( '#czr-skope-pane' ).remove();
+                                                    }, 400 );
+                                              }
+                                        });
+                                  }, 200);
+                            });
+                      }, 50);
+                };
+
+            //display load pane if skope is not yet ready and loading is true
+            if ( 'pending' == api.czr_skopeReady.state() && loading ) {
+                  $('body').addClass('czr-skop-loading');
+                  _render()
+                        .done( function( $_el ) {
+                              $skopeLoadingPanel = $_el;
+                        })
+                        .then( function() {
+                              if ( ! $skopeLoadingPanel.length )
+                                return;
+
+                              _.delay( function() {
+                                    //set height
+                                    var _height = $('#customize-preview').height();
+                                    $skopeLoadingPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
+                                    //display
+                                    $('body').addClass('czr-skope-pane-open');
+                              }, 50 );
+                        });
             }
-      }
 
-      //let's set a lower autosave interval ( default is 60000 ms )
-      if ( serverControlParams.isChangeSetOn ) {
-            api.settings.timeouts.changesetAutoSave = 10000;
-      }
-} );
-
-//INCLUDE THE REVISION COUNT IF WP < 4.7
-if ( ! _.has( api, '_latestRevision') ) {
-      /**
-       * Current change count.
-       */
-      api._latestRevision = 0;
-
-      /**
-       * Latest revisions associated with the updated setting.
-       */
-      api._latestSettingRevisions = {};
-
-      /*
-       * Keep track of the revision associated with each updated setting so that
-       * requestChangesetUpdate knows which dirty settings to include. Also, once
-       * ready is triggered and all initial settings have been added, increment
-       * revision for each newly-created initially-dirty setting so that it will
-       * also be included in changeset update requests.
-       */
-      api.bind( 'change', function incrementChangedSettingRevision( setting ) {
-            api._latestRevision += 1;
-            api._latestSettingRevisions[ setting.id ] = api._latestRevision;
-      } );
-      api.bind( 'ready', function() {
-            api.bind( 'add', function incrementCreatedSettingRevision( setting ) {
-                  if ( setting._dirty ) {
-                        api._latestRevision += 1;
-                        api._latestSettingRevisions[ setting.id ] = api._latestRevision;
-                  }
-            } );
-      } );
-}
-
-//@fired before skopeReady
-var toggleSkopeLoadPane = function( loading ) {
-      loading = _.isUndefined( loading ) ? true : loading;
-      var self = this, $skopeLoadingPanel,
-          _render = function() {
-                var dfd = $.Deferred();
-                try {
-                      _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
-                } catch( er ) {
-                      api.errorLog( 'In toggleSkopeLoadPane : error when parsing the the reset skope template : ' + er );//@to_translate
-                      dfd.resolve( false );
-                }
-                $.when( $('#customize-preview').after( $( _tmpl ) ) )
-                      .always( function() {
-                            dfd.resolve( $( '#czr-skope-pane' ) );
-                      });
-
-                return dfd.promise();
-          },
-          _destroy = function() {
-                _.delay( function() {
-                      $.when( $('body').removeClass('czr-skope-pane-open') ).done( function() {
-                            _.delay( function() {
-                                  $.when( $('body').removeClass('czr-skop-loading') ).done( function() {
-                                        if ( false !== $( '#czr-skope-pane' ).length ) {
-                                              setTimeout( function() {
-                                                    $( '#czr-skope-pane' ).remove();
-                                              }, 400 );
-                                        }
-                                  });
-                            }, 200);
-                      });
-                }, 50);
-          };
-
-      //display load pane if skope is not yet ready and loading is true
-      if ( 'pending' == api.czr_skopeReady.state() && loading ) {
-            $('body').addClass('czr-skop-loading');
-            _render()
-                  .done( function( $_el ) {
-                        $skopeLoadingPanel = $_el;
-                  })
-                  .then( function() {
-                        if ( ! $skopeLoadingPanel.length )
-                          return;
-
-                        _.delay( function() {
-                              //set height
-                              var _height = $('#customize-preview').height();
-                              $skopeLoadingPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
-                              //display
-                              $('body').addClass('czr-skope-pane-open');
-                        }, 50 );
-                  });
-      }
-
-      api.czr_skopeReady.done( function() {
-            _destroy();
-      });
-      //if a destroy is requested, typically when the loading delay exceeds 15 seconds
-      if ( ! loading ) {
-            _destroy();
-      }
-};//toggleSkopeLoadPane
+            api.czr_skopeReady.done( function() {
+                  _destroy();
+            });
+            //if a destroy is requested, typically when the loading delay exceeds 15 seconds
+            if ( ! loading ) {
+                  _destroy();
+            }
+      };//toggleSkopeLoadPane
 })( wp.customize , jQuery, _);
 
   //WHAT IS A SKOPE ?
@@ -989,6 +989,7 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 })( wp.customize , jQuery, _);
 
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+(function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
       //callback of api.czr_serverNotification
@@ -1138,8 +1139,9 @@ $.extend( CZRSkopeBaseMths, {
             return resp;
       }
 });//$.extend()
-
+})( wp.customize , jQuery, _);
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+(function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
       //can be call directly, but is also a callback of api.czr_topNoteVisible, fired on skope base initialize
@@ -1236,7 +1238,9 @@ $.extend( CZRSkopeBaseMths, {
             return $( '#czr-top-note' );
       }
 });//$.extend()
+})( wp.customize , jQuery, _);
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+(function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * WORDPRESS API ACTIONS ON INIT
@@ -1310,7 +1314,9 @@ $.extend( CZRSkopeBaseMths, {
           }
     }
 });//$.extend()
+})( wp.customize , jQuery, _ );
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
     /*****************************************************************************
@@ -1394,8 +1400,10 @@ $.extend( CZRSkopeBaseMths, {
           return dfd.promise();
     }
 });//$.extend()
+})( wp.customize , jQuery, _ );
 
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
     /*****************************************************************************
@@ -1604,10 +1612,12 @@ $.extend( CZRSkopeBaseMths, {
           });
     }
 });//$.extend()
+})( wp.customize , jQuery, _ );
 /*****************************************************************************
 * THE SKOPE BASE OBJECT
 *****************************************************************************/
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
     /*****************************************************************************
@@ -1742,7 +1752,9 @@ $.extend( CZRSkopeBaseMths, {
           return this;
     }
 });//$.extend()
+})( wp.customize , jQuery, _ );
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
     /*****************************************************************************
@@ -2105,7 +2117,9 @@ $.extend( CZRSkopeBaseMths, {
         return registered;
     }
 });//$.extend
+})( wp.customize , jQuery, _ );
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
     getAppliedPrioritySkopeId : function( setId, skope_id ) {
@@ -2397,7 +2411,9 @@ $.extend( CZRSkopeBaseMths, {
     }
 
 });//$.extend
+})( wp.customize , jQuery, _ );
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
     //Fired on 'czr-skopes-synced' triggered by the preview, each time the preview is refreshed.
@@ -2765,7 +2781,9 @@ $.extend( CZRSkopeBaseMths, {
           return dfd.resolve().promise();
     }
 });//$.extend
+})( wp.customize , jQuery, _ );
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
     //declared in initialize
@@ -2981,7 +2999,9 @@ $.extend( CZRSkopeBaseMths, {
           });
     }
 });//$.extend
+})( wp.customize , jQuery, _ );
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
     //@param params :
     // {
@@ -3306,7 +3326,9 @@ $.extend( CZRSkopeBaseMths, {
     }
 
 });//$.extend
+})( wp.customize , jQuery, _ );
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * SILENT ACTIONS for czr_module_type on skope switch
@@ -3477,11 +3499,13 @@ $.extend( CZRSkopeBaseMths, {
           return dfd.promise();
     }
 });//$.extend
+})( wp.customize , jQuery, _ );
 
 /*****************************************************************************
 * THE SKOPE BASE OBJECT
 *****************************************************************************/
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * SETUP CONTROL RESET ON SECTION EXPANSION + SKOPE SWITCH
@@ -3766,11 +3790,13 @@ $.extend( CZRSkopeBaseMths, {
           });
     }
 });//$.extend()
+})( wp.customize , jQuery, _ );
 
 /*****************************************************************************
 * THE SKOPE BASE OBJECT
 *****************************************************************************/
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
     //fired on
     //1) active section expansion
@@ -4043,13 +4069,14 @@ $.extend( CZRSkopeBaseMths, {
           }
           return dfd.resolve().promise();
     }
-
 });//$.extend()
+})( wp.customize , jQuery, _ );
 
 /*****************************************************************************
 * THE SKOPE BASE OBJECT
 *****************************************************************************/
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
 
     //fired when a section is expanded
@@ -4281,7 +4308,9 @@ $.extend( CZRSkopeBaseMths, {
           });
     }
 });//$.extend()
+})( wp.customize , jQuery, _ );
 var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeSaveMths, {
       initialize: function() {
             var self = this;
@@ -4442,7 +4471,9 @@ $.extend( CZRSkopeSaveMths, {
             return self.globalSaveDeferred.promise();
       }//save
 });//$.extend
+})( wp.customize , jQuery, _ );
 var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeSaveMths, {
       //@return a promise()
       getSubmitPromise : function( skope_id ) {
@@ -4648,7 +4679,9 @@ $.extend( CZRSkopeSaveMths, {
             return submit_dfd.promise();
       }//submit()
 });//$.extend
+})( wp.customize , jQuery, _ );
 var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeSaveMths, {
       //PROCESS SUBMISSIONS
       //ALWAYS FIRE THE GLOBAL SKOPE WHEN ALL OTHER SKOPES HAVE BEEN DONE.
@@ -4814,6 +4847,7 @@ $.extend( CZRSkopeSaveMths, {
             return dfd.promise();
       }
 });//$.extend
+})( wp.customize , jQuery, _ );
 
 
 
@@ -4897,6 +4931,7 @@ $.extend( CZRSkopeSaveMths, {
   //       );
   // });
 var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeSaveMths, {
       //Fired when all submissions are done and the preview has been refreshed
       //@param {} skopesServerData looks like :
@@ -4977,7 +5012,9 @@ $.extend( CZRSkopeSaveMths, {
             api.czr_skopeBase.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
       }
 });//$.extend
+})( wp.customize , jQuery, _ );
 var CZRSkopeResetMths = CZRSkopeResetMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeResetMths, {
       initialize: function() {
             var self = this;
@@ -5099,22 +5136,6 @@ $.extend( CZRSkopeResetMths, {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       //args : {
       //  is_setting : false,
       //  is_skope : false,
@@ -5221,8 +5242,10 @@ $.extend( CZRSkopeResetMths, {
             return dfd.promise();
       }
 });//$.extend
+})( wp.customize , jQuery, _ );
 
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
       //fired in skopeBase initialize
       initWidgetSidebarSpecifics : function() {
@@ -5275,308 +5298,307 @@ $.extend( CZRSkopeBaseMths, {
             _debounced = _.debounce( _debounced, 500 );
             _debounced();
       }
-} );//$.extend(
+} );//$.extend
+})( wp.customize , jQuery, _ );
 
 var CZRSkopeMths = CZRSkopeMths || {};
-
-
+( function ( api, $, _ ) {
 //The Active state is delegated to the scope base class
-
 $.extend( CZRSkopeMths, {
-  /*****************************************************************************
-  * THE SKOPE MODEL
-  *****************************************************************************/
-  // 'id'          => 'global',
-  // 'level'       => '_all_',
-  // 'dyn_type'    => 'option',
-  // 'opt_name'    => HU_THEME_OPTIONS,
-  // 'is_winner'   => false,
-  // 'db'    => array(),
-  // 'has_db_val'  => false
-  // 'is_forced'  => false,
-    initialize: function( skope_id, constructor_options ) {
-          var skope = this;
-          api.Value.prototype.initialize.call( skope, null, constructor_options );
+      /*****************************************************************************
+      * THE SKOPE MODEL
+      *****************************************************************************/
+      // 'id'          => 'global',
+      // 'level'       => '_all_',
+      // 'dyn_type'    => 'option',
+      // 'opt_name'    => HU_THEME_OPTIONS,
+      // 'is_winner'   => false,
+      // 'db'    => array(),
+      // 'has_db_val'  => false
+      // 'is_forced'  => false,
+      initialize: function( skope_id, constructor_options ) {
+            var skope = this;
+            api.Value.prototype.initialize.call( skope, null, constructor_options );
 
-          skope.isReady = $.Deferred();
-          skope.embedded = $.Deferred();
-          skope.el = 'czr-scope-' + skope_id;//@todo replace with a css selector based on the scope name
+            skope.isReady = $.Deferred();
+            skope.embedded = $.Deferred();
+            skope.el = 'czr-scope-' + skope_id;//@todo replace with a css selector based on the scope name
 
-          //write the options as properties, skope_id is included
-          $.extend( skope, constructor_options || {} );
+            //write the options as properties, skope_id is included
+            $.extend( skope, constructor_options || {} );
 
-          //Make it alive with various Values
-          skope.visible     = new api.Value( true );
-          skope.winner      = new api.Value( false ); //is this skope the one that will be applied on front end in the current context?
-          skope.priority    = new api.Value(); //shall this skope always win or respect the default skopes priority
-          skope.active      = new api.Value( false ); //active, inactive. Are we currently customizing this skope ?
-          skope.dirtyness   = new api.Value( false ); //true or false : has this skope been customized ?
-          skope.skopeResetDialogVisibility = new api.Value( false );
+            //Make it alive with various Values
+            skope.visible     = new api.Value( true );
+            skope.winner      = new api.Value( false ); //is this skope the one that will be applied on front end in the current context?
+            skope.priority    = new api.Value(); //shall this skope always win or respect the default skopes priority
+            skope.active      = new api.Value( false ); //active, inactive. Are we currently customizing this skope ?
+            skope.dirtyness   = new api.Value( false ); //true or false : has this skope been customized ?
+            skope.skopeResetDialogVisibility = new api.Value( false );
 
-          //setting values are stored in :
-          skope.hasDBValues = new api.Value( false );
-          skope.dirtyValues = new api.Value({});//stores the current customized value.
-          skope.dbValues    = new api.Value({});//stores the latest db values => will be updated on each skope synced event
-          skope.changesetValues = new api.Value({});//stores the latest changeset values => will be updated on each skope synced eventsynced event
+            //setting values are stored in :
+            skope.hasDBValues = new api.Value( false );
+            skope.dirtyValues = new api.Value({});//stores the current customized value.
+            skope.dbValues    = new api.Value({});//stores the latest db values => will be updated on each skope synced event
+            skope.changesetValues = new api.Value({});//stores the latest changeset values => will be updated on each skope synced eventsynced event
 
-          ////////////////////////////////////////////////////
-          /// MODULE DOM EVENT MAP
-          ////////////////////////////////////////////////////
-          skope.userEventMap = new api.Value( [
-                //skope switch
-                {
-                      trigger   : 'click keydown',
-                      selector  : '.czr-scope-switch, .czr-skp-switch-link',
-                      name      : 'skope_switch',
-                      actions   : function() {
-                            api.czr_activeSkopeId( skope().id );
-                      }
-                },
-                //skope reset : display warning
-                {
-                      trigger   : 'click keydown',
-                      selector  : '.czr-scope-reset',
-                      name      : 'skope_reset_warning',
-                      actions   : 'reactOnSkopeResetUserRequest'
-                }
-          ]);//module.userEventMap
+            ////////////////////////////////////////////////////
+            /// MODULE DOM EVENT MAP
+            ////////////////////////////////////////////////////
+            skope.userEventMap = new api.Value( [
+                  //skope switch
+                  {
+                        trigger   : 'click keydown',
+                        selector  : '.czr-scope-switch, .czr-skp-switch-link',
+                        name      : 'skope_switch',
+                        actions   : function() {
+                              api.czr_activeSkopeId( skope().id );
+                        }
+                  },
+                  //skope reset : display warning
+                  {
+                        trigger   : 'click keydown',
+                        selector  : '.czr-scope-reset',
+                        name      : 'skope_reset_warning',
+                        actions   : 'reactOnSkopeResetUserRequest'
+                  }
+            ]);//module.userEventMap
 
-          //Reset actions ( deferred cb )
-          skope.skopeResetDialogVisibility.bind( function( to, from ) {
-                return skope.skopeResetDialogReact( to );
-          }, { deferred : true } );
-
-
-          //LISTEN TO API DIRTYNESS
-          //@to is {setId1 : val1, setId2 : val2, ...}
-          skope.dirtyValues.callbacks.add(function() { return skope.dirtyValuesReact.apply(skope, arguments ); } );
-
-          //LISTEN TO CHANGESET VALUES
-          skope.changesetValues.callbacks.add(function() { return skope.changesetValuesReact.apply(skope, arguments ); } );
-
-          //LISTEN TO DB VALUES
-          skope.dbValues.callbacks.add(function() { return skope.dbValuesReact.apply(skope, arguments ); } );
-
-          //UPDATE global skope collection each time a skope model is populated or updated
-          skope.callbacks.add(function() { return skope.skopeReact.apply( skope, arguments ); } );
-
-          //PREPARE THE CONSTRUCTOR OPTIONS AND SET SKOPE MODEL WITH IT
-          //=> we don't need to store the db , has_db_val, and changeset properties in the model statically
-          //because it will be stored as observable values
-          skope.set( _.omit( constructor_options, function( _v, _key ) {
-                return _.contains( [ 'db', 'changeset', 'has_db_val' ], _key );
-          } ) );
+            //Reset actions ( deferred cb )
+            skope.skopeResetDialogVisibility.bind( function( to, from ) {
+                  return skope.skopeResetDialogReact( to );
+            }, { deferred : true } );
 
 
+            //LISTEN TO API DIRTYNESS
+            //@to is {setId1 : val1, setId2 : val2, ...}
+            skope.dirtyValues.callbacks.add(function() { return skope.dirtyValuesReact.apply(skope, arguments ); } );
 
+            //LISTEN TO CHANGESET VALUES
+            skope.changesetValues.callbacks.add(function() { return skope.changesetValuesReact.apply(skope, arguments ); } );
 
+            //LISTEN TO DB VALUES
+            skope.dbValues.callbacks.add(function() { return skope.dbValuesReact.apply(skope, arguments ); } );
 
-          ////////////////////////////////////////////////////
-          /// SETUP SKOPE OBSERVABLE VALUES LISTENERS
-          /// => skope embedded dependants
-          ////////////////////////////////////////////////////
-          skope.setupObservableViewValuesCallbacks();
+            //UPDATE global skope collection each time a skope model is populated or updated
+            skope.callbacks.add(function() { return skope.skopeReact.apply( skope, arguments ); } );
 
-          //Now that the values are listened to. Let's set some initial values
-          skope.dirtyness( ! _.isEmpty( constructor_options.changeset ) );
-          skope.hasDBValues( ! _.isEmpty( constructor_options.db ) );
-          skope.winner( constructor_options.is_winner );
+            //PREPARE THE CONSTRUCTOR OPTIONS AND SET SKOPE MODEL WITH IT
+            //=> we don't need to store the db , has_db_val, and changeset properties in the model statically
+            //because it will be stored as observable values
+            skope.set( _.omit( constructor_options, function( _v, _key ) {
+                  return _.contains( [ 'db', 'changeset', 'has_db_val' ], _key );
+            } ) );
 
 
 
 
-          ////////////////////////////////////////////////////
-          /// EMBED + SETUP DOM LISTENERS
-          ////////////////////////////////////////////////////
-          skope.embedded
-                .fail( function() {
-                      throw new Error('The container of skope ' + skope().id + ' has not been embededd');
-                })
-                .done( function() {
-                      //api.consoleLog('SKOPE : '  + skope().id + ' EMBEDDED');
-                      //Setup the user event listeners
-                      skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
 
-                      skope.isReady.resolve();
-                });
+            ////////////////////////////////////////////////////
+            /// SETUP SKOPE OBSERVABLE VALUES LISTENERS
+            /// => skope embedded dependants
+            ////////////////////////////////////////////////////
+            skope.setupObservableViewValuesCallbacks();
 
-    },//initialize
-
-
-
-    //this skope model is instantiated at this point.
-    ready : function() {
-          var skope = this;
-          //WAIT FOR THE SKOPE WRAPPER TO BE EMBEDDED
-          //=> The skope wrapper is embedded when api.czr_skopeReady.state() == 'resolved'
-          api.czr_skopeBase.skopeWrapperEmbedded.done( function() {
-                //EMBED THE SKOPE VIEW : EMBED AND STORE THE CONTAINER
-                try {
-                      $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
-                            if ( false !== $_container.length ) {
-                                  //paint it
-                                  $_container.css('background-color', skope.color );
-                                  skope.container = $_container;
-                                  skope.embedded.resolve( $_container );
-                            } else {
-                                  skope.embedded.reject();
-                            }
-                      });
-                } catch( er ) {
-                      api.errorLog( "In skope base : " + er );
-                      skope.embedded.reject();
-                }
-          });
-    },
+            //Now that the values are listened to. Let's set some initial values
+            skope.dirtyness( ! _.isEmpty( constructor_options.changeset ) );
+            skope.hasDBValues( ! _.isEmpty( constructor_options.db ) );
+            skope.winner( constructor_options.is_winner );
 
 
 
 
-    /*****************************************************************************
-    * SKOPE API DIRTIES REACTIONS
-    *****************************************************************************/
-    dirtyValuesReact : function( to, from ) {
-          //api.consoleLog('IN DIRTY VALUES REACT', this.id, to, from );
-          var skope = this;
+            ////////////////////////////////////////////////////
+            /// EMBED + SETUP DOM LISTENERS
+            ////////////////////////////////////////////////////
+            skope.embedded
+                  .fail( function() {
+                        throw new Error('The container of skope ' + skope().id + ' has not been embededd');
+                  })
+                  .done( function() {
+                        //api.consoleLog('SKOPE : '  + skope().id + ' EMBEDDED');
+                        //Setup the user event listeners
+                        skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
 
-          //set the skope() dirtyness boolean state value
-          skope.dirtyness( ! _.isEmpty( to ) );
-          // skope.dirtyness(
-          //       ! _.isEmpty(
-          //             'global' != skope().skope ?
-          //             to :
-          //             _.omit( to, function( _val, _id ) {
-          //                   return ! api.czr_skopeBase.isThemeSetting( _id );
-          //             })
-          //       )
-          // );
+                        skope.isReady.resolve();
+                  });
 
-          //set the API global dirtyness
-          api.czr_dirtyness( ! _.isEmpty(to) );
+      },//initialize
 
-          //build the collection of control ids for which the dirtyness has to be reset
-          var ctrlIdDirtynessToClean = [];
-          _.each( from, function( _val, _id ) {
-              if ( _.has( to, _id ) )
-                return;
-              ctrlIdDirtynessToClean.push( _id );
-          });
 
-          //SET THE ACTIVE SKOPE CONTROLS DIRTYNESSES
-          //The ctrl.czr_state value looks like :
-          //{
-          // hasDBVal : false,
-          // isDirty : false,
-          // noticeVisible : false,
-          // resetVisible : false
-          //}
-          if ( skope().id == api.czr_activeSkopeId() ) {
-                //RESET DIRTYNESS FOR THE CLEAN SETTINGS CONTROLS IN THE ACTIVE SKOPE
-                _.each( ctrlIdDirtynessToClean , function( setId ) {
-                      if ( ! _.has( api.control( setId ), 'czr_states') )
+
+      //this skope model is instantiated at this point.
+      ready : function() {
+            var skope = this;
+            //WAIT FOR THE SKOPE WRAPPER TO BE EMBEDDED
+            //=> The skope wrapper is embedded when api.czr_skopeReady.state() == 'resolved'
+            api.czr_skopeBase.skopeWrapperEmbedded.done( function() {
+                  //EMBED THE SKOPE VIEW : EMBED AND STORE THE CONTAINER
+                  try {
+                        $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
+                              if ( false !== $_container.length ) {
+                                    //paint it
+                                    $_container.css('background-color', skope.color );
+                                    skope.container = $_container;
+                                    skope.embedded.resolve( $_container );
+                              } else {
+                                    skope.embedded.reject();
+                              }
+                        });
+                  } catch( er ) {
+                        api.errorLog( "In skope base : " + er );
+                        skope.embedded.reject();
+                  }
+            });
+      },
+
+
+
+
+      /*****************************************************************************
+      * SKOPE API DIRTIES REACTIONS
+      *****************************************************************************/
+      dirtyValuesReact : function( to, from ) {
+            //api.consoleLog('IN DIRTY VALUES REACT', this.id, to, from );
+            var skope = this;
+
+            //set the skope() dirtyness boolean state value
+            skope.dirtyness( ! _.isEmpty( to ) );
+            // skope.dirtyness(
+            //       ! _.isEmpty(
+            //             'global' != skope().skope ?
+            //             to :
+            //             _.omit( to, function( _val, _id ) {
+            //                   return ! api.czr_skopeBase.isThemeSetting( _id );
+            //             })
+            //       )
+            // );
+
+            //set the API global dirtyness
+            api.czr_dirtyness( ! _.isEmpty(to) );
+
+            //build the collection of control ids for which the dirtyness has to be reset
+            var ctrlIdDirtynessToClean = [];
+            _.each( from, function( _val, _id ) {
+                if ( _.has( to, _id ) )
+                  return;
+                ctrlIdDirtynessToClean.push( _id );
+            });
+
+            //SET THE ACTIVE SKOPE CONTROLS DIRTYNESSES
+            //The ctrl.czr_state value looks like :
+            //{
+            // hasDBVal : false,
+            // isDirty : false,
+            // noticeVisible : false,
+            // resetVisible : false
+            //}
+            if ( skope().id == api.czr_activeSkopeId() ) {
+                  //RESET DIRTYNESS FOR THE CLEAN SETTINGS CONTROLS IN THE ACTIVE SKOPE
+                  _.each( ctrlIdDirtynessToClean , function( setId ) {
+                        if ( ! _.has( api.control( setId ), 'czr_states') )
+                          return;
+                        api.control( setId ).czr_states( 'isDirty' )( false );
+                  });
+                  //Set control dirtyness for dirty settings
+                  _.each( to, function( _val, _setId ) {
+                        if ( ! _.has( api.control( _setId ), 'czr_states') )
+                          return;
+                        api.control( _setId ).czr_states( 'isDirty' )( true );
+                  });
+            }
+      },
+
+
+      /*****************************************************************************
+      * SKOPE API CHANGESET REACTIONS
+      *****************************************************************************/
+      changesetValuesReact : function( to, from ) {
+            var skope = this,
+                _currentServerDirties = $.extend( true, {}, skope.dirtyValues() );
+            skope.dirtyValues( $.extend( _currentServerDirties, to ) );
+      },
+
+
+      /*****************************************************************************
+      * SKOPE DB VALUES REACTIONS
+      *****************************************************************************/
+      dbValuesReact : function( to, from ) {
+            var skope = this;
+
+            //set the skope() db dirtyness boolean state value
+            skope.hasDBValues(
+                  ! _.isEmpty(
+                        'global' != skope().skope ?
+                        to :
+                        _.omit( to, function( _val, _id ) {
+                              return ! api.czr_skopeBase.isThemeSetting( _id );
+                        })
+                  )
+            );
+
+            //RESET DIRTYNESS FOR THE CONTROLS IN THE ACTIVE SKOPE
+            //=> make sure this is set for the active skopes only
+            var ctrlIdDbToReset = [];
+            _.each( from, function( _val, _id ) {
+                if ( _.has( to, _id ) )
+                  return;
+                ctrlIdDbToReset.push( _id );
+            });
+            //The ctrl.czr_state value looks like :
+            //{
+            // hasDBVal : false,
+            // isDirty : false,
+            // noticeVisible : false,
+            // resetVisible : false
+            //}
+            if ( skope().id == api.czr_activeSkopeId() ) {
+                  _.each( ctrlIdDbToReset , function( setId ) {
+                        if ( ! _.has( api.control( setId ), 'czr_states') )
+                          return;
+                        api.control( setId ).czr_states( 'hasDBVal' )( false );
+                  });
+                  //Set control db dirtyness for settings with a db value
+                  _.each( to, function( _val, _setId ) {
+                        if ( ! _.has( api.control( _setId ), 'czr_states') )
+                          return;
+
+                        api.control( _setId ).czr_states( 'hasDBVal' )( true );
+                  });
+            }
+      },
+
+
+      /*****************************************************************************
+      * SKOPE MODEL CHANGES CALLBACKS
+      *****************************************************************************/
+      //cb of skope.callbacks
+      skopeReact : function( to, from ) {
+            var skope = this,
+                _current_collection = [],
+                _new_collection = [];
+
+            //INFORM COLLECTION
+            //populate case
+            if ( ! api.czr_skopeBase.isSkopeRegisteredInCollection( to.id ) ) {
+                  //Add this new skope to the global skope collection
+                  _current_collection = $.extend( true, [], api.czr_skopeCollection() );
+                  _current_collection.push( to );
+                  api.czr_skopeCollection( _current_collection );
+            }
+            //update case
+            else {
+                  //Add this new skope to the global skope collection
+                  _current_collection = $.extend( true, [], api.czr_skopeCollection() );
+                  _new_collection = _current_collection;
+                  //update the collection with the current new skope model
+                  _.each( _current_collection, function( _skope, _key ) {
+                      if ( _skope.id != skope().id )
                         return;
-                      api.control( setId ).czr_states( 'isDirty' )( false );
-                });
-                //Set control dirtyness for dirty settings
-                _.each( to, function( _val, _setId ) {
-                      if ( ! _.has( api.control( _setId ), 'czr_states') )
-                        return;
-                      api.control( _setId ).czr_states( 'isDirty' )( true );
-                });
-          }
-    },
-
-
-    /*****************************************************************************
-    * SKOPE API CHANGESET REACTIONS
-    *****************************************************************************/
-    changesetValuesReact : function( to, from ) {
-          var skope = this,
-              _currentServerDirties = $.extend( true, {}, skope.dirtyValues() );
-          skope.dirtyValues( $.extend( _currentServerDirties, to ) );
-    },
-
-
-    /*****************************************************************************
-    * SKOPE DB VALUES REACTIONS
-    *****************************************************************************/
-    dbValuesReact : function( to, from ) {
-          var skope = this;
-
-          //set the skope() db dirtyness boolean state value
-          skope.hasDBValues(
-                ! _.isEmpty(
-                      'global' != skope().skope ?
-                      to :
-                      _.omit( to, function( _val, _id ) {
-                            return ! api.czr_skopeBase.isThemeSetting( _id );
-                      })
-                )
-          );
-
-          //RESET DIRTYNESS FOR THE CONTROLS IN THE ACTIVE SKOPE
-          //=> make sure this is set for the active skopes only
-          var ctrlIdDbToReset = [];
-          _.each( from, function( _val, _id ) {
-              if ( _.has( to, _id ) )
-                return;
-              ctrlIdDbToReset.push( _id );
-          });
-          //The ctrl.czr_state value looks like :
-          //{
-          // hasDBVal : false,
-          // isDirty : false,
-          // noticeVisible : false,
-          // resetVisible : false
-          //}
-          if ( skope().id == api.czr_activeSkopeId() ) {
-                _.each( ctrlIdDbToReset , function( setId ) {
-                      if ( ! _.has( api.control( setId ), 'czr_states') )
-                        return;
-                      api.control( setId ).czr_states( 'hasDBVal' )( false );
-                });
-                //Set control db dirtyness for settings with a db value
-                _.each( to, function( _val, _setId ) {
-                      if ( ! _.has( api.control( _setId ), 'czr_states') )
-                        return;
-
-                      api.control( _setId ).czr_states( 'hasDBVal' )( true );
-                });
-          }
-    },
-
-
-    /*****************************************************************************
-    * SKOPE MODEL CHANGES CALLBACKS
-    *****************************************************************************/
-    //cb of skope.callbacks
-    skopeReact : function( to, from ) {
-          var skope = this,
-              _current_collection = [],
-              _new_collection = [];
-
-          //INFORM COLLECTION
-          //populate case
-          if ( ! api.czr_skopeBase.isSkopeRegisteredInCollection( to.id ) ) {
-                //Add this new skope to the global skope collection
-                _current_collection = $.extend( true, [], api.czr_skopeCollection() );
-                _current_collection.push( to );
-                api.czr_skopeCollection( _current_collection );
-          }
-          //update case
-          else {
-                //Add this new skope to the global skope collection
-                _current_collection = $.extend( true, [], api.czr_skopeCollection() );
-                _new_collection = _current_collection;
-                //update the collection with the current new skope model
-                _.each( _current_collection, function( _skope, _key ) {
-                    if ( _skope.id != skope().id )
-                      return;
-                    _new_collection[_key] = to;
-                });
-                api.czr_skopeCollection( _new_collection );
-          }
-    },
+                      _new_collection[_key] = to;
+                  });
+                  api.czr_skopeCollection( _new_collection );
+            }
+      },
 
 
 
@@ -5585,325 +5607,327 @@ $.extend( CZRSkopeMths, {
 
 
 
-    /*****************************************************************************
-    * VALUES CALLBACKS WHEN SKOPE EMBEDDED AND READY
-    * => The skope container exists at this stage
-    *****************************************************************************/
-    //@fired in initiliaze
-    setupObservableViewValuesCallbacks : function() {
-          var skope = this;
-          //hide when this skope is not in the current skopes list
-          skope.visible.bind( function( is_visible ){
-                if ( 'pending' == skope.embedded.state() ) {
-                      skope.embedded.done( function() {
-                            skope.container.toggle( is_visible );
-                      });
-                } else {
-                      skope.container.toggle( is_visible );
+      /*****************************************************************************
+      * VALUES CALLBACKS WHEN SKOPE EMBEDDED AND READY
+      * => The skope container exists at this stage
+      *****************************************************************************/
+      //@fired in initiliaze
+      setupObservableViewValuesCallbacks : function() {
+            var skope = this;
+            //hide when this skope is not in the current skopes list
+            skope.visible.bind( function( is_visible ){
+                  if ( 'pending' == skope.embedded.state() ) {
+                        skope.embedded.done( function() {
+                              skope.container.toggle( is_visible );
+                        });
+                  } else {
+                        skope.container.toggle( is_visible );
+                  }
+
+            });
+
+            //How does the view react to model changes ?
+            //When active :
+            //1) add a green point to the view box
+            //2) disable the switch-to icon
+            skope.active.bind( function() {
+                  if ( 'pending' == skope.embedded.state() ) {
+                        skope.embedded.done( function() {
+                              skope.activeStateReact.apply( skope, arguments );
+                        });
+                  } else {
+                        skope.activeStateReact.apply( skope, arguments );
+                  }
+            });
+
+            skope.dirtyness.bind( function() {
+                  if ( 'pending' == skope.embedded.state() ) {
+                        skope.embedded.done( function() {
+                              skope.dirtynessReact.apply( skope, arguments );
+                        });
+                  } else {
+                        skope.dirtynessReact.apply( skope, arguments );
+                  }
+            });
+
+            skope.hasDBValues.bind( function() {
+                  if ( 'pending' == skope.embedded.state() ) {
+                        skope.embedded.done( function() {
+                              skope.hasDBValuesReact.apply( skope, arguments );
+                        });
+                  } else {
+                        skope.hasDBValuesReact.apply( skope, arguments );
+                  }
+            });
+
+            skope.winner.bind( function() {
+                  if ( 'pending' == skope.embedded.state() ) {
+                        skope.embedded.done( function() {
+                              skope.winnerReact.apply( skope, arguments );
+                        });
+                  } else {
+                        skope.winnerReact.apply( skope, arguments );
+                  }
+            });
+      },//setupObservableViewValuesCallbacks
+
+      //cb of skope.active.callbacks
+      activeStateReact : function( to, from ){
+            var skope = this;
+            skope.container.toggleClass('inactive', ! to ).toggleClass( 'active', to );
+            //api.consoleLog('in the view : listen for scope state change', this.name, to, from );
+            $('.czr-scope-switch', skope.container).toggleClass('fa-toggle-on', to).toggleClass('fa-toggle-off', !to);
+      },
+
+      //cb of skope.dirtyness.callbacks
+      dirtynessReact : function( to, from ) {
+            var skope = this;
+            $.when( this.container.toggleClass( 'dirty', to ) ).done( function() {
+                if ( to )
+                  $( '.czr-scope-reset', skope.container).fadeIn('slow').attr('title', [ 'Reset the current customizations for', skope().title ].join(' ') );//@to_translate
+                else if ( ! skope.hasDBValues() )
+                  $( '.czr-scope-reset', skope.container).fadeOut('fast');
+            });
+      },
+
+      //cb of skope.hasDBValues.callbacks
+      hasDBValuesReact : function( to, from ) {
+            var skope = this;
+            $.when( skope.container.toggleClass('has-db-val', to ) ).done( function() {
+                if ( to ) {
+                      $( '.czr-scope-reset', skope.container)
+                            .fadeIn( 'slow')
+                            .attr( 'title', [
+                                  'global' == skope().skope ? 'Reset the theme options published site wide' : 'Reset your website published options for',//@to_translate
+                                  'global' == skope().skope ? '' : skope().title
+                            ].join(' ') );//@to_translate
                 }
-
-          });
-
-          //How does the view react to model changes ?
-          //When active :
-          //1) add a green point to the view box
-          //2) disable the switch-to icon
-          skope.active.bind( function() {
-                if ( 'pending' == skope.embedded.state() ) {
-                      skope.embedded.done( function() {
-                            skope.activeStateReact.apply( skope, arguments );
-                      });
-                } else {
-                      skope.activeStateReact.apply( skope, arguments );
+                else if ( ! skope.dirtyness() ) {
+                      $( '.czr-scope-reset', skope.container ).fadeOut('fast');
                 }
-          });
+            });
+      },
 
-          skope.dirtyness.bind( function() {
-                if ( 'pending' == skope.embedded.state() ) {
-                      skope.embedded.done( function() {
-                            skope.dirtynessReact.apply( skope, arguments );
-                      });
-                } else {
-                      skope.dirtynessReact.apply( skope, arguments );
-                }
-          });
+      //cb of skope.winner.callbacks
+      winnerReact : function( is_winner ) {
+            var skope = this;
+            this.container.toggleClass('is_winner', is_winner );
 
-          skope.hasDBValues.bind( function() {
-                if ( 'pending' == skope.embedded.state() ) {
-                      skope.embedded.done( function() {
-                            skope.hasDBValuesReact.apply( skope, arguments );
-                      });
-                } else {
-                      skope.hasDBValuesReact.apply( skope, arguments );
-                }
-          });
-
-          skope.winner.bind( function() {
-                if ( 'pending' == skope.embedded.state() ) {
-                      skope.embedded.done( function() {
-                            skope.winnerReact.apply( skope, arguments );
-                      });
-                } else {
-                      skope.winnerReact.apply( skope, arguments );
-                }
-          });
-    },//setupObservableViewValuesCallbacks
-
-    //cb of skope.active.callbacks
-    activeStateReact : function( to, from ){
-          var skope = this;
-          skope.container.toggleClass('inactive', ! to ).toggleClass( 'active', to );
-          //api.consoleLog('in the view : listen for scope state change', this.name, to, from );
-          $('.czr-scope-switch', skope.container).toggleClass('fa-toggle-on', to).toggleClass('fa-toggle-off', !to);
-    },
-
-    //cb of skope.dirtyness.callbacks
-    dirtynessReact : function( to, from ) {
-          var skope = this;
-          $.when( this.container.toggleClass( 'dirty', to ) ).done( function() {
-              if ( to )
-                $( '.czr-scope-reset', skope.container).fadeIn('slow').attr('title', [ 'Reset the current customizations for', skope().title ].join(' ') );//@to_translate
-              else if ( ! skope.hasDBValues() )
-                $( '.czr-scope-reset', skope.container).fadeOut('fast');
-          });
-    },
-
-    //cb of skope.hasDBValues.callbacks
-    hasDBValuesReact : function( to, from ) {
-          var skope = this;
-          $.when( skope.container.toggleClass('has-db-val', to ) ).done( function() {
-              if ( to ) {
-                    $( '.czr-scope-reset', skope.container)
-                          .fadeIn( 'slow')
-                          .attr( 'title', [
-                                'global' == skope().skope ? 'Reset the theme options published site wide' : 'Reset your website published options for',//@to_translate
-                                'global' == skope().skope ? '' : skope().title
-                          ].join(' ') );//@to_translate
-              }
-              else if ( ! skope.dirtyness() ) {
-                    $( '.czr-scope-reset', skope.container ).fadeOut('fast');
-              }
-          });
-    },
-
-    //cb of skope.winner.callbacks
-    winnerReact : function( is_winner ) {
-          var skope = this;
-          this.container.toggleClass('is_winner', is_winner );
-
-          if ( is_winner ) {
-                //make sure there's only one winner in the current skope collection
-                _.each( api.czr_currentSkopesCollection(), function( _skope ) {
-                      if ( _skope.id == skope().id )
-                        return;
-                      var _current_model = $.extend( true, {}, _skope );
-                      $.extend( _current_model, { is_winner : false } );
-                      api.czr_skope( _skope.id )( _current_model );
-                });
-          }
-    },
+            if ( is_winner ) {
+                  //make sure there's only one winner in the current skope collection
+                  _.each( api.czr_currentSkopesCollection(), function( _skope ) {
+                        if ( _skope.id == skope().id )
+                          return;
+                        var _current_model = $.extend( true, {}, _skope );
+                        $.extend( _current_model, { is_winner : false } );
+                        api.czr_skope( _skope.id )( _current_model );
+                  });
+            }
+      },
 
 
 
 
-    /*****************************************************************************
-    * HELPERS
-    *****************************************************************************/
-    //this method updates a given skope instance dirty values
-    //and returns the dirty values object
-    //fired on api setting change and in the ajax query
-    updateSkopeDirties : function( setId, new_val ) {
-          var skope = this,
-              shortSetId = api.CZR_Helpers.getOptionName( setId );
+      /*****************************************************************************
+      * HELPERS
+      *****************************************************************************/
+      //this method updates a given skope instance dirty values
+      //and returns the dirty values object
+      //fired on api setting change and in the ajax query
+      updateSkopeDirties : function( setId, new_val ) {
+            var skope = this,
+                shortSetId = api.CZR_Helpers.getOptionName( setId );
 
-          //for the settings that are excluded from skope, the skope is always the global one
-          if ( ! api.czr_skopeBase.isSettingSkopeEligible( setId ) && 'global' != skope().skope )
-            return api.czr_skope( api.czr_skopeBase.getGlobalSkopeId() ).updateSkopeDirties( setId, new_val );
+            //for the settings that are excluded from skope, the skope is always the global one
+            if ( ! api.czr_skopeBase.isSettingSkopeEligible( setId ) && 'global' != skope().skope )
+              return api.czr_skope( api.czr_skopeBase.getGlobalSkopeId() ).updateSkopeDirties( setId, new_val );
 
-          var current_dirties = $.extend( true, {}, skope.dirtyValues() ),
-              _dirtyCustomized = {};
+            var current_dirties = $.extend( true, {}, skope.dirtyValues() ),
+                _dirtyCustomized = {};
 
-          _dirtyCustomized[ setId ] = new_val;
-          skope.dirtyValues.set( $.extend( current_dirties , _dirtyCustomized ) );
-          return skope.dirtyValues();
-    },
+            _dirtyCustomized[ setId ] = new_val;
+            skope.dirtyValues.set( $.extend( current_dirties , _dirtyCustomized ) );
+            return skope.dirtyValues();
+      },
 
 
 
-    //@return the boolean dirtyness state of a given setId for a given skope
-    getSkopeSettingDirtyness : function( setId ) {
-          var skope = this;
-          return skope.getSkopeSettingAPIDirtyness( setId ) || skope.getSkopeSettingChangesetDirtyness( setId );
-    },
+      //@return the boolean dirtyness state of a given setId for a given skope
+      getSkopeSettingDirtyness : function( setId ) {
+            var skope = this;
+            return skope.getSkopeSettingAPIDirtyness( setId ) || skope.getSkopeSettingChangesetDirtyness( setId );
+      },
 
-    //Has this skope already be customized in the API ?
-    getSkopeSettingAPIDirtyness : function( setId ) {
-          var skope = this;
-          return _.has( skope.dirtyValues(), api.CZR_Helpers.build_setId( setId ) );
-    },
+      //Has this skope already be customized in the API ?
+      getSkopeSettingAPIDirtyness : function( setId ) {
+            var skope = this;
+            return _.has( skope.dirtyValues(), api.CZR_Helpers.build_setId( setId ) );
+      },
 
-    //Has this skope already be customized in the API ?
-    getSkopeSettingChangesetDirtyness : function( setId ) {
-          var skope = this;
-          if ( ! api.czr_isChangeSetOn() )
-            return skope.getSkopeSettingAPIDirtyness( setId );
-          return _.has( skope.changesetValues(), api.CZR_Helpers.build_setId( setId ) );
-    },
+      //Has this skope already be customized in the API ?
+      getSkopeSettingChangesetDirtyness : function( setId ) {
+            var skope = this;
+            if ( ! api.czr_isChangeSetOn() )
+              return skope.getSkopeSettingAPIDirtyness( setId );
+            return _.has( skope.changesetValues(), api.CZR_Helpers.build_setId( setId ) );
+      },
 
-    //@return boolean
-    hasSkopeSettingDBValues : function( setId ) {
-          var skope = this,
-              _setId = api.CZR_Helpers.build_setId(setId);
+      //@return boolean
+      hasSkopeSettingDBValues : function( setId ) {
+            var skope = this,
+                _setId = api.CZR_Helpers.build_setId(setId);
 
-          return ! _.isUndefined( api.czr_skope( api.czr_activeSkopeId() ).dbValues()[_setId] );
-    }
-  } );//$.extend(
+            return ! _.isUndefined( api.czr_skope( api.czr_activeSkopeId() ).dbValues()[_setId] );
+      }
+});//$.extend(
+})( wp.customize , jQuery, _ );
 var CZRSkopeMths = CZRSkopeMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeMths, {
-    embedSkopeDialogBox : function() {
-          var skope = this,
-              skope_model = $.extend( true, {}, skope() ),
-              _tmpl = '';
+      embedSkopeDialogBox : function() {
+            var skope = this,
+                skope_model = $.extend( true, {}, skope() ),
+                _tmpl = '';
 
-          //@todo will need to be refreshed on scopes change in the future
-          if ( ! $('#customize-header-actions').find('.czr-scope-switcher').length ) {
-              throw new Error('The skope switcher wrapper is not printed, the skope can not be embedded.');
-          }
-          try {
-                _tmpl =  wp.template('czr-skope')( _.extend( skope_model, { el : skope.el } ) );
-          } catch( er ) {
-                api.errorLog( 'Error when parsing the template of a skope' + er );
-                return false;
-          }
+            //@todo will need to be refreshed on scopes change in the future
+            if ( ! $('#customize-header-actions').find('.czr-scope-switcher').length ) {
+                throw new Error('The skope switcher wrapper is not printed, the skope can not be embedded.');
+            }
+            try {
+                  _tmpl =  wp.template('czr-skope')( _.extend( skope_model, { el : skope.el } ) );
+            } catch( er ) {
+                  api.errorLog( 'Error when parsing the template of a skope' + er );
+                  return false;
+            }
 
-          $('.czr-skopes-wrapper', '#customize-header-actions').append( $( _tmpl ) );
-          return $( '.' + skope.el , '.czr-skopes-wrapper' );
-    },
-
-
-
-
-    // setSkopeSwitcherButtonActive : function( dyn_type ) {
-    //       $('.button', '.czr-scope-switcher').each( function( ind ) {
-    //         $(this).toggleClass( 'active', dyn_type == $(this).attr('data-dyn-type') );
-    //       });
-    // },
-
-
-
-    /*****************************************************************************
-    * RESET
-    *****************************************************************************/
-    renderResetWarningTmpl : function() {
-          var skope = this,
-              skope_model = $.extend( true, {}, skope() ),
-              _tmpl = '',
-              warning_message,
-              success_message;
-
-          if ( skope.dirtyness() ) {
-              warning_message = [
-                    'Please confirm that you want to reset your current customizations for : ',//@to_translate
-                    skope().title,
-                    '.'
-              ].join('');
-              success_message = [
-                    'Your customizations have been reset for ',//@to_translate
-                    skope().title,
-                    '.'
-              ].join('');
-          } else {
-              warning_message = [
-                    'Please confirm that you want to reset your published customizations to defaults for : ',//@to_translate
-                    skope().title,
-                    '.'
-              ].join('');
-              success_message = [
-                    'The options have been reset to defaults for ',//@to_translate
-                    skope().title,
-                    '.'
-              ].join('');
-          }
-
-          try {
-                _tmpl =  wp.template( 'czr-skope-pane' )(
-                      _.extend( skope_model, {
-                            el : skope.el,
-                            warning_message : warning_message,
-                            success_message : success_message
-                      } )
-                );
-          } catch( er ) {
-                api.errorLog( 'Error when parsing the the reset skope template : ' + er );//@to_translate
-                return false;
-          }
-
-          $('#customize-preview').after( $( _tmpl ) );
-
-          return $( '#czr-skope-pane' );
-    },
+            $('.czr-skopes-wrapper', '#customize-header-actions').append( $( _tmpl ) );
+            return $( '.' + skope.el , '.czr-skopes-wrapper' );
+      },
 
 
 
 
-    /*****************************************************************************
-    * HELPERS
-    *****************************************************************************/
-    getEl : function() {
-          var skope = this;
-          return $( skope.el, '#customize-header-actions');
-    }
+      // setSkopeSwitcherButtonActive : function( dyn_type ) {
+      //       $('.button', '.czr-scope-switcher').each( function( ind ) {
+      //         $(this).toggleClass( 'active', dyn_type == $(this).attr('data-dyn-type') );
+      //       });
+      // },
+
+
+
+      /*****************************************************************************
+      * RESET
+      *****************************************************************************/
+      renderResetWarningTmpl : function() {
+            var skope = this,
+                skope_model = $.extend( true, {}, skope() ),
+                _tmpl = '',
+                warning_message,
+                success_message;
+
+            if ( skope.dirtyness() ) {
+                  warning_message = [
+                        'Please confirm that you want to reset your current customizations for : ',//@to_translate
+                        skope().title,
+                        '.'
+                  ].join('');
+                  success_message = [
+                        'Your customizations have been reset for ',//@to_translate
+                        skope().title,
+                        '.'
+                  ].join('');
+            } else {
+                  warning_message = [
+                        'Please confirm that you want to reset your published customizations to defaults for : ',//@to_translate
+                        skope().title,
+                        '.'
+                  ].join('');
+                  success_message = [
+                        'The options have been reset to defaults for ',//@to_translate
+                        skope().title,
+                        '.'
+                  ].join('');
+            }
+
+            try {
+                  _tmpl =  wp.template( 'czr-skope-pane' )(
+                        _.extend( skope_model, {
+                              el : skope.el,
+                              warning_message : warning_message,
+                              success_message : success_message
+                        } )
+                  );
+            } catch( er ) {
+                  api.errorLog( 'Error when parsing the the reset skope template : ' + er );//@to_translate
+                  return false;
+            }
+
+            $('#customize-preview').after( $( _tmpl ) );
+
+            return $( '#czr-skope-pane' );
+      },
+
+
+
+
+      /*****************************************************************************
+      * HELPERS
+      *****************************************************************************/
+      getEl : function() {
+            var skope = this;
+            return $( skope.el, '#customize-header-actions');
+      }
 });//$.extend()
+})( wp.customize , jQuery, _ );
 
 var CZRSkopeMths = CZRSkopeMths || {};
-
-
+( function ( api, $, _ ) {
 //The Active state is delegated to the skope base class
 $.extend( CZRSkopeMths, {
-    /*****************************************************************************
-    * RESET
-    *****************************************************************************/
-    //Fired when on user click on ".czr-scope-reset", defined in skope model init
-    //Handles several scenarios :
-    //1) a reset ajax request (save, changeset, reset) can be currently processed, we need to wait for completion
-    //2) another skope reset dialog panel might be already opened
-    reactOnSkopeResetUserRequest : function() {
-          var skope = this,
-              _fireReaction = function() {
-                    api.state( 'czr-resetting')( true );
-                    if ( api.czr_activeSkopeId() != skope().id ) {
-                          api.czr_activeSkopeId( skope().id )
-                                .done( function() {
-                                      skope.skopeResetDialogVisibility( ! skope.skopeResetDialogVisibility() ).done( function() {
-                                            api.state( 'czr-resetting')( false );
-                                      });
+      /*****************************************************************************
+      * RESET
+      *****************************************************************************/
+      //Fired when on user click on ".czr-scope-reset", defined in skope model init
+      //Handles several scenarios :
+      //1) a reset ajax request (save, changeset, reset) can be currently processed, we need to wait for completion
+      //2) another skope reset dialog panel might be already opened
+      reactOnSkopeResetUserRequest : function() {
+            var skope = this,
+                _fireReaction = function() {
+                      api.state( 'czr-resetting')( true );
+                      if ( api.czr_activeSkopeId() != skope().id ) {
+                            api.czr_activeSkopeId( skope().id )
+                                  .done( function() {
+                                        skope.skopeResetDialogVisibility( ! skope.skopeResetDialogVisibility() ).done( function() {
+                                              api.state( 'czr-resetting')( false );
+                                        });
 
-                                });
-                    } else {
-                          skope.skopeResetDialogVisibility( ! skope.skopeResetDialogVisibility() ).done( function() {
-                                api.state( 'czr-resetting')( false );
-                          });
-                    }
-              };
+                                  });
+                      } else {
+                            skope.skopeResetDialogVisibility( ! skope.skopeResetDialogVisibility() ).done( function() {
+                                  api.state( 'czr-resetting')( false );
+                            });
+                      }
+                };
 
-          //Bail if other process currenty running
-          if ( ( api.state( 'czr-resetting')() || 0 !== api.state( 'processing' )() ) ) {
-                  api.czr_serverNotification( {
-                        message: 'Slow down, you move too fast !',//@to_translate
-                        status : 'success',
-                        auto_collapse : true
+            //Bail if other process currenty running
+            if ( ( api.state( 'czr-resetting')() || 0 !== api.state( 'processing' )() ) ) {
+                    api.czr_serverNotification( {
+                          message: 'Slow down, you move too fast !',//@to_translate
+                          status : 'success',
+                          auto_collapse : true
+                    });
+                    return;
+            }
+            //Close the current panel if a reset for a different skope is requested
+            if ( api.czr_activeSkopeId() != skope().id && api.czr_skope( api.czr_activeSkopeId() ).skopeResetDialogVisibility() ) {
+                  api.czr_skope( api.czr_activeSkopeId() ).skopeResetDialogVisibility( false ).done( function() {
+                        _fireReaction();
                   });
-                  return;
-          }
-          //Close the current panel if a reset for a different skope is requested
-          if ( api.czr_activeSkopeId() != skope().id && api.czr_skope( api.czr_activeSkopeId() ).skopeResetDialogVisibility() ) {
-                api.czr_skope( api.czr_activeSkopeId() ).skopeResetDialogVisibility( false ).done( function() {
-                      _fireReaction();
-                });
-          } else {
-                _fireReaction();
-          }
-    },
+            } else {
+                  _fireReaction();
+            }
+      },
 
 
 
@@ -5913,870 +5937,862 @@ $.extend( CZRSkopeMths, {
 
 
 
-    //cb of skope.skopeResetDialogVisibility.callbacks
-    //Setup user DOM events listeners
-    //Render the dialog box
-    skopeResetDialogReact : function( visible ) {
-          var skope = this, dfd = $.Deferred();
-          //Are we currently performing a reset or any other processing task ? (reset setting or skope, saving )
-          //=> if so, let's defer the current action when its possible
-          // if ( api.state( 'czr-resetting')() || 0 !== api.state( 'processing' )() ) {
-          //         var reactWhenPossible = function () {
-          //               if ( 0 === api.state( 'processing' )() && false === api.state( 'czr-resetting' )() ) {
-          //                     api.state.unbind( 'change', reactWhenPossible );
-          //                     skope.skopeResetDialogReact( visible );
-          //               }
-          //         };
-          //         api.state.bind( 'change', reactWhenPossible );
-          //         return dfd.resolve().promise();
-          // }
+      //cb of skope.skopeResetDialogVisibility.callbacks
+      //Setup user DOM events listeners
+      //Render the dialog box
+      skopeResetDialogReact : function( visible ) {
+            var skope = this, dfd = $.Deferred();
+            //Are we currently performing a reset or any other processing task ? (reset setting or skope, saving )
+            //=> if so, let's defer the current action when its possible
+            // if ( api.state( 'czr-resetting')() || 0 !== api.state( 'processing' )() ) {
+            //         var reactWhenPossible = function () {
+            //               if ( 0 === api.state( 'processing' )() && false === api.state( 'czr-resetting' )() ) {
+            //                     api.state.unbind( 'change', reactWhenPossible );
+            //                     skope.skopeResetDialogReact( visible );
+            //               }
+            //         };
+            //         api.state.bind( 'change', reactWhenPossible );
+            //         return dfd.resolve().promise();
+            // }
 
-          //Event Map for the Reset Panel
-          skope.userResetEventMap = skope.userResetEventMap || new api.Value( [
-                //skope reset : display warning
-                {
-                      trigger   : 'click keydown',
-                      selector  : '.czr-scope-reset-cancel',
-                      name      : 'skope_reset_cancel',
-                      actions   : function() {
-                          skope.skopeResetDialogVisibility( ! skope.skopeResetDialogVisibility() );
-                      }
-                },
-                //skope reset : do reset
-                {
-                      trigger   : 'click keydown',
-                      selector  : '.czr-scope-do-reset',
-                      name      : 'skope_do_reset',
-                      actions   : 'doResetSkopeValues'
-                }
-            ]
-          );
-
-          if ( visible ) {
-                //inform the api that we are resetting
-                //=> some actions have to be frozen in this state
-                //like for example, resetting another skope
-                api.czr_isResettingSkope( skope().id );
-
-                //render reset warning template
-                $.when( skope.renderResetWarningTmpl() ).done( function( $_container ) {
-                      skope.resetPanel = $_container;
-                      //add the reset type class
-                      skope.resetPanel.addClass( skope.dirtyness() ? 'dirty-reset' : 'db-reset' );
-                      skope.setupDOMListeners( skope.userResetEventMap() , { dom_el : skope.resetPanel } );
-                      //$('body').addClass('czr-skope-pane-open');
-                }).then( function() {
-                      setTimeout( function() {
-                            //set height
-                            var _height = $('#customize-preview').height();
-                            skope.resetPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
-                            //display
-                            $('body').addClass('czr-skope-pane-open');
-                      }, 50 );
-                });
-          } else {
-                $.when( $('body').removeClass('czr-skope-pane-open') ).done( function() {
-                      if ( _.has( skope, 'resetPanel') && false !== skope.resetPanel.length ) {
-                            setTimeout( function() {
-                                  skope.resetPanel.remove();
-                                  api.czr_isResettingSkope( false );
-                            }, 300 );
-                      }
-                });
-          }
-
-          //wait for panel sliding action before resolving
-          _.delay( function() {
-                dfd.resolve();
-          }, 350 );
-
-          return dfd.promise();
-    },
-
-
-
-    //fired on user click
-    //Is used for both resetting customized and db values, depending on the skope customization state
-    doResetSkopeValues : function() {
-          var skope = this,
-              skope_id = skope().id,
-              reset_method = skope.dirtyness() ? '_resetSkopeDirties' : '_resetSkopeAPIValues',
-              _updateAPI = function() {
-                    var _silentUpdate = function() {
-                          api.czr_skopeBase.processSilentUpdates( { refresh : false } )
-                                .fail( function() { api.consoleLog( 'Silent update failed after resetting skope : ' + skope_id ); } )
-                                .done( function() {
-                                      $.when( $('.czr-reset-warning', skope.resetPanel ).fadeOut('300') ).done( function() {
-                                            $.when( $('.czr-reset-success', skope.resetPanel ).fadeIn('300') ).done( function() {
-                                                  _.delay( function() {
-                                                        api.czr_isResettingSkope( false );
-                                                        skope.skopeResetDialogVisibility( false );
-                                                  }, 2000 );
-                                            });
-                                      });
-                                });
-                    };
-
-                    skope[reset_method]()
-                          .done( function() {
-                                //api.previewer.refresh() method is resolved with an object looking like :
-                                //{
-                                //    previewer : api.previewer,
-                                //    skopesServerData : {
-                                //        czr_skopes : _wpCustomizeSettings.czr_skopes || [],
-                                //        isChangesetDirty : boolean
-                                //    },
-                                // }
-                                api.previewer.refresh()
-                                      .fail( function( refresh_data ) {
-                                            api.consoleLog('SKOPE RESET REFRESH FAILED', refresh_data );
-                                      })
-                                      .done( function( refresh_data ) {
-                                            if ( 'global' == api.czr_skope( skope_id )().skope && '_resetSkopeAPIValues' == reset_method ) {
-                                                  var _sentSkopeCollection,
-                                                      _serverGlobalDbValues = {},
-                                                      _skope_opt_name = api.czr_skope( skope_id )().opt_name;
-
-                                                  if ( ! _.isUndefined( refresh_data.skopesServerData ) && _.has( refresh_data.skopesServerData, 'czr_skopes' ) ) {
-                                                        _sentSkopeCollection = refresh_data.skopesServerData.czr_skopes;
-                                                        if ( _.isUndefined( _.findWhere( _sentSkopeCollection, { opt_name : _skope_opt_name } ) ) ) {
-                                                              _serverGlobalDbValues = _.findWhere( _sentSkopeCollection, { opt_name : _skope_opt_name } ).db || {};
-                                                        }
-                                                  }
-                                                  api.czr_skopeBase.maybeSynchronizeGlobalSkope( { isGlobalReset : true, isSkope : true, skopeIdToReset : skope_id } )
-                                                        .done( function() {
-                                                              _silentUpdate();
-                                                        });
-                                            } else {
-                                                  _silentUpdate();
-                                            }
-                                      });
-
-                          });
-              };//_updateAPI
-
-          $('body').addClass('czr-resetting-skope');
-          //$('.czr-reset-warning', skope.resetPanel ).hide();
-
-          //When resetting the db value, wait for the ajax promise to be done before reseting the api values.
-          api.czr_skopeReset[ skope.dirtyness() ? 'resetChangeset' : 'resetPublished' ](
-                      { skope_id : skope().id, is_skope : true } )
-                      .always( function() {
-                            $('body').removeClass('czr-resetting-skope');//hides the spinner
-                      })
-                      .done( function( r ) {
-                            _updateAPI();
-                      })
-                      .fail( function( r ) {
-                              skope.skopeResetDialogVisibility( false );
-                              api.consoleLog('Skope reset failed', r );
-                      });
-    },
-
-
-    //fired in doResetSkopeValues
-    //@uses The ctrl.czr_states values
-    _resetSkopeDirties : function() {
-          var skope = this, dfd = $.Deferred();
-          skope.dirtyValues({});
-          skope.changesetValues({});
-          return dfd.resolve().promise();
-    },
-
-    //fired in doResetSkopeValues
-    //@uses The ctrl.czr_states values
-    _resetSkopeAPIValues : function() {
-          var skope = this, dfd = $.Deferred();
-          //update the skope model db property
-          skope.dbValues( {} );
-          return dfd.resolve().promise();
-    }
-  } );//$.extend(
-(function (api, $, _) {
-  // if ( ! serverControlParams.isSkopOn )
-  //   return;
-  /*****************************************************************************
-  * A "CONTEXT AWARE" SET METHD
-  *****************************************************************************/
-  /**
-  * OVERRIDES BASE api.Value method
-  * => adds the o {} param, allowing to pass additional contextual informations.
-  *
-  * Set the value and trigger all bound callbacks.
-  *
-  * @param {object} to New value.
-  */
-  api.Value.prototype.set = function( to, o ) {
-        var from = this._value, dfd = $.Deferred(), self = this, _promises = [];
-
-        to = this._setter.apply( this, arguments );
-        to = this.validate( to );
-        args = _.extend( { silent : false }, _.isObject( o ) ? o : {} );
-
-        // Bail if the sanitized value is null or unchanged.
-        if ( null === to || _.isEqual( from, to ) ) {
-              return dfd.resolveWith( self, [ to, from, o ] ).promise();
-        }
-
-        this._value = to;
-        this._dirty = true;
-        if ( true === args.silent ) {
-              return dfd.resolveWith( self, [ to, from, o ] ).promise();
-        }
-
-        if ( this._deferreds ) {
-              _.each( self._deferreds, function( _prom ) {
-                    _promises.push( _prom.apply( null, [ to, from, o ] ) );
-              });
-
-              $.when.apply( null, _promises )
-                    .fail( function() { api.consoleLog( 'A deferred callback failed in api.Value::set()'); })
-                    .then( function() {
-                          self.callbacks.fireWith( self, [ to, from, o ] );
-                          dfd.resolveWith( self, [ to, from, o ] );
-                    });
-        } else {
-              this.callbacks.fireWith( this, [ to, from, o ] );
-              return dfd.resolveWith( self, [ to, from, o ] ).promise( self );
-        }
-        return dfd.promise( self );
-  };
-
-  //allows us to specify a list of callbacks + a { deferred : true } param
-  //if deferred is found and true, then the callback(s) are added in a list of deferred
-  //@see how this deferred list is used in api.Value.prototype.set()
-  api.Value.prototype.bind = function() {
-      //find an object in the argument
-      var self = this,
-          _isDeferred = false,
-          _cbs = [];
-
-      $.each( arguments, function( _key, _arg ) {
-            if ( ! _isDeferred )
-              _isDeferred = _.isObject( _arg  ) && _arg.deferred;
-            if ( _.isFunction( _arg ) )
-              _cbs.push( _arg );
-      });
-
-      if ( _isDeferred ) {
-            self._deferreds = self._deferreds || [];
-            _.each( _cbs, function( _cb ) {
-                  if ( ! _.contains( _cb, self._deferreds ) )
-                    self._deferreds.push( _cb );
-            });
-      } else {
-            //original method
-            self.callbacks.add.apply( self.callbacks, arguments );
-      }
-      return this;
-  };
-
-  /*****************************************************************************
-  * A SILENT SET METHOD :
-  * => keep the dirtyness param unchanged
-  * => stores the api state before callback calls, and reset it after
-  * => add an object param to the callback to inform that this is a silent process
-  * , this is typically used in the overridden api.Setting.preview method
-  *****************************************************************************/
-  //@param to : the new value to set
-  //@param dirtyness : the current dirtyness status of this setting in the skope
-  //
-  api.Setting.prototype.silent_set =function( to, dirtyness ) {
-        var from = this._value,
-            _save_state = api.state('saved')();
-
-        to = this._setter.apply( this, arguments );
-        to = this.validate( to );
-
-        // Bail if the sanitized value is null or unchanged.
-        if ( null === to || _.isEqual( from, to ) ) {
-          return this;
-        }
-
-        this._value = to;
-        this._dirty = ( _.isUndefined( dirtyness ) || ! _.isBoolean( dirtyness ) ) ? this._dirty : dirtyness;
-
-        this.callbacks.fireWith( this, [ to, from, { silent : true } ] );
-        //reset the api state to its value before the callback call
-        api.state('saved')( _save_state );
-        return this;
-  };
-})( wp.customize , jQuery, _ );
-(function (api, $, _) {
-
-  /*****************************************************************************
-  * A SKOPE AWARE PREVIEWER QUERY
-  *****************************************************************************/
-
-  api.bind('ready', function() {
-        if ( ! serverControlParams.isSkopOn )
-          return;
-
-        /**
-        * Build the query to send along with the Preview request.
-        *
-        * @return {object}
-        */
-        var _coreQuery = api.previewer.query;
-
-
-        //@todo : turn those arguments into an object ?
-        //the dyn_type can also be set to 'wp_default_type' when saving a skope excluded setting
-        //@queryVars = {
-        //    skope_id : string,
-        //    action : string,
-        //    the_dirties : {},
-        //    dyn_type : string,
-        //    opt_name : string
-        // }
-        api.previewer.query =  function( queryVars ) {
-              //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
-              //=> that's why we check it here again before doing anything else
-              if ( ! serverControlParams.isSkopOn ) {
-                    return _coreQuery.apply( this );
-              }
-
-              //IS SKOP ON
-              //falls back to WP core treatment if skope is not on or if the requested skope is not registered
-              if ( ! _.has( api, 'czr_skope') ) {
-                    api.consoleLog('QUERY : SKOPE IS NOT FULLY READY YEY. FALLING BACK ON CORE QUERY');
-                    return _coreQuery.apply( this );
-              }
-
-              //HAS THE FIRST SKOPE COLLECTION BEEN POPULATED ?
-              if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() ) {
-                    api.consoleLog('QUERY : INITIAL SKOPE COLLECTION NOT POPULATED YET. FALLING BACK ON CORE QUERY');
-                    return _coreQuery.apply( this );
-              }
-
-              //the previewer is now skope aware
-              if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
-                    api.czr_isPreviewerSkopeAware.resolve();
-                    //return _coreQuery.apply( this );
-              }
-
-              //Skope is fully ready but the query is accessed from core (widgets) or a plugin
-              //=> fallback on the core method
-              if ( ! _.isObject( queryVars ) && 'resolved' == api.czr_initialSkopeCollectionPopulated.state() && 'resolved' == api.czr_initialSkopeCollectionPopulated.state() ) {
-                    return _coreQuery.apply( this );
-              }
-
-              //IS THE SKOPE ID PROVIDED ?
-              //When navigating in the preview, the skope_id might not be provided.
-              //In this case, falls back on the activeSkope() or the global skope
-              //skope_id = skope_id || api.czr_activeSkopeId() || api.czr_skopeBase.getGlobalSkopeId();
-              if ( _.isUndefined( queryVars.skope_id ) || ! _.isString( queryVars.skope_id ) ) {
-                    queryVars.skope_id = api.czr_activeSkopeId() || api.czr_skopeBase.getGlobalSkopeId();
-              }
-
-              var globalCustomized = {},
-                  skopeCustomized = {},
-                  _defaults = {
-                        skope_id : null,
-                        action : null,
-                        the_dirties : {},
-                        dyn_type : null,
-                        opt_name : null
+            //Event Map for the Reset Panel
+            skope.userResetEventMap = skope.userResetEventMap || new api.Value( [
+                  //skope reset : display warning
+                  {
+                        trigger   : 'click keydown',
+                        selector  : '.czr-scope-reset-cancel',
+                        name      : 'skope_reset_cancel',
+                        actions   : function() {
+                            skope.skopeResetDialogVisibility( ! skope.skopeResetDialogVisibility() );
+                        }
                   },
-                  _to_return;
+                  //skope reset : do reset
+                  {
+                        trigger   : 'click keydown',
+                        selector  : '.czr-scope-do-reset',
+                        name      : 'skope_do_reset',
+                        actions   : 'doResetSkopeValues'
+                  }
+              ]
+            );
 
-              queryVars = $.extend( _defaults, queryVars );
+            if ( visible ) {
+                  //inform the api that we are resetting
+                  //=> some actions have to be frozen in this state
+                  //like for example, resetting another skope
+                  api.czr_isResettingSkope( skope().id );
 
-              //ARE THE DIRTIES WELL FORMED OR NOT EMPTY ?
-              if ( ! _.isObject( queryVars.the_dirties ) ) {
-                    api.consoleLog('QUERY PARAMS : ', queryVars );
-                    throw new Error( 'QUERY DIRTIES MUST BE AN OBJECT. Requested action : ' + queryVars.action );
-              }
+                  //render reset warning template
+                  $.when( skope.renderResetWarningTmpl() ).done( function( $_container ) {
+                        skope.resetPanel = $_container;
+                        //add the reset type class
+                        skope.resetPanel.addClass( skope.dirtyness() ? 'dirty-reset' : 'db-reset' );
+                        skope.setupDOMListeners( skope.userResetEventMap() , { dom_el : skope.resetPanel } );
+                        //$('body').addClass('czr-skope-pane-open');
+                  }).then( function() {
+                        setTimeout( function() {
+                              //set height
+                              var _height = $('#customize-preview').height();
+                              skope.resetPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
+                              //display
+                              $('body').addClass('czr-skope-pane-open');
+                        }, 50 );
+                  });
+            } else {
+                  $.when( $('body').removeClass('czr-skope-pane-open') ).done( function() {
+                        if ( _.has( skope, 'resetPanel') && false !== skope.resetPanel.length ) {
+                              setTimeout( function() {
+                                    skope.resetPanel.remove();
+                                    api.czr_isResettingSkope( false );
+                              }, 300 );
+                        }
+                  });
+            }
 
-              ///TO CHANGE ?
-              if ( 'pending' != api.czr_isPreviewerSkopeAware.state() && _.isNull( queryVars.skope_id ) ) {
-                    api.consoleLog('QUERY PARAMS : ', queryVars );
-                    //api.consoleLog( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY.' );
-                    throw new Error( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY. Requested action : ' + queryVars.action );
-                    //return _coreQuery.apply( this );
-              }
+            //wait for panel sliding action before resolving
+            _.delay( function() { dfd.resolve(); }, 350 );
 
-              //IS THE REQUESTED ACTION AUTHORIZED ?
-              if ( ! _.contains( [ null, 'refresh', 'save', 'reset', 'changeset_update' ], queryVars.action ) ) {
-                    api.consoleLog('QUERY PARAMS : ', queryVars );
-                    throw new Error( 'A REQUESTED QUERY HAS NO AUTHORIZED ACTION. Requested action : ' + queryVars.action );
-              }
-
-              //@return an object of customized values for each of the current skopes :
-              //{
-              //  'skope_id_1' = { ... },
-              //  'skope_id_2' = { ... }
-              //}
-              var _getSkopesCustomized = function() {
-                    //if the initial skope collection has been populated, let's populate the skopeCustomized
-                    if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
-                      return {};
-                    var _skpCust = {};
-                    //Loop current skopes collection
-                    //Exclude the global skope
-                    _.each( api.czr_currentSkopesCollection(), function( _skp ) {
-                          if ( 'global' == _skp.skope )
-                            return;
-                          _skpCust[_skp.id] = api.czr_skopeBase.getSkopeDirties( _skp.id );
-                    } );
-                    return _skpCust;
-              };
-
-
-
-              ///BUILD THE DIRTIES
-              //There are cases ( _forceSidebarDirtyRefresh ) when the dirties can be passed as param
-              //In this cases, we use them and assign them to the relevant customized object
-              //Since 4.7 and the changeset introduction, the boolean param 'excludeCustomizedSaved' can be passed to the query
-              if ( _.isNull( queryVars.the_dirties ) || _.isEmpty( queryVars.the_dirties ) ) {
-                    globalCustomized = api.dirtyValues( { unsaved:  queryVars.excludeCustomizedSaved || false } );
-                    skopeCustomized = _getSkopesCustomized();
-              } else {
-                    if ( 'global' == api.czr_skopeBase.getActiveSkopeName() )
-                      globalCustomized = queryVars.the_dirties;
-                    else
-                      skopeCustomized[ api.czr_activeSkopeId() ] = queryVars.the_dirties;
-              }
+            return dfd.promise();
+      },
 
 
-              ///HANDLE THE VARIOUS CASES : REFRESH, SAVE, RESET
-              //on first load OR if the current skope is the customized one, build the globalCustomized the regular way : typically a refresh after setting change
-              //otherwise, get the dirties from the requested skope instance : typically a save action on several skopes
-              switch( queryVars.action ) {
-                    case null :
-                    case 'refresh' :
-                          //INHERITANCE : FILTER THE DIRTIES
-                          //when refreshing the preview, we need to apply the skope inheritance to the customized values
-                          //apply the inheritance
-                          // var _inheritanceReadyCustomized = {};
-                          // _.each( skopeCustomized, function( _custValues, _skopId ) {
-                          //       _inheritanceReadyCustomized[_skopId] =  api.czr_skopeBase.applyDirtyCustomizedInheritance( _custValues, _skopId );
-                          // } );
-                          // skopeCustomized = _inheritanceReadyCustomized;
 
-                          //globalCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( globalCustomized, api.czr_skopeBase.getGlobalSkopeId() );
-                    break;
+      //fired on user click
+      //Is used for both resetting customized and db values, depending on the skope customization state
+      doResetSkopeValues : function() {
+            var skope = this,
+                skope_id = skope().id,
+                reset_method = skope.dirtyness() ? '_resetSkopeDirties' : '_resetSkopeAPIValues',
+                _updateAPI = function() {
+                      var _silentUpdate = function() {
+                            api.czr_skopeBase.processSilentUpdates( { refresh : false } )
+                                  .fail( function() { api.consoleLog( 'Silent update failed after resetting skope : ' + skope_id ); } )
+                                  .done( function() {
+                                        $.when( $('.czr-reset-warning', skope.resetPanel ).fadeOut('300') ).done( function() {
+                                              $.when( $('.czr-reset-success', skope.resetPanel ).fadeIn('300') ).done( function() {
+                                                    _.delay( function() {
+                                                          api.czr_isResettingSkope( false );
+                                                          skope.skopeResetDialogVisibility( false );
+                                                    }, 2000 );
+                                              });
+                                        });
+                                  });
+                      };
 
-                    case 'changeset_update' :
-                          if ( _.isUndefined( queryVars.opt_name ) ) {
-                                throw new Error('Missing opt_name param in the changeset_update query for skope : ' + queryVars.skope_id );
-                          }
-                    break;
+                      skope[reset_method]()
+                            .done( function() {
+                                  //api.previewer.refresh() method is resolved with an object looking like :
+                                  //{
+                                  //    previewer : api.previewer,
+                                  //    skopesServerData : {
+                                  //        czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+                                  //        isChangesetDirty : boolean
+                                  //    },
+                                  // }
+                                  api.previewer.refresh()
+                                        .fail( function( refresh_data ) {
+                                              api.consoleLog('SKOPE RESET REFRESH FAILED', refresh_data );
+                                        })
+                                        .done( function( refresh_data ) {
+                                              if ( 'global' == api.czr_skope( skope_id )().skope && '_resetSkopeAPIValues' == reset_method ) {
+                                                    var _sentSkopeCollection,
+                                                        _serverGlobalDbValues = {},
+                                                        _skope_opt_name = api.czr_skope( skope_id )().opt_name;
+
+                                                    if ( ! _.isUndefined( refresh_data.skopesServerData ) && _.has( refresh_data.skopesServerData, 'czr_skopes' ) ) {
+                                                          _sentSkopeCollection = refresh_data.skopesServerData.czr_skopes;
+                                                          if ( _.isUndefined( _.findWhere( _sentSkopeCollection, { opt_name : _skope_opt_name } ) ) ) {
+                                                                _serverGlobalDbValues = _.findWhere( _sentSkopeCollection, { opt_name : _skope_opt_name } ).db || {};
+                                                          }
+                                                    }
+                                                    api.czr_skopeBase.maybeSynchronizeGlobalSkope( { isGlobalReset : true, isSkope : true, skopeIdToReset : skope_id } )
+                                                          .done( function() {
+                                                                _silentUpdate();
+                                                          });
+                                              } else {
+                                                    _silentUpdate();
+                                              }
+                                        });
+
+                            });
+                };//_updateAPI
+
+            $('body').addClass('czr-resetting-skope');
+            //$('.czr-reset-warning', skope.resetPanel ).hide();
+
+            //When resetting the db value, wait for the ajax promise to be done before reseting the api values.
+            api.czr_skopeReset[ skope.dirtyness() ? 'resetChangeset' : 'resetPublished' ](
+                        { skope_id : skope().id, is_skope : true } )
+                        .always( function() {
+                              $('body').removeClass('czr-resetting-skope');//hides the spinner
+                        })
+                        .done( function( r ) {
+                              _updateAPI();
+                        })
+                        .fail( function( r ) {
+                                skope.skopeResetDialogVisibility( false );
+                                api.consoleLog('Skope reset failed', r );
+                        });
+      },
 
 
-                    case 'save' :
-                          // if ( _.isEmpty( queryVars.the_dirties ) ) {
-                          //       throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A NOT EMPTY DIRTY OBJECT TO SUBMIT' );
-                          // }
-                          //Set the Dyn type
-                          //the dyn type might be passed as a param to the query in some cases
-                          //typically to save skope excluded settings. In this case the dyn_type is set to false, to fall back on the default wp one : theme_mod or option
-                          if ( _.isNull( queryVars.dyn_type ) )
-                                queryVars.dyn_type = api.czr_skope( queryVars.skope_id )().dyn_type;//post_meta, term_meta, user_meta, trans, option
-                          if ( _.isNull( queryVars.dyn_type ) || _.isUndefined( queryVars.dyn_type ) ) {
-                                throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A VALID DYN TYPE.' + queryVars.skope_id );
-                          }
-                          //Set the dirties  || api.czr_skopeBase.getSkopeDirties(skope_id) ?
-                          //globalCustomized = queryVars.the_dirties; //was : api.czr_skope( skope_id ).dirtyValues();
-                    break;
+      //fired in doResetSkopeValues
+      //@uses The ctrl.czr_states values
+      _resetSkopeDirties : function() {
+            var skope = this, dfd = $.Deferred();
+            skope.dirtyValues({});
+            skope.changesetValues({});
+            return dfd.resolve().promise();
+      },
 
-                    case 'reset' :
-                          //no specific treatment for reset
-                          if ( _.isNull( queryVars.dyn_type ) )
-                                queryVars.dyn_type = api.czr_skope( queryVars.skope_id )().dyn_type;//post_meta, term_meta, user_meta, trans, option
-                          if ( _.isNull( queryVars.dyn_type ) || _.isUndefined( queryVars.dyn_type ) ) {
-                                throw new Error( 'QUERY : A RESET QUERY MUST HAVE A VALID DYN TYPE.' + queryVars.skope_id );
-                          }
-                    break;
-              }
-
-
-              //BUILD THE CURRENT SKOPES ARRAY
-              var _current_skopes = {};
-              _.each( api.czr_currentSkopesCollection(), function( _skp ) {
-                    _current_skopes[_skp.skope] = { id : _skp.id, opt_name : _skp.opt_name };
-              });
-
-
-              //Before 4.7 and the changeset introduction, the queryVars were :
-              //{
-              //  wp_customize: 'on',
-              //  theme:      api.settings.theme.stylesheet,
-              //  customized: JSON.stringify( globalCustomized ),
-              //  nonce:      this.nonce.preview
-              //}
-
-              //Since 4.7 the queryVars are :
-              //{
-              //  wp_customize: 'on',
-              //  customize_theme: api.settings.theme.stylesheet,
-              //  customized : JSON.stringify( api.dirtyValues( { unsaved: options && options.excludeCustomizedSaved } ) );
-              //  nonce: this.nonce.preview,
-              //  customize_changeset_uuid: api.settings.changeset.uuid
-              //}
-
-              //common properties
-              _to_return = {
-                    wp_customize: 'on',
-                    //theme is added after, because the property name has been changed to customize_theme in 4.7
-                    //always make sure that the customized values is not empty, otherwise nothing will be posted since 4.7.
-                    //@see api.PreviewFrame::run()
-                    customized:      '{}' == JSON.stringify( globalCustomized ) ? '{\"__not_customized__\"}' : JSON.stringify( globalCustomized ),
-                    skopeCustomized:  JSON.stringify( skopeCustomized ),
-                    nonce:            this.nonce.preview,
-                    skope:            api.czr_skope( queryVars.skope_id )().skope,
-                    level_id:          api.czr_skope( queryVars.skope_id )().level,
-                    skope_id:         queryVars.skope_id,
-                    dyn_type:         queryVars.dyn_type,
-                    opt_name:         ! _.isNull( queryVars.opt_name ) ? queryVars.opt_name : api.czr_skope( queryVars.skope_id )().opt_name,
-                    obj_id:           api.czr_skope( queryVars.skope_id )().obj_id,
-                    current_skopes:   JSON.stringify( _current_skopes ) || {},
-                    channel:          this.channel(),
-                    revisionIndex:    api._latestRevision
-              };
-
-              //since 4.7
-              if ( api.czr_isChangeSetOn() ) {
-                    _to_return = $.extend( _to_return , {
-                          customize_theme: api.settings.theme.stylesheet,
-                          customize_changeset_uuid: api.settings.changeset.uuid
-                    });
-              }
-              //before 4.7
-              else {
-                    _to_return = $.extend( _to_return , {
-                          theme: api.settings.theme.stylesheet
-                    });
-              }
-              // api.consoleLog('DIRTY VALUES TO SUBMIT ? ', globalCustomized, api.czr_skopeBase.getSkopeDirties(skope_id) );
-              return _to_return;
-
-        };//api.previewer.query
-  });//api.bind('ready')
-
+      //fired in doResetSkopeValues
+      //@uses The ctrl.czr_states values
+      _resetSkopeAPIValues : function() {
+            var skope = this, dfd = $.Deferred();
+            //update the skope model db property
+            skope.dbValues( {} );
+            return dfd.resolve().promise();
+      }
+});//$.extend(
 })( wp.customize , jQuery, _ );
-(function (api, $, _) {
+( function ( api, $, _ ) {
+      // if ( ! serverControlParams.isSkopOn )
+      //   return;
+      /*****************************************************************************
+      * A "CONTEXT AWARE" SET METHD
+      *****************************************************************************/
+      /**
+      * OVERRIDES BASE api.Value method
+      * => adds the o {} param, allowing to pass additional contextual informations.
+      *
+      * Set the value and trigger all bound callbacks.
+      *
+      * @param {object} to New value.
+      */
+      api.Value.prototype.set = function( to, o ) {
+            var from = this._value, dfd = $.Deferred(), self = this, _promises = [];
+
+            to = this._setter.apply( this, arguments );
+            to = this.validate( to );
+            args = _.extend( { silent : false }, _.isObject( o ) ? o : {} );
+
+            // Bail if the sanitized value is null or unchanged.
+            if ( null === to || _.isEqual( from, to ) ) {
+                  return dfd.resolveWith( self, [ to, from, o ] ).promise();
+            }
+
+            this._value = to;
+            this._dirty = true;
+            if ( true === args.silent ) {
+                  return dfd.resolveWith( self, [ to, from, o ] ).promise();
+            }
+
+            if ( this._deferreds ) {
+                  _.each( self._deferreds, function( _prom ) {
+                        _promises.push( _prom.apply( null, [ to, from, o ] ) );
+                  });
+
+                  $.when.apply( null, _promises )
+                        .fail( function() { api.consoleLog( 'A deferred callback failed in api.Value::set()'); })
+                        .then( function() {
+                              self.callbacks.fireWith( self, [ to, from, o ] );
+                              dfd.resolveWith( self, [ to, from, o ] );
+                        });
+            } else {
+                  this.callbacks.fireWith( this, [ to, from, o ] );
+                  return dfd.resolveWith( self, [ to, from, o ] ).promise( self );
+            }
+            return dfd.promise( self );
+      };
+
+      //allows us to specify a list of callbacks + a { deferred : true } param
+      //if deferred is found and true, then the callback(s) are added in a list of deferred
+      //@see how this deferred list is used in api.Value.prototype.set()
+      api.Value.prototype.bind = function() {
+          //find an object in the argument
+          var self = this,
+              _isDeferred = false,
+              _cbs = [];
+
+          $.each( arguments, function( _key, _arg ) {
+                if ( ! _isDeferred )
+                  _isDeferred = _.isObject( _arg  ) && _arg.deferred;
+                if ( _.isFunction( _arg ) )
+                  _cbs.push( _arg );
+          });
+
+          if ( _isDeferred ) {
+                self._deferreds = self._deferreds || [];
+                _.each( _cbs, function( _cb ) {
+                      if ( ! _.contains( _cb, self._deferreds ) )
+                        self._deferreds.push( _cb );
+                });
+          } else {
+                //original method
+                self.callbacks.add.apply( self.callbacks, arguments );
+          }
+          return this;
+      };
+
+      /*****************************************************************************
+      * A SILENT SET METHOD :
+      * => keep the dirtyness param unchanged
+      * => stores the api state before callback calls, and reset it after
+      * => add an object param to the callback to inform that this is a silent process
+      * , this is typically used in the overridden api.Setting.preview method
+      *****************************************************************************/
+      //@param to : the new value to set
+      //@param dirtyness : the current dirtyness status of this setting in the skope
+      //
+      api.Setting.prototype.silent_set =function( to, dirtyness ) {
+            var from = this._value,
+                _save_state = api.state('saved')();
+
+            to = this._setter.apply( this, arguments );
+            to = this.validate( to );
+
+            // Bail if the sanitized value is null or unchanged.
+            if ( null === to || _.isEqual( from, to ) ) {
+              return this;
+            }
+
+            this._value = to;
+            this._dirty = ( _.isUndefined( dirtyness ) || ! _.isBoolean( dirtyness ) ) ? this._dirty : dirtyness;
+
+            this.callbacks.fireWith( this, [ to, from, { silent : true } ] );
+            //reset the api state to its value before the callback call
+            api.state('saved')( _save_state );
+            return this;
+      };
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      /*****************************************************************************
+      * A SKOPE AWARE PREVIEWER QUERY
+      *****************************************************************************/
+      api.bind('ready', function() {
+            if ( ! serverControlParams.isSkopOn )
+              return;
+
+            /**
+            * Build the query to send along with the Preview request.
+            *
+            * @return {object}
+            */
+            var _coreQuery = api.previewer.query;
+
+
+            //@todo : turn those arguments into an object ?
+            //the dyn_type can also be set to 'wp_default_type' when saving a skope excluded setting
+            //@queryVars = {
+            //    skope_id : string,
+            //    action : string,
+            //    the_dirties : {},
+            //    dyn_type : string,
+            //    opt_name : string
+            // }
+            api.previewer.query =  function( queryVars ) {
+                  //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
+                  //=> that's why we check it here again before doing anything else
+                  if ( ! serverControlParams.isSkopOn ) {
+                        return _coreQuery.apply( this );
+                  }
+
+                  //IS SKOP ON
+                  //falls back to WP core treatment if skope is not on or if the requested skope is not registered
+                  if ( ! _.has( api, 'czr_skope') ) {
+                        api.consoleLog('QUERY : SKOPE IS NOT FULLY READY YEY. FALLING BACK ON CORE QUERY');
+                        return _coreQuery.apply( this );
+                  }
+
+                  //HAS THE FIRST SKOPE COLLECTION BEEN POPULATED ?
+                  if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() ) {
+                        api.consoleLog('QUERY : INITIAL SKOPE COLLECTION NOT POPULATED YET. FALLING BACK ON CORE QUERY');
+                        return _coreQuery.apply( this );
+                  }
+
+                  //the previewer is now skope aware
+                  if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
+                        api.czr_isPreviewerSkopeAware.resolve();
+                        //return _coreQuery.apply( this );
+                  }
+
+                  //Skope is fully ready but the query is accessed from core (widgets) or a plugin
+                  //=> fallback on the core method
+                  if ( ! _.isObject( queryVars ) && 'resolved' == api.czr_initialSkopeCollectionPopulated.state() && 'resolved' == api.czr_initialSkopeCollectionPopulated.state() ) {
+                        return _coreQuery.apply( this );
+                  }
+
+                  //IS THE SKOPE ID PROVIDED ?
+                  //When navigating in the preview, the skope_id might not be provided.
+                  //In this case, falls back on the activeSkope() or the global skope
+                  //skope_id = skope_id || api.czr_activeSkopeId() || api.czr_skopeBase.getGlobalSkopeId();
+                  if ( _.isUndefined( queryVars.skope_id ) || ! _.isString( queryVars.skope_id ) ) {
+                        queryVars.skope_id = api.czr_activeSkopeId() || api.czr_skopeBase.getGlobalSkopeId();
+                  }
+
+                  var globalCustomized = {},
+                      skopeCustomized = {},
+                      _defaults = {
+                            skope_id : null,
+                            action : null,
+                            the_dirties : {},
+                            dyn_type : null,
+                            opt_name : null
+                      },
+                      _to_return;
+
+                  queryVars = $.extend( _defaults, queryVars );
+
+                  //ARE THE DIRTIES WELL FORMED OR NOT EMPTY ?
+                  if ( ! _.isObject( queryVars.the_dirties ) ) {
+                        api.consoleLog('QUERY PARAMS : ', queryVars );
+                        throw new Error( 'QUERY DIRTIES MUST BE AN OBJECT. Requested action : ' + queryVars.action );
+                  }
+
+                  ///TO CHANGE ?
+                  if ( 'pending' != api.czr_isPreviewerSkopeAware.state() && _.isNull( queryVars.skope_id ) ) {
+                        api.consoleLog('QUERY PARAMS : ', queryVars );
+                        //api.consoleLog( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY.' );
+                        throw new Error( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY. Requested action : ' + queryVars.action );
+                        //return _coreQuery.apply( this );
+                  }
+
+                  //IS THE REQUESTED ACTION AUTHORIZED ?
+                  if ( ! _.contains( [ null, 'refresh', 'save', 'reset', 'changeset_update' ], queryVars.action ) ) {
+                        api.consoleLog('QUERY PARAMS : ', queryVars );
+                        throw new Error( 'A REQUESTED QUERY HAS NO AUTHORIZED ACTION. Requested action : ' + queryVars.action );
+                  }
+
+                  //@return an object of customized values for each of the current skopes :
+                  //{
+                  //  'skope_id_1' = { ... },
+                  //  'skope_id_2' = { ... }
+                  //}
+                  var _getSkopesCustomized = function() {
+                        //if the initial skope collection has been populated, let's populate the skopeCustomized
+                        if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
+                          return {};
+                        var _skpCust = {};
+                        //Loop current skopes collection
+                        //Exclude the global skope
+                        _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                              if ( 'global' == _skp.skope )
+                                return;
+                              _skpCust[_skp.id] = api.czr_skopeBase.getSkopeDirties( _skp.id );
+                        } );
+                        return _skpCust;
+                  };
+
+
+
+                  ///BUILD THE DIRTIES
+                  //There are cases ( _forceSidebarDirtyRefresh ) when the dirties can be passed as param
+                  //In this cases, we use them and assign them to the relevant customized object
+                  //Since 4.7 and the changeset introduction, the boolean param 'excludeCustomizedSaved' can be passed to the query
+                  if ( _.isNull( queryVars.the_dirties ) || _.isEmpty( queryVars.the_dirties ) ) {
+                        globalCustomized = api.dirtyValues( { unsaved:  queryVars.excludeCustomizedSaved || false } );
+                        skopeCustomized = _getSkopesCustomized();
+                  } else {
+                        if ( 'global' == api.czr_skopeBase.getActiveSkopeName() )
+                          globalCustomized = queryVars.the_dirties;
+                        else
+                          skopeCustomized[ api.czr_activeSkopeId() ] = queryVars.the_dirties;
+                  }
+
+
+                  ///HANDLE THE VARIOUS CASES : REFRESH, SAVE, RESET
+                  //on first load OR if the current skope is the customized one, build the globalCustomized the regular way : typically a refresh after setting change
+                  //otherwise, get the dirties from the requested skope instance : typically a save action on several skopes
+                  switch( queryVars.action ) {
+                        case null :
+                        case 'refresh' :
+                              //INHERITANCE : FILTER THE DIRTIES
+                              //when refreshing the preview, we need to apply the skope inheritance to the customized values
+                              //apply the inheritance
+                              // var _inheritanceReadyCustomized = {};
+                              // _.each( skopeCustomized, function( _custValues, _skopId ) {
+                              //       _inheritanceReadyCustomized[_skopId] =  api.czr_skopeBase.applyDirtyCustomizedInheritance( _custValues, _skopId );
+                              // } );
+                              // skopeCustomized = _inheritanceReadyCustomized;
+
+                              //globalCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( globalCustomized, api.czr_skopeBase.getGlobalSkopeId() );
+                        break;
+
+                        case 'changeset_update' :
+                              if ( _.isUndefined( queryVars.opt_name ) ) {
+                                    throw new Error('Missing opt_name param in the changeset_update query for skope : ' + queryVars.skope_id );
+                              }
+                        break;
+
+
+                        case 'save' :
+                              // if ( _.isEmpty( queryVars.the_dirties ) ) {
+                              //       throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A NOT EMPTY DIRTY OBJECT TO SUBMIT' );
+                              // }
+                              //Set the Dyn type
+                              //the dyn type might be passed as a param to the query in some cases
+                              //typically to save skope excluded settings. In this case the dyn_type is set to false, to fall back on the default wp one : theme_mod or option
+                              if ( _.isNull( queryVars.dyn_type ) )
+                                    queryVars.dyn_type = api.czr_skope( queryVars.skope_id )().dyn_type;//post_meta, term_meta, user_meta, trans, option
+                              if ( _.isNull( queryVars.dyn_type ) || _.isUndefined( queryVars.dyn_type ) ) {
+                                    throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A VALID DYN TYPE.' + queryVars.skope_id );
+                              }
+                              //Set the dirties  || api.czr_skopeBase.getSkopeDirties(skope_id) ?
+                              //globalCustomized = queryVars.the_dirties; //was : api.czr_skope( skope_id ).dirtyValues();
+                        break;
+
+                        case 'reset' :
+                              //no specific treatment for reset
+                              if ( _.isNull( queryVars.dyn_type ) )
+                                    queryVars.dyn_type = api.czr_skope( queryVars.skope_id )().dyn_type;//post_meta, term_meta, user_meta, trans, option
+                              if ( _.isNull( queryVars.dyn_type ) || _.isUndefined( queryVars.dyn_type ) ) {
+                                    throw new Error( 'QUERY : A RESET QUERY MUST HAVE A VALID DYN TYPE.' + queryVars.skope_id );
+                              }
+                        break;
+                  }
+
+
+                  //BUILD THE CURRENT SKOPES ARRAY
+                  var _current_skopes = {};
+                  _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                        _current_skopes[_skp.skope] = { id : _skp.id, opt_name : _skp.opt_name };
+                  });
+
+
+                  //Before 4.7 and the changeset introduction, the queryVars were :
+                  //{
+                  //  wp_customize: 'on',
+                  //  theme:      api.settings.theme.stylesheet,
+                  //  customized: JSON.stringify( globalCustomized ),
+                  //  nonce:      this.nonce.preview
+                  //}
+
+                  //Since 4.7 the queryVars are :
+                  //{
+                  //  wp_customize: 'on',
+                  //  customize_theme: api.settings.theme.stylesheet,
+                  //  customized : JSON.stringify( api.dirtyValues( { unsaved: options && options.excludeCustomizedSaved } ) );
+                  //  nonce: this.nonce.preview,
+                  //  customize_changeset_uuid: api.settings.changeset.uuid
+                  //}
+
+                  //common properties
+                  _to_return = {
+                        wp_customize: 'on',
+                        //theme is added after, because the property name has been changed to customize_theme in 4.7
+                        //always make sure that the customized values is not empty, otherwise nothing will be posted since 4.7.
+                        //@see api.PreviewFrame::run()
+                        customized:      '{}' == JSON.stringify( globalCustomized ) ? '{\"__not_customized__\"}' : JSON.stringify( globalCustomized ),
+                        skopeCustomized:  JSON.stringify( skopeCustomized ),
+                        nonce:            this.nonce.preview,
+                        skope:            api.czr_skope( queryVars.skope_id )().skope,
+                        level_id:          api.czr_skope( queryVars.skope_id )().level,
+                        skope_id:         queryVars.skope_id,
+                        dyn_type:         queryVars.dyn_type,
+                        opt_name:         ! _.isNull( queryVars.opt_name ) ? queryVars.opt_name : api.czr_skope( queryVars.skope_id )().opt_name,
+                        obj_id:           api.czr_skope( queryVars.skope_id )().obj_id,
+                        current_skopes:   JSON.stringify( _current_skopes ) || {},
+                        channel:          this.channel(),
+                        revisionIndex:    api._latestRevision
+                  };
+
+                  //since 4.7
+                  if ( api.czr_isChangeSetOn() ) {
+                        _to_return = $.extend( _to_return , {
+                              customize_theme: api.settings.theme.stylesheet,
+                              customize_changeset_uuid: api.settings.changeset.uuid
+                        });
+                  }
+                  //before 4.7
+                  else {
+                        _to_return = $.extend( _to_return , {
+                              theme: api.settings.theme.stylesheet
+                        });
+                  }
+                  // api.consoleLog('DIRTY VALUES TO SUBMIT ? ', globalCustomized, api.czr_skopeBase.getSkopeDirties(skope_id) );
+                  return _to_return;
+
+            };//api.previewer.query
+      });//api.bind('ready')
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
       api.bind( 'czr-skope-started', function() {
             //OVERRIDES WP
             api.previewer.save = function( args ) {
                   return api.czr_skopeSave.save();
             };
-
       });//api.bind('ready')
 })( wp.customize , jQuery, _ );
 (function (api, $, _) {
+      if ( ! serverControlParams.isSkopOn )
+        return;
 
-  if ( ! serverControlParams.isSkopOn )
-    return;
+      /*****************************************************************************
+      * SYNCHRONIZER AUGMENTED
+      *****************************************************************************/
+      // var _original_element_initialize = api.Element.prototype.initialize;
+      // api.Element.prototype.initialize = function( element, options  ) {
+      //         //call the original constructor
+      //         _original_element_initialize .apply( this, [element, options ] );
+      //         api.consoleLog('IN OVERRIDEN INITIALIZE ELEMENT ?');
+      //         // if ( this.element.is('select') ) {
+      //         //     api.consoleLog('element, options', element, options);
+      //         // }
+      // };
 
-  /*****************************************************************************
-  * SYNCHRONIZER AUGMENTED
-  *****************************************************************************/
-  // var _original_element_initialize = api.Element.prototype.initialize;
-  // api.Element.prototype.initialize = function( element, options  ) {
-  //         //call the original constructor
-  //         _original_element_initialize .apply( this, [element, options ] );
-  //         api.consoleLog('IN OVERRIDEN INITIALIZE ELEMENT ?');
-  //         // if ( this.element.is('select') ) {
-  //         //     api.consoleLog('element, options', element, options);
-  //         // }
-  // };
+      // //CHECKBOX WITH ICHECK
+      api.Element.synchronizer.checkbox.update = function( to ) {
+            this.element.prop( 'checked', to );
+            this.element.iCheck('update');
+      };
 
-  // //CHECKBOX WITH ICHECK
-  api.Element.synchronizer.checkbox.update = function( to ) {
-        this.element.prop( 'checked', to );
-        this.element.iCheck('update');
-  };
-
-  var _original = api.Element.synchronizer.val.update;
-  api.Element.synchronizer.val.update = function(to) {
-        var self = this,
-            _modifySynchronizer = function() {
-                  //SELECT CASE
-                  if ( self.element.is('select') ) {
-                        //SELECT2 OR SELECTER
-                        //select2.val() documented https://select2.github.io/announcements-4.0.html
-                        self.element.val(to).trigger('change');
-                  } else if ( self.element.hasClass('wp-color-picker') ) {
-                        //COLOR PICKER CASE
-                        self.element.val(to).trigger('change');
-                  }
-                  else {
-                        //falls back to the parent behaviour
-                        self.element.val( to );
-                  }
-            };
-        //if skope on,
-        //wait for skope to be fully loaded to alter this
-        if ( serverControlParams.isSkopOn ) {
-              if ( 'resolved' != api.czr_skopeReady.state() ) {
-                    return _original.call( self, to );
-              } else {
-                    api.czr_skopeReady.then( function () {
-                          _modifySynchronizer();
-                    });
-              }
-        } else {
-              _modifySynchronizer();
-        }
-  };
-
-  api.Element.synchronizer.val.refresh = function() {
-        var syncApiInstance = this;
-        //SELECT CASE
-        //Avoid null values because not taken into account by the api.value.set() method
-        //=> keep the same var type empty if the setting val is reset by user
-        if ( this.element.is('select') && _.isNull( this.element.val() ) ) {
-              if ( _.isArray( syncApiInstance() ) )
-                return [];
-              else if ( _.isObject( syncApiInstance() ) )
-                return {};
-              else
-                return '';
-        } else {
-              //falls back to the parent behaviour
-              return  this.element.val();
-        }
-  };
-})( wp.customize , jQuery, _ );
-(function (api, $, _) {
-    var coreRefresh = api.Previewer.prototype.refresh;
-    var _new_refresh = function( params ) {
-          params = _.extend({
-                      waitSkopeSynced : true,
-                      the_dirties : {}
-                },
-                params
-          );
-
-          var previewer = this, dfd = $.Deferred();
-
-          //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
-          //=> that's why we check it here again before doing anything else
-          if ( ! serverControlParams.isSkopOn ) {
-                return dfd.resolve().promise();
-          }
-
-          if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
-                api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.previewer._new_refresh() method.');
-          }
-
-          //if too early, then let's fall back on core
-          if ( ! _.has( api, 'czr_activeSkopeId') ) {
-                if ( 'resolved' != api.czr_skopeReady.state() ) {
-                      api.czr_skopeReady.done( function() {
-                            _new_refresh.apply( api.previewer, params );
-                      });
-                      //Fire the core one
-                      coreRefresh.apply( previewer );
-                      return dfd.resolve().promise();
-                }
-          }
-
-          // Display loading indicator
-          previewer.send( 'loading-initiated' );
-
-          previewer.abort();
-
-          var query_params = api.czr_getSkopeQueryParams({
-                    skope_id : api.czr_activeSkopeId(),
-                    action : 'refresh',
-                    the_dirties : params.the_dirties || {}
-              });
-
-          previewer.loading = new api.PreviewFrame({
-                url:        previewer.url(),
-                previewUrl: previewer.previewUrl(),
-                query:      previewer.query( query_params ) || {},
-                container:  previewer.container,
-                signature:  'WP_CUSTOMIZER_SIGNATURE'//will be deprecated in 4.7
-          });
-
-
-          previewer.settingsModifiedWhileLoading = {};
-          onSettingChange = function( setting ) {
-                previewer.settingsModifiedWhileLoading[ setting.id ] = true;
-          };
-          api.bind( 'change', onSettingChange );
-
-          previewer.loading.always( function() {
-                api.unbind( 'change', onSettingChange );
-          } );
-
-          //Needed before WP 4.7
-          if ( ! api.czr_isChangeSetOn() ) {
-                previewer._previousPreview = previewer._previousPreview || previewer.preview;
-          }
-
-          previewer.loading.done( function( readyData ) {
-                var loadingFrame = this, onceSynced;
-
-                previewer.preview = loadingFrame;
-                previewer.targetWindow( loadingFrame.targetWindow() );
-                previewer.channel( loadingFrame.channel() );
-                onceSynced = function( skopesServerData ) {
-                      loadingFrame.unbind( 'synced', onceSynced );
-                      loadingFrame.unbind( 'czr-skopes-synced', onceSynced );
-
-                      if ( previewer._previousPreview ) {
-                            previewer._previousPreview.destroy();
-                      } //before WP 4.7
+      var _original = api.Element.synchronizer.val.update;
+      api.Element.synchronizer.val.update = function(to) {
+            var self = this,
+                _modifySynchronizer = function() {
+                      //SELECT CASE
+                      if ( self.element.is('select') ) {
+                            //SELECT2 OR SELECTER
+                            //select2.val() documented https://select2.github.io/announcements-4.0.html
+                            self.element.val(to).trigger('change');
+                      } else if ( self.element.hasClass('wp-color-picker') ) {
+                            //COLOR PICKER CASE
+                            self.element.val(to).trigger('change');
+                      }
                       else {
-                          if ( previewer.preview )
-                            previewer.preview.destroy();
-                      }
-
-                      previewer._previousPreview = previewer.preview;
-                      previewer.deferred.active.resolve();
-                      delete previewer.loading;
-
-                      //Before WP 4.7
-                      // if ( ! api.czr_isChangeSetOn() ) {
-                      //     previewer.targetWindow( this.targetWindow() );
-                      //     previewer.channel( this.channel() );
-                      // }
-
-                      api.trigger( 'pre_refresh_done', { previewer : previewer, skopesServerData : skopesServerData || {} } );
-                      dfd.resolve( { previewer : previewer, skopesServerData : skopesServerData || {} } );
-                };
-
-                //Before WP 4.7 !!
-                if ( ! api.czr_isChangeSetOn() ) {
-                    previewer.send( 'sync', {
-                          scroll:   previewer.scroll,
-                          settings: api.get()
-                    });
-                }
-
-                if ( params.waitSkopeSynced ) {
-                      loadingFrame.bind( 'czr-skopes-synced', onceSynced );
-                } else {
-                      //default WP behaviour before and after 4.7
-                      loadingFrame.bind( 'synced', onceSynced );
-                }
-
-
-                // This event will be received directly by the previewer in normal navigation; this is only needed for seamless refresh.
-                previewer.trigger( 'ready', readyData );
-          });
-
-          // Note : the location param has been removed in WP 4.7
-          previewer.loading.fail( function( reason, location ) {
-                api.consoleLog('LOADING FAILED : ' , arguments );
-                previewer.send( 'loading-failed' );
-                //Before WP 4.7 !!
-                if ( ! api.czr_isChangeSetOn() ) {
-                    if ( 'redirect' === reason && location ) {
-                          previewer.previewUrl( location );
-                    }
-                }
-
-                if ( 'logged out' === reason ) {
-                      if ( previewer.preview ) {
-                            previewer.preview.destroy();
-                            delete previewer.preview;
-                      }
-
-                      previewer.login().done( previewer.refresh );
-                }
-
-                if ( 'cheatin' === reason ) {
-                      previewer.cheatin();
-                }
-                dfd.reject( reason );
-          });
-
-          return dfd.promise();
-    };//_new_refresh()
-
-    //'czr-skope-started' is fired after the skopeBase has been initialized.
-    //the api is 'ready' at this point
-    api.bind( 'czr-skope-started' , function() {
-          //post process after refresh
-          //@param param = { previewer : previewer, skopesServerData : skopesServerData || {} }
-          // api.bind( 'pre_refresh_done', function( params ) {
-          // });
-          czr_override_refresh_for_skope();
-          //OVERRIDES CORE
-          api.Previewer.prototype.refresh = _new_refresh;
-    });
-
-    //since 4.7 (when changeset has been introduced ), the core query takes parameter
-    //Typically an object looking like { excludeCustomizedSaved: true }
-    api.czr_getSkopeQueryParams = function( params ) {
-          if ( ! api.czr_isChangeSetOn() )
-            return params;
-          params = ! _.isObject(params) ? {} : params;
-          var _action = params.action || 'refresh';
-          switch( _action ) {
-                case 'refresh' :
-                    params = $.extend( params, { excludeCustomizedSaved: true } );
-                break;
-          }
-          return params;
-    };
-
-
-    //fired on 'czr-skope-started', after the skopeBase has been initialized
-    czr_override_refresh_for_skope = function() {
-          if ( ! serverControlParams.isSkopOn )
-            return;
-
-
-          /**
-          * Refresh the preview.
-          */
-          //The purpose of this refresh method is to pass additional params to the query()
-          //=> we want to know the skope, and the action
-          //=> here the action is always refresh.
-          //=> this way we are able to better identify what to do in the api.previewer.query method
-          //
-          //@params can hold an obj looking like :
-          //{
-          //  waitSkopeSynced : true,
-          //  the_dirties : {}
-          //}
-          //
-          //When waitSkopeSynced is set to true, the refresh will wait for the 'czr_skopes_synced' event to be synced
-          //if not, it waits for the default 'synced' wp event to be resolved
-          //api.previewer._new_refresh = _new_refresh;
-
-          // Debounce to prevent hammering server and then wait for any pending update requests.
-          // Overrides the WP api.previewer.refresh method
-          // We may need to pass force dirties here
-          api.previewer.refresh = function( _params_ ) {
-                var dfd = $.Deferred();
-                var _refresh_ = function( params ) {
-                      var refreshOnceProcessingComplete,
-                          isProcessingComplete = function() {
-                            return 0 === api.state( 'processing' ).get();
-                          },
-                          resolveRefresh = function() {
-                                _new_refresh.call( api.previewer, params ).done( function( refresh_data ) {
-                                      dfd.resolve( refresh_data );
-                                });
-                          };
-                      if ( isProcessingComplete() ) {
-                            resolveRefresh();
-                      } else {
-                            refreshOnceProcessingComplete = function() {
-                                  if ( isProcessingComplete() ) {
-                                        resolveRefresh();
-                                        api.state( 'processing' ).unbind( refreshOnceProcessingComplete );
-                                  }
-                            };
-                            api.state( 'processing' ).bind( refreshOnceProcessingComplete );
+                            //falls back to the parent behaviour
+                            self.element.val( to );
                       }
                 };
-                _refresh_ = _.debounce( _refresh_, api.previewer.refreshBuffer );
-                _refresh_( _params_ );
-                return dfd.promise();
-          };
+            //if skope on,
+            //wait for skope to be fully loaded to alter this
+            if ( serverControlParams.isSkopOn ) {
+                  if ( 'resolved' != api.czr_skopeReady.state() ) {
+                        return _original.call( self, to );
+                  } else {
+                        api.czr_skopeReady.then( function () {
+                              _modifySynchronizer();
+                        });
+                  }
+            } else {
+                  _modifySynchronizer();
+            }
+      };
 
-  };//czr_override_refresh_for_skope
-
+      api.Element.synchronizer.val.refresh = function() {
+            var syncApiInstance = this;
+            //SELECT CASE
+            //Avoid null values because not taken into account by the api.value.set() method
+            //=> keep the same var type empty if the setting val is reset by user
+            if ( this.element.is('select') && _.isNull( this.element.val() ) ) {
+                  if ( _.isArray( syncApiInstance() ) )
+                    return [];
+                  else if ( _.isObject( syncApiInstance() ) )
+                    return {};
+                  else
+                    return '';
+            } else {
+                  //falls back to the parent behaviour
+                  return  this.element.val();
+            }
+      };
 })( wp.customize , jQuery, _ );
-(function (api, $, _) {
+( function ( api, $, _ ) {
+      var coreRefresh = api.Previewer.prototype.refresh;
+      var _new_refresh = function( params ) {
+            params = _.extend({
+                        waitSkopeSynced : true,
+                        the_dirties : {}
+                  },
+                  params
+            );
+
+            var previewer = this, dfd = $.Deferred();
+
+            //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
+            //=> that's why we check it here again before doing anything else
+            if ( ! serverControlParams.isSkopOn ) {
+                  return dfd.resolve().promise();
+            }
+
+            if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
+                  api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.previewer._new_refresh() method.');
+            }
+
+            //if too early, then let's fall back on core
+            if ( ! _.has( api, 'czr_activeSkopeId') ) {
+                  if ( 'resolved' != api.czr_skopeReady.state() ) {
+                        api.czr_skopeReady.done( function() {
+                              _new_refresh.apply( api.previewer, params );
+                        });
+                        //Fire the core one
+                        coreRefresh.apply( previewer );
+                        return dfd.resolve().promise();
+                  }
+            }
+
+            // Display loading indicator
+            previewer.send( 'loading-initiated' );
+
+            previewer.abort();
+
+            var query_params = api.czr_getSkopeQueryParams({
+                      skope_id : api.czr_activeSkopeId(),
+                      action : 'refresh',
+                      the_dirties : params.the_dirties || {}
+                });
+
+            previewer.loading = new api.PreviewFrame({
+                  url:        previewer.url(),
+                  previewUrl: previewer.previewUrl(),
+                  query:      previewer.query( query_params ) || {},
+                  container:  previewer.container,
+                  signature:  'WP_CUSTOMIZER_SIGNATURE'//will be deprecated in 4.7
+            });
+
+
+            previewer.settingsModifiedWhileLoading = {};
+            onSettingChange = function( setting ) {
+                  previewer.settingsModifiedWhileLoading[ setting.id ] = true;
+            };
+            api.bind( 'change', onSettingChange );
+
+            previewer.loading.always( function() {
+                  api.unbind( 'change', onSettingChange );
+            } );
+
+            //Needed before WP 4.7
+            if ( ! api.czr_isChangeSetOn() ) {
+                  previewer._previousPreview = previewer._previousPreview || previewer.preview;
+            }
+
+            previewer.loading.done( function( readyData ) {
+                  var loadingFrame = this, onceSynced;
+
+                  previewer.preview = loadingFrame;
+                  previewer.targetWindow( loadingFrame.targetWindow() );
+                  previewer.channel( loadingFrame.channel() );
+                  onceSynced = function( skopesServerData ) {
+                        loadingFrame.unbind( 'synced', onceSynced );
+                        loadingFrame.unbind( 'czr-skopes-synced', onceSynced );
+
+                        if ( previewer._previousPreview ) {
+                              previewer._previousPreview.destroy();
+                        } //before WP 4.7
+                        else {
+                            if ( previewer.preview )
+                              previewer.preview.destroy();
+                        }
+
+                        previewer._previousPreview = previewer.preview;
+                        previewer.deferred.active.resolve();
+                        delete previewer.loading;
+
+                        //Before WP 4.7
+                        // if ( ! api.czr_isChangeSetOn() ) {
+                        //     previewer.targetWindow( this.targetWindow() );
+                        //     previewer.channel( this.channel() );
+                        // }
+
+                        api.trigger( 'pre_refresh_done', { previewer : previewer, skopesServerData : skopesServerData || {} } );
+                        dfd.resolve( { previewer : previewer, skopesServerData : skopesServerData || {} } );
+                  };
+
+                  //Before WP 4.7 !!
+                  if ( ! api.czr_isChangeSetOn() ) {
+                      previewer.send( 'sync', {
+                            scroll:   previewer.scroll,
+                            settings: api.get()
+                      });
+                  }
+
+                  if ( params.waitSkopeSynced ) {
+                        loadingFrame.bind( 'czr-skopes-synced', onceSynced );
+                  } else {
+                        //default WP behaviour before and after 4.7
+                        loadingFrame.bind( 'synced', onceSynced );
+                  }
+
+
+                  // This event will be received directly by the previewer in normal navigation; this is only needed for seamless refresh.
+                  previewer.trigger( 'ready', readyData );
+            });
+
+            // Note : the location param has been removed in WP 4.7
+            previewer.loading.fail( function( reason, location ) {
+                  api.consoleLog('LOADING FAILED : ' , arguments );
+                  previewer.send( 'loading-failed' );
+                  //Before WP 4.7 !!
+                  if ( ! api.czr_isChangeSetOn() ) {
+                      if ( 'redirect' === reason && location ) {
+                            previewer.previewUrl( location );
+                      }
+                  }
+
+                  if ( 'logged out' === reason ) {
+                        if ( previewer.preview ) {
+                              previewer.preview.destroy();
+                              delete previewer.preview;
+                        }
+
+                        previewer.login().done( previewer.refresh );
+                  }
+
+                  if ( 'cheatin' === reason ) {
+                        previewer.cheatin();
+                  }
+                  dfd.reject( reason );
+            });
+
+            return dfd.promise();
+      };//_new_refresh()
+
+      //'czr-skope-started' is fired after the skopeBase has been initialized.
+      //the api is 'ready' at this point
+      api.bind( 'czr-skope-started' , function() {
+            //post process after refresh
+            //@param param = { previewer : previewer, skopesServerData : skopesServerData || {} }
+            // api.bind( 'pre_refresh_done', function( params ) {
+            // });
+            czr_override_refresh_for_skope();
+            //OVERRIDES CORE
+            api.Previewer.prototype.refresh = _new_refresh;
+      });
+
+      //since 4.7 (when changeset has been introduced ), the core query takes parameter
+      //Typically an object looking like { excludeCustomizedSaved: true }
+      api.czr_getSkopeQueryParams = function( params ) {
+            if ( ! api.czr_isChangeSetOn() )
+              return params;
+            params = ! _.isObject(params) ? {} : params;
+            var _action = params.action || 'refresh';
+            switch( _action ) {
+                  case 'refresh' :
+                      params = $.extend( params, { excludeCustomizedSaved: true } );
+                  break;
+            }
+            return params;
+      };
+
+
+      //fired on 'czr-skope-started', after the skopeBase has been initialized
+      czr_override_refresh_for_skope = function() {
+            if ( ! serverControlParams.isSkopOn )
+              return;
+
+
+            /**
+            * Refresh the preview.
+            */
+            //The purpose of this refresh method is to pass additional params to the query()
+            //=> we want to know the skope, and the action
+            //=> here the action is always refresh.
+            //=> this way we are able to better identify what to do in the api.previewer.query method
+            //
+            //@params can hold an obj looking like :
+            //{
+            //  waitSkopeSynced : true,
+            //  the_dirties : {}
+            //}
+            //
+            //When waitSkopeSynced is set to true, the refresh will wait for the 'czr_skopes_synced' event to be synced
+            //if not, it waits for the default 'synced' wp event to be resolved
+            //api.previewer._new_refresh = _new_refresh;
+
+            // Debounce to prevent hammering server and then wait for any pending update requests.
+            // Overrides the WP api.previewer.refresh method
+            // We may need to pass force dirties here
+            api.previewer.refresh = function( _params_ ) {
+                  var dfd = $.Deferred();
+                  var _refresh_ = function( params ) {
+                        var refreshOnceProcessingComplete,
+                            isProcessingComplete = function() {
+                              return 0 === api.state( 'processing' ).get();
+                            },
+                            resolveRefresh = function() {
+                                  _new_refresh.call( api.previewer, params ).done( function( refresh_data ) {
+                                        dfd.resolve( refresh_data );
+                                  });
+                            };
+                        if ( isProcessingComplete() ) {
+                              resolveRefresh();
+                        } else {
+                              refreshOnceProcessingComplete = function() {
+                                    if ( isProcessingComplete() ) {
+                                          resolveRefresh();
+                                          api.state( 'processing' ).unbind( refreshOnceProcessingComplete );
+                                    }
+                              };
+                              api.state( 'processing' ).bind( refreshOnceProcessingComplete );
+                        }
+                  };
+                  _refresh_ = _.debounce( _refresh_, api.previewer.refreshBuffer );
+                  _refresh_( _params_ );
+                  return dfd.promise();
+            };
+      };//czr_override_refresh_for_skope
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
       if ( ! serverControlParams.isSkopOn )
         return;
 
@@ -6794,7 +6810,7 @@ $.extend( CZRSkopeMths, {
       };
 
 })( wp.customize , jQuery, _ );
-(function (api, $, _) {
+( function ( api, $, _ ) {
       if ( ! serverControlParams.isSkopOn || ! api.czr_isChangeSetOn() )
         return;
 
@@ -7090,9 +7106,8 @@ $.extend( CZRSkopeMths, {
 
             return deferred.promise();
       };
-
 })( wp.customize , jQuery, _ );
-(function (api, $, _) {
+( function ( api, $, _ ) {
       //PREPARE THE SKOPE AWARE PREVIEWER
 
       //@return void()
@@ -7201,564 +7216,561 @@ $.extend( CZRSkopeMths, {
 
             return dfd.promise();
       };//api.Setting.prototype.preview
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      /* monkey patch for the content height set */
+      //wp.customize.Section is not available before wp 4.1
+      if ( 'function' == typeof api.Section ) {
+            // backup the original function
+            var _original_section_initialize = api.Section.prototype.initialize;
+            api.Section.prototype.initialize = function( id, options ) {
+                  //call the original constructor
+                  _original_section_initialize.apply( this, [id, options] );
+                  var section = this;
 
+                  this.expanded.callbacks.add( function( _expanded ) {
+                    if ( ! _expanded )
+                      return;
+
+                  var container = section.container.closest( '.wp-full-overlay-sidebar-content' ),
+                        content = section.container.find( '.accordion-section-content' );
+                    //content resizing to the container height
+                    _resizeContentHeight = function() {
+                      content.css( 'height', container.innerHeight() );
+                  };
+                    _resizeContentHeight();
+                    //this is set to off in the original expand callback if 'expanded' is false
+                    $( window ).on( 'resize.customizer-section', _.debounce( _resizeContentHeight, 110 ) );
+                  });
+            };
+      }
 })( wp.customize , jQuery, _ );
 (function (api, $, _) {
-   /* monkey patch for the content height set */
-  //wp.customize.Section is not available before wp 4.1
-  if ( 'function' == typeof api.Section ) {
-    // backup the original function
-    var _original_section_initialize = api.Section.prototype.initialize;
-    api.Section.prototype.initialize = function( id, options ) {
-          //call the original constructor
-          _original_section_initialize.apply( this, [id, options] );
-          var section = this;
+api.CZR_Helpers = api.CZR_Helpers || {};
+//////////////////////////////////////////////////
+/// ACTIONS AND DOM LISTENERS
+//////////////////////////////////////////////////
+//adds action to an existing event map
+//@event map = [ {event1}, {event2}, ... ]
+//@new_event = {  trigger   : event name , actions   : [ 'cb1', 'cb2', ... ] }
+api.CZR_Helpers = $.extend( api.CZR_Helpers, {
+      //While a control should always have a default setting,
+      //It can have additional setting assigned
+      //This method returns the default setting or the specified type if requested
+      //Example : header_image has default and data
+      getControlSettingId : function( control_id, setting_type ) {
+            setting_type = 'default' || setting_type;
+            if ( ! api.control.has( control_id ) ) {
+                  api.consoleLog( 'getControlSettingId : The requested control_id is not registered in the api yet : ' + control_id );
+                  return control_id;
+            }
+            if ( ! _.has( api.control( control_id ), 'settings' ) || _.isEmpty( api.control( control_id ).settings ) )
+              return control_id;
 
-          this.expanded.callbacks.add( function( _expanded ) {
-            if ( ! _expanded )
-              return;
-
-          var container = section.container.closest( '.wp-full-overlay-sidebar-content' ),
-                content = section.container.find( '.accordion-section-content' );
-            //content resizing to the container height
-            _resizeContentHeight = function() {
-              content.css( 'height', container.innerHeight() );
-          };
-            _resizeContentHeight();
-            //this is set to off in the original expand callback if 'expanded' is false
-            $( window ).on( 'resize.customizer-section', _.debounce( _resizeContentHeight, 110 ) );
-          });
-        };
-  }
-})( wp.customize , jQuery, _ );
-(function (api, $, _) {
-  api.CZR_Helpers = api.CZR_Helpers || {};
-  //////////////////////////////////////////////////
-  /// ACTIONS AND DOM LISTENERS
-  //////////////////////////////////////////////////
-  //adds action to an existing event map
-  //@event map = [ {event1}, {event2}, ... ]
-  //@new_event = {  trigger   : event name , actions   : [ 'cb1', 'cb2', ... ] }
-  api.CZR_Helpers = $.extend( api.CZR_Helpers, {
-        //While a control should always have a default setting,
-        //It can have additional setting assigned
-        //This method returns the default setting or the specified type if requested
-        //Example : header_image has default and data
-        getControlSettingId : function( control_id, setting_type ) {
-              setting_type = 'default' || setting_type;
-              if ( ! api.control.has( control_id ) ) {
-                    api.consoleLog( 'getControlSettingId : The requested control_id is not registered in the api yet : ' + control_id );
-                    return control_id;
-              }
-              if ( ! _.has( api.control( control_id ), 'settings' ) || _.isEmpty( api.control( control_id ).settings ) )
-                return control_id;
-
-              if ( ! _.has( api.control( control_id ).settings, setting_type ) ) {
-                    api.consoleLog( 'getControlSettingId : The requested control_id does not have the requested setting type : ' + control_id + ' , ' + setting_type );
-                    return control_id;
-              }
-              if ( _.isUndefined( api.control( control_id ).settings[setting_type].id ) ) {
-                    api.consoleLog( 'getControlSettingId : The requested control_id has no setting id assigned : ' + control_id );
-                    return control_id;
-              }
-              return api.control( control_id ).settings[setting_type].id;
-        },
-
-
-
-        getDocSearchLink : function( text ) {
-              text = ! _.isString(text) ? '' : text;
-              var _searchtext = text.replace( / /g, '+'),
-                  _url = [ serverControlParams.docURL, 'search?query=', _searchtext ].join('');
-              return [
-                '<a href="' + _url + '" title="' + serverControlParams.translatedStrings.readDocumentation + '" target="_blank">',
-                ' ',
-                '<span class="fa fa-question-circle-o"></span>'
-              ].join('');
-        },
-
-
-        /*
-        * @return string
-        * simple helper to build the setting wp api ready id
-        */
-        build_setId : function ( setId ) {
-              //exclude the WP built-in settings like blogdescription, show_on_front, etc
-              if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
-                return setId;
-
-              // //extract the setting id for theme mods
-              // var _pattern;
-
-              //exclude the WP built-in settings like sidebars_widgets*, nav_menu_*, widget_*, custom_css
-              // var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css' ],
-              //     _isExcld = false;
-              // _.each( _patterns, function( _ptrn ) {
-              //       if ( _isExcld )
-              //         return;
-              //       _isExcld = _ptrn == setId.substring( 0, _ptrn.length );
-              // });
-              // if ( _isExcld )
-              // return setId;
-              if ( ! _.contains( serverControlParams.themeSettingList, setId ) )
-                return setId;
-
-              return -1 == setId.indexOf( serverControlParams.themeOptions ) ? [ serverControlParams.themeOptions +'[' , setId  , ']' ].join('') : setId;
+            if ( ! _.has( api.control( control_id ).settings, setting_type ) ) {
+                  api.consoleLog( 'getControlSettingId : The requested control_id does not have the requested setting type : ' + control_id + ' , ' + setting_type );
+                  return control_id;
+            }
+            if ( _.isUndefined( api.control( control_id ).settings[setting_type].id ) ) {
+                  api.consoleLog( 'getControlSettingId : The requested control_id has no setting id assigned : ' + control_id );
+                  return control_id;
+            }
+            return api.control( control_id ).settings[setting_type].id;
       },
 
-        /*
-        * @return string
-        * simple helper to extract the option name from a setting id
-        */
-        getOptionName : function(name) {
-              var self = this;
-              //targets only the options of the theme
-              if ( -1 == name.indexOf(serverControlParams.themeOptions) )
-                return name;
-              return name.replace(/\[|\]/g, '').replace(serverControlParams.themeOptions, '');
-        },
+
+
+      getDocSearchLink : function( text ) {
+            text = ! _.isString(text) ? '' : text;
+            var _searchtext = text.replace( / /g, '+'),
+                _url = [ serverControlParams.docURL, 'search?query=', _searchtext ].join('');
+            return [
+              '<a href="' + _url + '" title="' + serverControlParams.translatedStrings.readDocumentation + '" target="_blank">',
+              ' ',
+              '<span class="fa fa-question-circle-o"></span>'
+            ].join('');
+      },
+
+
+      /*
+      * @return string
+      * simple helper to build the setting wp api ready id
+      */
+      build_setId : function ( setId ) {
+            //exclude the WP built-in settings like blogdescription, show_on_front, etc
+            if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
+              return setId;
+
+            // //extract the setting id for theme mods
+            // var _pattern;
+
+            //exclude the WP built-in settings like sidebars_widgets*, nav_menu_*, widget_*, custom_css
+            // var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css' ],
+            //     _isExcld = false;
+            // _.each( _patterns, function( _ptrn ) {
+            //       if ( _isExcld )
+            //         return;
+            //       _isExcld = _ptrn == setId.substring( 0, _ptrn.length );
+            // });
+            // if ( _isExcld )
+            // return setId;
+            if ( ! _.contains( serverControlParams.themeSettingList, setId ) )
+              return setId;
+
+            return -1 == setId.indexOf( serverControlParams.themeOptions ) ? [ serverControlParams.themeOptions +'[' , setId  , ']' ].join('') : setId;
+    },
+
+      /*
+      * @return string
+      * simple helper to extract the option name from a setting id
+      */
+      getOptionName : function(name) {
+            var self = this;
+            //targets only the options of the theme
+            if ( -1 == name.indexOf(serverControlParams.themeOptions) )
+              return name;
+            return name.replace(/\[|\]/g, '').replace(serverControlParams.themeOptions, '');
+      },
 
 
 
-        //@return bool
-        //@uses api.czr_partials
-        hasPartRefresh : function( setId ) {
-              if ( ! _.has( api, 'czr_partials')  )
-                return;
-              return  _.contains( _.map( api.czr_partials(), function( partial, key ) {
-                    return _.contains( partial.settings, setId );
-              }), true );
-        },
+      //@return bool
+      //@uses api.czr_partials
+      hasPartRefresh : function( setId ) {
+            if ( ! _.has( api, 'czr_partials')  )
+              return;
+            return  _.contains( _.map( api.czr_partials(), function( partial, key ) {
+                  return _.contains( partial.settings, setId );
+            }), true );
+      },
 
-        //@return the array of controls in a given section_id
-        getSectionControlIds : function( section_id ) {
-              section_id = section_id || api.czr_activeSectionId();
-              return ! api.section.has( section_id ) ?
-              [] :
-              _.map( api.section( section_id ).controls(), function( _ctrl ) {
-                    return _ctrl.id;
-              });
-        },
-
-
-        //1) get the control of a given section
-        //2) for each control get the associated setting(s)
-        //=> important, a control might have several associated settings. Typical example : header_image.
-        //@return [] of setting ids for a given czr section
-        getSectionSettingIds : function( section_id ) {
-              section_id = section_id || api.czr_activeSectionId();
-              if ( ! api.section.has( section_id) )
-                return;
-              var self = this,
-                  _sec_settings = [],
-                  _sec_controls = self.getSectionControlIds( section_id );
-
-              _.each( _sec_controls, function( ctrlId ) {
-                    _.each( api.control(ctrlId).settings, function( _instance, _k ) {
-                          _sec_settings.push( _instance.id );
-                    });
-              });
-              return _sec_settings;
-        },
+      //@return the array of controls in a given section_id
+      getSectionControlIds : function( section_id ) {
+            section_id = section_id || api.czr_activeSectionId();
+            return ! api.section.has( section_id ) ?
+            [] :
+            _.map( api.section( section_id ).controls(), function( _ctrl ) {
+                  return _ctrl.id;
+            });
+      },
 
 
-        //////////////////////////////////////////////////
-        /// STRINGS HELPERS
-        //////////////////////////////////////////////////
-        capitalize : function( string ) {
-              if( ! _.isString(string) )
-                return string;
-              return string.charAt(0).toUpperCase() + string.slice(1);
-        },
+      //1) get the control of a given section
+      //2) for each control get the associated setting(s)
+      //=> important, a control might have several associated settings. Typical example : header_image.
+      //@return [] of setting ids for a given czr section
+      getSectionSettingIds : function( section_id ) {
+            section_id = section_id || api.czr_activeSectionId();
+            if ( ! api.section.has( section_id) )
+              return;
+            var self = this,
+                _sec_settings = [],
+                _sec_controls = self.getSectionControlIds( section_id );
 
-        truncate : function( string, n, useWordBoundary ){
-              if ( _.isUndefined(string) )
-                return '';
-              var isTooLong = string.length > n,
-                  s_ = isTooLong ? string.substr(0,n-1) : string;
-                  s_ = (useWordBoundary && isTooLong) ? s_.substr(0,s_.lastIndexOf(' ')) : s_;
-              return  isTooLong ? s_ + '...' : s_;
-        },
-
-
-        //////////////////////////////////////////////////
-        /// STRINGS HELPERS
-        //////////////////////////////////////////////////
-        //is a module multi item ?
-        //@return bool
-        isMultiItemModule : function( module_type, moduleInst ) {
-              if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
-                return;
-              if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
-                module_type = moduleInst.module_type;
-              else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
-                return;
-              if ( ! _.has( api.czrModuleMap, module_type ) )
-                return;
-
-              return api.czrModuleMap[module_type].crud || api.czrModuleMap[module_type].multi_item || false;
-        },
-
-        //is a module crud ?
-        //@return bool
-        isCrudModule : function( module_type, moduleInst ) {
-              if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
-                return;
-              if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
-                module_type = moduleInst.module_type;
-              else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
-                return;
-              if ( ! _.has( api.czrModuleMap, module_type ) )
-                return;
-
-              return api.czrModuleMap[module_type].crud || false;
-        },
-
-        //is a module crud ?
-        //@return bool
-        hasModuleModOpt : function( module_type, moduleInst ) {
-              if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
-                return;
-              if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
-                module_type = moduleInst.module_type;
-              else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
-                return;
-              if ( ! _.has( api.czrModuleMap, module_type ) )
-                return;
-
-              return api.czrModuleMap[module_type].has_mod_opt || false;
-        },
+            _.each( _sec_controls, function( ctrlId ) {
+                  _.each( api.control(ctrlId).settings, function( _instance, _k ) {
+                        _sec_settings.push( _instance.id );
+                  });
+            });
+            return _sec_settings;
+      },
 
 
+      //////////////////////////////////////////////////
+      /// STRINGS HELPERS
+      //////////////////////////////////////////////////
+      capitalize : function( string ) {
+            if( ! _.isString(string) )
+              return string;
+            return string.charAt(0).toUpperCase() + string.slice(1);
+      },
 
-        //This method is now statically accessed by item and modopt instances because it does the same job for both.
-        //=> It instantiates the inputs based on what it finds in the DOM ( item or mod opt js templates )
-        //
-        //Fired on 'contentRendered' for items and on user click for module options (mod opt)
-        //creates the inputs based on the rendered parent item or mod option
-        //inputParentInst can be an item instance or a module option instance
-        setupInputCollectionFromDOM : function() {
-              var inputParentInst = this;//<= because fired with .call( inputParentInst )
-              if ( ! _.isFunction( inputParentInst ) ) {
-                    throw new Error( 'setupInputCollectionFromDOM : inputParentInst is not valid.' );
-              }
-              var module = inputParentInst.module,
-                  is_mod_opt = _.has( inputParentInst() , 'is_mod_opt' );
-
-              //bail if already done
-              if ( _.has( inputParentInst, 'czr_Input') && ! _.isEmpty( inputParentInst.inputCollection() ) )
-                return;
-
-              //INPUTS => Setup as soon as the view content is rendered
-              //the inputParentInst is a collection of inputs, each one has its own view module.
-              inputParentInst.czr_Input = new api.Values();
-
-              //IS THE PARENT AN ITEM OR A MODULE OPTION ?
-              //those default constructors (declared in the module init ) can be overridden by extended item or mod opt constructors inside the modules
-              inputParentInst.inputConstructor = is_mod_opt ? module.inputModOptConstructor : module.inputConstructor;
-
-              var _defaultInputParentModel = is_mod_opt ? inputParentInst.defaultModOptModel : inputParentInst.defaultItemModel;
-
-              if ( _.isEmpty( _defaultInputParentModel ) || _.isUndefined( _defaultInputParentModel ) ) {
-                throw new Error( 'No default model found in item or mod opt ' + inputParentInst.id + '.' );
-              }
-
-              //prepare and sets the inputParentInst value on api ready
-              //=> triggers the module rendering + DOM LISTENERS
-              var inputParentInst_model = $.extend( true, {}, inputParentInst() );
-
-              if ( ! _.isObject( inputParentInst_model ) )
-                inputParentInst_model = _defaultInputParentModel;
-              else
-                inputParentInst_model = $.extend( _defaultInputParentModel, inputParentInst_model );
-
-              var dom_inputParentInst_model = {};
-
-              //creates the inputs based on the rendered item or mod opt
-              $( '.' + module.control.css_attr.sub_set_wrapper, inputParentInst.container).each( function( _index ) {
-                    var _id = $(this).find('[data-type]').attr( 'data-type' ),
-                        _value = _.has( inputParentInst_model, _id ) ? inputParentInst_model[ _id ] : '';
-
-                    //skip if no valid input data-type is found in this node
-                    if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
-                          api.consoleLog( 'setupInputCollectionFromDOM : missing data-type for ' + module.id );
-                          return;
-                    }
-                    //check if this property exists in the current inputParentInst model
-                    if ( ! _.has( inputParentInst_model, _id ) ) {
-                          throw new Error('The item or mod opt property : ' + _id + ' has been found in the DOM but not in the item or mod opt model : '+ inputParentInst.id + '. The input can not be instantiated.');
-                    }
-
-                    //Do we have a specific set of options defined in the parent module for this inputConstructor ?
-                    var _inputType      = $(this).attr( 'data-input-type' ),
-                        _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
-                        _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
-
-                    //INSTANTIATE THE INPUT
-                    inputParentInst.czr_Input.add( _id, new inputParentInst.inputConstructor( _id, {
-                          id            : _id,
-                          type          : _inputType,
-                          transport     : _inputTransport,
-                          input_value   : _value,
-                          input_options : _inputOptions,//<= a module can define a specific set of option
-                          container     : $(this),
-                          input_parent  : inputParentInst,
-                          is_mod_opt    : is_mod_opt,
-                          module        : module
-                    } ) );
-
-                    //FIRE THE INPUT
-                    //fires ready once the input Value() instance is initialized
-                    inputParentInst.czr_Input( _id ).ready();
-
-                    //POPULATES THE PARENT INPUT COLLECTION
-                    dom_inputParentInst_model[ _id ] = _value;
-                    //shall we trigger a specific event when the input collection from DOM has been populated ?
-              });//each
-
-              //stores the collection
-              inputParentInst.inputCollection( dom_inputParentInst_model );
-
-              //chain
-              return inputParentInst;
-        },
-
-        //@self explanatory: removes a collection of input from a parent item or modOpt instance
-        //Triggered by : user actions usually when an item is collapsed or when the modOpt panel is closed
-        removeInputCollection : function() {
-              var inputParentInst = this;//<= because fired with .call( inputParentInst )
-              if ( ! _.isFunction( inputParentInst ) ) {
-                    throw new Error( 'removeInputCollection : inputParentInst is not valid.' );
-              }
-              if ( ! _.has( inputParentInst, 'czr_Input') )
-                return;
-              //remove each input api.Value() instance
-              inputParentInst.czr_Input.each( function( _input ) {
-                    inputParentInst.czr_Input.remove( _input.id );
-              });
-              //reset the input collection property
-              inputParentInst.inputCollection({});
-        },
-
-        //Re-instantiate a module control based on its id
-        //@param wpSetId : the api id of the control to refresh
-        refreshModuleControl : function( wpSetId ) {
-              var _constructor = api.controlConstructor.czr_module,
-                  _control_type = api.control( wpSetId ).params.type,
-                  _control_data = api.settings.controls[wpSetId];
-
-              //remove the container and its control
-              $.when( api.control( wpSetId ).container.remove() ).done( function() {
-                    //remove the control from the api control collection
-                    api.control.remove( wpSetId );
-
-                    //re-instantiate the control with the updated _control_data
-                    api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
-              });
-
-        },
+      truncate : function( string, n, useWordBoundary ){
+            if ( _.isUndefined(string) )
+              return '';
+            var isTooLong = string.length > n,
+                s_ = isTooLong ? string.substr(0,n-1) : string;
+                s_ = (useWordBoundary && isTooLong) ? s_.substr(0,s_.lastIndexOf(' ')) : s_;
+            return  isTooLong ? s_ + '...' : s_;
+      },
 
 
-        //COLORS
-        hexToRgb : function( hex ) {
-              // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-              var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-              try {
-                    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-                        return r + r + g + g + b + b;
-                    });
-              } catch( er ) {
-                    api.errorLog( 'Error in Helpers::hexToRgb : ' + er );
-                    return hex;
-              }
+      //////////////////////////////////////////////////
+      /// STRINGS HELPERS
+      //////////////////////////////////////////////////
+      //is a module multi item ?
+      //@return bool
+      isMultiItemModule : function( module_type, moduleInst ) {
+            if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
+              return;
+            if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
+              module_type = moduleInst.module_type;
+            else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
+              return;
+            if ( ! _.has( api.czrModuleMap, module_type ) )
+              return;
 
-              var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec( hex );
-              result = result ? [
-                    parseInt(result[1], 16),//r
-                    parseInt(result[2], 16),//g
-                    parseInt(result[3], 16)//b
-              ] : [];
-              return 'rgb(' + result.join(',') + ')';
-        },
+            return api.czrModuleMap[module_type].crud || api.czrModuleMap[module_type].multi_item || false;
+      },
 
-        rgbToHex : function ( r, g, b ) {
-              var componentToHex = function(c) {
-                    var hex = c.toString(16);
-                    return hex.length == 1 ? "0" + hex : hex;
-              };
-              return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-        }
+      //is a module crud ?
+      //@return bool
+      isCrudModule : function( module_type, moduleInst ) {
+            if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
+              return;
+            if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
+              module_type = moduleInst.module_type;
+            else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
+              return;
+            if ( ! _.has( api.czrModuleMap, module_type ) )
+              return;
 
-  });//$.extend
+            return api.czrModuleMap[module_type].crud || false;
+      },
+
+      //is a module crud ?
+      //@return bool
+      hasModuleModOpt : function( module_type, moduleInst ) {
+            if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
+              return;
+            if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
+              module_type = moduleInst.module_type;
+            else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
+              return;
+            if ( ! _.has( api.czrModuleMap, module_type ) )
+              return;
+
+            return api.czrModuleMap[module_type].has_mod_opt || false;
+      },
 
 
+
+      //This method is now statically accessed by item and modopt instances because it does the same job for both.
+      //=> It instantiates the inputs based on what it finds in the DOM ( item or mod opt js templates )
+      //
+      //Fired on 'contentRendered' for items and on user click for module options (mod opt)
+      //creates the inputs based on the rendered parent item or mod option
+      //inputParentInst can be an item instance or a module option instance
+      setupInputCollectionFromDOM : function() {
+            var inputParentInst = this;//<= because fired with .call( inputParentInst )
+            if ( ! _.isFunction( inputParentInst ) ) {
+                  throw new Error( 'setupInputCollectionFromDOM : inputParentInst is not valid.' );
+            }
+            var module = inputParentInst.module,
+                is_mod_opt = _.has( inputParentInst() , 'is_mod_opt' );
+
+            //bail if already done
+            if ( _.has( inputParentInst, 'czr_Input') && ! _.isEmpty( inputParentInst.inputCollection() ) )
+              return;
+
+            //INPUTS => Setup as soon as the view content is rendered
+            //the inputParentInst is a collection of inputs, each one has its own view module.
+            inputParentInst.czr_Input = new api.Values();
+
+            //IS THE PARENT AN ITEM OR A MODULE OPTION ?
+            //those default constructors (declared in the module init ) can be overridden by extended item or mod opt constructors inside the modules
+            inputParentInst.inputConstructor = is_mod_opt ? module.inputModOptConstructor : module.inputConstructor;
+
+            var _defaultInputParentModel = is_mod_opt ? inputParentInst.defaultModOptModel : inputParentInst.defaultItemModel;
+
+            if ( _.isEmpty( _defaultInputParentModel ) || _.isUndefined( _defaultInputParentModel ) ) {
+              throw new Error( 'No default model found in item or mod opt ' + inputParentInst.id + '.' );
+            }
+
+            //prepare and sets the inputParentInst value on api ready
+            //=> triggers the module rendering + DOM LISTENERS
+            var inputParentInst_model = $.extend( true, {}, inputParentInst() );
+
+            if ( ! _.isObject( inputParentInst_model ) )
+              inputParentInst_model = _defaultInputParentModel;
+            else
+              inputParentInst_model = $.extend( _defaultInputParentModel, inputParentInst_model );
+
+            var dom_inputParentInst_model = {};
+
+            //creates the inputs based on the rendered item or mod opt
+            $( '.' + module.control.css_attr.sub_set_wrapper, inputParentInst.container).each( function( _index ) {
+                  var _id = $(this).find('[data-type]').attr( 'data-type' ),
+                      _value = _.has( inputParentInst_model, _id ) ? inputParentInst_model[ _id ] : '';
+
+                  //skip if no valid input data-type is found in this node
+                  if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
+                        api.consoleLog( 'setupInputCollectionFromDOM : missing data-type for ' + module.id );
+                        return;
+                  }
+                  //check if this property exists in the current inputParentInst model
+                  if ( ! _.has( inputParentInst_model, _id ) ) {
+                        throw new Error('The item or mod opt property : ' + _id + ' has been found in the DOM but not in the item or mod opt model : '+ inputParentInst.id + '. The input can not be instantiated.');
+                  }
+
+                  //Do we have a specific set of options defined in the parent module for this inputConstructor ?
+                  var _inputType      = $(this).attr( 'data-input-type' ),
+                      _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
+                      _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
+
+                  //INSTANTIATE THE INPUT
+                  inputParentInst.czr_Input.add( _id, new inputParentInst.inputConstructor( _id, {
+                        id            : _id,
+                        type          : _inputType,
+                        transport     : _inputTransport,
+                        input_value   : _value,
+                        input_options : _inputOptions,//<= a module can define a specific set of option
+                        container     : $(this),
+                        input_parent  : inputParentInst,
+                        is_mod_opt    : is_mod_opt,
+                        module        : module
+                  } ) );
+
+                  //FIRE THE INPUT
+                  //fires ready once the input Value() instance is initialized
+                  inputParentInst.czr_Input( _id ).ready();
+
+                  //POPULATES THE PARENT INPUT COLLECTION
+                  dom_inputParentInst_model[ _id ] = _value;
+                  //shall we trigger a specific event when the input collection from DOM has been populated ?
+            });//each
+
+            //stores the collection
+            inputParentInst.inputCollection( dom_inputParentInst_model );
+
+            //chain
+            return inputParentInst;
+      },
+
+      //@self explanatory: removes a collection of input from a parent item or modOpt instance
+      //Triggered by : user actions usually when an item is collapsed or when the modOpt panel is closed
+      removeInputCollection : function() {
+            var inputParentInst = this;//<= because fired with .call( inputParentInst )
+            if ( ! _.isFunction( inputParentInst ) ) {
+                  throw new Error( 'removeInputCollection : inputParentInst is not valid.' );
+            }
+            if ( ! _.has( inputParentInst, 'czr_Input') )
+              return;
+            //remove each input api.Value() instance
+            inputParentInst.czr_Input.each( function( _input ) {
+                  inputParentInst.czr_Input.remove( _input.id );
+            });
+            //reset the input collection property
+            inputParentInst.inputCollection({});
+      },
+
+      //Re-instantiate a module control based on its id
+      //@param wpSetId : the api id of the control to refresh
+      refreshModuleControl : function( wpSetId ) {
+            var _constructor = api.controlConstructor.czr_module,
+                _control_type = api.control( wpSetId ).params.type,
+                _control_data = api.settings.controls[wpSetId];
+
+            //remove the container and its control
+            $.when( api.control( wpSetId ).container.remove() ).done( function() {
+                  //remove the control from the api control collection
+                  api.control.remove( wpSetId );
+
+                  //re-instantiate the control with the updated _control_data
+                  api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
+            });
+
+      },
+
+
+      //COLORS
+      hexToRgb : function( hex ) {
+            // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+            var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+            try {
+                  hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+                      return r + r + g + g + b + b;
+                  });
+            } catch( er ) {
+                  api.errorLog( 'Error in Helpers::hexToRgb : ' + er );
+                  return hex;
+            }
+
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec( hex );
+            result = result ? [
+                  parseInt(result[1], 16),//r
+                  parseInt(result[2], 16),//g
+                  parseInt(result[3], 16)//b
+            ] : [];
+            return 'rgb(' + result.join(',') + ')';
+      },
+
+      rgbToHex : function ( r, g, b ) {
+            var componentToHex = function(c) {
+                  var hex = c.toString(16);
+                  return hex.length == 1 ? "0" + hex : hex;
+            };
+            return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+      }
+
+});//$.extend
   // $( window ).on( 'message', function( e, o) {
   //   api.consoleLog('WHAT ARE WE LISTENING TO?', e, o );
   // });
 })( wp.customize , jQuery, _);
 (function (api, $, _) {
-  api.CZR_Helpers = api.CZR_Helpers || {};
-  //////////////////////////////////////////////////
-  /// ACTIONS AND DOM LISTENERS
-  //////////////////////////////////////////////////
-  //adds action to an existing event map
-  //@event map = [ {event1}, {event2}, ... ]
-  //@new_event = {  trigger   : event name , actions   : [ 'cb1', 'cb2', ... ] }
-  api.CZR_Helpers = $.extend( api.CZR_Helpers, {
-        addActions : function( event_map, new_events, instance ) {
-                var control = this;
-                instance = instance || control;
-                instance[event_map] = instance[event_map] || [];
-                new_event_map = _.clone( instance[event_map] );
-                instance[event_map] = _.union( new_event_map, ! _.isArray(new_events) ? [new_events] : new_events );
-        },
+api.CZR_Helpers = api.CZR_Helpers || {};
+//////////////////////////////////////////////////
+/// ACTIONS AND DOM LISTENERS
+//////////////////////////////////////////////////
+//adds action to an existing event map
+//@event map = [ {event1}, {event2}, ... ]
+//@new_event = {  trigger   : event name , actions   : [ 'cb1', 'cb2', ... ] }
+api.CZR_Helpers = $.extend( api.CZR_Helpers, {
+      addActions : function( event_map, new_events, instance ) {
+              var control = this;
+              instance = instance || control;
+              instance[event_map] = instance[event_map] || [];
+              new_event_map = _.clone( instance[event_map] );
+              instance[event_map] = _.union( new_event_map, ! _.isArray(new_events) ? [new_events] : new_events );
+      },
 
-        doActions : function( action, $dom_el, obj ) {
-                $dom_el.trigger( action, obj );
-        },
+      doActions : function( action, $dom_el, obj ) {
+              $dom_el.trigger( action, obj );
+      },
 
 
-        //@args = {model : model, dom_el : $_view_el, refreshed : _refreshed }
-        setupDOMListeners : function( event_map , args, instance ) {
-                var control = this,
-                    _defaultArgs = {
-                          model : {},
-                          dom_el : {}
-                    };
+      //@args = {model : model, dom_el : $_view_el, refreshed : _refreshed }
+      setupDOMListeners : function( event_map , args, instance ) {
+              var control = this,
+                  _defaultArgs = {
+                        model : {},
+                        dom_el : {}
+                  };
 
-                instance = instance || control;
-                //event_map : are we good ?
-                if ( ! _.isArray( event_map ) ) {
-                      api.errorLog( 'setupDomListeners : event_map should be an array', args );
-                      return;
-                }
+              instance = instance || control;
+              //event_map : are we good ?
+              if ( ! _.isArray( event_map ) ) {
+                    api.errorLog( 'setupDomListeners : event_map should be an array', args );
+                    return;
+              }
 
-                //args : are we good ?
-                if ( ! _.isObject( args ) ) {
-                      api.errorLog( 'setupDomListeners : args should be an object', event_map );
-                      return;
-                }
+              //args : are we good ?
+              if ( ! _.isObject( args ) ) {
+                    api.errorLog( 'setupDomListeners : args should be an object', event_map );
+                    return;
+              }
 
-                args = _.extend( _defaultArgs, args );
-                // => we need an existing dom element
-                if ( ! args.dom_el instanceof jQuery || 1 != args.dom_el.length ) {
-                      api.errorLog( 'setupDomListeners : dom element should be an existing dom element', args );
-                      return;
-                }
+              args = _.extend( _defaultArgs, args );
+              // => we need an existing dom element
+              if ( ! args.dom_el instanceof jQuery || 1 != args.dom_el.length ) {
+                    api.errorLog( 'setupDomListeners : dom element should be an existing dom element', args );
+                    return;
+              }
 
-                //loop on the event map and map the relevant callbacks by event name
-                // @param _event :
-                //{
-                //       trigger : '',
-                //       selector : '',
-                //       name : '',
-                //       actions : ''
-                // },
-                _.map( event_map , function( _event ) {
-                      if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
-                            api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
+              //loop on the event map and map the relevant callbacks by event name
+              // @param _event :
+              //{
+              //       trigger : '',
+              //       selector : '',
+              //       name : '',
+              //       actions : ''
+              // },
+              _.map( event_map , function( _event ) {
+                    if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
+                          api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
+                          return;
+                    }
+
+                    //Are we good ?
+                    if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
+                          api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
+                          return;
+                    }
+
+                    //LISTEN TO THE DOM => USES EVENT DELEGATION
+                    args.dom_el.on( _event.trigger , _event.selector, function( e, event_params ) {
+                          //stop propagation to ancestors modules, typically a sektion
+                          e.stopPropagation();
+                          //particular treatment
+                          if ( api.utils.isKeydownButNotEnterEvent( e ) ) {
                             return;
-                      }
+                          }
+                          e.preventDefault(); // Keep this AFTER the key filter above
 
-                      //Are we good ?
-                      if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
-                            api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
-                            return;
-                      }
+                          //It is important to deconnect the original object from its source
+                          //=> because we will extend it when used as params for the action chain execution
+                          var actionsParams = $.extend( true, {}, args );
 
-                      //LISTEN TO THE DOM => USES EVENT DELEGATION
-                      args.dom_el.on( _event.trigger , _event.selector, function( e, event_params ) {
-                            //stop propagation to ancestors modules, typically a sektion
-                            e.stopPropagation();
-                            //particular treatment
-                            if ( api.utils.isKeydownButNotEnterEvent( e ) ) {
-                              return;
-                            }
-                            e.preventDefault(); // Keep this AFTER the key filter above
+                          //always get the latest model from the collection
+                          if ( _.has( actionsParams, 'model') && _.has( actionsParams.model, 'id') ) {
+                                if ( _.has( instance, 'get' ) )
+                                  actionsParams.model = instance();
+                                else
+                                  actionsParams.model = instance.getModel( actionsParams.model.id );
+                          }
 
-                            //It is important to deconnect the original object from its source
-                            //=> because we will extend it when used as params for the action chain execution
-                            var actionsParams = $.extend( true, {}, args );
+                          //always add the event obj to the passed args
+                          //+ the dom event
+                          $.extend( actionsParams, { event : _event, dom_event : e } );
 
-                            //always get the latest model from the collection
-                            if ( _.has( actionsParams, 'model') && _.has( actionsParams.model, 'id') ) {
-                                  if ( _.has( instance, 'get' ) )
-                                    actionsParams.model = instance();
-                                  else
-                                    actionsParams.model = instance.getModel( actionsParams.model.id );
-                            }
+                          //add the event param => useful for triggered event
+                          $.extend( actionsParams, event_params );
 
-                            //always add the event obj to the passed args
-                            //+ the dom event
-                            $.extend( actionsParams, { event : _event, dom_event : e } );
-
-                            //add the event param => useful for triggered event
-                            $.extend( actionsParams, event_params );
-
-                            //SETUP THE EMITTERS
-                            //inform the container that something has happened
-                            //pass the model and the current dom_el
-                            //the model is always passed as parameter
-                            if ( ! _.has( actionsParams, 'event' ) || ! _.has( actionsParams.event, 'actions' ) ) {
-                                  api.errorLog( 'executeEventActionChain : missing obj.event or obj.event.actions' );
-                                  return;
-                            }
-                            try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
-                                  api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
-                                  api.errorLog( 'Error : ' + er );
-                            }
-                      });//.on()
-                });//_.map()
-        },//setupDomListeners
+                          //SETUP THE EMITTERS
+                          //inform the container that something has happened
+                          //pass the model and the current dom_el
+                          //the model is always passed as parameter
+                          if ( ! _.has( actionsParams, 'event' ) || ! _.has( actionsParams.event, 'actions' ) ) {
+                                api.errorLog( 'executeEventActionChain : missing obj.event or obj.event.actions' );
+                                return;
+                          }
+                          try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
+                                api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
+                                api.errorLog( 'Error : ' + er );
+                          }
+                    });//.on()
+              });//_.map()
+      },//setupDomListeners
 
 
 
-        //GENERIC METHOD TO SETUP EVENT LISTENER
-        //NOTE : the args.event must alway be defined
-        executeEventActionChain : function( args, instance ) {
-                var control = this;
+      //GENERIC METHOD TO SETUP EVENT LISTENER
+      //NOTE : the args.event must alway be defined
+      executeEventActionChain : function( args, instance ) {
+              var control = this;
 
-                //if the actions param is a anonymous function, fire it and stop there
-                if ( 'function' === typeof( args.event.actions ) )
-                  return args.event.actions.call( instance, args );
+              //if the actions param is a anonymous function, fire it and stop there
+              if ( 'function' === typeof( args.event.actions ) )
+                return args.event.actions.call( instance, args );
 
-                //execute the various actions required
-                //first normalizes the provided actions into an array of callback methods
-                //then loop on the array and fire each cb if exists
-                if ( ! _.isArray( args.event.actions ) )
-                  args.event.actions = [ args.event.actions ];
+              //execute the various actions required
+              //first normalizes the provided actions into an array of callback methods
+              //then loop on the array and fire each cb if exists
+              if ( ! _.isArray( args.event.actions ) )
+                args.event.actions = [ args.event.actions ];
 
-                //if one of the callbacks returns false, then we break the loop
-                //=> allows us to stop a chain of callbacks if a condition is not met
-                var _break = false;
-                _.map( args.event.actions, function( _cb ) {
-                      if ( _break )
-                        return;
+              //if one of the callbacks returns false, then we break the loop
+              //=> allows us to stop a chain of callbacks if a condition is not met
+              var _break = false;
+              _.map( args.event.actions, function( _cb ) {
+                    if ( _break )
+                      return;
 
-                      if ( 'function' != typeof( instance[ _cb ] ) ) {
-                            throw new Error( 'executeEventActionChain : the action : ' + _cb + ' has not been found when firing event : ' + args.event.selector );
-                      }
+                    if ( 'function' != typeof( instance[ _cb ] ) ) {
+                          throw new Error( 'executeEventActionChain : the action : ' + _cb + ' has not been found when firing event : ' + args.event.selector );
+                    }
 
-                      //Allow other actions to be bound before action and after
-                      //
-                      //=> we don't want the event in the object here => we use the one in the event map if set
-                      //=> otherwise will loop infinitely because triggering always the same cb from args.event.actions[_cb]
-                      //=> the dom element shall be get from the passed args and fall back to the controler container.
-                      var $_dom_el = ( _.has(args, 'dom_el') && -1 != args.dom_el.length ) ? args.dom_el : control.container;
+                    //Allow other actions to be bound before action and after
+                    //
+                    //=> we don't want the event in the object here => we use the one in the event map if set
+                    //=> otherwise will loop infinitely because triggering always the same cb from args.event.actions[_cb]
+                    //=> the dom element shall be get from the passed args and fall back to the controler container.
+                    var $_dom_el = ( _.has(args, 'dom_el') && -1 != args.dom_el.length ) ? args.dom_el : control.container;
 
-                      $_dom_el.trigger( 'before_' + _cb, _.omit( args, 'event' ) );
+                    $_dom_el.trigger( 'before_' + _cb, _.omit( args, 'event' ) );
 
-                      //executes the _cb and stores the result in a local var
-                      var _cb_return = instance[ _cb ].call( instance, args );
-                      //shall we stop the action chain here ?
-                      if ( false === _cb_return )
-                        _break = true;
+                    //executes the _cb and stores the result in a local var
+                    var _cb_return = instance[ _cb ].call( instance, args );
+                    //shall we stop the action chain here ?
+                    if ( false === _cb_return )
+                      _break = true;
 
-                      //allow other actions to be bound after
-                      $_dom_el.trigger( 'after_' + _cb, _.omit( args, 'event' ) );
-                });//_.map
-        }
-  });//$.extend
+                    //allow other actions to be bound after
+                    $_dom_el.trigger( 'after_' + _cb, _.omit( args, 'event' ) );
+              });//_.map
+      }
+});//$.extend
 })( wp.customize , jQuery, _);
 (function (api, $, _) {
   //This promise will let us know when we have the first set of preview query ready to use
@@ -7846,6 +7858,7 @@ $.extend( CZRSkopeMths, {
 // type : $(this).attr('data-input-type'),
 // is_mod_opt : bool,
 // is_preItemInput : bool
+( function ( api, $, _ ) {
 $.extend( CZRInputMths , {
     initialize: function( name, options ) {
           if ( _.isUndefined( options.input_parent ) || _.isEmpty(options.input_parent) ) {
@@ -8102,7 +8115,9 @@ $.extend( CZRInputMths , {
                     _updateHandle( $handle[0], this.value );
               });
         }
-});//$.extendvar CZRInputMths = CZRInputMths || {};
+});//$.extend
+})( wp.customize , jQuery, _ );var CZRInputMths = CZRInputMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRInputMths , {
     setupImageUploader : function() {
           var input        = this,
@@ -8303,7 +8318,8 @@ $.extend( CZRInputMths , {
 
         return _map;
   }
-});//$.extend/* Fix caching, select2 default one seems to not correctly work, or it doesn't what I think it should */
+});//$.extend
+})( wp.customize , jQuery, _ );/* Fix caching, select2 default one seems to not correctly work, or it doesn't what I think it should */
 // the content_picker options are set in the module with :
 // $.extend( module.inputOptions, {
 //       'content_picker' : {
@@ -8326,1256 +8342,1265 @@ $.extend( CZRInputMths , {
 //       }
 // });
 var CZRInputMths = CZRInputMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRInputMths , {
-  setupContentPicker: function( wpObjectTypes ) {
-          var input  = this,
-          _event_map = [];
+      setupContentPicker: function( wpObjectTypes ) {
+              var input  = this,
+              _event_map = [];
 
-          /* Dummy for the prototype purpose */
-          //input.object = ['post']; //this.control.params.object_types  - array('page', 'post')
-          $.extend( {
-                post : '',
-                taxonomy : ''
-          }, _.isObject( wpObjectTypes ) ? wpObjectTypes : {} );
+              /* Dummy for the prototype purpose */
+              //input.object = ['post']; //this.control.params.object_types  - array('page', 'post')
+              $.extend( {
+                    post : '',
+                    taxonomy : ''
+              }, _.isObject( wpObjectTypes ) ? wpObjectTypes : {} );
 
-          input.wpObjectTypes = wpObjectTypes;
+              input.wpObjectTypes = wpObjectTypes;
 
-          /* Methodize this or use a template */
-          input.container.find('.czr-input').append('<select data-select-type="content-picker-select" class="js-example-basic-simple"></select>');
+              /* Methodize this or use a template */
+              input.container.find('.czr-input').append('<select data-select-type="content-picker-select" class="js-example-basic-simple"></select>');
 
-          //binding
-          _event_map = [
-                //set input value
-                {
-                      trigger   : 'change',
-                      selector  : 'select[data-select-type]',
-                      name      : 'set_input_value',
-                      actions   : function( obj ){
-                            var $_changed_input   = $(obj.dom_event.currentTarget, obj.dom_el ),
-                                _raw_val          = $( $_changed_input, obj.dom_el ).select2( 'data' ),
-                                _val_candidate    = {},
-                                _default          = {
-                                      id          : '',
-                                      type_label  : '',
-                                      title       : '',
-                                      object_type : '',
-                                      url         : ''
+              //binding
+              _event_map = [
+                    //set input value
+                    {
+                          trigger   : 'change',
+                          selector  : 'select[data-select-type]',
+                          name      : 'set_input_value',
+                          actions   : function( obj ){
+                                var $_changed_input   = $(obj.dom_event.currentTarget, obj.dom_el ),
+                                    _raw_val          = $( $_changed_input, obj.dom_el ).select2( 'data' ),
+                                    _val_candidate    = {},
+                                    _default          = {
+                                          id          : '',
+                                          type_label  : '',
+                                          title       : '',
+                                          object_type : '',
+                                          url         : ''
+                                    };
+
+                                _raw_val = _.isArray( _raw_val ) ? _raw_val[0] : _raw_val;
+                                if ( ! _.isObject( _raw_val ) || _.isEmpty( _raw_val ) ) {
+                                    api.consoleLog( 'Content Picker Input : the picked value should be an object not empty.');
+                                    return;
+                                }
+
+                                //normalize and purge useless select2 fields
+                                //=> skip a possible _custom_ id, used for example in the slider module to set a custom url
+                                _.each( _default, function( val, k ){
+                                      if ( '_custom_' !== _raw_val.id ) {
+                                            if ( ! _.has( _raw_val, k ) || _.isEmpty( _raw_val[ k ] ) ) {
+                                                  api.consoleLog( 'content_picker : missing input param : ' + k );
+                                                  return;
+                                            }
+                                      }
+                                      _val_candidate[ k ] = _raw_val[ k ];
+                                } );
+                                //set the value now
+                                input.set( _val_candidate );
+                          }
+                    }
+              ];
+
+              input.setupDOMListeners( _event_map , { dom_el : input.container }, input );
+              input.setupContentSelecter();
+      },
+
+      setupContentSelecter : function() {
+              var input = this;
+
+              input.container.find('select').select2( {
+                    placeholder: {
+                          id: '-1', // the value of the option
+                          title: 'Select'
+                    },
+                    data : input.setupSelectedContents(),
+                    //  allowClear: true,
+                    ajax: {
+                          url: serverControlParams.AjaxUrl,
+                          type: 'POST',
+                          dataType: 'json',
+                          delay: 250,
+                          debug: true,
+                          data: function ( params ) {
+                                //for some reason I'm not getting at the moment the params.page returned when searching is different
+                                var page = params.page ? params.page - 1 : 0;
+                                page = params.term ? params.page : page;
+                                return {
+                                      action          : params.term ? "search-available-content-items-customizer" : "load-available-content-items-customizer",
+                                      search          : params.term,
+                                      wp_customize    : 'on',
+                                      page            : page,
+                                      wp_object_types : JSON.stringify( input.wpObjectTypes ),
+                                      CZRCpNonce      : serverControlParams.CZRCpNonce
                                 };
+                          },
+                          /* transport: function (params, success, failure) {
+                            var $request = $.ajax(params);
 
-                            _raw_val = _.isArray( _raw_val ) ? _raw_val[0] : _raw_val;
-                            if ( ! _.isObject( _raw_val ) || _.isEmpty( _raw_val ) ) {
-                                api.consoleLog( 'Content Picker Input : the picked value should be an object not empty.');
-                                return;
-                            }
+                            $request.then(success);
+                            $request.fail(failure);
 
-                            //normalize and purge useless select2 fields
-                            //=> skip a possible _custom_ id, used for example in the slider module to set a custom url
-                            _.each( _default, function( val, k ){
-                                  if ( '_custom_' !== _raw_val.id ) {
-                                        if ( ! _.has( _raw_val, k ) || _.isEmpty( _raw_val[ k ] ) ) {
-                                              api.consoleLog( 'content_picker : missing input param : ' + k );
-                                              return;
-                                        }
-                                  }
-                                  _val_candidate[ k ] = _raw_val[ k ];
-                            } );
-                            //set the value now
-                            input.set( _val_candidate );
-                      }
-                }
-          ];
+                            return $request;
+                          },*/
+                          processResults: function ( data, params ) {
+                                //let us remotely set a default option like custom link when initializing the content picker input.
+                                input.defaultContentPickerOption = input.defaultContentPickerOption || [];
 
-          input.setupDOMListeners( _event_map , { dom_el : input.container }, input );
-          input.setupContentSelecter();
-  },
+                                if ( ! data.success )
+                                  return { results: input.defaultContentPickerOption };
 
-  setupContentSelecter : function() {
-          var input = this;
+                                var items   = data.data.items,
+                                    _results = _.clone( input.defaultContentPickerOption );
 
-          input.container.find('select').select2( {
-                placeholder: {
-                      id: '-1', // the value of the option
-                      title: 'Select'
-                },
-                data : input.setupSelectedContents(),
-                //  allowClear: true,
-                ajax: {
-                      url: serverControlParams.AjaxUrl,
-                      type: 'POST',
-                      dataType: 'json',
-                      delay: 250,
-                      debug: true,
-                      data: function ( params ) {
-                            //for some reason I'm not getting at the moment the params.page returned when searching is different
-                            var page = params.page ? params.page - 1 : 0;
-                            page = params.term ? params.page : page;
-                            return {
-                                  action          : params.term ? "search-available-content-items-customizer" : "load-available-content-items-customizer",
-                                  search          : params.term,
-                                  wp_customize    : 'on',
-                                  page            : page,
-                                  wp_object_types : JSON.stringify( input.wpObjectTypes ),
-                                  CZRCpNonce      : serverControlParams.CZRCpNonce
-                            };
-                      },
-                      /* transport: function (params, success, failure) {
-                        var $request = $.ajax(params);
-
-                        $request.then(success);
-                        $request.fail(failure);
-
-                        return $request;
-                      },*/
-                      processResults: function ( data, params ) {
-                            //let us remotely set a default option like custom link when initializing the content picker input.
-                            input.defaultContentPickerOption = input.defaultContentPickerOption || [];
-
-                            if ( ! data.success )
-                              return { results: input.defaultContentPickerOption };
-
-                            var items   = data.data.items,
-                                _results = _.clone( input.defaultContentPickerOption );
-
-                            _.each( items, function( item ) {
-                                  _results.push({
-                                        id          : item.id,
-                                        title       : item.title,
-                                        type_label  : item.type_label,
-                                        object_type : item.object,
-                                        url         : item.url
-                                  });
-                            });
-                            return {
-                                  results: _results,
-                                  //The pagination param will trigger the infinite load
-                                  pagination: { more: data.data.items.length == 10 }
-                            };
-                      },
-                },//ajax
-                templateSelection: input.czrFormatContentSelected,
-                templateResult: input.czrFormatContentSelected,
-                escapeMarkup: function (markup) { return markup; },
-         });//select2 setup
-  },
+                                _.each( items, function( item ) {
+                                      _results.push({
+                                            id          : item.id,
+                                            title       : item.title,
+                                            type_label  : item.type_label,
+                                            object_type : item.object,
+                                            url         : item.url
+                                      });
+                                });
+                                return {
+                                      results: _results,
+                                      //The pagination param will trigger the infinite load
+                                      pagination: { more: data.data.items.length == 10 }
+                                };
+                          },
+                    },//ajax
+                    templateSelection: input.czrFormatContentSelected,
+                    templateResult: input.czrFormatContentSelected,
+                    escapeMarkup: function (markup) { return markup; },
+             });//select2 setup
+      },
 
 
-  czrFormatContentSelected: function (item) {
-          if ( item.loading ) return item.text;
-          var markup = "<div class='content-picker-item clearfix'>" +
-            "<div class='content-item-bar'>" +
-              "<span class='item-title'>" + item.title + "</span>";
+      czrFormatContentSelected: function (item) {
+              if ( item.loading ) return item.text;
+              var markup = "<div class='content-picker-item clearfix'>" +
+                "<div class='content-item-bar'>" +
+                  "<span class='item-title'>" + item.title + "</span>";
 
-          if ( item.type_label ) {
-            markup += "<span class='item-type'>" + item.type_label + "</span>";
-          }
+              if ( item.type_label ) {
+                markup += "<span class='item-type'>" + item.type_label + "</span>";
+              }
 
-          markup += "</div></div>";
+              markup += "</div></div>";
 
-          return markup;
-  },
+              return markup;
+      },
 
-  setupSelectedContents : function() {
-        var input = this,
-           _model = input();
+      setupSelectedContents : function() {
+            var input = this,
+               _model = input();
 
-        return _model;
-  }
+            return _model;
+      }
 });//$.extend
-var CZRInputMths = CZRInputMths || {};
+})( wp.customize , jQuery, _ );var CZRInputMths = CZRInputMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRInputMths , {
-    setupTextEditor : function() {
-          var input        = this,
-              _model       = input();
+      setupTextEditor : function() {
+            var input        = this,
+                _model       = input();
 
-          //do we have an html template and a input container?
-          if ( ! input.container ) {
-              throw new Error( 'The input container is not set for WP text editor in module.' + input.module.id );
-          }
+            //do we have an html template and a input container?
+            if ( ! input.container ) {
+                throw new Error( 'The input container is not set for WP text editor in module.' + input.module.id );
+            }
 
-          if ( ! input.czrRenderInputTextEditorTemplate() )
-            return;
-
-          input.editor       = tinyMCE( 'czr-customize-content_editor' );
-          input.textarea     = $( '#czr-customize-content_editor' );
-          input.editorPane   = $( '#czr-customize-content_editor-pane' );
-          input.dragbar      = $( '#czr-customize-content_editor-dragbar' );
-          input.editorFrame  = $( '#czr-customize-content_editor_ifr' );
-          input.mceTools     = $( '#wp-czr-customize-content_editor-tools' );
-          input.mceToolbar   = input.editorPane.find( '.mce-toolbar-grp' );
-          input.mceStatusbar = input.editorPane.find( '.mce-statusbar' );
-
-          input.preview      = $( '#customize-preview' );
-          input.collapse     = $( '.collapse-sidebar' );
-
-          input.textpreview  = input.container.find('textarea');
-          input.toggleButton = input.container.find('button.text_editor-button');
-
-          //status
-          input.editorExpanded   = new api.Value( false );
-
-
-          //initial filling of the textpreview and button text
-          input.czrUpdateTextPreview();
-          input.czrSetToggleButtonText( input.editorExpanded() );
-
-          input.czrTextEditorBinding();
-
-          input.czrResizeEditorOnUserRequest();
-  },
-
-  czrTextEditorBinding : function() {
-          var input = this,
-              editor = input.editor,
-              textarea = input.textarea,
-              toggleButton = input.toggleButton,
-              editorExpanded = input.editorExpanded,
-              editorPane   = input.editorPane;
-
-
-          input.bind( input.id + ':changed', input.czrUpdateTextPreview );
-
-          _.bindAll( input, 'czrOnVisualEditorChange', 'czrOnTextEditorChange', 'czrResizeEditorOnWindowResize' );
-
-          toggleButton.on( 'click', function() {
-                input.editorExpanded.set( ! input.editorExpanded() );
-                if ( input.editorExpanded() ) {
-                  editor.focus();
-                }
-          });
-
-          //on this module section close close the editor and unbind this input
-          input.module.czr_ModuleState.bind(
-            function( state ) {
-              if ( 'expanded' != state )
-                input.editorExpanded.set( false );
-          });
-
-          input.editorExpanded.bind( function (expanded) {
-
-                api.consoleLog('in input.editorExpanded', expanded, input() );
-                /*
-                * Ensure only the latest input is bound
-                */
-                if ( editor.locker && editor.locker !== input ) {
-                    editor.locker.editorExpanded.set(false);
-                    editor.locker = null;
-                }if ( ! editor.locker || editor.locker === input ) {
-                    $(document.body).toggleClass('czr-customize-content_editor-pane-open', expanded);
-                    editor.locker = input;
-                }
-
-                //set toggle button text
-                input.czrSetToggleButtonText( expanded );
-
-                if ( expanded ) {
-                    editor.setContent( wp.editor.autop( input() ) );
-                    editor.on( 'input change keyup', input.czrOnVisualEditorChange );
-                    textarea.on( 'input', input.czrOnTextEditorChange );
-                    input.czrResizeEditor( window.innerHeight - editorPane.height() );
-                    $( window ).on('resize', input.czrResizeEditorOnWindowResize );
-
-                } else {
-                    editor.off( 'input change keyup', input.czrOnVisualEditorChange );
-                    textarea.off( 'input', input.czrOnTextEditorChange );
-                    $( window ).off('resize', input.czrResizeEditorOnWindowResize );
-
-                    //resize reset
-                    input.czrResizeReset();
-                }
-          } );
-  },
-
-  czrOnVisualEditorChange : function() {
-          var input = this,
-              editor = input.editor,
-              value;
-
-          value = wp.editor.removep( editor.getContent() );
-          input.set(value);
-  },
-
-  czrOnTextEditorChange : function() {
-          var input = this,
-              textarea = input.textarea,
-              value;
-
-          value = textarea.val();
-          input.set(value);
-  },
-  czrUpdateTextPreview: function() {
-          var input   = this,
-              input_model = input(),
-              value;
-
-          //TODO: better stripping
-          value = input_model.replace(/(<([^>]+)>)/ig,"");
-          //max 30 chars
-          if ( value.length > 30 )
-            value = value.substring(0, 34) + '...';
-
-          input.textpreview.val( value );
-  },
-  //////////////////////////////////////////////////
-  /// HELPERS
-  //////////////////////////////////////////////////
-  czrRenderInputTextEditorTemplate: function() {
-          var input  = this;
-
-          //do we have view template script?
-          if ( 0 === $( '#tmpl-czr-input-text_editor-view-content' ).length ) {
-              throw new Error('Missing js template for text editor input in module : ' + input.module.id );
-          }
-
-          var view_template = wp.template('czr-input-text_editor-view-content'),
-                  $_view_el = input.container.find('input');
-
-          //  //do we have an html template and a module container?
-          if ( ! view_template  || ! input.container )
-            return;
-
-          api.consoleLog('Model injected in text editor tmpl : ', input() );
-
-          $_view_el.after( view_template( input() ) );
-
-          return true;
-  },
-  czrIsEditorExpanded : function() {
-          return $( document.body ).hasClass('czr-customize-content_editor-pane-open');
-  },
-  czrResizeReset  : function() {
-          var input = this,
-              preview = input.preview,
-              collapse = input.collapse,
-              sectionContent = input.container.closest('ul.accordion-section-content');
-
-          sectionContent.css( 'padding-bottom', '' );
-          preview.css( 'bottom', '' );
-          collapse.css( 'bottom', '' );
-  },
-  czrResizeEditor : function( position ) {
-          var windowHeight = window.innerHeight,
-              windowWidth = window.innerWidth,
-              minScroll = 40,
-              maxScroll = 1,
-              mobileWidth = 782,
-              collapseMinSpacing = 56,
-              collapseBottomOutsideEditor = 8,
-              collapseBottomInsideEditor = 4,
-              args = {},
-              input = this,
-              sectionContent = input.container.closest('ul.accordion-section-content'),
-              mceTools = input.mceTools,
-              mceToolbar = input.mceToolbar,
-              mceStatusbar = input.mceStatusbar,
-              preview      = input.preview,
-              collapse     = input.collapse,
-              editorPane   = input.editorPane,
-              editorFrame  = input.editorFrame;
-
-          if ( ! input.editorExpanded() ) {
-            return;
-          }
-
-          if ( ! _.isNaN( position ) ) {
-            resizeHeight = windowHeight - position;
-          }
-
-          args.height = resizeHeight;
-          args.components = mceTools.outerHeight() + mceToolbar.outerHeight() + mceStatusbar.outerHeight();
-
-          if ( resizeHeight < minScroll ) {
-            args.height = minScroll;
-          }
-
-          if ( resizeHeight > windowHeight - maxScroll ) {
-            args.height = windowHeight - maxScroll;
-          }
-
-          if ( windowHeight < editorPane.outerHeight() ) {
-            args.height = windowHeight;
-          }
-
-          preview.css( 'bottom', args.height );
-          editorPane.css( 'height', args.height );
-          editorFrame.css( 'height', args.height - args.components );
-          collapse.css( 'bottom', args.height + collapseBottomOutsideEditor );
-
-          if ( collapseMinSpacing > windowHeight - args.height ) {
-            collapse.css( 'bottom', mceStatusbar.outerHeight() + collapseBottomInsideEditor );
-          }
-
-          if ( windowWidth <= mobileWidth ) {
-            sectionContent.css( 'padding-bottom', args.height );
-          } else {
-            sectionContent.css( 'padding-bottom', '' );
-          }
-  },
-  czrResizeEditorOnWindowResize : function() {
-          var input = this,
-              resizeDelay = 50,
-              editorPane   = input.editorPane;
-
-          if ( ! input.editorExpanded() ) {
-            return;
-          }
-
-          _.delay( function() {
-            input.czrResizeEditor( window.innerHeight - editorPane.height() );
-          }, resizeDelay );
-
-  },
-  czrResizeEditorOnUserRequest : function() {
-          var input = this,
-              dragbar = input.dragbar,
-              editorFrame = input.editorFrame;
-
-          dragbar.on( 'mousedown', function() {
-            if ( ! input.editorExpanded() )
+            if ( ! input.czrRenderInputTextEditorTemplate() )
               return;
 
-            $( document ).on( 'mousemove.czr-customize-content_editor', function( event ) {
-                event.preventDefault();
-                $( document.body ).addClass( 'czr-customize-content_editor-pane-resize' );
-                editorFrame.css( 'pointer-events', 'none' );
-                input.czrResizeEditor( event.pageY );
+            input.editor       = tinyMCE( 'czr-customize-content_editor' );
+            input.textarea     = $( '#czr-customize-content_editor' );
+            input.editorPane   = $( '#czr-customize-content_editor-pane' );
+            input.dragbar      = $( '#czr-customize-content_editor-dragbar' );
+            input.editorFrame  = $( '#czr-customize-content_editor_ifr' );
+            input.mceTools     = $( '#wp-czr-customize-content_editor-tools' );
+            input.mceToolbar   = input.editorPane.find( '.mce-toolbar-grp' );
+            input.mceStatusbar = input.editorPane.find( '.mce-statusbar' );
+
+            input.preview      = $( '#customize-preview' );
+            input.collapse     = $( '.collapse-sidebar' );
+
+            input.textpreview  = input.container.find('textarea');
+            input.toggleButton = input.container.find('button.text_editor-button');
+
+            //status
+            input.editorExpanded   = new api.Value( false );
+
+
+            //initial filling of the textpreview and button text
+            input.czrUpdateTextPreview();
+            input.czrSetToggleButtonText( input.editorExpanded() );
+
+            input.czrTextEditorBinding();
+
+            input.czrResizeEditorOnUserRequest();
+      },
+
+      czrTextEditorBinding : function() {
+              var input = this,
+                  editor = input.editor,
+                  textarea = input.textarea,
+                  toggleButton = input.toggleButton,
+                  editorExpanded = input.editorExpanded,
+                  editorPane   = input.editorPane;
+
+
+              input.bind( input.id + ':changed', input.czrUpdateTextPreview );
+
+              _.bindAll( input, 'czrOnVisualEditorChange', 'czrOnTextEditorChange', 'czrResizeEditorOnWindowResize' );
+
+              toggleButton.on( 'click', function() {
+                    input.editorExpanded.set( ! input.editorExpanded() );
+                    if ( input.editorExpanded() ) {
+                      editor.focus();
+                    }
+              });
+
+              //on this module section close close the editor and unbind this input
+              input.module.czr_ModuleState.bind(
+                function( state ) {
+                  if ( 'expanded' != state )
+                    input.editorExpanded.set( false );
+              });
+
+              input.editorExpanded.bind( function (expanded) {
+
+                    api.consoleLog('in input.editorExpanded', expanded, input() );
+                    /*
+                    * Ensure only the latest input is bound
+                    */
+                    if ( editor.locker && editor.locker !== input ) {
+                        editor.locker.editorExpanded.set(false);
+                        editor.locker = null;
+                    }if ( ! editor.locker || editor.locker === input ) {
+                        $(document.body).toggleClass('czr-customize-content_editor-pane-open', expanded);
+                        editor.locker = input;
+                    }
+
+                    //set toggle button text
+                    input.czrSetToggleButtonText( expanded );
+
+                    if ( expanded ) {
+                        editor.setContent( wp.editor.autop( input() ) );
+                        editor.on( 'input change keyup', input.czrOnVisualEditorChange );
+                        textarea.on( 'input', input.czrOnTextEditorChange );
+                        input.czrResizeEditor( window.innerHeight - editorPane.height() );
+                        $( window ).on('resize', input.czrResizeEditorOnWindowResize );
+
+                    } else {
+                        editor.off( 'input change keyup', input.czrOnVisualEditorChange );
+                        textarea.off( 'input', input.czrOnTextEditorChange );
+                        $( window ).off('resize', input.czrResizeEditorOnWindowResize );
+
+                        //resize reset
+                        input.czrResizeReset();
+                    }
               } );
-            } );
+      },
 
-          dragbar.on( 'mouseup', function() {
-            if ( ! input.editorExpanded() )
-              return;
+      czrOnVisualEditorChange : function() {
+              var input = this,
+                  editor = input.editor,
+                  value;
 
-            $( document ).off( 'mousemove.czr-customize-content_editor' );
-            $( document.body ).removeClass( 'czr-customize-content_editor-pane-resize' );
-            editorFrame.css( 'pointer-events', '' );
-          } );
+              value = wp.editor.removep( editor.getContent() );
+              input.set(value);
+      },
 
-  },
-  czrSetToggleButtonText : function( $_expanded ) {
-          var input = this;
+      czrOnTextEditorChange : function() {
+              var input = this,
+                  textarea = input.textarea,
+                  value;
 
-          input.toggleButton.text( serverControlParams.translatedStrings[ ! $_expanded ? 'textEditorOpen' : 'textEditorClose' ] );
-  }
-});//$.extend//extends api.Value
+              value = textarea.val();
+              input.set(value);
+      },
+      czrUpdateTextPreview: function() {
+              var input   = this,
+                  input_model = input(),
+                  value;
+
+              //TODO: better stripping
+              value = input_model.replace(/(<([^>]+)>)/ig,"");
+              //max 30 chars
+              if ( value.length > 30 )
+                value = value.substring(0, 34) + '...';
+
+              input.textpreview.val( value );
+      },
+      //////////////////////////////////////////////////
+      /// HELPERS
+      //////////////////////////////////////////////////
+      czrRenderInputTextEditorTemplate: function() {
+              var input  = this;
+
+              //do we have view template script?
+              if ( 0 === $( '#tmpl-czr-input-text_editor-view-content' ).length ) {
+                  throw new Error('Missing js template for text editor input in module : ' + input.module.id );
+              }
+
+              var view_template = wp.template('czr-input-text_editor-view-content'),
+                      $_view_el = input.container.find('input');
+
+              //  //do we have an html template and a module container?
+              if ( ! view_template  || ! input.container )
+                return;
+
+              api.consoleLog('Model injected in text editor tmpl : ', input() );
+
+              $_view_el.after( view_template( input() ) );
+
+              return true;
+      },
+      czrIsEditorExpanded : function() {
+              return $( document.body ).hasClass('czr-customize-content_editor-pane-open');
+      },
+      czrResizeReset  : function() {
+              var input = this,
+                  preview = input.preview,
+                  collapse = input.collapse,
+                  sectionContent = input.container.closest('ul.accordion-section-content');
+
+              sectionContent.css( 'padding-bottom', '' );
+              preview.css( 'bottom', '' );
+              collapse.css( 'bottom', '' );
+      },
+      czrResizeEditor : function( position ) {
+              var windowHeight = window.innerHeight,
+                  windowWidth = window.innerWidth,
+                  minScroll = 40,
+                  maxScroll = 1,
+                  mobileWidth = 782,
+                  collapseMinSpacing = 56,
+                  collapseBottomOutsideEditor = 8,
+                  collapseBottomInsideEditor = 4,
+                  args = {},
+                  input = this,
+                  sectionContent = input.container.closest('ul.accordion-section-content'),
+                  mceTools = input.mceTools,
+                  mceToolbar = input.mceToolbar,
+                  mceStatusbar = input.mceStatusbar,
+                  preview      = input.preview,
+                  collapse     = input.collapse,
+                  editorPane   = input.editorPane,
+                  editorFrame  = input.editorFrame;
+
+              if ( ! input.editorExpanded() ) {
+                return;
+              }
+
+              if ( ! _.isNaN( position ) ) {
+                resizeHeight = windowHeight - position;
+              }
+
+              args.height = resizeHeight;
+              args.components = mceTools.outerHeight() + mceToolbar.outerHeight() + mceStatusbar.outerHeight();
+
+              if ( resizeHeight < minScroll ) {
+                args.height = minScroll;
+              }
+
+              if ( resizeHeight > windowHeight - maxScroll ) {
+                args.height = windowHeight - maxScroll;
+              }
+
+              if ( windowHeight < editorPane.outerHeight() ) {
+                args.height = windowHeight;
+              }
+
+              preview.css( 'bottom', args.height );
+              editorPane.css( 'height', args.height );
+              editorFrame.css( 'height', args.height - args.components );
+              collapse.css( 'bottom', args.height + collapseBottomOutsideEditor );
+
+              if ( collapseMinSpacing > windowHeight - args.height ) {
+                collapse.css( 'bottom', mceStatusbar.outerHeight() + collapseBottomInsideEditor );
+              }
+
+              if ( windowWidth <= mobileWidth ) {
+                sectionContent.css( 'padding-bottom', args.height );
+              } else {
+                sectionContent.css( 'padding-bottom', '' );
+              }
+      },
+      czrResizeEditorOnWindowResize : function() {
+              var input = this,
+                  resizeDelay = 50,
+                  editorPane   = input.editorPane;
+
+              if ( ! input.editorExpanded() ) {
+                return;
+              }
+
+              _.delay( function() {
+                input.czrResizeEditor( window.innerHeight - editorPane.height() );
+              }, resizeDelay );
+
+      },
+      czrResizeEditorOnUserRequest : function() {
+              var input = this,
+                  dragbar = input.dragbar,
+                  editorFrame = input.editorFrame;
+
+              dragbar.on( 'mousedown', function() {
+                if ( ! input.editorExpanded() )
+                  return;
+
+                $( document ).on( 'mousemove.czr-customize-content_editor', function( event ) {
+                    event.preventDefault();
+                    $( document.body ).addClass( 'czr-customize-content_editor-pane-resize' );
+                    editorFrame.css( 'pointer-events', 'none' );
+                    input.czrResizeEditor( event.pageY );
+                  } );
+                } );
+
+              dragbar.on( 'mouseup', function() {
+                if ( ! input.editorExpanded() )
+                  return;
+
+                $( document ).off( 'mousemove.czr-customize-content_editor' );
+                $( document.body ).removeClass( 'czr-customize-content_editor-pane-resize' );
+                editorFrame.css( 'pointer-events', '' );
+              } );
+
+      },
+      czrSetToggleButtonText : function( $_expanded ) {
+              var input = this;
+
+              input.toggleButton.text( serverControlParams.translatedStrings[ ! $_expanded ? 'textEditorOpen' : 'textEditorClose' ] );
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//extends api.Value
 //options:
   // id : item.id,
   // initial_item_model : item,
   // defaultItemModel : module.defaultItemModel,
   // module : module,
   // is_added_by_user : is_added_by_user || false
+
 var CZRItemMths = CZRItemMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRItemMths , {
-  initialize: function( id, options ) {
-        if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
-          throw new Error('No module assigned to item ' + id + '. Aborting');
-        }
+      initialize: function( id, options ) {
+            if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
+              throw new Error('No module assigned to item ' + id + '. Aborting');
+            }
 
-        var item = this;
-        api.Value.prototype.initialize.call( item, null, options );
+            var item = this;
+            api.Value.prototype.initialize.call( item, null, options );
 
-        //DEFERRED STATES
-        //store the state of ready.
-        //=> we don't want the ready method to be fired several times
-        item.isReady = $.Deferred();
-        //will store the embedded and content rendered state
-        item.embedded = $.Deferred();
-        item.container = null;//will store the item $ dom element
-        item.contentContainer = null;//will store the item content $ dom element
-        item.inputCollection = new api.Value({});
+            //DEFERRED STATES
+            //store the state of ready.
+            //=> we don't want the ready method to be fired several times
+            item.isReady = $.Deferred();
+            //will store the embedded and content rendered state
+            item.embedded = $.Deferred();
+            item.container = null;//will store the item $ dom element
+            item.contentContainer = null;//will store the item content $ dom element
+            item.inputCollection = new api.Value({});
 
-        //VIEW STATES FOR ITEM AND REMOVE DIALOG
-        //viewState stores the current expansion status of a given view => one value by created by item.id
-        //viewState can take 3 values : expanded, expanded_noscroll (=> used on view creation), closed
-        item.viewState = new api.Value( 'closed' );
-        item.removeDialogVisible = new api.Value( false );
+            //VIEW STATES FOR ITEM AND REMOVE DIALOG
+            //viewState stores the current expansion status of a given view => one value by created by item.id
+            //viewState can take 3 values : expanded, expanded_noscroll (=> used on view creation), closed
+            item.viewState = new api.Value( 'closed' );
+            item.removeDialogVisible = new api.Value( false );
 
-        //input.options = options;
-        //write the options as properties, name is included
-        $.extend( item, options || {} );
+            //input.options = options;
+            //write the options as properties, name is included
+            $.extend( item, options || {} );
 
-        //declares a default model
-        item.defaultItemModel = _.clone( options.defaultItemModel ) || { id : '', title : '' };
+            //declares a default model
+            item.defaultItemModel = _.clone( options.defaultItemModel ) || { id : '', title : '' };
 
-        //set initial values
-        var _initial_model = $.extend( item.defaultItemModel, options.initial_item_model );
+            //set initial values
+            var _initial_model = $.extend( item.defaultItemModel, options.initial_item_model );
 
-        //this won't be listened to at this stage
-        item.set( _initial_model );
+            //this won't be listened to at this stage
+            item.set( _initial_model );
 
-        //USER EVENT MAP
-        item.userEventMap = new api.Value( [
-              //toggles remove view alert
-              {
-                    trigger   : 'click keydown',
-                    selector  : [ '.' + item.module.control.css_attr.display_alert_btn, '.' + item.module.control.css_attr.cancel_alert_btn ].join(','),
-                    name      : 'toggle_remove_alert',
-                    actions   : function() {
-                          var _isVisible = this.removeDialogVisible();
-                          this.module.closeRemoveDialogs();
-                          this.removeDialogVisible( ! _isVisible );
-                    }
-              },
-              //removes item and destroys its view
-              {
-                    trigger   : 'click keydown',
-                    selector  : '.' + item.module.control.css_attr.remove_view_btn,
-                    name      : 'remove_item',
-                    actions   : ['removeItem']
-              },
-              //edit view
-              {
-                    trigger   : 'click keydown',
-                    selector  : [ '.' + item.module.control.css_attr.edit_view_btn, '.' + item.module.control.css_attr.item_title ].join(','),
-                    name      : 'edit_view',
-                    actions   : [ 'setViewVisibility' ]
-              },
-              //tabs navigation
-              {
-                    trigger   : 'click keydown',
-                    selector  : '.tabs nav li',
-                    name      : 'tab_nav',
-                    actions   : function( args ) {
-                          //toggleTabVisibility is defined in the module ctor and its this is the item or the modOpt
-                          this.module.toggleTabVisibility.call( this, args );
-                    }
-              }
-        ]);
-
-
+            //USER EVENT MAP
+            item.userEventMap = new api.Value( [
+                  //toggles remove view alert
+                  {
+                        trigger   : 'click keydown',
+                        selector  : [ '.' + item.module.control.css_attr.display_alert_btn, '.' + item.module.control.css_attr.cancel_alert_btn ].join(','),
+                        name      : 'toggle_remove_alert',
+                        actions   : function() {
+                              var _isVisible = this.removeDialogVisible();
+                              this.module.closeRemoveDialogs();
+                              this.removeDialogVisible( ! _isVisible );
+                        }
+                  },
+                  //removes item and destroys its view
+                  {
+                        trigger   : 'click keydown',
+                        selector  : '.' + item.module.control.css_attr.remove_view_btn,
+                        name      : 'remove_item',
+                        actions   : ['removeItem']
+                  },
+                  //edit view
+                  {
+                        trigger   : 'click keydown',
+                        selector  : [ '.' + item.module.control.css_attr.edit_view_btn, '.' + item.module.control.css_attr.item_title ].join(','),
+                        name      : 'edit_view',
+                        actions   : [ 'setViewVisibility' ]
+                  },
+                  //tabs navigation
+                  {
+                        trigger   : 'click keydown',
+                        selector  : '.tabs nav li',
+                        name      : 'tab_nav',
+                        actions   : function( args ) {
+                              //toggleTabVisibility is defined in the module ctor and its this is the item or the modOpt
+                              this.module.toggleTabVisibility.call( this, args );
+                        }
+                  }
+            ]);
 
 
-        //ITEM IS READY
-        //1) push it to the module item collection
-        //2) observe its changes
-        item.isReady.done( function() {
-              //push it to the collection
-              item.module.updateItemsCollection( { item : item() } );
-              //listen to each single item change
-              item.callbacks.add( function() { return item.itemReact.apply(item, arguments ); } );
-
-              //When shall we render the item ?
-              //If the module is part of a simple control, the item can be render now,
-              //If the module is part of a sektion, then the item will be rendered on module edit.
-              // if ( ! item.module.isInSektion() ) {
-              //       item.mayBeRenderItemWrapper();
-              // }
-              item.mayBeRenderItemWrapper();
-
-              //ITEM WRAPPER VIEW SETUP
-              //defer actions on item view embedded
-              item.embedded.done( function() {
-                    //define the item view DOM event map
-                    //bind actions when the item is embedded : item title, etc.
-                    item.itemWrapperViewSetup( _initial_model );
-              });
 
 
-              //INPUTS SETUP
-              //=> when the item content has been rendered. Typically on item expansion for a multi-items module.
-              item.bind( 'contentRendered', function() {
-                    //create the collection of inputs if needed
-                    //first time or after a removal
-                    if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) ) {
-                          try {
-                                api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
-                                //the item.container is now available
-                                //Setup the tabs navigation
-                                //setupTabNav is defined in the module ctor and its this is the item or the modOpt
-                                item.module.setupTabNav.call( item );
-                          } catch( er ) {
-                                api.errorLog( 'In item.isReady.done : ' + er );
-                          }
-                    }
-              });
+            //ITEM IS READY
+            //1) push it to the module item collection
+            //2) observe its changes
+            item.isReady.done( function() {
+                  //push it to the collection
+                  item.module.updateItemsCollection( { item : item() } );
+                  //listen to each single item change
+                  item.callbacks.add( function() { return item.itemReact.apply(item, arguments ); } );
 
-              //INPUTS DESTROY
-              item.bind( 'contentRemoved', function() {
-                    if ( _.has(item, 'czr_Input') )
-                      api.CZR_Helpers.removeInputCollection.call( item );
-              });
+                  //When shall we render the item ?
+                  //If the module is part of a simple control, the item can be render now,
+                  //If the module is part of a sektion, then the item will be rendered on module edit.
+                  // if ( ! item.module.isInSektion() ) {
+                  //       item.mayBeRenderItemWrapper();
+                  // }
+                  item.mayBeRenderItemWrapper();
 
-        });//item.isReady.done()
-
-        //if an item is manually added : open it
-        // if ( item.is_added_by_user ) {
-        //   item.setViewVisibility( {}, true );//empty obj because this method can be fired by the dom chain actions, always passing an object. true for added_by_user
-        // }
-        //item.setViewVisibility( {}, item.is_added_by_user );
-
-  },//initialize
-
-  //overridable method
-  //Fired if the item has been instantiated
-  //The item.callbacks are declared.
-  ready : function() {
-        this.isReady.resolve();
-  },
+                  //ITEM WRAPPER VIEW SETUP
+                  //defer actions on item view embedded
+                  item.embedded.done( function() {
+                        //define the item view DOM event map
+                        //bind actions when the item is embedded : item title, etc.
+                        item.itemWrapperViewSetup( _initial_model );
+                  });
 
 
-  //React to a single item change
-  //cb of module.czr_Item( item.id ).callbacks
-  //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
-  //data looks like :
-  //{
-  //  module : {}
-  //  input_changed     : string input.id
-  //  input_transport   : 'postMessage' or '',
-  //  not_preview_sent  : bool
-  //}
-  itemReact : function( to, from, data ) {
-        var item = this,
-            module = item.module;
+                  //INPUTS SETUP
+                  //=> when the item content has been rendered. Typically on item expansion for a multi-items module.
+                  item.bind( 'contentRendered', function() {
+                        //create the collection of inputs if needed
+                        //first time or after a removal
+                        if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) ) {
+                              try {
+                                    api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
+                                    //the item.container is now available
+                                    //Setup the tabs navigation
+                                    //setupTabNav is defined in the module ctor and its this is the item or the modOpt
+                                    item.module.setupTabNav.call( item );
+                              } catch( er ) {
+                                    api.errorLog( 'In item.isReady.done : ' + er );
+                              }
+                        }
+                  });
 
-        data = data || {};
+                  //INPUTS DESTROY
+                  item.bind( 'contentRemoved', function() {
+                        if ( _.has(item, 'czr_Input') )
+                          api.CZR_Helpers.removeInputCollection.call( item );
+                  });
 
-        //update the collection
-        module.updateItemsCollection( { item : to, data : data } ).done( function() {
-              //Always update the view title when the item collection has been updated
-              item.writeItemViewTitle( to, data );
-        });
+            });//item.isReady.done()
 
-        //send item to the preview. On update only, not on creation.
-        // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
-        //       api.consoleLog('DO WE REALLY NEED TO SEND THIS TO THE PREVIEW WITH _sendItem(to, from) ?');
-        //       item._sendItem(to, from);
-        // }
-  },
+            //if an item is manually added : open it
+            // if ( item.is_added_by_user ) {
+            //   item.setViewVisibility( {}, true );//empty obj because this method can be fired by the dom chain actions, always passing an object. true for added_by_user
+            // }
+            //item.setViewVisibility( {}, item.is_added_by_user );
+
+      },//initialize
+
+      //overridable method
+      //Fired if the item has been instantiated
+      //The item.callbacks are declared.
+      ready : function() {
+            this.isReady.resolve();
+      },
 
 
-});//$.extend//extends api.CZRBaseControl
-var CZRItemMths = CZRItemMths || {};
-
-  $.extend( CZRItemMths , {
-    //The idea is to send only the currently modified item instead of the entire collection
-    //the entire collection is sent anyway on api(setId).set( value ), and accessible in the preview via api(setId).bind( fn( to) )
-    _sendItem : function( to, from ) {
-          var item = this,
-              module = item.module,
-              _changed_props = [];
-
-          //which property(ies) has(ve) changed ?
-          _.each( from, function( _val, _key ) {
-                if ( _val != to[_key] )
-                  _changed_props.push(_key);
-          });
-
-          _.each( _changed_props, function( _prop ) {
-                module.control.previewer.send( 'sub_setting', {
-                      set_id : module.control.id,
-                      id : to.id,
-                      changed_prop : _prop,
-                      value : to[_prop]
-                });
-
-                //add a hook here
-                module.trigger('item_sent', { item : to , dom_el: item.container, changed_prop : _prop } );
-          });
-    },
-
-    //fired on click dom event
-    //for dynamic multi input modules
-    removeItem : function() {
+      //React to a single item change
+      //cb of module.czr_Item( item.id ).callbacks
+      //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+      //data looks like :
+      //{
+      //  module : {}
+      //  input_changed     : string input.id
+      //  input_transport   : 'postMessage' or '',
+      //  not_preview_sent  : bool
+      //}
+      itemReact : function( to, from, data ) {
             var item = this,
-                module = this.module,
-                _new_collection = _.clone( module.itemCollection() );
+                module = item.module;
 
-            //hook here
-            module.trigger('pre_item_dom_remove', item() );
+            data = data || {};
 
-            //destroy the Item DOM el
-            item._destroyView();
+            //update the collection
+            module.updateItemsCollection( { item : to, data : data } ).done( function() {
+                  //Always update the view title when the item collection has been updated
+                  item.writeItemViewTitle( to, data );
+            });
 
-            //new collection
-            //say it
-            _new_collection = _.without( _new_collection, _.findWhere( _new_collection, {id: item.id }) );
-            module.itemCollection.set( _new_collection );
-            //hook here
-            module.trigger('pre_item_api_remove', item() );
-            //remove the item from the collection
-            module.czr_Item.remove(item.id);
-    },
+            //send item to the preview. On update only, not on creation.
+            // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
+            //       api.consoleLog('DO WE REALLY NEED TO SEND THIS TO THE PREVIEW WITH _sendItem(to, from) ?');
+            //       item._sendItem(to, from);
+            // }
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//extends api.CZRBaseControl
 
-    //@return the item {...} from the collection
-    //takes a item unique id as param
-    getModel : function(id) {
-            return this();
-    }
+var CZRItemMths = CZRItemMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRItemMths , {
+      //The idea is to send only the currently modified item instead of the entire collection
+      //the entire collection is sent anyway on api(setId).set( value ), and accessible in the preview via api(setId).bind( fn( to) )
+      _sendItem : function( to, from ) {
+            var item = this,
+                module = item.module,
+                _changed_props = [];
 
-  });//$.extend
+            //which property(ies) has(ve) changed ?
+            _.each( from, function( _val, _key ) {
+                  if ( _val != to[_key] )
+                    _changed_props.push(_key);
+            });
 
+            _.each( _changed_props, function( _prop ) {
+                  module.control.previewer.send( 'sub_setting', {
+                        set_id : module.control.id,
+                        id : to.id,
+                        changed_prop : _prop,
+                        value : to[_prop]
+                  });
+
+                  //add a hook here
+                  module.trigger('item_sent', { item : to , dom_el: item.container, changed_prop : _prop } );
+            });
+      },
+
+      //fired on click dom event
+      //for dynamic multi input modules
+      removeItem : function() {
+              var item = this,
+                  module = this.module,
+                  _new_collection = _.clone( module.itemCollection() );
+
+              //hook here
+              module.trigger('pre_item_dom_remove', item() );
+
+              //destroy the Item DOM el
+              item._destroyView();
+
+              //new collection
+              //say it
+              _new_collection = _.without( _new_collection, _.findWhere( _new_collection, {id: item.id }) );
+              module.itemCollection.set( _new_collection );
+              //hook here
+              module.trigger('pre_item_api_remove', item() );
+              //remove the item from the collection
+              module.czr_Item.remove(item.id);
+      },
+
+      //@return the item {...} from the collection
+      //takes a item unique id as param
+      getModel : function(id) {
+              return this();
+      }
+
+});//$.extend
+})( wp.customize , jQuery, _ );
 //extends api.CZRBaseControl
 var CZRItemMths = CZRItemMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRItemMths , {
-  //fired on initialize for items in module embedded in a regular control
-  //fired when user edit module for items in modules embedded in a sektion
-  mayBeRenderItemWrapper : function() {
-        var item = this;
+      //fired on initialize for items in module embedded in a regular control
+      //fired when user edit module for items in modules embedded in a sektion
+      mayBeRenderItemWrapper : function() {
+            var item = this;
 
-        if ( 'pending' != item.embedded.state() )
-          return;
+            if ( 'pending' != item.embedded.state() )
+              return;
 
-        $.when( item.renderItemWrapper() ).done( function( $_container ) {
-              item.container = $_container;
-              if ( _.isUndefined(item.container) || ! item.container.length ) {
-                  throw new Error( 'In mayBeRenderItemWrapper the Item view has not been rendered : ' + item.id );
-              } else {
-                  //say it
-                  item.embedded.resolve();
-              }
-        });
-  },
-
-
-  //fired when item is ready and embedded
-  //define the item view DOM event map
-  //bind actions when the item is embedded
-  itemWrapperViewSetup : function( item_model ) {
-        var item = this,
-            module = this.module;
-
-        item_model = item() || item.initial_item_model;//could not be set yet
-
-        //always write the title
-        item.writeItemViewTitle();
+            $.when( item.renderItemWrapper() ).done( function( $_container ) {
+                  item.container = $_container;
+                  if ( _.isUndefined(item.container) || ! item.container.length ) {
+                      throw new Error( 'In mayBeRenderItemWrapper the Item view has not been rendered : ' + item.id );
+                  } else {
+                      //say it
+                      item.embedded.resolve();
+                  }
+            });
+      },
 
 
-        //When do we render the item content ?
-        //If this is a multi-item module, let's render each item content when they are expanded.
-        //In the case of a single item module, we can render the item content now.
-        var _updateItemContentDeferred = function( $_content, to, from ) {
-              //update the $.Deferred state
-              if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                  item.trigger( 'contentRendered' );
-                  item.contentContainer = $_content;
-                  item.toggleItemExpansion( to, from );
-              }
-              else {
-                  throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
-              }
-        };
+      //fired when item is ready and embedded
+      //define the item view DOM event map
+      //bind actions when the item is embedded
+      itemWrapperViewSetup : function( item_model ) {
+            var item = this,
+                module = this.module;
 
-        if ( item.module.isMultiItem() ) {
-              item.viewState.callbacks.add( function( to, from ) {
-                    //viewState can take 3 states : expanded, expanded_noscroll, closed
-                    var _isExpanded = -1 !== to.indexOf('expanded');
-                    if ( _isExpanded ) {
-                          //item already rendered ?
-                          if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
-                                //toggle on view state change
-                                item.toggleItemExpansion(to, from );
-                          } else {
-                                $.when( item.renderItemContent( item() || item.initial_item_model ) ).done( function( $_item_content ) {
-                                      //introduce a small delay to give some times to the modules to be printed.
-                                      //@todo : needed ?
-                                      _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
-                                      _updateItemContentDeferred( $_item_content, to, from );
-                                });
-                          }
-                    } else {
-                          //toggle on view state change
-                          item.toggleItemExpansion( to, from ).done( function() {
-                                if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
-                                      item.trigger( 'beforeContenRemoved' );
-                                      //Removes DOM input nodes
-                                      $( '.' + module.control.css_attr.item_content, item.container ).children().each( function() {
-                                            $(this).remove();
-                                      });
-                                      //clean any other content like a commented html markup
-                                      $( '.' + module.control.css_attr.item_content, item.container ).html('');
-                                      //reset the contentContainer property
-                                      item.contentContainer = null;
-                                      //will remove the input collection values
-                                      item.trigger( 'contentRemoved' );
-                                }
-                          });
-                    }
-              });
-        } else {
-              //react to the item state changes
-              item.viewState.callbacks.add( function( to, from ) {
-                  //toggle on view state change
-                  item.toggleItemExpansion.apply(item, arguments );
-              });
+            item_model = item() || item.initial_item_model;//could not be set yet
 
-              //renderview content now for a single item module
-              $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
-                    _updateItemContentDeferred( $_item_content, true );
-                    //item.viewState.set('expanded');
-              });
-        }
-
-        //DOM listeners for the user action in item view wrapper
-        api.CZR_Helpers.setupDOMListeners(
-              item.userEventMap(),//actions to execute
-              { model:item_model, dom_el:item.container },//model + dom scope
-              item //instance where to look for the cb methods
-        );
-
-        //Listen to the remove dialog state
-        item.removeDialogVisible.bind( function( visible ) {
-              var module = item.module,
-                  $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, item.container ).first();
-
-              //first close all open items views and dialogs
-              if ( visible )
-                module.closeAllItems();
-
-              //Close Mod opts if any
-              if ( visible && module.hasModOpt() ) {
-                    api.czr_ModOptVisible( false );
-              }
-
-              //Close Pre item dialog
-              if ( visible && _.has( module, 'preItem' ) ) {
-                    module.preItemExpanded(false);
-              }
-
-              //then close any other open remove dialog in the item container
-              $('.' + module.control.css_attr.remove_alert_wrapper, item.container ).not( $_alert_el ).each( function() {
-                    if ( $(this).hasClass( 'open' ) ) {
-                          $(this).slideToggle( {
-                                duration : 200,
-                                done : function() {
-                                      $(this).toggleClass('open' , false );
-                                      //deactivate the icons
-                                      $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass( 'active' , false );
-                                }
-                          } );
-                    }
-              });
-
-              //print the html if dialod is expanded
-              if ( visible ) {
-                    //do we have an html template and a control container?
-                    if ( ! wp.template( module.AlertPart )  || ! item.container ) {
-                          api.consoleLog( 'No removal alert template available for items in module :' + module.id );
-                          return;
-                    }
-
-                    $_alert_el.html( wp.template( module.AlertPart )( { title : ( item().title || item.id ) } ) );
-              }
-
-              //Slide it
-              var _slideComplete = function( visible ) {
-                    $_alert_el.toggleClass( 'open' , visible );
-                    //set the active class of the clicked icon
-                    item.container.find('.' + module.control.css_attr.display_alert_btn ).toggleClass( 'active', visible );
-                    //adjust scrolling to display the entire dialog block
-                    if ( visible )
-                      module._adjustScrollExpandedBlock( item.container );
-              };
-              if ( visible )
-                $_alert_el.stop( true, true ).slideDown( 200, function() { _slideComplete( visible ); } );
-              else
-                $_alert_el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
-        });//item.removeDialogVisible.bind()
-  },//itemWrapperViewSetup
+            //always write the title
+            item.writeItemViewTitle();
 
 
-  //the view wrapper has been rendered by WP
-  //the content ( the various inputs ) is rendered by the following methods
-  //an event is triggered on the control.container when content is rendered
-  renderItemWrapper : function( item_model ) {
-        //=> an array of objects
-        var item = this,
-            module = item.module;
-
-        item_model = item_model || item();
-
-        //render the item wrapper
-        $_view_el = $('<li>', { class : module.control.css_attr.single_item, 'data-id' : item_model.id,  id : item_model.id } );
-
-        //append the item view to the first module view wrapper
-        //!!note : => there could be additional sub view wrapper inside !!
-        //$( '.' + module.control.css_attr.items_wrapper , module.container).first().append( $_view_el );
-        // module.itemsWrapper has been stored as a $ var in module initialize() when the tmpl has been embedded
-        module.itemsWrapper.append( $_view_el );
-
-        //if module is multi item, then render the item crud header part
-        //Note : for the widget module, the getTemplateEl method is overridden
-        if ( module.isMultiItem() ) {
-              var _template_selector = module.getTemplateEl( 'rudItemPart', item_model );
-              //do we have view template script?
-              if ( 0 === $( '#tmpl-' + _template_selector ).length ) {
-                  throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateEl( 'rudItemPart', item_model ) );
-              }
-              $_view_el.append( $( wp.template( _template_selector )( item_model ) ) );
-        }
-
-
-        //then, append the item content wrapper
-        $_view_el.append( $( '<div/>', { class: module.control.css_attr.item_content } ) );
-
-        return $_view_el;
-  },
-
-
-  //renders saved items views and attach event handlers
-  //the saved item look like :
-  //array[ { id : 'sidebar-one', title : 'A Title One' }, {id : 'sidebar-two', title : 'A Title Two' }]
-  renderItemContent : function( item_model ) {
-          //=> an array of objects
-          var item = this,
-              module = this.module;
-
-          item_model = item_model || item();
-
-          //do we have view content template script?
-          if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) ).length ) {
-              throw new Error('No item content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) );
-          }
-
-          var  item_content_template = wp.template( module.getTemplateEl( 'itemInputList', item_model ) );
-
-          //do we have an html template ?
-          if ( ! item_content_template )
-            return this;
-
-          //the view content
-          $( item_content_template( item_model )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
-
-          return $( $( item_content_template( item_model )), item.container );
-  },
-
-
-
-
-
-  //fired in setupItemListeners
-  writeItemViewTitle : function( item_model ) {
-        var item = this,
-            module = item.module,
-            _model = item_model || item(),
-            _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
-
-        _title = api.CZR_Helpers.truncate( _title, 20 );
-        $( '.' + module.control.css_attr.item_title , item.container ).text(_title );
-        //add a hook here
-        api.CZR_Helpers.doActions('after_writeViewTitle', item.container , _model, item );
-  },
-
-
-
-  //@param : obj = { event : {}, model : {}, view : ${} }
-  //Fired on view_rendered:new when a new model has been added
-  //Fired on click on edit_view_btn
-  setViewVisibility : function( obj, is_added_by_user ) {
-          var item = this,
-              module = this.module;
-          if ( is_added_by_user ) {
-                item.viewState.set( 'expanded_noscroll' );
-          } else {
-                module.closeAllItems( item.id );
-                if ( _.has(module, 'preItem') ) {
-                  module.preItemExpanded.set(false);
-                }
-                item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
-          }
-  },
-
-
-  _getViewState : function() {
-          return -1 == this.viewState().indexOf('expanded') ? 'closed' : 'expanded';
-  },
-
-
-  //callback of item.viewState.callbacks
-  //viewState can take 3 states : expanded, expanded_noscroll, closed
-  toggleItemExpansion : function( status, from, duration ) {
-        var visible = 'closed' != status,
-            item = this,
-            module = this.module,
-            $el = $( '.' + module.control.css_attr.item_content , item.container ).first(),
-            dfd = $.Deferred(),
-            _slideComplete = function( visible ) {
-                  item.container.toggleClass( 'open' , visible );
-                  //close all remove dialogs
-                  if ( visible )
-                    module.closeRemoveDialogs();
-
-                  //toggle the icon activate class depending on the status
-                  //switch icon
-                  var $_edit_icon = $el.siblings().find('.' + module.control.css_attr.edit_view_btn );
-
-                  $_edit_icon.toggleClass('active' , visible );
-                  if ( visible )
-                    $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.translatedStrings.close );
-                  else
-                    $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.translatedStrings.edit );
-
-                  //scroll to the currently expanded view
-                  if ( 'expanded' == status )
-                    module._adjustScrollExpandedBlock( item.container );
-
-                  dfd.resolve();
+            //When do we render the item content ?
+            //If this is a multi-item module, let's render each item content when they are expanded.
+            //In the case of a single item module, we can render the item content now.
+            var _updateItemContentDeferred = function( $_content, to, from ) {
+                  //update the $.Deferred state
+                  if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
+                      item.trigger( 'contentRendered' );
+                      item.contentContainer = $_content;
+                      item.toggleItemExpansion( to, from );
+                  }
+                  else {
+                      throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
+                  }
             };
 
-        if ( visible )
-          $el.stop( true, true ).slideDown( duration || 200, function() { _slideComplete( visible ); } );
-        else
-          $el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
+            if ( item.module.isMultiItem() ) {
+                  item.viewState.callbacks.add( function( to, from ) {
+                        //viewState can take 3 states : expanded, expanded_noscroll, closed
+                        var _isExpanded = -1 !== to.indexOf('expanded');
+                        if ( _isExpanded ) {
+                              //item already rendered ?
+                              if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
+                                    //toggle on view state change
+                                    item.toggleItemExpansion(to, from );
+                              } else {
+                                    $.when( item.renderItemContent( item() || item.initial_item_model ) ).done( function( $_item_content ) {
+                                          //introduce a small delay to give some times to the modules to be printed.
+                                          //@todo : needed ?
+                                          _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
+                                          _updateItemContentDeferred( $_item_content, to, from );
+                                    });
+                              }
+                        } else {
+                              //toggle on view state change
+                              item.toggleItemExpansion( to, from ).done( function() {
+                                    if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
+                                          item.trigger( 'beforeContenRemoved' );
+                                          //Removes DOM input nodes
+                                          $( '.' + module.control.css_attr.item_content, item.container ).children().each( function() {
+                                                $(this).remove();
+                                          });
+                                          //clean any other content like a commented html markup
+                                          $( '.' + module.control.css_attr.item_content, item.container ).html('');
+                                          //reset the contentContainer property
+                                          item.contentContainer = null;
+                                          //will remove the input collection values
+                                          item.trigger( 'contentRemoved' );
+                                    }
+                              });
+                        }
+                  });
+            } else {
+                  //react to the item state changes
+                  item.viewState.callbacks.add( function( to, from ) {
+                      //toggle on view state change
+                      item.toggleItemExpansion.apply(item, arguments );
+                  });
 
-        return dfd.promise();
-  },
+                  //renderview content now for a single item module
+                  $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
+                        _updateItemContentDeferred( $_item_content, true );
+                        //item.viewState.set('expanded');
+                  });
+            }
+
+            //DOM listeners for the user action in item view wrapper
+            api.CZR_Helpers.setupDOMListeners(
+                  item.userEventMap(),//actions to execute
+                  { model:item_model, dom_el:item.container },//model + dom scope
+                  item //instance where to look for the cb methods
+            );
+
+            //Listen to the remove dialog state
+            item.removeDialogVisible.bind( function( visible ) {
+                  var module = item.module,
+                      $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, item.container ).first();
+
+                  //first close all open items views and dialogs
+                  if ( visible )
+                    module.closeAllItems();
+
+                  //Close Mod opts if any
+                  if ( visible && module.hasModOpt() ) {
+                        api.czr_ModOptVisible( false );
+                  }
+
+                  //Close Pre item dialog
+                  if ( visible && _.has( module, 'preItem' ) ) {
+                        module.preItemExpanded(false);
+                  }
+
+                  //then close any other open remove dialog in the item container
+                  $('.' + module.control.css_attr.remove_alert_wrapper, item.container ).not( $_alert_el ).each( function() {
+                        if ( $(this).hasClass( 'open' ) ) {
+                              $(this).slideToggle( {
+                                    duration : 200,
+                                    done : function() {
+                                          $(this).toggleClass('open' , false );
+                                          //deactivate the icons
+                                          $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass( 'active' , false );
+                                    }
+                              } );
+                        }
+                  });
+
+                  //print the html if dialod is expanded
+                  if ( visible ) {
+                        //do we have an html template and a control container?
+                        if ( ! wp.template( module.AlertPart )  || ! item.container ) {
+                              api.consoleLog( 'No removal alert template available for items in module :' + module.id );
+                              return;
+                        }
+
+                        $_alert_el.html( wp.template( module.AlertPart )( { title : ( item().title || item.id ) } ) );
+                  }
+
+                  //Slide it
+                  var _slideComplete = function( visible ) {
+                        $_alert_el.toggleClass( 'open' , visible );
+                        //set the active class of the clicked icon
+                        item.container.find('.' + module.control.css_attr.display_alert_btn ).toggleClass( 'active', visible );
+                        //adjust scrolling to display the entire dialog block
+                        if ( visible )
+                          module._adjustScrollExpandedBlock( item.container );
+                  };
+                  if ( visible )
+                    $_alert_el.stop( true, true ).slideDown( 200, function() { _slideComplete( visible ); } );
+                  else
+                    $_alert_el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
+            });//item.removeDialogVisible.bind()
+      },//itemWrapperViewSetup
 
 
-  //removes the view dom module
-  _destroyView : function ( duration ) {
-          this.container.fadeOut( {
-              duration : duration ||400,
-              done : function() {
-                $(this).remove();
+      //the view wrapper has been rendered by WP
+      //the content ( the various inputs ) is rendered by the following methods
+      //an event is triggered on the control.container when content is rendered
+      renderItemWrapper : function( item_model ) {
+            //=> an array of objects
+            var item = this,
+                module = item.module;
+
+            item_model = item_model || item();
+
+            //render the item wrapper
+            $_view_el = $('<li>', { class : module.control.css_attr.single_item, 'data-id' : item_model.id,  id : item_model.id } );
+
+            //append the item view to the first module view wrapper
+            //!!note : => there could be additional sub view wrapper inside !!
+            //$( '.' + module.control.css_attr.items_wrapper , module.container).first().append( $_view_el );
+            // module.itemsWrapper has been stored as a $ var in module initialize() when the tmpl has been embedded
+            module.itemsWrapper.append( $_view_el );
+
+            //if module is multi item, then render the item crud header part
+            //Note : for the widget module, the getTemplateEl method is overridden
+            if ( module.isMultiItem() ) {
+                  var _template_selector = module.getTemplateEl( 'rudItemPart', item_model );
+                  //do we have view template script?
+                  if ( 0 === $( '#tmpl-' + _template_selector ).length ) {
+                      throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateEl( 'rudItemPart', item_model ) );
+                  }
+                  $_view_el.append( $( wp.template( _template_selector )( item_model ) ) );
+            }
+
+
+            //then, append the item content wrapper
+            $_view_el.append( $( '<div/>', { class: module.control.css_attr.item_content } ) );
+
+            return $_view_el;
+      },
+
+
+      //renders saved items views and attach event handlers
+      //the saved item look like :
+      //array[ { id : 'sidebar-one', title : 'A Title One' }, {id : 'sidebar-two', title : 'A Title Two' }]
+      renderItemContent : function( item_model ) {
+              //=> an array of objects
+              var item = this,
+                  module = this.module;
+
+              item_model = item_model || item();
+
+              //do we have view content template script?
+              if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) ).length ) {
+                  throw new Error('No item content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) );
               }
-          });
-  },
-});//$.extend//extends api.Value
+
+              var  item_content_template = wp.template( module.getTemplateEl( 'itemInputList', item_model ) );
+
+              //do we have an html template ?
+              if ( ! item_content_template )
+                return this;
+
+              //the view content
+              $( item_content_template( item_model )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
+
+              return $( $( item_content_template( item_model )), item.container );
+      },
+
+
+
+
+
+      //fired in setupItemListeners
+      writeItemViewTitle : function( item_model ) {
+            var item = this,
+                module = item.module,
+                _model = item_model || item(),
+                _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
+
+            _title = api.CZR_Helpers.truncate( _title, 20 );
+            $( '.' + module.control.css_attr.item_title , item.container ).text(_title );
+            //add a hook here
+            api.CZR_Helpers.doActions('after_writeViewTitle', item.container , _model, item );
+      },
+
+
+
+      //@param : obj = { event : {}, model : {}, view : ${} }
+      //Fired on view_rendered:new when a new model has been added
+      //Fired on click on edit_view_btn
+      setViewVisibility : function( obj, is_added_by_user ) {
+              var item = this,
+                  module = this.module;
+              if ( is_added_by_user ) {
+                    item.viewState.set( 'expanded_noscroll' );
+              } else {
+                    module.closeAllItems( item.id );
+                    if ( _.has(module, 'preItem') ) {
+                      module.preItemExpanded.set(false);
+                    }
+                    item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
+              }
+      },
+
+
+      _getViewState : function() {
+              return -1 == this.viewState().indexOf('expanded') ? 'closed' : 'expanded';
+      },
+
+
+      //callback of item.viewState.callbacks
+      //viewState can take 3 states : expanded, expanded_noscroll, closed
+      toggleItemExpansion : function( status, from, duration ) {
+            var visible = 'closed' != status,
+                item = this,
+                module = this.module,
+                $el = $( '.' + module.control.css_attr.item_content , item.container ).first(),
+                dfd = $.Deferred(),
+                _slideComplete = function( visible ) {
+                      item.container.toggleClass( 'open' , visible );
+                      //close all remove dialogs
+                      if ( visible )
+                        module.closeRemoveDialogs();
+
+                      //toggle the icon activate class depending on the status
+                      //switch icon
+                      var $_edit_icon = $el.siblings().find('.' + module.control.css_attr.edit_view_btn );
+
+                      $_edit_icon.toggleClass('active' , visible );
+                      if ( visible )
+                        $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.translatedStrings.close );
+                      else
+                        $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.translatedStrings.edit );
+
+                      //scroll to the currently expanded view
+                      if ( 'expanded' == status )
+                        module._adjustScrollExpandedBlock( item.container );
+
+                      dfd.resolve();
+                };
+
+            if ( visible )
+              $el.stop( true, true ).slideDown( duration || 200, function() { _slideComplete( visible ); } );
+            else
+              $el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
+
+            return dfd.promise();
+      },
+
+
+      //removes the view dom module
+      _destroyView : function ( duration ) {
+              this.container.fadeOut( {
+                  duration : duration ||400,
+                  done : function() {
+                    $(this).remove();
+                  }
+              });
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//extends api.Value
 //options:
 // module : module,
 // initial_modOpt_model : modOpt, can contains the already db saved values
 // defaultModOptModel : module.defaultModOptModel
 // control : control instance
+
 var CZRModOptMths = CZRModOptMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRModOptMths , {
-  initialize: function( options ) {
-        if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
-          throw new Error('No module assigned to modOpt.');
-        }
+      initialize: function( options ) {
+            if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
+              throw new Error('No module assigned to modOpt.');
+            }
 
-        var modOpt = this;
-        api.Value.prototype.initialize.call( modOpt, null, options );
+            var modOpt = this;
+            api.Value.prototype.initialize.call( modOpt, null, options );
 
-        //DEFERRED STATES
-        //store the state of ready.
-        //=> we don't want the ready method to be fired several times
-        modOpt.isReady = $.Deferred();
+            //DEFERRED STATES
+            //store the state of ready.
+            //=> we don't want the ready method to be fired several times
+            modOpt.isReady = $.Deferred();
 
-        //VARIOUS DEFINITIONS
-        modOpt.container = null;//will store the modOpt $ dom element
-        modOpt.inputCollection = new api.Value({});
+            //VARIOUS DEFINITIONS
+            modOpt.container = null;//will store the modOpt $ dom element
+            modOpt.inputCollection = new api.Value({});
 
-        //input.options = options;
-        //write the options as properties, name is included
-        $.extend( modOpt, options || {} );
+            //input.options = options;
+            //write the options as properties, name is included
+            $.extend( modOpt, options || {} );
 
-        //declares a default modOpt model
-        modOpt.defaultModOptModel = _.clone( options.defaultModOptModel ) || { is_mod_opt : true };
+            //declares a default modOpt model
+            modOpt.defaultModOptModel = _.clone( options.defaultModOptModel ) || { is_mod_opt : true };
 
-        //set initial values
-        var _initial_model = $.extend( modOpt.defaultModOptModel, options.initial_modOpt_model );
-        var ctrl = modOpt.module.control;
-        //this won't be listened to at this stage
-        modOpt.set( _initial_model );
+            //set initial values
+            var _initial_model = $.extend( modOpt.defaultModOptModel, options.initial_modOpt_model );
+            var ctrl = modOpt.module.control;
+            //this won't be listened to at this stage
+            modOpt.set( _initial_model );
 
-        //MOD OPT PANEL SETTINGS
-        api.czr_ModOptVisible = new api.Value( false );
+            //MOD OPT PANEL SETTINGS
+            api.czr_ModOptVisible = new api.Value( false );
 
-        //MOD OPT VISIBLE REACT
-        api.czr_ModOptVisible.bind( function( visible ) {
-              if ( visible ) {
-                    //first close all opened remove dialogs
-                    modOpt.module.closeRemoveDialogs();
+            //MOD OPT VISIBLE REACT
+            api.czr_ModOptVisible.bind( function( visible ) {
+                  if ( visible ) {
+                        //first close all opened remove dialogs
+                        modOpt.module.closeRemoveDialogs();
 
-                    modOpt.modOptWrapperViewSetup( _initial_model ).done( function( $_container ) {
-                          modOpt.container = $_container;
-                          try {
-                                api.CZR_Helpers.setupInputCollectionFromDOM.call( modOpt ).toggleModPanelView( visible );
-                          } catch(e) {
-                                api.consoleLog(e);
-                          }
-                    });
+                        modOpt.modOptWrapperViewSetup( _initial_model ).done( function( $_container ) {
+                              modOpt.container = $_container;
+                              try {
+                                    api.CZR_Helpers.setupInputCollectionFromDOM.call( modOpt ).toggleModPanelView( visible );
+                              } catch(e) {
+                                    api.consoleLog(e);
+                              }
+                        });
 
-              } else {
-                    modOpt.toggleModPanelView( visible ).done( function() {
-                          if ( false !== modOpt.container.length ) {
-                                $.when( modOpt.container.remove() ).done( function() {
-                                      api.CZR_Helpers.removeInputCollection.call( modOpt );
-                                });
-                          } else {
-                                api.CZR_Helpers.removeInputCollection.call( modOpt );
-                          }
-                          modOpt.container = null;
-                    });
-              }
-        } );
+                  } else {
+                        modOpt.toggleModPanelView( visible ).done( function() {
+                              if ( false !== modOpt.container.length ) {
+                                    $.when( modOpt.container.remove() ).done( function() {
+                                          api.CZR_Helpers.removeInputCollection.call( modOpt );
+                                    });
+                              } else {
+                                    api.CZR_Helpers.removeInputCollection.call( modOpt );
+                              }
+                              modOpt.container = null;
+                        });
+                  }
+            } );
 
-        //OPTIONS IS READY
-        //observe its changes when ready
-        modOpt.isReady.done( function() {
-              //listen to any modOpt change
-              //=> done in the module
-              //modOpt.callbacks.add( function() { return modOpt.modOptReact.apply(modOpt, arguments ); } );
+            //OPTIONS IS READY
+            //observe its changes when ready
+            modOpt.isReady.done( function() {
+                  //listen to any modOpt change
+                  //=> done in the module
+                  //modOpt.callbacks.add( function() { return modOpt.modOptReact.apply(modOpt, arguments ); } );
 
-              //When shall we render the modOpt ?
-              //If the module is part of a simple control, the modOpt can be render now,
-              //modOpt.mayBeRenderModOptWrapper();
+                  //When shall we render the modOpt ?
+                  //If the module is part of a simple control, the modOpt can be render now,
+                  //modOpt.mayBeRenderModOptWrapper();
 
-              //RENDER THE CONTROL TITLE GEAR ICON
-              if( ! $( '.' + ctrl.css_attr.edit_modopt_icon, ctrl.container ).length ) {
-                    $.when( ctrl.container
-                          .find('.customize-control-title').first()//was.find('.customize-control-title')
-                          .append( $( '<span/>', {
-                                class : [ ctrl.css_attr.edit_modopt_icon, 'fa fa-cog' ].join(' '),
-                                title : 'Settings'//@to_translate
-                          } ) ) )
-                    .done( function(){
-                          $( '.' + ctrl.css_attr.edit_modopt_icon, ctrl.container ).fadeIn( 400 );
-                    });
-              }
+                  //RENDER THE CONTROL TITLE GEAR ICON
+                  if( ! $( '.' + ctrl.css_attr.edit_modopt_icon, ctrl.container ).length ) {
+                        $.when( ctrl.container
+                              .find('.customize-control-title').first()//was.find('.customize-control-title')
+                              .append( $( '<span/>', {
+                                    class : [ ctrl.css_attr.edit_modopt_icon, 'fa fa-cog' ].join(' '),
+                                    title : 'Settings'//@to_translate
+                              } ) ) )
+                        .done( function(){
+                              $( '.' + ctrl.css_attr.edit_modopt_icon, ctrl.container ).fadeIn( 400 );
+                        });
+                  }
 
-              //LISTEN TO USER ACTIONS ON CONTROL EL
-              api.CZR_Helpers.setupDOMListeners(
-                    [
-                          //toggle mod options
-                          {
-                                trigger   : 'click keydown',
-                                selector  : '.' + ctrl.css_attr.edit_modopt_icon,
-                                name      : 'toggle_mod_option',
-                                actions   : function() {
-                                      api.czr_ModOptVisible( ! api.czr_ModOptVisible() );
-                                }
-                          }
-                    ],//actions to execute
-                    { dom_el: ctrl.container },//dom scope
-                    modOpt //instance where to look for the cb methods
-              );
-              //modOpt.userEventMap = new api.Value( [] );
-        });//modOpt.isReady.done()
+                  //LISTEN TO USER ACTIONS ON CONTROL EL
+                  api.CZR_Helpers.setupDOMListeners(
+                        [
+                              //toggle mod options
+                              {
+                                    trigger   : 'click keydown',
+                                    selector  : '.' + ctrl.css_attr.edit_modopt_icon,
+                                    name      : 'toggle_mod_option',
+                                    actions   : function() {
+                                          api.czr_ModOptVisible( ! api.czr_ModOptVisible() );
+                                    }
+                              }
+                        ],//actions to execute
+                        { dom_el: ctrl.container },//dom scope
+                        modOpt //instance where to look for the cb methods
+                  );
+                  //modOpt.userEventMap = new api.Value( [] );
+            });//modOpt.isReady.done()
 
-  },//initialize
+      },//initialize
 
-  //overridable method
-  //Fired if the modOpt has been instantiated
-  //The modOpt.callbacks are declared.
-  ready : function() {
-        this.isReady.resolve();
-  },
+      //overridable method
+      //Fired if the modOpt has been instantiated
+      //The modOpt.callbacks are declared.
+      ready : function() {
+            this.isReady.resolve();
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//extends api.CZRBaseControl
 
-});//$.extend//extends api.CZRBaseControl
 var CZRModOptMths = CZRModOptMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRModOptMths , {
-  //fired when modOpt is ready and embedded
-  //define the modOpt view DOM event map
-  //bind actions when the modOpt is embedded
-  modOptWrapperViewSetup : function( modOpt_model ) {
-          var modOpt = this,
-              module = this.module,
-              dfd = $.Deferred(),
-              _setupDOMListeners = function( $_container ) {
-                    //DOM listeners for the user action in modOpt view wrapper
-                    api.CZR_Helpers.setupDOMListeners(
-                         [
-                                //toggle mod options
-                                {
-                                      trigger   : 'click keydown',
-                                      selector  : '.' + module.control.css_attr.close_modopt_icon,
-                                      name      : 'close_mod_option',
-                                      actions   : function() {
-                                            api.czr_ModOptVisible( false );
-                                      }
-                                },
-                                //tabs navigation
-                                {
-                                      trigger   : 'click keydown',
-                                      selector  : '.tabs nav li',
-                                      name      : 'tab_nav',
-                                      actions   : function( args ) {
-                                            //toggleTabVisibility is defined in the module ctor and its this is the item or the modOpt
-                                            this.module.toggleTabVisibility.call( this, args );
-                                      }
-                                }
-                          ],//actions to execute
-                          { dom_el: $_container },//model + dom scope
-                          modOpt //instance where to look for the cb methods
-                    );
-              };
+      //fired when modOpt is ready and embedded
+      //define the modOpt view DOM event map
+      //bind actions when the modOpt is embedded
+      modOptWrapperViewSetup : function( modOpt_model ) {
+              var modOpt = this,
+                  module = this.module,
+                  dfd = $.Deferred(),
+                  _setupDOMListeners = function( $_container ) {
+                        //DOM listeners for the user action in modOpt view wrapper
+                        api.CZR_Helpers.setupDOMListeners(
+                             [
+                                    //toggle mod options
+                                    {
+                                          trigger   : 'click keydown',
+                                          selector  : '.' + module.control.css_attr.close_modopt_icon,
+                                          name      : 'close_mod_option',
+                                          actions   : function() {
+                                                api.czr_ModOptVisible( false );
+                                          }
+                                    },
+                                    //tabs navigation
+                                    {
+                                          trigger   : 'click keydown',
+                                          selector  : '.tabs nav li',
+                                          name      : 'tab_nav',
+                                          actions   : function( args ) {
+                                                //toggleTabVisibility is defined in the module ctor and its this is the item or the modOpt
+                                                this.module.toggleTabVisibility.call( this, args );
+                                          }
+                                    }
+                              ],//actions to execute
+                              { dom_el: $_container },//model + dom scope
+                              modOpt //instance where to look for the cb methods
+                        );
+                  };
 
-          modOpt_model = modOpt() || modOpt.initial_modOpt_model;//could not be set yet
+              modOpt_model = modOpt() || modOpt.initial_modOpt_model;//could not be set yet
 
-          //renderview content now
-          $.when( modOpt.renderModOptContent( modOpt_model ) )
-                .done( function( $_container ) {
-                      //update the $.Deferred state
-                      if ( ! _.isUndefined( $_container ) && false !== $_container.length ) {
-                            _setupDOMListeners( $_container );
-                            dfd.resolve( $_container );
-                      }
-                      else {
-                            throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
-                      }
-                })
-                .then( function() {
-                      //the modOpt.container is now available
-                      //Setup the tabs navigation
-                      //setupTabNav is defined in the module ctor and its this is the item or the modOpt
-                      modOpt.module.setupTabNav.call( modOpt );
-                });
+              //renderview content now
+              $.when( modOpt.renderModOptContent( modOpt_model ) )
+                    .done( function( $_container ) {
+                          //update the $.Deferred state
+                          if ( ! _.isUndefined( $_container ) && false !== $_container.length ) {
+                                _setupDOMListeners( $_container );
+                                dfd.resolve( $_container );
+                          }
+                          else {
+                                throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
+                          }
+                    })
+                    .then( function() {
+                          //the modOpt.container is now available
+                          //Setup the tabs navigation
+                          //setupTabNav is defined in the module ctor and its this is the item or the modOpt
+                          modOpt.module.setupTabNav.call( modOpt );
+                    });
 
-          return dfd.promise();
-  },
-
-
-  //renders saved modOpt views and attach event handlers
-  //the saved modOpt look like :
-  //array[ { id : 'sidebar-one', title : 'A Title One' }, {id : 'sidebar-two', title : 'A Title Two' }]
-  renderModOptContent : function( modOpt_model ) {
-          //=> an array of objects
-          var modOpt = this,
-              module = this.module;
-
-          modOpt_model = modOpt_model || modOpt();
-
-          //do we have view content template script?
-          if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) ).length ) {
-              throw new Error('No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) );
-          }
-          var  modOpt_content_template = wp.template( module.getTemplateEl( 'modOptInputList', modOpt_model ) );
-
-          //do we have an html template ?
-          if ( ! modOpt_content_template )
-            return this;
-
-          var _ctrlLabel = '';
-          try {
-                _ctrlLabel = 'Options for ' + module.control.params.label;//@to_translate
-          } catch( er ) {
-                api.errorLog( 'In renderModOptContent : ' + er );
-                _ctrlLabel = 'Settings';//@to_translate
-          }
-
-          $('#widgets-left').after( $( '<div/>', {
-                class : module.control.css_attr.mod_opt_wrapper,
-                html : [
-                      [ '<h2 class="mod-opt-title">', _ctrlLabel , '</h2>' ].join(''),
-                      '<span class="fa fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
-                ].join('')
-          } ) );
-
-          //render the mod opt content for this module
-          $( '.' + module.control.css_attr.mod_opt_wrapper ).append( $( modOpt_content_template( modOpt_model ) ) );
-
-          return $( '.' + module.control.css_attr.mod_opt_wrapper );
-  },
+              return dfd.promise();
+      },
 
 
+      //renders saved modOpt views and attach event handlers
+      //the saved modOpt look like :
+      //array[ { id : 'sidebar-one', title : 'A Title One' }, {id : 'sidebar-two', title : 'A Title Two' }]
+      renderModOptContent : function( modOpt_model ) {
+              //=> an array of objects
+              var modOpt = this,
+                  module = this.module;
 
-  toggleModPanelView : function( visible ) {
-        var modOpt = this,
-            module = this.module,
-            ctrl = module.control,
-            dfd = $.Deferred();
+              modOpt_model = modOpt_model || modOpt();
 
-        module.control.container.toggleClass( 'czr-modopt-visible', visible );
-        $('body').toggleClass('czr-editing-modopt', visible );
-        //Let the panel slide (  -webkit-transition: left .18s ease-in-out )
-        _.delay( function() {
-              dfd.resolve();
-        }, 200 );
-        return dfd.promise();
-  }
+              //do we have view content template script?
+              if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) ).length ) {
+                  throw new Error('No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) );
+              }
+              var  modOpt_content_template = wp.template( module.getTemplateEl( 'modOptInputList', modOpt_model ) );
 
-});//$.extend//MULTI CONTROL CLASS
+              //do we have an html template ?
+              if ( ! modOpt_content_template )
+                return this;
+
+              var _ctrlLabel = '';
+              try {
+                    _ctrlLabel = 'Options for ' + module.control.params.label;//@to_translate
+              } catch( er ) {
+                    api.errorLog( 'In renderModOptContent : ' + er );
+                    _ctrlLabel = 'Settings';//@to_translate
+              }
+
+              $('#widgets-left').after( $( '<div/>', {
+                    class : module.control.css_attr.mod_opt_wrapper,
+                    html : [
+                          [ '<h2 class="mod-opt-title">', _ctrlLabel , '</h2>' ].join(''),
+                          '<span class="fa fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
+                    ].join('')
+              } ) );
+
+              //render the mod opt content for this module
+              $( '.' + module.control.css_attr.mod_opt_wrapper ).append( $( modOpt_content_template( modOpt_model ) ) );
+
+              return $( '.' + module.control.css_attr.mod_opt_wrapper );
+      },
+
+
+
+      toggleModPanelView : function( visible ) {
+            var modOpt = this,
+                module = this.module,
+                ctrl = module.control,
+                dfd = $.Deferred();
+
+            module.control.container.toggleClass( 'czr-modopt-visible', visible );
+            $('body').toggleClass('czr-editing-modopt', visible );
+            //Let the panel slide (  -webkit-transition: left .18s ease-in-out )
+            _.delay( function() {
+                  dfd.resolve();
+            }, 200 );
+            return dfd.promise();
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
 //extends api.Value
 //
 //Setup the collection of items
@@ -9592,417 +9617,417 @@ $.extend( CZRModOptMths , {
   // section     : module.section,
   // is_added_by_user : is_added_by_user || false
 var CZRModuleMths = CZRModuleMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRModuleMths, {
+      initialize: function( id, constructorOptions ) {
+            if ( _.isUndefined(constructorOptions.control) || _.isEmpty(constructorOptions.control) ) {
+                throw new Error('No control assigned to module ' + id );
+            }
+            var module = this;
+            api.Value.prototype.initialize.call( this, null, constructorOptions );
 
-  initialize: function( id, constructorOptions ) {
-        if ( _.isUndefined(constructorOptions.control) || _.isEmpty(constructorOptions.control) ) {
-            throw new Error('No control assigned to module ' + id );
-        }
-        var module = this;
-        api.Value.prototype.initialize.call( this, null, constructorOptions );
+            //store the state of ready.
+            //=> we don't want the ready method to be fired several times
+            module.isReady = $.Deferred();
 
-        //store the state of ready.
-        //=> we don't want the ready method to be fired several times
-        module.isReady = $.Deferred();
+            //write the options as properties
+            $.extend( module, constructorOptions || {} );
 
-        //write the options as properties
-        $.extend( module, constructorOptions || {} );
+            //extend the module with new template Selectors
+            $.extend( module, {
+                  crudModulePart : 'czr-crud-module-part',//create, read, update, delete
+                  rudItemPart : 'czr-rud-item-part',//read, update, delete
+                  ruItemPart : 'czr-ru-item-part',//read, update
+                  itemInputList : '',//is specific for each crud module
+                  modOptInputList : '',//is specific for each module
+                  AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
 
-        //extend the module with new template Selectors
-        $.extend( module, {
-              crudModulePart : 'czr-crud-module-part',//create, read, update, delete
-              rudItemPart : 'czr-rud-item-part',//read, update, delete
-              ruItemPart : 'czr-ru-item-part',//read, update
-              itemInputList : '',//is specific for each crud module
-              modOptInputList : '',//is specific for each module
-              AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
+            } );
 
-        } );
+            //embed : define a container, store the embed state, fire the render method
+            module.embedded = $.Deferred();
+            //if a module is embedded in a control, its container == the control container.
+            //if the module is part of a sektion, its container will be set and resolve() later ( @see multi_module part )
+            if ( ! module.isInSektion() ) {
+                  module.container = $( module.control.selector );
+                  module.embedded.resolve();
+            }
 
-        //embed : define a container, store the embed state, fire the render method
-        module.embedded = $.Deferred();
-        //if a module is embedded in a control, its container == the control container.
-        //if the module is part of a sektion, its container will be set and resolve() later ( @see multi_module part )
-        if ( ! module.isInSektion() ) {
-              module.container = $( module.control.selector );
-              module.embedded.resolve();
-        }
-
-        //render the item(s) wrapper
-        module.embedded.done( function() {
-              $.when( module.renderModuleParts() ).done(function( $_module_items_wrapper ){
-                    if ( false === $_module_items_wrapper.length ) {
-                        throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
-                    }
-                    //stores the items wrapper ( </ul> el ) as a jQuery var
-                    module.itemsWrapper = $_module_items_wrapper;
-              });
-        });
-
-        /*-----------------------------------------------
-        //MODULE OPTIONS
-        ------------------------------------------------*/
-        //declares a default Mod options API model
-        module.defaultAPImodOptModel = {
-              initial_modOpt_model : {},
-              defaultModOptModel : {},
-              control : {},//control instance
-              module : {}//module instance
-        };
-
-        //declares a default modOpt model
-        module.defaultModOptModel = {};
-
-        //define a default Constructors
-        module.modOptConstructor = api.CZRModOpt;
-
-        /*-----------------------------------------------
-        //ITEMS
-        ------------------------------------------------*/
-        module.itemCollection = new api.Value( [] );
-
-        //declares a default Item API model
-        module.defaultAPIitemModel = {
-              id : '',
-              initial_item_model : {},
-              defaultItemModel : {},
-              control : {},//control instance
-              module : {},//module instance
-              is_added_by_user : false
-        };
-
-        //declares a default item model
-        module.defaultItemModel = { id : '', title : '' };
-
-        //define a default Constructors
-        module.itemConstructor = api.CZRItem;
-        //czr_model stores the each model value => one value by created by model.id
-        module.czr_Item = new api.Values();
-
-
-        /*-----------------------------------------------
-        //SET THE DEFAULT INPUT CONSTRUCTOR AND INPUT OPTIONS
-        ------------------------------------------------*/
-        module.inputConstructor = api.CZRInput;//constructor for the items input
-        if ( module.hasModOpt() ) {
-              module.inputModOptConstructor = api.CZRInput;//constructor for the modOpt input
-        }
-        module.inputOptions = {};//<= can be set by each module specifically
-        //For example, if I need specific options for the content_picker, this is where I will set them in the module extended object
-
-
-        /*-----------------------------------------------
-        //FIRE ON isReady
-        ------------------------------------------------*/
-        //module.ready(); => fired by children
-        module.isReady.done( function() {
-              //store the module dirtyness, => no items set
-              module.isDirty = new api.Value( constructorOptions.dirty || false );
-
-              //initialize the module api.Value()
-              //constructorOptions has the same structure as the one described in prepareModuleforAPI
-              //setting the module Value won't be listen to at this stage
-              module.initializeModuleModel( constructorOptions )
-                    .done( function( initialModuleValue ) {
-                          module.set( initialModuleValue );
-                    })
-                    .fail( function( response ){ api.consoleLog( 'Module : ' + module.id + ' initialize module model failed : ', response ); })
-                    .always( function( initialModuleValue ) {
-                          //listen to each single module change
-                          module.callbacks.add( function() { return module.moduleReact.apply( module, arguments ); } );
-
-                          //if the module is not registered yet (for example when the module is added by user),
-                          //=> push it to the collection of the module-collection control
-                          //=> updates the wp api setting
-                          if (  ! module.control.isModuleRegistered( module.id ) ) {
-                              module.control.updateModulesCollection( { module : constructorOptions, is_registered : false } );
-                          }
-
-                          module.bind('items-collection-populated', function( collection ) {
-                                //listen to item Collection changes
-                                module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply( module, arguments ); } );
-
-                                //it can be overridden by a module in its initialize method
-                                if ( module.isMultiItem() ) {
-                                      module._makeItemsSortable();
-                                }
-                          });
-
-                          //populate and instantiate the items now when a module is embedded in a regular control
-                          //if in a sektion, the populateSavedItemCollection() will be fired on module edit
-                          if ( ! module.isInSektion() )
-                            module.populateSavedItemCollection();
-
-                          //When the module has modOpt :
-                          //=> Instantiate the modOpt and setup listener
-                          if ( module.hasModOpt() ) {
-                              module.instantiateModOpt();
-                          }
-                    });
-        });//module.isReady.done()
-  },
-
-
-
-
-  //////////////////////////////////
-  ///READY
-  //////////////////////////////////
-  //When the control is embedded on the page, this method is fired in api.CZRBaseModuleControl:ready()
-  //=> right after the module is instantiated.
-  //If the module is a dynamic one (CRUD like), then this method is invoked by the child class
-  ready : function() {
-        var module = this;
-        module.isReady.resolve();
-  },
-
-
-
-  //fired when module is initialized, on module.isReady.done()
-  //designed to be extended or overridden to add specific items or properties
-  initializeModuleModel : function( constructorOptions ) {
-        var module = this, dfd = $.Deferred();
-        if ( ! module.isMultiItem() && ! module.isCrud() ) {
-              //this is a static module. We only have one item
-              //init module item if needed.
-              if ( _.isEmpty( constructorOptions.items ) ) {
-                    var def = _.clone( module.defaultItemModel );
-                    constructorOptions.items = [ $.extend( def, { id : module.id } ) ];
-              }
-        }
-        return dfd.resolve( constructorOptions ).promise();
-  },
-
-
-  //cb of : module.itemCollection.callbacks
-  //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
-  //data looks like :
-  //{
-  //  module : {}
-  //  input_changed     : string input.id
-  //  input_transport   : 'postMessage' or '',
-  //  not_preview_sent  : bool
-  //}
-  itemCollectionReact : function( to, from, data ) {
-        var module = this,
-            _current_model = module(),
-            _new_model = $.extend( true, {}, _current_model );
-        _new_model.items = to;
-        //update the dirtyness state
-        module.isDirty.set(true);
-        //set the the new items model
-        module.set( _new_model, data || {} );
-  },
-
-
-  //cb of module.callbacks
-  moduleReact : function( to, from, data ) {
-        //cb of : module.callbacks
-        var module            = this,
-            control           = module.control,
-            isItemUpdate    = ( _.size(from.items) == _.size(to.items) ) && ! _.isEmpty( _.difference(to.items, from.items) ),
-            isColumnUpdate  = to.column_id != from.column_id,
-            refreshPreview    = function() {
-                  module.control.previewer.refresh();
-            };
-
-        //update the collection + pass data
-        control.updateModulesCollection( {
-              module : $.extend( true, {}, to ),
-              data : data//useful to pass contextual info when a change happens
-        } );
-
-        // //Always update the view title
-        // module.writeViewTitle(to);
-
-        // //@todo : do we need that ?
-        // //send module to the preview. On update only, not on creation.
-        // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
-        //   module._sendModule(to, from);
-        // }
-  },
-
-  //@todo : create a smart helper to get either the wp api section or the czr api sektion, depending on the module context
-  getModuleSection : function() {
-        return this.section;
-  },
-
-  //@return bool
-  isInSektion : function() {
-        var module = this;
-        return _.has( module, 'sektion_id' );
-  },
-
-  //is this module multi item ?
-  //@return bool
-  isMultiItem : function() {
-        return api.CZR_Helpers.isMultiItemModule( null, this );
-  },
-
-  //is this module crud ?
-  //@return bool
-  isCrud : function() {
-        return api.CZR_Helpers.isCrudModule( null, this );
-  },
-
-  hasModOpt : function() {
-        return api.CZR_Helpers.hasModuleModOpt( null, this );
-  },
-
-
-  //////////////////////////////////
-  ///MODULE OPTION :
-  ///1) PREPARE
-  ///2) INSTANTIATE
-  ///3) LISTEN TO AND SET PARENT MODULE ON CHANGE
-  //////////////////////////////////
-  //fired when module isReady
-  instantiateModOpt : function() {
-        var module = this;
-        //Prepare the modOpt and instantiate it
-        var modOpt_candidate = module.prepareModOptForAPI( module().modOpt || {} );
-        module.czr_ModOpt = new module.modOptConstructor( modOpt_candidate );
-        module.czr_ModOpt.ready();
-        //update the module model on modOpt change
-        module.czr_ModOpt.callbacks.add( function( to, from, data ) {
-              var _current_model = module(),
-                  _new_model = $.extend( true, {}, _current_model );
-              _new_model.modOpt = to;
-              //update the dirtyness state
-              module.isDirty(true);
-              //set the the new items model
-              //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
-              //data looks like :
-              //{
-              //  module : {}
-              //  input_changed     : string input.id
-              //  input_transport   : 'postMessage' or '',
-              //  not_preview_sent  : bool
-              //}
-              module( _new_model, data );
-        });
-  },
-
-  //@return an API ready modOpt object with the following properties
-  // initial_modOpt_model : {},
-  // defaultModOptModel : {},
-  // control : {},//control instance
-  // module : {},//module instance
-  //@param modOpt_candidate is an object. Can contain the saved modOpt properties on init.
-  prepareModOptForAPI : function( modOpt_candidate ) {
-        var module = this,
-            api_ready_modOpt = {};
-        // if ( ! _.isObject( modOpt_candidate ) ) {
-        //       throw new Error('preparemodOptForAPI : a modOpt must be an object to be instantiated.');
-        // }
-        modOpt_candidate = _.isObject( modOpt_candidate ) ? modOpt_candidate : {};
-
-        _.each( module.defaultAPImodOptModel, function( _value, _key ) {
-              var _candidate_val = modOpt_candidate[_key];
-              switch( _key ) {
-                    case 'initial_modOpt_model' :
-                        //make sure that the provided modOpt has all the default properties set
-                        _.each( module.getDefaultModOptModel() , function( _value, _property ) {
-                              if ( ! _.has( modOpt_candidate, _property) )
-                                 modOpt_candidate[_property] = _value;
-                        });
-                        api_ready_modOpt[_key] = modOpt_candidate;
-
-                    break;
-                    case  'defaultModOptModel' :
-                        api_ready_modOpt[_key] = _.clone( module.defaultModOptModel );
-                    break;
-                    case  'control' :
-                        api_ready_modOpt[_key] = module.control;
-                    break;
-                    case  'module' :
-                        api_ready_modOpt[_key] = module;
-                    break;
-              }//switch
-        });
-        return api_ready_modOpt;
-  },
-
-  //Returns the default modOpt defined in initialize
-  //Each chid class can override the default item and the following method
-  getDefaultModOptModel : function( id ) {
-        var module = this;
-        return $.extend( _.clone( module.defaultModOptModel ), { is_mod_opt : true } );
-  },
-
-
-  //The idea is to send only the currently modified item instead of the entire collection
-  //the entire collection is sent anyway on api(setId).set( value ), and accessible in the preview via api(setId).bind( fn( to) )
-  //This method can be called on input change and on czr-partial-refresh-done
-  //{
-  //  input_id :
-  //  input_parent_id :
-  //  is_mod_opt :
-  //  to :
-  //  from :
-  //}
-  sendInputToPreview : function( args ) {
-        var module = this;
-        //normalizes the args
-        args = _.extend(
-          {
-                input_id        : '',
-                input_parent_id : '',//<= can be the mod opt or an item
-                to              : null,
-                from            : null
-          } , args );
-
-        if ( _.isEqual( args.to, args.from ) )
-          return;
-
-        //This is listened to by the preview frame
-        module.control.previewer.send( 'czr_input', {
-              set_id        : api.CZR_Helpers.getControlSettingId( module.control.id ),
-              module_id     : module.id,//<= will allow us to target the right dom element on front end
-              module        : { items : $.extend( true, {}, module().items) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
-              input_parent_id : args.input_parent_id,//<= can be the mod opt or the item
-              input_id      : args.input_id,
-              value         : args.to
-        });
-
-        //add a hook here
-        module.trigger( 'input_sent', { input : args.to , dom_el: module.container } );
-  },
-
-
-  //@return void()
-  //Fired in base control initialize, only for module type controls
-  //This method can be called when don't have input instances available
-  //=> typically when reordering items, mod options and items are closed, therefore there's no input instances.
-  //=> the input id are being retrieved from the input parent models : items and mod options.
-  sendModuleInputsToPreview : function() {
-        var module = this,
-            _sendInputData = function() {
-                  var inputParent = this,//this is the input parent : item or modOpt
-                      inputParentModel = $.extend( true, {}, inputParent() );
-                  //we don't need to send the id, which is never an input, but generated by the api.
-                  inputParentModel = _.omit( inputParentModel, 'id' );
-
-                  _.each( inputParentModel, function( inputVal, inputId ) {
-                        module.sendInputToPreview( {
-                              input_id : inputId,
-                              input_parent_id : inputParent.id,
-                              to : inputVal,
-                              from : null
-                        });
+            //render the item(s) wrapper
+            module.embedded.done( function() {
+                  $.when( module.renderModuleParts() ).done(function( $_module_items_wrapper ){
+                        if ( false === $_module_items_wrapper.length ) {
+                            throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
+                        }
+                        //stores the items wrapper ( </ul> el ) as a jQuery var
+                        module.itemsWrapper = $_module_items_wrapper;
                   });
+            });
+
+            /*-----------------------------------------------
+            //MODULE OPTIONS
+            ------------------------------------------------*/
+            //declares a default Mod options API model
+            module.defaultAPImodOptModel = {
+                  initial_modOpt_model : {},
+                  defaultModOptModel : {},
+                  control : {},//control instance
+                  module : {}//module instance
             };
 
-        module.czr_Item.each( function( _itm_ ) {
-              _sendInputData.call( _itm_ );
-        });
+            //declares a default modOpt model
+            module.defaultModOptModel = {};
 
-        if ( module.hasModOpt() ) {
-              _sendInputData.call( module.czr_ModOpt );
-        }
-  }
-});//$.extend//CZRBaseControlMths//MULTI CONTROL CLASS
+            //define a default Constructors
+            module.modOptConstructor = api.CZRModOpt;
+
+            /*-----------------------------------------------
+            //ITEMS
+            ------------------------------------------------*/
+            module.itemCollection = new api.Value( [] );
+
+            //declares a default Item API model
+            module.defaultAPIitemModel = {
+                  id : '',
+                  initial_item_model : {},
+                  defaultItemModel : {},
+                  control : {},//control instance
+                  module : {},//module instance
+                  is_added_by_user : false
+            };
+
+            //declares a default item model
+            module.defaultItemModel = { id : '', title : '' };
+
+            //define a default Constructors
+            module.itemConstructor = api.CZRItem;
+            //czr_model stores the each model value => one value by created by model.id
+            module.czr_Item = new api.Values();
+
+
+            /*-----------------------------------------------
+            //SET THE DEFAULT INPUT CONSTRUCTOR AND INPUT OPTIONS
+            ------------------------------------------------*/
+            module.inputConstructor = api.CZRInput;//constructor for the items input
+            if ( module.hasModOpt() ) {
+                  module.inputModOptConstructor = api.CZRInput;//constructor for the modOpt input
+            }
+            module.inputOptions = {};//<= can be set by each module specifically
+            //For example, if I need specific options for the content_picker, this is where I will set them in the module extended object
+
+
+            /*-----------------------------------------------
+            //FIRE ON isReady
+            ------------------------------------------------*/
+            //module.ready(); => fired by children
+            module.isReady.done( function() {
+                  //store the module dirtyness, => no items set
+                  module.isDirty = new api.Value( constructorOptions.dirty || false );
+
+                  //initialize the module api.Value()
+                  //constructorOptions has the same structure as the one described in prepareModuleforAPI
+                  //setting the module Value won't be listen to at this stage
+                  module.initializeModuleModel( constructorOptions )
+                        .done( function( initialModuleValue ) {
+                              module.set( initialModuleValue );
+                        })
+                        .fail( function( response ){ api.consoleLog( 'Module : ' + module.id + ' initialize module model failed : ', response ); })
+                        .always( function( initialModuleValue ) {
+                              //listen to each single module change
+                              module.callbacks.add( function() { return module.moduleReact.apply( module, arguments ); } );
+
+                              //if the module is not registered yet (for example when the module is added by user),
+                              //=> push it to the collection of the module-collection control
+                              //=> updates the wp api setting
+                              if (  ! module.control.isModuleRegistered( module.id ) ) {
+                                  module.control.updateModulesCollection( { module : constructorOptions, is_registered : false } );
+                              }
+
+                              module.bind('items-collection-populated', function( collection ) {
+                                    //listen to item Collection changes
+                                    module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply( module, arguments ); } );
+
+                                    //it can be overridden by a module in its initialize method
+                                    if ( module.isMultiItem() ) {
+                                          module._makeItemsSortable();
+                                    }
+                              });
+
+                              //populate and instantiate the items now when a module is embedded in a regular control
+                              //if in a sektion, the populateSavedItemCollection() will be fired on module edit
+                              if ( ! module.isInSektion() )
+                                module.populateSavedItemCollection();
+
+                              //When the module has modOpt :
+                              //=> Instantiate the modOpt and setup listener
+                              if ( module.hasModOpt() ) {
+                                  module.instantiateModOpt();
+                              }
+                        });
+            });//module.isReady.done()
+      },
+
+
+
+
+      //////////////////////////////////
+      ///READY
+      //////////////////////////////////
+      //When the control is embedded on the page, this method is fired in api.CZRBaseModuleControl:ready()
+      //=> right after the module is instantiated.
+      //If the module is a dynamic one (CRUD like), then this method is invoked by the child class
+      ready : function() {
+            var module = this;
+            module.isReady.resolve();
+      },
+
+
+
+      //fired when module is initialized, on module.isReady.done()
+      //designed to be extended or overridden to add specific items or properties
+      initializeModuleModel : function( constructorOptions ) {
+            var module = this, dfd = $.Deferred();
+            if ( ! module.isMultiItem() && ! module.isCrud() ) {
+                  //this is a static module. We only have one item
+                  //init module item if needed.
+                  if ( _.isEmpty( constructorOptions.items ) ) {
+                        var def = _.clone( module.defaultItemModel );
+                        constructorOptions.items = [ $.extend( def, { id : module.id } ) ];
+                  }
+            }
+            return dfd.resolve( constructorOptions ).promise();
+      },
+
+
+      //cb of : module.itemCollection.callbacks
+      //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+      //data looks like :
+      //{
+      //  module : {}
+      //  input_changed     : string input.id
+      //  input_transport   : 'postMessage' or '',
+      //  not_preview_sent  : bool
+      //}
+      itemCollectionReact : function( to, from, data ) {
+            var module = this,
+                _current_model = module(),
+                _new_model = $.extend( true, {}, _current_model );
+            _new_model.items = to;
+            //update the dirtyness state
+            module.isDirty.set(true);
+            //set the the new items model
+            module.set( _new_model, data || {} );
+      },
+
+
+      //cb of module.callbacks
+      moduleReact : function( to, from, data ) {
+            //cb of : module.callbacks
+            var module            = this,
+                control           = module.control,
+                isItemUpdate    = ( _.size(from.items) == _.size(to.items) ) && ! _.isEmpty( _.difference(to.items, from.items) ),
+                isColumnUpdate  = to.column_id != from.column_id,
+                refreshPreview    = function() {
+                      module.control.previewer.refresh();
+                };
+
+            //update the collection + pass data
+            control.updateModulesCollection( {
+                  module : $.extend( true, {}, to ),
+                  data : data//useful to pass contextual info when a change happens
+            } );
+
+            // //Always update the view title
+            // module.writeViewTitle(to);
+
+            // //@todo : do we need that ?
+            // //send module to the preview. On update only, not on creation.
+            // if ( ! _.isEmpty(from) || ! _.isUndefined(from) ) {
+            //   module._sendModule(to, from);
+            // }
+      },
+
+      //@todo : create a smart helper to get either the wp api section or the czr api sektion, depending on the module context
+      getModuleSection : function() {
+            return this.section;
+      },
+
+      //@return bool
+      isInSektion : function() {
+            var module = this;
+            return _.has( module, 'sektion_id' );
+      },
+
+      //is this module multi item ?
+      //@return bool
+      isMultiItem : function() {
+            return api.CZR_Helpers.isMultiItemModule( null, this );
+      },
+
+      //is this module crud ?
+      //@return bool
+      isCrud : function() {
+            return api.CZR_Helpers.isCrudModule( null, this );
+      },
+
+      hasModOpt : function() {
+            return api.CZR_Helpers.hasModuleModOpt( null, this );
+      },
+
+
+      //////////////////////////////////
+      ///MODULE OPTION :
+      ///1) PREPARE
+      ///2) INSTANTIATE
+      ///3) LISTEN TO AND SET PARENT MODULE ON CHANGE
+      //////////////////////////////////
+      //fired when module isReady
+      instantiateModOpt : function() {
+            var module = this;
+            //Prepare the modOpt and instantiate it
+            var modOpt_candidate = module.prepareModOptForAPI( module().modOpt || {} );
+            module.czr_ModOpt = new module.modOptConstructor( modOpt_candidate );
+            module.czr_ModOpt.ready();
+            //update the module model on modOpt change
+            module.czr_ModOpt.callbacks.add( function( to, from, data ) {
+                  var _current_model = module(),
+                      _new_model = $.extend( true, {}, _current_model );
+                  _new_model.modOpt = to;
+                  //update the dirtyness state
+                  module.isDirty(true);
+                  //set the the new items model
+                  //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+                  //data looks like :
+                  //{
+                  //  module : {}
+                  //  input_changed     : string input.id
+                  //  input_transport   : 'postMessage' or '',
+                  //  not_preview_sent  : bool
+                  //}
+                  module( _new_model, data );
+            });
+      },
+
+      //@return an API ready modOpt object with the following properties
+      // initial_modOpt_model : {},
+      // defaultModOptModel : {},
+      // control : {},//control instance
+      // module : {},//module instance
+      //@param modOpt_candidate is an object. Can contain the saved modOpt properties on init.
+      prepareModOptForAPI : function( modOpt_candidate ) {
+            var module = this,
+                api_ready_modOpt = {};
+            // if ( ! _.isObject( modOpt_candidate ) ) {
+            //       throw new Error('preparemodOptForAPI : a modOpt must be an object to be instantiated.');
+            // }
+            modOpt_candidate = _.isObject( modOpt_candidate ) ? modOpt_candidate : {};
+
+            _.each( module.defaultAPImodOptModel, function( _value, _key ) {
+                  var _candidate_val = modOpt_candidate[_key];
+                  switch( _key ) {
+                        case 'initial_modOpt_model' :
+                            //make sure that the provided modOpt has all the default properties set
+                            _.each( module.getDefaultModOptModel() , function( _value, _property ) {
+                                  if ( ! _.has( modOpt_candidate, _property) )
+                                     modOpt_candidate[_property] = _value;
+                            });
+                            api_ready_modOpt[_key] = modOpt_candidate;
+
+                        break;
+                        case  'defaultModOptModel' :
+                            api_ready_modOpt[_key] = _.clone( module.defaultModOptModel );
+                        break;
+                        case  'control' :
+                            api_ready_modOpt[_key] = module.control;
+                        break;
+                        case  'module' :
+                            api_ready_modOpt[_key] = module;
+                        break;
+                  }//switch
+            });
+            return api_ready_modOpt;
+      },
+
+      //Returns the default modOpt defined in initialize
+      //Each chid class can override the default item and the following method
+      getDefaultModOptModel : function( id ) {
+            var module = this;
+            return $.extend( _.clone( module.defaultModOptModel ), { is_mod_opt : true } );
+      },
+
+
+      //The idea is to send only the currently modified item instead of the entire collection
+      //the entire collection is sent anyway on api(setId).set( value ), and accessible in the preview via api(setId).bind( fn( to) )
+      //This method can be called on input change and on czr-partial-refresh-done
+      //{
+      //  input_id :
+      //  input_parent_id :
+      //  is_mod_opt :
+      //  to :
+      //  from :
+      //}
+      sendInputToPreview : function( args ) {
+            var module = this;
+            //normalizes the args
+            args = _.extend(
+              {
+                    input_id        : '',
+                    input_parent_id : '',//<= can be the mod opt or an item
+                    to              : null,
+                    from            : null
+              } , args );
+
+            if ( _.isEqual( args.to, args.from ) )
+              return;
+
+            //This is listened to by the preview frame
+            module.control.previewer.send( 'czr_input', {
+                  set_id        : api.CZR_Helpers.getControlSettingId( module.control.id ),
+                  module_id     : module.id,//<= will allow us to target the right dom element on front end
+                  module        : { items : $.extend( true, {}, module().items) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
+                  input_parent_id : args.input_parent_id,//<= can be the mod opt or the item
+                  input_id      : args.input_id,
+                  value         : args.to
+            });
+
+            //add a hook here
+            module.trigger( 'input_sent', { input : args.to , dom_el: module.container } );
+      },
+
+
+      //@return void()
+      //Fired in base control initialize, only for module type controls
+      //This method can be called when don't have input instances available
+      //=> typically when reordering items, mod options and items are closed, therefore there's no input instances.
+      //=> the input id are being retrieved from the input parent models : items and mod options.
+      sendModuleInputsToPreview : function() {
+            var module = this,
+                _sendInputData = function() {
+                      var inputParent = this,//this is the input parent : item or modOpt
+                          inputParentModel = $.extend( true, {}, inputParent() );
+                      //we don't need to send the id, which is never an input, but generated by the api.
+                      inputParentModel = _.omit( inputParentModel, 'id' );
+
+                      _.each( inputParentModel, function( inputVal, inputId ) {
+                            module.sendInputToPreview( {
+                                  input_id : inputId,
+                                  input_parent_id : inputParent.id,
+                                  to : inputVal,
+                                  from : null
+                            });
+                      });
+                };
+
+            module.czr_Item.each( function( _itm_ ) {
+                  _sendInputData.call( _itm_ );
+            });
+
+            if ( module.hasModOpt() ) {
+                  _sendInputData.call( module.czr_ModOpt );
+            }
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
 //extends api.CZRBaseControl
 //
 //Setup the collection of items
@@ -10010,329 +10035,331 @@ $.extend( CZRModuleMths, {
 //Listen to items collection changes and update the control setting
 
 var CZRModuleMths = CZRModuleMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRModuleMths, {
+      //@fired in module ready on api('ready')
+      //the module().items has been set in initialize
+      populateSavedItemCollection : function() {
+              var module = this, _saved_items = [];
+              if ( ! _.isArray( module().items ) ) {
+                  throw new Error( 'populateSavedItemCollection : The saved items collection must be an array in module :' + module.id );
+              }
 
-  //@fired in module ready on api('ready')
-  //the module().items has been set in initialize
-  populateSavedItemCollection : function() {
-          var module = this, _saved_items = [];
-          if ( ! _.isArray( module().items ) ) {
-              throw new Error( 'populateSavedItemCollection : The saved items collection must be an array in module :' + module.id );
-          }
+              //populates the collection with the saved items
+              //the modOpt must be skipped
+              //the saved items + modOpt is an array looking like :
+              ////MODOPT IS THE FIRST ARRAY ELEMENT: A modOpt has no unique id and has the property is_mod_opt set to true
+              //[
+              //  is_mod_opt : true //<= inform us that this is not an item but a modOpt
+              //],
+              ////THEN COME THE ITEMS
+              //[
+              //  id : "czr_slide_module_0"
+              //     slide-background : 21,
+              //     ....
+              //   ],
+              //   [
+              // id : "czr_slide_module_1"
+              //     slide-background : 21,
+              //     ....
+              //   ]
 
-          //populates the collection with the saved items
-          //the modOpt must be skipped
-          //the saved items + modOpt is an array looking like :
-          ////MODOPT IS THE FIRST ARRAY ELEMENT: A modOpt has no unique id and has the property is_mod_opt set to true
-          //[
-          //  is_mod_opt : true //<= inform us that this is not an item but a modOpt
-          //],
-          ////THEN COME THE ITEMS
-          //[
-          //  id : "czr_slide_module_0"
-          //     slide-background : 21,
-          //     ....
-          //   ],
-          //   [
-          // id : "czr_slide_module_1"
-          //     slide-background : 21,
-          //     ....
-          //   ]
-
-          //FILTER THE ACTUAL ITEMS ( REMOVE THE MODOPTS ELEMENT IF ANY )
-          //=> the items and the modOpt should already be split at this stage, because it's done before module instantiation... this check is totally paranoid.
-          _.each( module().items, function( item_candidate , key ) {
-                if ( _.has( item_candidate, 'id') && ! _.has( item_candidate, 'is_mod_opt' ) ) {
-                      _saved_items.push( item_candidate );
-                }
-          });
-
-          //INSTANTIATE THE ITEMS
-          _.each( _saved_items, function( item_candidate , key ) {
-                //adds it to the collection and fire item.ready()
-                module.instantiateItem( item_candidate ).ready();
-          });
-
-          //check if everything went well
-          _.each( _saved_items, function( _item ) {
-                if ( _.isUndefined( _.findWhere( module.itemCollection(), _item.id ) ) ) {
-                      throw new Error( 'populateSavedItemCollection : The saved items have not been properly populated in module : ' + module.id );
-                }
-          });
-
-          module.trigger('items-collection-populated');
-          //do we need to chain this method ?
-          //return this;
-  },
-
-
-  instantiateItem : function( item, is_added_by_user ) {
-          var module = this;
-          //Prepare the item, make sure its id is set and unique
-          item_candidate = module.prepareItemForAPI( item );
-          //Item id checks !
-          if ( ! _.has( item_candidate, 'id' ) ) {
-            throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
-          }
-          if ( module.czr_Item.has( item_candidate.id ) ) {
-              throw new Error('CZRModule::instantiateItem() : the following item id ' + item_candidate.id + ' already exists in module.czr_Item() for module ' + this.id  );
-          }
-          //instanciate the item with the default constructor
-          module.czr_Item.add( item_candidate.id, new module.itemConstructor( item_candidate.id, item_candidate ) );
-
-          if ( ! module.czr_Item.has( item_candidate.id ) ) {
-              throw new Error('CZRModule::instantiateItem() : instantiation failed for item id ' + item_candidate.id + ' for module ' + this.id  );
-          }
-          //the item is now ready and will listen to changes
-          //return the instance
-          return module.czr_Item( item_candidate.id );
-  },
-
-
-
-  //@return an API ready item object with the following properties
-  // id : '',
-  // initial_item_model : {},
-  // defaultItemModel : {},
-  // control : {},//control instance
-  // module : {},//module instance
-  // is_added_by_user : false
-  prepareItemForAPI : function( item_candidate ) {
-          var module = this,
-              api_ready_item = {};
-          // if ( ! _.isObject( item_candidate ) ) {
-          //       throw new Error('prepareitemForAPI : a item must be an object to be instantiated.');
-          // }
-          item_candidate = _.isObject( item_candidate ) ? item_candidate : {};
-
-          _.each( module.defaultAPIitemModel, function( _value, _key ) {
-                var _candidate_val = item_candidate[_key];
-                switch( _key ) {
-                      case 'id' :
-                          if ( _.isEmpty( _candidate_val ) ) {
-                              api_ready_item[_key] = module.generateItemId( module.module_type );
-                          } else {
-                              api_ready_item[_key] = _candidate_val;
-                          }
-                      break;
-                      case 'initial_item_model' :
-                          //make sure that the provided item has all the default properties set
-                          _.each( module.getDefaultItemModel() , function( _value, _property ) {
-                                if ( ! _.has( item_candidate, _property) )
-                                   item_candidate[_property] = _value;
-                          });
-                          api_ready_item[_key] = item_candidate;
-
-                      break;
-                      case  'defaultItemModel' :
-                          api_ready_item[_key] = _.clone( module.defaultItemModel );
-                      break;
-                      case  'control' :
-                          api_ready_item[_key] = module.control;
-                      break;
-                      case  'module' :
-                          api_ready_item[_key] = module;
-                      break;
-                      case 'is_added_by_user' :
-                          api_ready_item[_key] =  _.isBoolean( _candidate_val ) ? _candidate_val : false;
-                      break;
-                }//switch
-          });
-
-          //if we don't have an id at this stage, let's generate it.
-          if ( ! _.has( api_ready_item, 'id' ) ) {
-                api_ready_item.id = module.generateItemId( module.module_type );
-          }
-
-          //Now amend the initial_item_model with the generated id
-          api_ready_item.initial_item_model.id = api_ready_item.id;
-
-          return api_ready_item;
-  },
-
-
-  //recursive
-  generateItemId : function( module_type, key, i ) {
-          //prevent a potential infinite loop
-          i = i || 1;
-          if ( i > 100 ) {
-                throw new Error('Infinite loop when generating of a module id.');
-          }
-          var module = this;
-          key = key || module._getNextItemKeyInCollection();
-          var id_candidate = module_type + '_' + key;
-
-          //do we have a module collection value ?
-          if ( ! _.has(module, 'itemCollection') || ! _.isArray( module.itemCollection() ) ) {
-                throw new Error('The item collection does not exist or is not properly set in module : ' + module.id );
-          }
-
-          //make sure the module is not already instantiated
-          if ( module.isItemRegistered( id_candidate ) ) {
-            key++; i++;
-            return module.generateItemId( module_type, key, i );
-          }
-          return id_candidate;
-  },
-
-
-  //helper : return an int
-  //=> the next available id of the item collection
-  _getNextItemKeyInCollection : function() {
-          var module = this,
-            _maxItem = {},
-            _next_key = 0;
-
-          //get the initial key
-          //=> if we already have a collection, extract all keys, select the max and increment it.
-          //else, key is 0
-          if ( _.isEmpty( module.itemCollection() ) )
-            return _next_key;
-          if ( _.isArray( module.itemCollection() ) && 1 === _.size( module.itemCollection() ) ) {
-                _maxItem = module.itemCollection()[0];
-          } else {
-                _maxItem = _.max( module.itemCollection(), function( _item ) {
-                      if ( ! _.isNumber( _item.id.replace(/[^\/\d]/g,'') ) )
-                        return 0;
-                      return parseInt( _item.id.replace( /[^\/\d]/g, '' ), 10 );
-                });
-          }
-
-          //For a single item collection, with an index free id, it might happen that the item is not parsable. Make sure it is. Otherwise, use the default key 0
-          if ( ! _.isUndefined( _maxItem ) && _.isNumber( _maxItem.id.replace(/[^\/\d]/g,'') ) ) {
-                _next_key = parseInt( _maxItem.id.replace(/[^\/\d]/g,''), 10 ) + 1;
-          }
-          return _next_key;
-  },
-
-
-
-  //this helper allows to check if an item has been registered in the collection
-  //no matter if it's not instantiated yet
-  isItemRegistered : function( id_candidate ) {
-        var module = this;
-        return ! _.isUndefined( _.findWhere( module.itemCollection(), { id : id_candidate}) );
-  },
-
-
-  //Fired in module.czr_Item.itemReact
-  //@param args can be
-  //{
-  //  collection : [],
-  //  data : data {}
-  //},
-  //
-  //or {
-  //  item : {}
-  //  data : data {}
-  //}
-  //if a collection is provided in the passed args then simply refresh the collection
-  //=> typically used when reordering the collection item with sortable or when a item is removed
-  //
-  //the args.data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
-  //data looks like :
-  //{
-  //  module : {}
-  //  input_changed     : string input.id
-  //  input_transport   : 'postMessage' or '',
-  //  not_preview_sent  : bool
-  //}
-  //@return a deferred promise
-  updateItemsCollection : function( args ) {
-          var module = this,
-              _current_collection = module.itemCollection(),
-              _new_collection = _.clone(_current_collection),
-              dfd = $.Deferred();
-
-          //if a collection is provided in the passed args then simply refresh the collection
-          //=> typically used when reordering the collection item with sortable or when a item is removed
-          if ( _.has( args, 'collection' ) ) {
-                //reset the collection
-                module.itemCollection.set( args.collection );
-                return;
-          }
-
-          if ( ! _.has( args, 'item' ) ) {
-              throw new Error('updateItemsCollection, no item provided ' + module.control.id + '. Aborting');
-          }
-          //normalizes with data
-          args = _.extend( { data : {} }, args );
-
-          var item = _.clone( args.item );
-
-          //the item already exist in the collection
-          if ( _.findWhere( _new_collection, { id : item.id } ) ) {
-                _.each( _current_collection , function( _item, _ind ) {
-                      if ( _item.id != item.id )
-                        return;
-
-                      //set the new val to the changed property
-                      _new_collection[_ind] = item;
-                });
-          }
-          //the item has to be added
-          else {
-              _new_collection.push(item);
-          }
-
-          //updates the collection value
-          //=> is listened to by module.itemCollectionReact
-          module.itemCollection.set( _new_collection, args.data );
-          return dfd.resolve( { collection : _new_collection, data : args.data } ).promise();
-  },
-
-
-
-  //fire on sortable() update callback
-  //@returns a sorted collection as an array of item objects
-  _getSortedDOMItemCollection : function( ) {
-          var module = this,
-              _old_collection = _.clone( module.itemCollection() ),
-              _new_collection = [],
-              dfd = $.Deferred();
-
-          //re-build the collection from the DOM
-          $( '.' + module.control.css_attr.single_item, module.container ).each( function( _index ) {
-                var _item = _.findWhere( _old_collection, {id: $(this).attr('data-id') });
-                //do we have a match in the existing collection ?
-                if ( ! _item )
-                  return;
-
-                _new_collection[_index] = _item;
-          });
-
-          if ( _old_collection.length != _new_collection.length ) {
-              throw new Error('There was a problem when re-building the item collection from the DOM in module : ' + module.id );
-          }
-          return dfd.resolve( _new_collection ).promise();
-  },
-
-
-  //This method should
-  //1) remove the item views
-  //2) remove the czr_items instances
-  //3) remove the item collection
-  //4) re-initialize items
-  //5) re-setup the item collection
-  //6) re-instantiate the items
-  //7) re-render their views
-  refreshItemCollection : function() {
-        var module = this;
-        //Remove item views and instances
-        module.czr_Item.each( function( _itm ) {
-              $.when( module.czr_Item( _itm.id ).container.remove() ).done( function() {
-                    //Remove item instances
-                    module.czr_Item.remove( _itm.id );
+              //FILTER THE ACTUAL ITEMS ( REMOVE THE MODOPTS ELEMENT IF ANY )
+              //=> the items and the modOpt should already be split at this stage, because it's done before module instantiation... this check is totally paranoid.
+              _.each( module().items, function( item_candidate , key ) {
+                    if ( _.has( item_candidate, 'id') && ! _.has( item_candidate, 'is_mod_opt' ) ) {
+                          _saved_items.push( item_candidate );
+                    }
               });
-        });
 
-        // Reset the item collection
-        // => the collection listeners will be setup after populate, on 'items-collection-populated'
-        module.itemCollection = new api.Value( [] );
-        module.populateSavedItemCollection();
-  }
-});//$.extend//CZRBaseControlMths//MULTI CONTROL CLASS
+              //INSTANTIATE THE ITEMS
+              _.each( _saved_items, function( item_candidate , key ) {
+                    //adds it to the collection and fire item.ready()
+                    try { module.instantiateItem( item_candidate ).ready(); } catch( er ) {
+                          api.errorLog( 'populateSavedItemCollection : ' + er );
+                    }
+              });
+
+              //check if everything went well
+              _.each( _saved_items, function( _item ) {
+                    if ( _.isUndefined( _.findWhere( module.itemCollection(), _item.id ) ) ) {
+                          throw new Error( 'populateSavedItemCollection : The saved items have not been properly populated in module : ' + module.id );
+                    }
+              });
+
+              module.trigger( 'items-collection-populated' );
+              //do we need to chain this method ?
+              //return this;
+      },
+
+
+      instantiateItem : function( item, is_added_by_user ) {
+              var module = this;
+              //Prepare the item, make sure its id is set and unique
+              item_candidate = module.prepareItemForAPI( item );
+              //Item id checks !
+              if ( ! _.has( item_candidate, 'id' ) ) {
+                throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
+              }
+              if ( module.czr_Item.has( item_candidate.id ) ) {
+                  throw new Error('CZRModule::instantiateItem() : the following item id ' + item_candidate.id + ' already exists in module.czr_Item() for module ' + this.id  );
+              }
+              //instanciate the item with the default constructor
+              module.czr_Item.add( item_candidate.id, new module.itemConstructor( item_candidate.id, item_candidate ) );
+
+              if ( ! module.czr_Item.has( item_candidate.id ) ) {
+                  throw new Error('CZRModule::instantiateItem() : instantiation failed for item id ' + item_candidate.id + ' for module ' + this.id  );
+              }
+              //the item is now ready and will listen to changes
+              //return the instance
+              return module.czr_Item( item_candidate.id );
+      },
+
+
+
+      //@return an API ready item object with the following properties
+      // id : '',
+      // initial_item_model : {},
+      // defaultItemModel : {},
+      // control : {},//control instance
+      // module : {},//module instance
+      // is_added_by_user : false
+      prepareItemForAPI : function( item_candidate ) {
+              var module = this,
+                  api_ready_item = {};
+              // if ( ! _.isObject( item_candidate ) ) {
+              //       throw new Error('prepareitemForAPI : a item must be an object to be instantiated.');
+              // }
+              item_candidate = _.isObject( item_candidate ) ? item_candidate : {};
+
+              _.each( module.defaultAPIitemModel, function( _value, _key ) {
+                    var _candidate_val = item_candidate[_key];
+                    switch( _key ) {
+                          case 'id' :
+                              if ( _.isEmpty( _candidate_val ) ) {
+                                  api_ready_item[_key] = module.generateItemId( module.module_type );
+                              } else {
+                                  api_ready_item[_key] = _candidate_val;
+                              }
+                          break;
+                          case 'initial_item_model' :
+                              //make sure that the provided item has all the default properties set
+                              _.each( module.getDefaultItemModel() , function( _value, _property ) {
+                                    if ( ! _.has( item_candidate, _property) )
+                                       item_candidate[_property] = _value;
+                              });
+                              api_ready_item[_key] = item_candidate;
+
+                          break;
+                          case  'defaultItemModel' :
+                              api_ready_item[_key] = _.clone( module.defaultItemModel );
+                          break;
+                          case  'control' :
+                              api_ready_item[_key] = module.control;
+                          break;
+                          case  'module' :
+                              api_ready_item[_key] = module;
+                          break;
+                          case 'is_added_by_user' :
+                              api_ready_item[_key] =  _.isBoolean( _candidate_val ) ? _candidate_val : false;
+                          break;
+                    }//switch
+              });
+
+              //if we don't have an id at this stage, let's generate it.
+              if ( ! _.has( api_ready_item, 'id' ) ) {
+                    api_ready_item.id = module.generateItemId( module.module_type );
+              }
+
+              //Now amend the initial_item_model with the generated id
+              api_ready_item.initial_item_model.id = api_ready_item.id;
+
+              return api_ready_item;
+      },
+
+
+      //recursive
+      generateItemId : function( module_type, key, i ) {
+              //prevent a potential infinite loop
+              i = i || 1;
+              if ( i > 100 ) {
+                    throw new Error( 'Infinite loop when generating of a module id.' );
+              }
+              var module = this;
+              key = key || module._getNextItemKeyInCollection();
+              var id_candidate = module_type + '_' + key;
+
+              //do we have a module collection value ?
+              if ( ! _.has(module, 'itemCollection') || ! _.isArray( module.itemCollection() ) ) {
+                    throw new Error('The item collection does not exist or is not properly set in module : ' + module.id );
+              }
+
+              //make sure the module is not already instantiated
+              if ( module.isItemRegistered( id_candidate ) ) {
+                key++; i++;
+                return module.generateItemId( module_type, key, i );
+              }
+              return id_candidate;
+      },
+
+
+      //helper : return an int
+      //=> the next available id of the item collection
+      _getNextItemKeyInCollection : function() {
+              var module = this,
+                _maxItem = {},
+                _next_key = 0;
+
+              //get the initial key
+              //=> if we already have a collection, extract all keys, select the max and increment it.
+              //else, key is 0
+              if ( _.isEmpty( module.itemCollection() ) )
+                return _next_key;
+              if ( _.isArray( module.itemCollection() ) && 1 === _.size( module.itemCollection() ) ) {
+                    _maxItem = module.itemCollection()[0];
+              } else {
+                    _maxItem = _.max( module.itemCollection(), function( _item ) {
+                          if ( ! _.isNumber( _item.id.replace(/[^\/\d]/g,'') ) )
+                            return 0;
+                          return parseInt( _item.id.replace( /[^\/\d]/g, '' ), 10 );
+                    });
+              }
+
+              //For a single item collection, with an index free id, it might happen that the item is not parsable. Make sure it is. Otherwise, use the default key 0
+              if ( ! _.isUndefined( _maxItem ) && _.isNumber( _maxItem.id.replace(/[^\/\d]/g,'') ) ) {
+                    _next_key = parseInt( _maxItem.id.replace(/[^\/\d]/g,''), 10 ) + 1;
+              }
+              return _next_key;
+      },
+
+
+
+      //this helper allows to check if an item has been registered in the collection
+      //no matter if it's not instantiated yet
+      isItemRegistered : function( id_candidate ) {
+            var module = this;
+            return ! _.isUndefined( _.findWhere( module.itemCollection(), { id : id_candidate}) );
+      },
+
+
+      //Fired in module.czr_Item.itemReact
+      //@param args can be
+      //{
+      //  collection : [],
+      //  data : data {}
+      //},
+      //
+      //or {
+      //  item : {}
+      //  data : data {}
+      //}
+      //if a collection is provided in the passed args then simply refresh the collection
+      //=> typically used when reordering the collection item with sortable or when a item is removed
+      //
+      //the args.data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+      //data looks like :
+      //{
+      //  module : {}
+      //  input_changed     : string input.id
+      //  input_transport   : 'postMessage' or '',
+      //  not_preview_sent  : bool
+      //}
+      //@return a deferred promise
+      updateItemsCollection : function( args ) {
+              var module = this,
+                  _current_collection = module.itemCollection(),
+                  _new_collection = _.clone(_current_collection),
+                  dfd = $.Deferred();
+
+              //if a collection is provided in the passed args then simply refresh the collection
+              //=> typically used when reordering the collection item with sortable or when a item is removed
+              if ( _.has( args, 'collection' ) ) {
+                    //reset the collection
+                    module.itemCollection.set( args.collection );
+                    return;
+              }
+
+              if ( ! _.has( args, 'item' ) ) {
+                  throw new Error('updateItemsCollection, no item provided ' + module.control.id + '. Aborting');
+              }
+              //normalizes with data
+              args = _.extend( { data : {} }, args );
+
+              var item = _.clone( args.item );
+
+              //the item already exist in the collection
+              if ( _.findWhere( _new_collection, { id : item.id } ) ) {
+                    _.each( _current_collection , function( _item, _ind ) {
+                          if ( _item.id != item.id )
+                            return;
+
+                          //set the new val to the changed property
+                          _new_collection[_ind] = item;
+                    });
+              }
+              //the item has to be added
+              else {
+                  _new_collection.push(item);
+              }
+
+              //updates the collection value
+              //=> is listened to by module.itemCollectionReact
+              module.itemCollection.set( _new_collection, args.data );
+              return dfd.resolve( { collection : _new_collection, data : args.data } ).promise();
+      },
+
+
+
+      //fire on sortable() update callback
+      //@returns a sorted collection as an array of item objects
+      _getSortedDOMItemCollection : function( ) {
+              var module = this,
+                  _old_collection = _.clone( module.itemCollection() ),
+                  _new_collection = [],
+                  dfd = $.Deferred();
+
+              //re-build the collection from the DOM
+              $( '.' + module.control.css_attr.single_item, module.container ).each( function( _index ) {
+                    var _item = _.findWhere( _old_collection, {id: $(this).attr('data-id') });
+                    //do we have a match in the existing collection ?
+                    if ( ! _item )
+                      return;
+
+                    _new_collection[_index] = _item;
+              });
+
+              if ( _old_collection.length != _new_collection.length ) {
+                  throw new Error('There was a problem when re-building the item collection from the DOM in module : ' + module.id );
+              }
+              return dfd.resolve( _new_collection ).promise();
+      },
+
+
+      //This method should
+      //1) remove the item views
+      //2) remove the czr_items instances
+      //3) remove the item collection
+      //4) re-initialize items
+      //5) re-setup the item collection
+      //6) re-instantiate the items
+      //7) re-render their views
+      refreshItemCollection : function() {
+            var module = this;
+            //Remove item views and instances
+            module.czr_Item.each( function( _itm ) {
+                  $.when( module.czr_Item( _itm.id ).container.remove() ).done( function() {
+                        //Remove item instances
+                        module.czr_Item.remove( _itm.id );
+                  });
+            });
+
+            // Reset the item collection
+            // => the collection listeners will be setup after populate, on 'items-collection-populated'
+            module.itemCollection = new api.Value( [] );
+            module.populateSavedItemCollection();
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
 //extends api.CZRBaseControl
 //
 //Setup the collection of items
@@ -10340,72 +10367,68 @@ $.extend( CZRModuleMths, {
 //Listen to items collection changes and update the control setting
 
 var CZRModuleMths = CZRModuleMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRModuleMths, {
+      //Returns the default item defined in initialize
+      //Each chid class can override the default item and the following method
+      getDefaultItemModel : function( id ) {
+              var module = this;
+              return $.extend( _.clone( module.defaultItemModel ), { id : id || '' } );
+      },
 
+      //////////////////////////////////
+      ///MODEL HELPERS
+      //////////////////////////////////
+      //the job of this function is to return a new item ready to be added to the collection
+      //the new item shall have a unique id
+      //!!recursive
+      _initNewItem : function( _item , _next_key ) {
+              var module = this,
+                  _new_item = { id : '' },
+                  _id;
 
-  //Returns the default item defined in initialize
-  //Each chid class can override the default item and the following method
-  getDefaultItemModel : function( id ) {
-          var module = this;
-          return $.extend( _.clone( module.defaultItemModel ), { id : id || '' } );
-  },
+              //get the next available key of the collection
+              _next_key = 'undefined' != typeof(_next_key) ? _next_key : _.size( module.itemCollection() );
 
+              if ( _.isNumber(_next_key) ) {
+                _id = module.module_type + '_' + _next_key;
+              }
+              else {
+                _id = _next_key;
+                //reset next key to 0 in case a recursive loop is needed later
+                _next_key = 0;
+              }
 
+              if ( _item && ! _.isEmpty( _item) )
+                _new_item = $.extend( _item, { id : _id } );
+              else
+                _new_item = this.getDefaultItemModel( _id );
 
-  //////////////////////////////////
-  ///MODEL HELPERS
-  //////////////////////////////////
+              //check the id existence, and its unicity
+              if ( _.has(_new_item, 'id') && module._isItemIdPossible(_id) ) {
+                    //make sure that the provided item has all the default properties set
+                    _.map( module.getDefaultItemModel() , function( value, property ){
+                          if ( ! _.has(_new_item, property) )
+                            _new_item[property] = value;
+                    });
 
-  //the job of this function is to return a new item ready to be added to the collection
-  //the new item shall have a unique id
-  //!!recursive
-  _initNewItem : function( _item , _next_key ) {
-          var module = this,
-              _new_item = { id : '' },
-              _id;
+                return _new_item;
+              }
 
-          //get the next available key of the collection
-          _next_key = 'undefined' != typeof(_next_key) ? _next_key : _.size( module.itemCollection() );
-
-          if ( _.isNumber(_next_key) ) {
-            _id = module.module_type + '_' + _next_key;
-          }
-          else {
-            _id = _next_key;
-            //reset next key to 0 in case a recursive loop is needed later
-            _next_key = 0;
-          }
-
-          if ( _item && ! _.isEmpty( _item) )
-            _new_item = $.extend( _item, { id : _id } );
-          else
-            _new_item = this.getDefaultItemModel( _id );
-
-          //check the id existence, and its unicity
-          if ( _.has(_new_item, 'id') && module._isItemIdPossible(_id) ) {
-                //make sure that the provided item has all the default properties set
-                _.map( module.getDefaultItemModel() , function( value, property ){
-                      if ( ! _.has(_new_item, property) )
-                        _new_item[property] = value;
-                });
-
-            return _new_item;
-          }
-
-          //if id already exists, then test a new one
-          return module._initNewItem( _new_item, _next_key + 1);
-  }
-
-});//$.extend//MULTI CONTROL CLASS
+              //if id already exists, then test a new one
+              return module._initNewItem( _new_item, _next_key + 1);
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
 //extends api.CZRBaseControl
 //
 //Setup the collection of items
 //renders the module view
 //Listen to items collection changes and update the control setting
-var CZRModuleMths = CZRModuleMths || {};
-$.extend( CZRModuleMths, {
 
+var CZRModuleMths = CZRModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRModuleMths, {
       //fired on module.isReady.done()
       //the module.container is set. Either as the control.container or the single module wrapper in a sektion
       renderModuleParts : function() {
@@ -10653,7 +10676,8 @@ $.extend( CZRModuleMths, {
                   20//<= introducing a small delay to let jQuery do its preprocessing job
             );
       }
-});//$.extend//MULTI CONTROL CLASS
+});//$.extend
+})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
 //extends api.CZRModule
 //
 //Setup the collection of items
@@ -10661,158 +10685,158 @@ $.extend( CZRModuleMths, {
 //Listen to items collection changes and update the control setting
 
 var CZRDynModuleMths = CZRDynModuleMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRDynModuleMths, {
-  initialize: function( id, options ) {
-          var module = this;
-          api.CZRModule.prototype.initialize.call( module, id, options );
+      initialize: function( id, options ) {
+              var module = this;
+              api.CZRModule.prototype.initialize.call( module, id, options );
 
-          //extend the module with new template Selectors
-          $.extend( module, {
-              itemPreAddEl : ''//is specific for each crud module
-          } );
+              //extend the module with new template Selectors
+              $.extend( module, {
+                  itemPreAddEl : ''//is specific for each crud module
+              } );
 
-          //EXTENDS THE DEFAULT MONO MODEL CONSTRUCTOR WITH NEW METHODS
-          //=> like remove item
-          //=> like remove item
-          //module.itemConstructor = api.CZRItem.extend( module.CZRItemDynamicMths || {} );
+              //EXTENDS THE DEFAULT MONO MODEL CONSTRUCTOR WITH NEW METHODS
+              //=> like remove item
+              //=> like remove item
+              //module.itemConstructor = api.CZRItem.extend( module.CZRItemDynamicMths || {} );
 
-          //default success message when item added
-          module.itemAddedMessage = serverControlParams.translatedStrings.successMessage;
+              //default success message when item added
+              module.itemAddedMessage = serverControlParams.translatedStrings.successMessage;
 
-          ////////////////////////////////////////////////////
-          /// MODULE DOM EVENT MAP
-          ////////////////////////////////////////////////////
-          module.userEventMap = new api.Value( [
-                //pre add new item : open the dialog box
-                {
-                    trigger   : 'click keydown',
-                    selector  : [ '.' + module.control.css_attr.open_pre_add_btn, '.' + module.control.css_attr.cancel_pre_add_btn ].join(','),
-                    name      : 'pre_add_item',
-                    actions   : [ 'closeAllItems', 'closeRemoveDialogs', 'renderPreItemView','setPreItemViewVisibility' ],
-                },
-                //add new item
-                {
-                    trigger   : 'click keydown',
-                    selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
-                    name      : 'add_item',
-                    actions   : [ 'closeRemoveDialogs', 'closeAllItems', 'addItem' ],
-                }
-          ]);//module.userEventMap
-  },
-
-
-
-  //When the control is embedded on the page, this method is fired in api.CZRBaseModuleControl:ready()
-  //=> right after the module is instantiated.
-  ready : function() {
-          var module = this;
-          //Setup the module event listeners
-          module.setupDOMListeners( module.userEventMap() , { dom_el : module.container } );
-
-          //PRE MODEL VALUE
-          module.preItem = new api.Value( module.getDefaultItemModel() );
-
-          //PRE MODEL EMBED PROMISE
-          module.preItemEmbedded = $.Deferred();//was module.czr_preItem.create('item_content');
-          //Add view rendered listeners
-          module.preItemEmbedded.done( function() {
-                module.setupPreItemInputCollection();
-          });
-
-          //PRE MODEL VIEW STATE
-          module.preItemExpanded = new api.Value(false);
-          //add state listeners
-          module.preItemExpanded.callbacks.add( function( to, from ) {
-                module._togglePreItemViewExpansion( to );
-          });
-
-          api.CZRModule.prototype.ready.call( module );//fires the parent
-  },//ready()
-
-
-  //PRE MODEL INPUTS
-  //fired when preItem is embedded.done()
-  setupPreItemInputCollection : function() {
-          var module = this;
-
-          //Pre item input collection
-          module.preItem.czr_Input = new api.Values();
-
-          //creates the inputs based on the rendered items
-          $('.' + module.control.css_attr.pre_add_wrapper, module.container)
-                .find( '.' + module.control.css_attr.sub_set_wrapper)
-                .each( function( _index ) {
-                      var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index;
-                      //instantiate the input
-                      module.preItem.czr_Input.add( _id, new module.inputConstructor( _id, {//api.CZRInput;
-                            id : _id,
-                            type : $(this).attr('data-input-type'),
-                            container : $(this),
-                            input_parent : module.preItem,
-                            module : module,
-                            is_preItemInput : true
-                      } ) );
-
-                      //fire ready once the input Value() instance is initialized
-                      module.preItem.czr_Input(_id).ready();
-                });//each
-  },
+              ////////////////////////////////////////////////////
+              /// MODULE DOM EVENT MAP
+              ////////////////////////////////////////////////////
+              module.userEventMap = new api.Value( [
+                    //pre add new item : open the dialog box
+                    {
+                        trigger   : 'click keydown',
+                        selector  : [ '.' + module.control.css_attr.open_pre_add_btn, '.' + module.control.css_attr.cancel_pre_add_btn ].join(','),
+                        name      : 'pre_add_item',
+                        actions   : [ 'closeAllItems', 'closeRemoveDialogs', 'renderPreItemView','setPreItemViewVisibility' ],
+                    },
+                    //add new item
+                    {
+                        trigger   : 'click keydown',
+                        selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
+                        name      : 'add_item',
+                        actions   : [ 'closeRemoveDialogs', 'closeAllItems', 'addItem' ],
+                    }
+              ]);//module.userEventMap
+      },
 
 
 
-  //Fired on user Dom action.
-  //the item is manually added.
-  addItem : function(obj) {
-          var module = this,
-              item = module.preItem(),
-              collapsePreItem = function() {
-                    module.preItemExpanded.set(false);
-                    module._resetPreItemInputs();
-                    module.toggleSuccessMessage('off');
-              };
+      //When the control is embedded on the page, this method is fired in api.CZRBaseModuleControl:ready()
+      //=> right after the module is instantiated.
+      ready : function() {
+              var module = this;
+              //Setup the module event listeners
+              module.setupDOMListeners( module.userEventMap() , { dom_el : module.container } );
 
-          if ( _.isEmpty(item) || ! _.isObject(item) ) {
-            throw new Error('addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
-          }
-          //display a sucess message if item is successfully instantiated
-          collapsePreItem = _.debounce( collapsePreItem, 2000 );
+              //PRE MODEL VALUE
+              module.preItem = new api.Value( module.getDefaultItemModel() );
 
-          //instantiates and fires ready
-          module.instantiateItem( item, true ).ready(); //true == Added by user
+              //PRE MODEL EMBED PROMISE
+              module.preItemEmbedded = $.Deferred();//was module.czr_preItem.create('item_content');
+              //Add view rendered listeners
+              module.preItemEmbedded.done( function() {
+                    module.setupPreItemInputCollection();
+              });
 
-          module.czr_Item( item.id ).isReady.then( function() {
-                module.toggleSuccessMessage('on');
-                collapsePreItem();
+              //PRE MODEL VIEW STATE
+              module.preItemExpanded = new api.Value(false);
+              //add state listeners
+              module.preItemExpanded.callbacks.add( function( to, from ) {
+                    module._togglePreItemViewExpansion( to );
+              });
 
-                module.trigger('item_added', item );
-                //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
-
-                //refresh the preview frame (only needed if transport is postMessage )
-                //must be a dom event not triggered
-                //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
-                if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
-                  module.control.previewer.refresh();
-                }
-          });
+              api.CZRModule.prototype.ready.call( module );//fires the parent
+      },//ready()
 
 
+      //PRE MODEL INPUTS
+      //fired when preItem is embedded.done()
+      setupPreItemInputCollection : function() {
+              var module = this;
 
-  },
+              //Pre item input collection
+              module.preItem.czr_Input = new api.Values();
 
-  _resetPreItemInputs : function() {
-          var module = this;
-          module.preItem.set( module.getDefaultItemModel() );
-          module.preItem.czr_Input.each( function( input_instance ) {
-                var _input_id = input_instance.id;
-                //do we have a default value ?
-                if ( ! _.has( module.getDefaultItemModel(), _input_id ) )
-                  return;
-                input_instance.set( module.getDefaultItemModel()._input_id );
-          });
-  }
+              //creates the inputs based on the rendered items
+              $('.' + module.control.css_attr.pre_add_wrapper, module.container)
+                    .find( '.' + module.control.css_attr.sub_set_wrapper)
+                    .each( function( _index ) {
+                          var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index;
+                          //instantiate the input
+                          module.preItem.czr_Input.add( _id, new module.inputConstructor( _id, {//api.CZRInput;
+                                id : _id,
+                                type : $(this).attr('data-input-type'),
+                                container : $(this),
+                                input_parent : module.preItem,
+                                module : module,
+                                is_preItemInput : true
+                          } ) );
 
-});//$.extend//MULTI CONTROL CLASS
+                          //fire ready once the input Value() instance is initialized
+                          module.preItem.czr_Input(_id).ready();
+                    });//each
+      },
+
+
+
+      //Fired on user Dom action.
+      //the item is manually added.
+      addItem : function(obj) {
+              var module = this,
+                  item = module.preItem(),
+                  collapsePreItem = function() {
+                        module.preItemExpanded.set(false);
+                        module._resetPreItemInputs();
+                        module.toggleSuccessMessage('off');
+                  };
+
+              if ( _.isEmpty(item) || ! _.isObject(item) ) {
+                throw new Error('addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
+              }
+              //display a sucess message if item is successfully instantiated
+              collapsePreItem = _.debounce( collapsePreItem, 2000 );
+
+              //instantiates and fires ready
+              module.instantiateItem( item, true ).ready(); //true == Added by user
+
+              module.czr_Item( item.id ).isReady.then( function() {
+                    module.toggleSuccessMessage('on');
+                    collapsePreItem();
+
+                    module.trigger('item_added', item );
+                    //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
+
+                    //refresh the preview frame (only needed if transport is postMessage )
+                    //must be a dom event not triggered
+                    //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
+                    if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
+                      module.control.previewer.refresh();
+                    }
+              });
+
+
+
+      },
+
+      _resetPreItemInputs : function() {
+              var module = this;
+              module.preItem.set( module.getDefaultItemModel() );
+              module.preItem.czr_Input.each( function( input_instance ) {
+                    var _input_id = input_instance.id;
+                    //do we have a default value ?
+                    if ( ! _.has( module.getDefaultItemModel(), _input_id ) )
+                      return;
+                    input_instance.set( module.getDefaultItemModel()._input_id );
+              });
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
 //extends api.CZRBaseControl
 //
 //Setup the collection of items
@@ -10820,797 +10844,657 @@ $.extend( CZRDynModuleMths, {
 //Listen to items collection changes and update the module setting
 
 var CZRDynModuleMths = CZRDynModuleMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRDynModuleMths, {
-    //////////////////////////////////////////////////
-  /// PRE ADD MODEL DIALOG AND VIEW
-  //////////////////////////////////////////////////
-  renderPreItemView : function( obj ) {
-          var module = this;
-          //is this view already rendered ?
-          if ( 'pending' != module.preItemEmbedded.state() ) //was ! _.isEmpty( module.czr_preItem('item_content')() ) )
-            return;
-
-          //do we have view template script?
-          if ( ! _.has(module, 'itemPreAddEl') ||  0 === $( '#tmpl-' + module.itemPreAddEl ).length )
-            return this;
-
-          //print the html
-          var pre_add_template = wp.template( module.itemPreAddEl );
-
-          //do we have an html template and a module container?
-          if ( ! pre_add_template  || ! module.container )
-            return this;
-
-          var $_pre_add_el = $('.' + module.control.css_attr.pre_add_item_content, module.container );
-          $_pre_add_el.prepend( pre_add_template() );
-
-          //say it
-          module.preItemEmbedded.resolve();
-  },
-
-  //@return $ el of the pre Item view
-  _getPreItemView : function() {
-          var module = this;
-          return $('.' +  module.control.css_attr.pre_add_item_content, module.container );
-  },
-
-
-  //toggles the visibility of the Remove View Block
-  //@param : obj = { event : {}, item : {}, view : ${} }
-  setPreItemViewVisibility : function(obj) {
-          var module = this;
-          module.preItemExpanded.set( ! module.preItemExpanded() );
-  },
-
-
-  //callback of module.preItemExpanded
-  //@_is_expanded = boolean.
-  _togglePreItemViewExpansion : function( _is_expanded ) {
-          var module = this,
-            $_pre_add_el = $( '.' +  module.control.css_attr.pre_add_item_content, module.container );
-
-          //toggle it
-          $_pre_add_el.slideToggle( {
-                duration : 200,
-                done : function() {
-                      var $_btn = $( '.' +  module.control.css_attr.open_pre_add_btn, module.container );
-
-                      $(this).toggleClass('open' , _is_expanded );
-                      //switch icons
-                      if ( _is_expanded )
-                        $_btn.find('.fa').removeClass('fa-plus-square').addClass('fa-minus-square');
-                      else
-                        $_btn.find('.fa').removeClass('fa-minus-square').addClass('fa-plus-square');
-
-                      //set the active class to the btn
-                      $_btn.toggleClass( 'active', _is_expanded );
-
-                      //set the adding_new class to the module container wrapper
-                      $( module.container ).toggleClass(  module.control.css_attr.adding_new, _is_expanded );
-                      //make sure it's fully visible
-                      module._adjustScrollExpandedBlock( $(this), 120 );
-              }//done
-          } );
-  },
-
-
-  toggleSuccessMessage : function( status ) {
-          var module = this,
-              _message = module.itemAddedMessage,
-              $_pre_add_wrapper = $('.' + module.control.css_attr.pre_add_wrapper, module.container );
-              $_success_wrapper = $('.' + module.control.css_attr.pre_add_success, module.container );
-
-          if ( 'on' == status ) {
-              //write message
-              $_success_wrapper.find('p').text(_message);
-
-              //set various properties
-              $_success_wrapper.css('z-index', 1000001 )
-                .css('height', $_pre_add_wrapper.height() + 'px' )
-                .css('line-height', $_pre_add_wrapper.height() + 'px');
-          } else {
-              $_success_wrapper.attr('style','');
-          }
-          module.container.toggleClass('czr-model-added', 'on' == status );
-          return this;
-  }
-
-});//$.extend//CZRBaseControlMths//extends api.CZRDynModule
-
-var CZRSocialModuleMths = CZRSocialModuleMths || {};
-
-$.extend( CZRSocialModuleMths, {
-  initialize: function( id, options ) {
-          var module = this;
-          //run the parent initialize
-          api.CZRDynModule.prototype.initialize.call( module, id, options );
-
-          //extend the module with new template Selectors
-          $.extend( module, {
-                itemPreAddEl : 'czr-module-social-pre-add-view-content',
-                itemInputList : 'czr-module-social-item-content',
-                modOptInputList : 'czr-module-social-mod-opt'
-          } );
-
-
-          this.social_icons = [
-            '500px',
-            'adn',
-            'amazon',
-            'android',
-            'angellist',
-            'apple',
-            'behance',
-            'behance-square',
-            'bitbucket',
-            'bitbucket-square',
-            'black-tie',
-            'btc',
-            'buysellads',
-            'chrome',
-            'codepen',
-            'codiepie',
-            'connectdevelop',
-            'contao',
-            'dashcube',
-            'delicious',
-            'deviantart',
-            'digg',
-            'dribbble',
-            'dropbox',
-            'drupal',
-            'edge',
-            'empire',
-            'envelope',
-            'envelope-o',
-            'envelope-square',
-            'expeditedssl',
-            'facebook',
-            'facebook-f (alias)',
-            'facebook-official',
-            'facebook-square',
-            'firefox',
-            'flickr',
-            'fonticons',
-            'fort-awesome',
-            'forumbee',
-            'foursquare',
-            'get-pocket',
-            'gg',
-            'gg-circle',
-            'git',
-            'github',
-            'github-alt',
-            'github-square',
-            'gitlab',
-            'git-square',
-            'google',
-            'google-plus',
-            'google-plus-circle',
-            'google-plus-official',
-            'google-plus-square',
-            'google-wallet',
-            'gratipay',
-            'hacker-news',
-            'houzz',
-            'instagram',
-            'internet-explorer',
-            'ioxhost',
-            'joomla',
-            'jsfiddle',
-            'lastfm',
-            'lastfm-square',
-            'leanpub',
-            'linkedin',
-            'linkedin-square',
-            'linux',
-            'maxcdn',
-            'meanpath',
-            'medium',
-            'mixcloud',
-            'mobile',
-            'modx',
-            'odnoklassniki',
-            'odnoklassniki-square',
-            'opencart',
-            'openid',
-            'opera',
-            'optin-monster',
-            'pagelines',
-            'paypal',
-            'phone',
-            'phone-square',
-            'pied-piper',
-            'pied-piper-alt',
-            'pinterest',
-            'pinterest-p',
-            'pinterest-square',
-            'product-hunt',
-            'qq',
-            'rebel',
-            'reddit',
-            'reddit-alien',
-            'reddit-square',
-            'renren',
-            'rss',
-            'rss-square',
-            'safari',
-            'scribd',
-            'sellsy',
-            'share-alt',
-            'share-alt-square',
-            'shirtsinbulk',
-            'simplybuilt',
-            'skyatlas',
-            'skype',
-            'slack',
-            'slideshare',
-            'snapchat',
-            'soundcloud',
-            'spotify',
-            'stack-exchange',
-            'stack-overflow',
-            'steam',
-            'steam-square',
-            'stumbleupon',
-            'stumbleupon-circle',
-            'telegram',
-            'tencent-weibo',
-            'trello',
-            'tripadvisor',
-            'tumblr',
-            'tumblr-square',
-            'twitch',
-            'twitter',
-            'twitter-square',
-            'usb',
-            'viacoin',
-            'vimeo',
-            'vimeo-square',
-            'vine',
-            'vk',
-            'weibo',
-            'weixin',
-            'whatsapp',
-            'wikipedia-w',
-            'windows',
-            'wordpress',
-            'xing',
-            'xing-square',
-            'yahoo',
-            'y-combinator',
-            'yelp',
-            'youtube',
-            'youtube-play',
-            'youtube-square'
-          ];
-          //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
-          module.inputConstructor = api.CZRInput.extend( module.CZRSocialsInputMths || {} );
-          //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
-          module.itemConstructor = api.CZRItem.extend( module.CZRSocialsItem || {} );
-
-          //declares a default ModOpt model
-          this.defaultModOptModel = {
-              is_mod_opt : true,
-              module_id : module.id,
-              'social-size' : serverControlParams.social_el_params.defaultSocialSize || 14
-          };
-
-          //declares a default model
-          this.defaultItemModel = {
-                id : '',
-                title : '' ,
-                'social-icon' : '',
-                'social-link' : '',
-                'social-color' : serverControlParams.social_el_params.defaultSocialColor,
-                'social-target' : 1
-          };
-
-          //overrides the default success message
-          this.itemAddedMessage = serverControlParams.translatedStrings.socialLinkAdded;
-
-          //fired ready :
-          //1) on section expansion
-          //2) or in the case of a module embedded in a regular control, if the module section is already opened => typically when skope is enabled
-          if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
-                module.ready();
-          }
-
-          api.section( module.control.section() ).expanded.bind(function(to) {
-                //set module ready on section expansion
-                if ( 'resolved' != module.isReady.state() ) {
-                      module.ready();
-                }
-          });
-
-          module.isReady.then( function() {
-                //specific update for the item preModel on social-icon change
-                module.preItem.bind( function( to, from ) {
-                      if ( ! _.has(to, 'social-icon') )
-                        return;
-                      if ( _.isEqual( to['social-icon'], from['social-icon'] ) )
-                        return;
-                      module.updateItemModel( module.preItem, true );
-                });
-          });
-  },//initialize
-
-
-  //ACTIONS ON ICON CHANGE
-  //Fired on 'social-icon:changed'
-  //Don't fire in pre item case
-  //@item_instance an be the preItem or an already created item
-  updateItemModel : function( item_instance, is_preItem ) {
-          var item = item_instance;
-          is_preItem = is_preItem || false;
-
-          //check if we are in the pre Item case => if so, the social-icon might be empty
-          if ( ! _.has( item(), 'social-icon') || _.isEmpty( item()['social-icon'] ) )
-            return;
-
-          var _new_model, _new_title, _new_color;
-
-          _new_model  = $.extend( true, {}, item() );//always safer to deep clone ( alternative to _.clone() ) => we don't know how nested this object might be in the future
-          _new_title  = this.getTitleFromIcon( _new_model['social-icon'] );
-          _new_color  = serverControlParams.social_el_params.defaultSocialColor;
-          if ( ! is_preItem && item.czr_Input.has( 'social-color' ) )
-            _new_color = item.czr_Input('social-color')();
-
-          //add text follow us... to the title
-          _new_title = [ serverControlParams.translatedStrings.followUs, _new_title].join(' ');
-
-          if ( is_preItem ) {
-                _new_model = $.extend( _new_model, { title : _new_title, 'social-color' : _new_color } );
-                item.set( _new_model );
-          } else {
-                item.czr_Input('title').set( _new_title );
-                //item.czr_Input('social-link').set( '' );
-                if ( item.czr_Input('social-color') ) { //optional
-                  item.czr_Input('social-color').set( _new_color );
-                }
-          }
-  },
-
-  /* Helpers */
-  getTitleFromIcon : function( icon ) {
-          return api.CZR_Helpers.capitalize( icon.replace('fa-', '').replace('envelope', 'email') );
-  },
-
-  getIconFromTitle : function( title ) {
-          return  'fa-' . title.toLowerCase().replace('envelope', 'email');
-  },
-
-
-
-
-
-
-
-  CZRSocialsInputMths : {
-          setupSelect : function() {
-                var input        = this,
-                    item         = input.input_parent,
-                    module       = input.module,
-                    socialList   = module.social_icons,
-                    _model       = item(),
-                    //check if we are in the pre Item case => if so, the id is empty
-                    is_preItem   = _.isEmpty(_model.id);
-
-                //=> add the select text in the pre Item case
-                if ( is_preItem ) {
-                      socialList = _.union( [ serverControlParams.translatedStrings.selectSocialIcon ], socialList );
-                }
-
-                //generates the options
-                _.each( socialList , function( icon_name, k ) {
-                      // in the pre Item case the first select element is the notice "Select a social icon"
-                      // doesn't need the fa-* class
-                      var _value = ( is_preItem && 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
-                          _attributes = {
-                                value : _value,
-                                html: module.getTitleFromIcon( icon_name )
-                          };
-                      if ( _value == _model['social-icon'] )
-                        $.extend( _attributes, { selected : "selected" } );
-
-                      $( 'select[data-type="social-icon"]', input.container ).append( $('<option>', _attributes) );
-                });
-
-                function addIcon( state ) {
-                      if (! state.id) { return state.text; }
-                      var $state = $(
-                        '<span class="fa ' + state.element.value.toLowerCase() + '">&nbsp;&nbsp;' + state.text + '</span>'
-                      );
-                      return $state;
-                }
-
-                //fire select2
-                $( 'select[data-type="social-icon"]', input.container ).select2( {
-                        templateResult: addIcon,
-                        templateSelection: addIcon
-                });
-        },
-
-        setupColorPicker : function( obj ) {
-                var input      = this,
-                    item       = input.input_parent,
-                    module     = input.module,
-                    $el        = $( 'input[data-type="social-color"]', input.container );
-
-                $el.iris( {
-                          palettes: true,
-                          hide:false,
-                          defaultColor : serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)',
-                          change : function( e, o ) {
-                                //if the input val is not updated here, it's not detected right away.
-                                //weird
-                                //is there a "change complete" kind of event for iris ?
-                                //hack to reset the color to default...@todo => use another color picker.
-                                if ( _.has( o, 'color') && 16777215 == o.color._color )
-                                  $(this).val( serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)' );
-                                else
-                                  $(this).val( o.color.toString() );
-
-                                $(this).trigger('colorpickerchange').trigger('change');
-                          }
-                });
-
-                //when the picker opens, it might be below the visible viewport.
-                //No built-in event available to react on this in the wpColorPicker unfortunately
-                $el.closest('div').on('click keydown', function() {
-                      module._adjustScrollExpandedBlock( input.container );
-                });
-        }
-
-  },//CZRSocialsInputMths
-
-
-
-
-
-
-
-
-
-  CZRSocialsItem : {
-          //Fired if the item has been instantiated
-          //The item.callbacks are declared.
-          ready : function() {
-                var item = this;
-                api.CZRItem.prototype.ready.call( item );
-
-                //update the item model on social-icon change
-                item.bind('social-icon:changed', function(){
-                      item.module.updateItemModel( item );
-                });
-          },
-
-
-          _buildTitle : function( title, icon, color ) {
-                  var item = this,
-                      module     = item.module;
-
-                  title = title || ( 'string' === typeof(icon) ? api.CZR_Helpers.capitalize( icon.replace( 'fa-', '') ) : '' );
-                  title = api.CZR_Helpers.truncate(title, 20);
-                  icon = icon || 'fa-' + module.social_icons[0];
-                  color = color || serverControlParams.social_el_params.defaultSocialColor;
-
-                  return '<div><span class="fa ' + icon + '" style="color:' + color + '"></span> ' + title + '</div>';
-          },
-
-          //overrides the default parent method by a custom one
-          //at this stage, the model passed in the obj is up to date
-          writeItemViewTitle : function( model ) {
-                  var item = this,
-                      module     = item.module,
-                      _model = model || item(),
-                      _title = module.getTitleFromIcon( _model['social-icon'] );
-
-                  $( '.' + module.control.css_attr.item_title , item.container ).html(
-                    item._buildTitle( _title, _model['social-icon'], _model['social-color'] )
-                  );
-          }
-  },//CZRSocialsItem
-
-});
+      //////////////////////////////////////////////////
+      /// PRE ADD MODEL DIALOG AND VIEW
+      //////////////////////////////////////////////////
+      renderPreItemView : function( obj ) {
+              var module = this;
+              //is this view already rendered ?
+              if ( 'pending' != module.preItemEmbedded.state() ) //was ! _.isEmpty( module.czr_preItem('item_content')() ) )
+                return;
+
+              //do we have view template script?
+              if ( ! _.has(module, 'itemPreAddEl') ||  0 === $( '#tmpl-' + module.itemPreAddEl ).length )
+                return this;
+
+              //print the html
+              var pre_add_template = wp.template( module.itemPreAddEl );
+
+              //do we have an html template and a module container?
+              if ( ! pre_add_template  || ! module.container )
+                return this;
+
+              var $_pre_add_el = $('.' + module.control.css_attr.pre_add_item_content, module.container );
+              $_pre_add_el.prepend( pre_add_template() );
+
+              //say it
+              module.preItemEmbedded.resolve();
+      },
+
+      //@return $ el of the pre Item view
+      _getPreItemView : function() {
+              var module = this;
+              return $('.' +  module.control.css_attr.pre_add_item_content, module.container );
+      },
+
+
+      //toggles the visibility of the Remove View Block
+      //@param : obj = { event : {}, item : {}, view : ${} }
+      setPreItemViewVisibility : function(obj) {
+              var module = this;
+              module.preItemExpanded.set( ! module.preItemExpanded() );
+      },
+
+
+      //callback of module.preItemExpanded
+      //@_is_expanded = boolean.
+      _togglePreItemViewExpansion : function( _is_expanded ) {
+              var module = this,
+                $_pre_add_el = $( '.' +  module.control.css_attr.pre_add_item_content, module.container );
+
+              //toggle it
+              $_pre_add_el.slideToggle( {
+                    duration : 200,
+                    done : function() {
+                          var $_btn = $( '.' +  module.control.css_attr.open_pre_add_btn, module.container );
+
+                          $(this).toggleClass('open' , _is_expanded );
+                          //switch icons
+                          if ( _is_expanded )
+                            $_btn.find('.fa').removeClass('fa-plus-square').addClass('fa-minus-square');
+                          else
+                            $_btn.find('.fa').removeClass('fa-minus-square').addClass('fa-plus-square');
+
+                          //set the active class to the btn
+                          $_btn.toggleClass( 'active', _is_expanded );
+
+                          //set the adding_new class to the module container wrapper
+                          $( module.container ).toggleClass(  module.control.css_attr.adding_new, _is_expanded );
+                          //make sure it's fully visible
+                          module._adjustScrollExpandedBlock( $(this), 120 );
+                  }//done
+              } );
+      },
+
+
+      toggleSuccessMessage : function( status ) {
+              var module = this,
+                  _message = module.itemAddedMessage,
+                  $_pre_add_wrapper = $('.' + module.control.css_attr.pre_add_wrapper, module.container );
+                  $_success_wrapper = $('.' + module.control.css_attr.pre_add_success, module.container );
+
+              if ( 'on' == status ) {
+                  //write message
+                  $_success_wrapper.find('p').text(_message);
+
+                  //set various properties
+                  $_success_wrapper.css('z-index', 1000001 )
+                    .css('height', $_pre_add_wrapper.height() + 'px' )
+                    .css('line-height', $_pre_add_wrapper.height() + 'px');
+              } else {
+                  $_success_wrapper.attr('style','');
+              }
+              module.container.toggleClass('czr-model-added', 'on' == status );
+              return this;
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
 //extends api.CZRDynModule
+var CZRSocialModuleMths = CZRSocialModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRSocialModuleMths, {
+      initialize: function( id, options ) {
+              var module = this;
+              //run the parent initialize
+              api.CZRDynModule.prototype.initialize.call( module, id, options );
+
+              //extend the module with new template Selectors
+              $.extend( module, {
+                    itemPreAddEl : 'czr-module-social-pre-add-view-content',
+                    itemInputList : 'czr-module-social-item-content',
+                    modOptInputList : 'czr-module-social-mod-opt'
+              } );
+
+
+              this.social_icons = [
+                '500px',
+                'adn',
+                'amazon',
+                'android',
+                'angellist',
+                'apple',
+                'behance',
+                'behance-square',
+                'bitbucket',
+                'bitbucket-square',
+                'black-tie',
+                'btc',
+                'buysellads',
+                'chrome',
+                'codepen',
+                'codiepie',
+                'connectdevelop',
+                'contao',
+                'dashcube',
+                'delicious',
+                'deviantart',
+                'digg',
+                'dribbble',
+                'dropbox',
+                'drupal',
+                'edge',
+                'empire',
+                'envelope',
+                'envelope-o',
+                'envelope-square',
+                'expeditedssl',
+                'facebook',
+                'facebook-f (alias)',
+                'facebook-official',
+                'facebook-square',
+                'firefox',
+                'flickr',
+                'fonticons',
+                'fort-awesome',
+                'forumbee',
+                'foursquare',
+                'get-pocket',
+                'gg',
+                'gg-circle',
+                'git',
+                'github',
+                'github-alt',
+                'github-square',
+                'gitlab',
+                'git-square',
+                'google',
+                'google-plus',
+                'google-plus-circle',
+                'google-plus-official',
+                'google-plus-square',
+                'google-wallet',
+                'gratipay',
+                'hacker-news',
+                'houzz',
+                'instagram',
+                'internet-explorer',
+                'ioxhost',
+                'joomla',
+                'jsfiddle',
+                'lastfm',
+                'lastfm-square',
+                'leanpub',
+                'linkedin',
+                'linkedin-square',
+                'linux',
+                'maxcdn',
+                'meanpath',
+                'medium',
+                'mixcloud',
+                'mobile',
+                'modx',
+                'odnoklassniki',
+                'odnoklassniki-square',
+                'opencart',
+                'openid',
+                'opera',
+                'optin-monster',
+                'pagelines',
+                'paypal',
+                'phone',
+                'phone-square',
+                'pied-piper',
+                'pied-piper-alt',
+                'pinterest',
+                'pinterest-p',
+                'pinterest-square',
+                'product-hunt',
+                'qq',
+                'rebel',
+                'reddit',
+                'reddit-alien',
+                'reddit-square',
+                'renren',
+                'rss',
+                'rss-square',
+                'safari',
+                'scribd',
+                'sellsy',
+                'share-alt',
+                'share-alt-square',
+                'shirtsinbulk',
+                'simplybuilt',
+                'skyatlas',
+                'skype',
+                'slack',
+                'slideshare',
+                'snapchat',
+                'soundcloud',
+                'spotify',
+                'stack-exchange',
+                'stack-overflow',
+                'steam',
+                'steam-square',
+                'stumbleupon',
+                'stumbleupon-circle',
+                'telegram',
+                'tencent-weibo',
+                'trello',
+                'tripadvisor',
+                'tumblr',
+                'tumblr-square',
+                'twitch',
+                'twitter',
+                'twitter-square',
+                'usb',
+                'viacoin',
+                'vimeo',
+                'vimeo-square',
+                'vine',
+                'vk',
+                'weibo',
+                'weixin',
+                'whatsapp',
+                'wikipedia-w',
+                'windows',
+                'wordpress',
+                'xing',
+                'xing-square',
+                'yahoo',
+                'y-combinator',
+                'yelp',
+                'youtube',
+                'youtube-play',
+                'youtube-square'
+              ];
+              //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
+              module.inputConstructor = api.CZRInput.extend( module.CZRSocialsInputMths || {} );
+              //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
+              module.itemConstructor = api.CZRItem.extend( module.CZRSocialsItem || {} );
+
+              //declares a default ModOpt model
+              this.defaultModOptModel = {
+                  is_mod_opt : true,
+                  module_id : module.id,
+                  'social-size' : serverControlParams.social_el_params.defaultSocialSize || 14
+              };
+
+              //declares a default model
+              this.defaultItemModel = {
+                    id : '',
+                    title : '' ,
+                    'social-icon' : '',
+                    'social-link' : '',
+                    'social-color' : serverControlParams.social_el_params.defaultSocialColor,
+                    'social-target' : 1
+              };
+
+              //overrides the default success message
+              this.itemAddedMessage = serverControlParams.translatedStrings.socialLinkAdded;
+
+              //fired ready :
+              //1) on section expansion
+              //2) or in the case of a module embedded in a regular control, if the module section is already opened => typically when skope is enabled
+              if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
+                    module.ready();
+              }
+
+              api.section( module.control.section() ).expanded.bind(function(to) {
+                    //set module ready on section expansion
+                    if ( 'resolved' != module.isReady.state() ) {
+                          module.ready();
+                    }
+              });
+
+              module.isReady.then( function() {
+                    //specific update for the item preModel on social-icon change
+                    module.preItem.bind( function( to, from ) {
+                          if ( ! _.has(to, 'social-icon') )
+                            return;
+                          if ( _.isEqual( to['social-icon'], from['social-icon'] ) )
+                            return;
+                          module.updateItemModel( module.preItem, true );
+                    });
+              });
+      },//initialize
+
+
+      //ACTIONS ON ICON CHANGE
+      //Fired on 'social-icon:changed'
+      //Don't fire in pre item case
+      //@item_instance an be the preItem or an already created item
+      updateItemModel : function( item_instance, is_preItem ) {
+              var item = item_instance;
+              is_preItem = is_preItem || false;
+
+              //check if we are in the pre Item case => if so, the social-icon might be empty
+              if ( ! _.has( item(), 'social-icon') || _.isEmpty( item()['social-icon'] ) )
+                return;
+
+              var _new_model, _new_title, _new_color;
+
+              _new_model  = $.extend( true, {}, item() );//always safer to deep clone ( alternative to _.clone() ) => we don't know how nested this object might be in the future
+              _new_title  = this.getTitleFromIcon( _new_model['social-icon'] );
+              _new_color  = serverControlParams.social_el_params.defaultSocialColor;
+              if ( ! is_preItem && item.czr_Input.has( 'social-color' ) )
+                _new_color = item.czr_Input('social-color')();
+
+              //add text follow us... to the title
+              _new_title = [ serverControlParams.translatedStrings.followUs, _new_title].join(' ');
+
+              if ( is_preItem ) {
+                    _new_model = $.extend( _new_model, { title : _new_title, 'social-color' : _new_color } );
+                    item.set( _new_model );
+              } else {
+                    item.czr_Input('title').set( _new_title );
+                    //item.czr_Input('social-link').set( '' );
+                    if ( item.czr_Input('social-color') ) { //optional
+                      item.czr_Input('social-color').set( _new_color );
+                    }
+              }
+      },
+
+      /* Helpers */
+      getTitleFromIcon : function( icon ) {
+              return api.CZR_Helpers.capitalize( icon.replace('fa-', '').replace('envelope', 'email') );
+      },
+
+      getIconFromTitle : function( title ) {
+              return  'fa-' . title.toLowerCase().replace('envelope', 'email');
+      },
+
+
+
+
+
+
+
+      CZRSocialsInputMths : {
+              setupSelect : function() {
+                    var input        = this,
+                        item         = input.input_parent,
+                        module       = input.module,
+                        socialList   = module.social_icons,
+                        _model       = item(),
+                        //check if we are in the pre Item case => if so, the id is empty
+                        is_preItem   = _.isEmpty(_model.id);
+
+                    //=> add the select text in the pre Item case
+                    if ( is_preItem ) {
+                          socialList = _.union( [ serverControlParams.translatedStrings.selectSocialIcon ], socialList );
+                    }
+
+                    //generates the options
+                    _.each( socialList , function( icon_name, k ) {
+                          // in the pre Item case the first select element is the notice "Select a social icon"
+                          // doesn't need the fa-* class
+                          var _value = ( is_preItem && 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
+                              _attributes = {
+                                    value : _value,
+                                    html: module.getTitleFromIcon( icon_name )
+                              };
+                          if ( _value == _model['social-icon'] )
+                            $.extend( _attributes, { selected : "selected" } );
+
+                          $( 'select[data-type="social-icon"]', input.container ).append( $('<option>', _attributes) );
+                    });
+
+                    function addIcon( state ) {
+                          if (! state.id) { return state.text; }
+                          var $state = $(
+                            '<span class="fa ' + state.element.value.toLowerCase() + '">&nbsp;&nbsp;' + state.text + '</span>'
+                          );
+                          return $state;
+                    }
+
+                    //fire select2
+                    $( 'select[data-type="social-icon"]', input.container ).select2( {
+                            templateResult: addIcon,
+                            templateSelection: addIcon
+                    });
+            },
+
+            setupColorPicker : function( obj ) {
+                    var input      = this,
+                        item       = input.input_parent,
+                        module     = input.module,
+                        $el        = $( 'input[data-type="social-color"]', input.container );
+
+                    $el.iris( {
+                              palettes: true,
+                              hide:false,
+                              defaultColor : serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)',
+                              change : function( e, o ) {
+                                    //if the input val is not updated here, it's not detected right away.
+                                    //weird
+                                    //is there a "change complete" kind of event for iris ?
+                                    //hack to reset the color to default...@todo => use another color picker.
+                                    if ( _.has( o, 'color') && 16777215 == o.color._color )
+                                      $(this).val( serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)' );
+                                    else
+                                      $(this).val( o.color.toString() );
+
+                                    $(this).trigger('colorpickerchange').trigger('change');
+                              }
+                    });
+
+                    //when the picker opens, it might be below the visible viewport.
+                    //No built-in event available to react on this in the wpColorPicker unfortunately
+                    $el.closest('div').on('click keydown', function() {
+                          module._adjustScrollExpandedBlock( input.container );
+                    });
+            }
+
+      },//CZRSocialsInputMths
+
+
+
+
+
+
+
+
+
+      CZRSocialsItem : {
+              //Fired if the item has been instantiated
+              //The item.callbacks are declared.
+              ready : function() {
+                    var item = this;
+                    api.CZRItem.prototype.ready.call( item );
+
+                    //update the item model on social-icon change
+                    item.bind('social-icon:changed', function(){
+                          item.module.updateItemModel( item );
+                    });
+              },
+
+
+              _buildTitle : function( title, icon, color ) {
+                      var item = this,
+                          module     = item.module;
+
+                      title = title || ( 'string' === typeof(icon) ? api.CZR_Helpers.capitalize( icon.replace( 'fa-', '') ) : '' );
+                      title = api.CZR_Helpers.truncate(title, 20);
+                      icon = icon || 'fa-' + module.social_icons[0];
+                      color = color || serverControlParams.social_el_params.defaultSocialColor;
+
+                      return '<div><span class="fa ' + icon + '" style="color:' + color + '"></span> ' + title + '</div>';
+              },
+
+              //overrides the default parent method by a custom one
+              //at this stage, the model passed in the obj is up to date
+              writeItemViewTitle : function( model ) {
+                      var item = this,
+                          module     = item.module,
+                          _model = model || item(),
+                          _title = module.getTitleFromIcon( _model['social-icon'] );
+
+                      $( '.' + module.control.css_attr.item_title , item.container ).html(
+                        item._buildTitle( _title, _model['social-icon'], _model['social-color'] )
+                      );
+              }
+      },//CZRSocialsItem
+});//$.extend
+})( wp.customize , jQuery, _ );//extends api.CZRDynModule
 
 var CZRWidgetAreaModuleMths = CZRWidgetAreaModuleMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRWidgetAreaModuleMths, {
-  initialize: function( id, constructorOptions ) {
-          var module = this;
-
-          api.CZRDynModule.prototype.initialize.call( this, id, constructorOptions );
-
-          //extend the module with new template Selectors
-          $.extend( module, {
-                itemPreAddEl : 'czr-module-widgets-pre-add-view-content',
-                itemInputList : 'czr-module-widgets-item-input-list',
-                itemInputListReduced : 'czr-module-widgets-item-input-list-reduced',
-                ruItemPart : 'czr-module-widgets-ru-item-part'
-          } );
-
-          //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
-          module.inputConstructor = api.CZRInput.extend( module.CZRWZonesInputMths || {} );
-          //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
-          module.itemConstructor = api.CZRItem.extend( module.CZRWZonesItem || {} );
-
-          module.serverParams = serverControlParams.widget_area_el_params || {};
-
-          //add a shortcut to the server side json properties
-          module.contexts = _.has( module.serverParams , 'sidebar_contexts') ? module.serverParams.sidebar_contexts : {};
-
-          //context match map
-          module.context_match_map = {
-                  is_404 : '404',
-                  is_category : 'archive-category',
-                  is_home : 'home',
-                  is_page : 'page',
-                  is_search : 'search',
-                  is_single : 'single'
-          };
-
-
-          module.locations = _.has( module.serverParams , 'sidebar_locations') ? module.serverParams.sidebar_locations : {};
-
-          //declares a default model
-          module.defaultItemModel = {
-                  id : '',
-                  title : serverControlParams.translatedStrings.widgetZone,
-                  contexts : _.without( _.keys(module.contexts), '_all_' ),//the server list of contexts is an object, we only need the keys, whitout _all_
-                  locations : [ module.serverParams.defaultWidgetLocation ],
-                  description : ''
-          };
-
-          //overrides the default success message
-          this.itemAddedMessage = serverControlParams.translatedStrings.widgetZoneAdded;
-
-          //Observe and react to sidebar insights from the preview frame
-          // SIDEBAR INSIGHTS => stores and observes the sidebars and widgets settings sent by the preview */
-          if ( ! _.has( api, 'sidebar_insights' ) ) {
-                api.sidebar_insights = new api.Values();
-                api.sidebar_insights.create('candidates');//will store the sidebar candidates on preview refresh
-                api.sidebar_insights.create('actives');//will record the refreshed active list of active sidebars sent from the preview
-                api.sidebar_insights.create('inactives');
-                api.sidebar_insights.create('registered');
-                api.sidebar_insights.create('available_locations');
-          }
-
-
-          this.listenToSidebarInsights();
-
-          //React on 'houston-widget-settings'
-          //actives :  data.renderedSidebars,
-          // inactives :  _inactives,
-          // registered :  _registered,
-          // candidates :  _candidates,
-          // available_locations :  data.availableWidgetLocations//built server side
-          api.czr_widgetZoneSettings = api.czr_widgetZoneSettings || new api.Value();
-          api.czr_widgetZoneSettings.bind( function( updated_data_sent_from_preview , from ) {
-                  module.isReady.then( function() {
-                        _.each( updated_data_sent_from_preview, function( _data, _key ) {
-                              api.sidebar_insights( _key ).set( _data );
-                        });
-                  });
-          });
-
-
-
-
-          //AVAILABLE LOCATIONS FOR THE PRE MODEL
-          //1) add an observable value to module.preItem to handle the alert visibility
-          module.preItem_location_alert_view_state = new api.Value( 'closed');
-          //2) add state listeners
-          module.preItem_location_alert_view_state.callbacks.add( function( to, from ) {
-                    module._toggleLocationAlertExpansion( module.container, to );
-          });
-
-
-          //REACT ON ADD / REMOVE ITEMS
-          module.bind( 'item_added', function( model ) {
-                  module.addWidgetSidebar( model );
-          });
-
-          module.bind( 'pre_item_api_remove' , function(model) {
-                  module.removeWidgetSidebar( model );
-          });
-
-
-          //records the top margin value of the widgets panel on each expansion
-          var fixTopMargin = new api.Values();
-          fixTopMargin.create('fixed_for_current_session');
-          fixTopMargin.create('value');
-
-          api.section(module.serverParams.dynWidgetSection).fixTopMargin = fixTopMargin;
-          api.section(module.serverParams.dynWidgetSection).fixTopMargin('fixed_for_current_session').set(false);
-
-
-          //setup reactions on widget section expansion
-          //change the expanded behaviour for the widget zone section
-          //api.section(module.serverParams.dynWidgetSection).expanded.callbacks.add( function() { return module.widgetSectionReact.apply(module, arguments ); } );
-
-          //bind actions on widget panel expansion and widget zone section expansion
-          //Fire the module
-          api.panel('widgets').expanded.callbacks.add( function(to, from) {
-                module.widgetPanelReact();//setup some visual adjustments, must be ran each time panel is closed or expanded
-
-                //Fire the module if not done already
-                if ( 'resolved' == module.isReady.state() )
-                  return;
-                module.ready();
-          });
-  },//initialize
-
-
-
-
-  //When the control is embedded on the page, this method is fired in api.CZRBaseModuleControl:ready()
-  //=> right after the module is instantiated.
-  ready : function() {
-          var module = this;
-          api.CZRDynModule.prototype.ready.call( module );
-
-          //add state listener on pre Item view
-          module.preItemExpanded.callbacks.add( function( to, from ) {
-                if ( ! to )
-                  return;
-                //refresh the location list
-                module.preItem.czr_Input('locations')._setupLocationSelect( true );//true for refresh
-                //refresh the location alert message
-                module.preItem.czr_Input('locations').mayBeDisplayModelAlert();
-          });
-  },
-
-
-
-  //overrides parent method
-  //adds the default widget zones in the items
-  initializeModuleModel : function( constructorOptions ) {
-              var module = this, dfd = $.Deferred();
-              constructorOptions.items = _.union( _.has( module.serverParams, 'default_zones' ) ? module.serverParams.default_zones : [], constructorOptions.items );
-              return dfd.resolve( constructorOptions ).promise();
-  },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  CZRWZonesInputMths : {
-          ready : function() {
-                  var input = this;
-
-                  input.bind('locations:changed', function(){
-                      input.mayBeDisplayModelAlert();
-                  });
-
-                  api.CZRInput.prototype.ready.call( input);
-          },
-
-
-
-          //////////////////////////////////////////////////
-          ///SETUP SELECTS
-          //////////////////////////////////////////////////
-          //setup select on view_rendered|item_content_event_map
-          setupSelect : function() {
-                  var input      = this;
-                  if ( 'locations' == this.id )
-                    this._setupLocationSelect();
-                  if ( 'contexts' == this.id )
-                    this._setupContextSelect();
-
-          },
-
-          //helper
-          _setupContextSelect : function() {
-                  var input      = this,
-                      input_contexts = input(),
-                      item = input.input_parent,
-                      module     = input.module;
-
-                  //generates the contexts options
-                  _.each( module.contexts, function( title, key ) {
-                        var _attributes = {
-                              value : key,
-                              html: title
-                            };
-                        if ( key == input_contexts || _.contains( input_contexts, key ) )
-                          $.extend( _attributes, { selected : "selected" } );
-
-                        $( 'select[data-type="contexts"]', input.container ).append( $('<option>', _attributes) );
-                  });
-                  //fire select2
-                  $( 'select[data-type="contexts"]', input.container ).select2();
-          },
-
-
-          //helper
-          //the refresh param is a bool
-          _setupLocationSelect : function(refresh ) {
-                  var input      = this,
-                      input_locations = input(),
-                      item = input.input_parent,
-                      module     = input.module,
-                      available_locs = api.sidebar_insights('available_locations')();
-
-                  //generates the locations options
-                  //append them if not set yet
-                  if ( ! $( 'select[data-type="locations"]', input.container ).children().length ) {
-                        _.each( module.locations, function( title, key ) {
-                              var _attributes = {
-                                    value : key,
-                                    html: title
-                                  };
-
-                              if ( key == input_locations || _.contains( input_locations, key ) )
-                                $.extend( _attributes, { selected : "selected" } );
-
-                              $( 'select[data-type="locations"]', input.container ).append( $('<option>', _attributes) );
-                        });
-                  }//if
-
-                  function setAvailability( state ) {
-                        if (! state.id) { return state.text; }
-                        if (  _.contains(available_locs, state.element.value) ) { return state.text; }
-                        var $state = $(
-                          '<span class="czr-unavailable-location fa fa-ban" title="' + serverControlParams.translatedStrings.unavailableLocation + '">&nbsp;&nbsp;' + state.text + '</span>'
-                        );
-                        return $state;
-                  }
-
-                  if ( refresh ) {
-                        $( 'select[data-type="locations"]', input.container ).select2( 'destroy' );
-                  }
-
-                  //fire select2
-                  $( 'select[data-type="locations"]', input.container ).select2( {
-                    templateResult: setAvailability,
-                    templateSelection: setAvailability
-                  });
-          },
-
-          //fired on view event map : 'locations:changed'
-          //@param obj { dom_el: $() , model : {} )
-          mayBeDisplayModelAlert : function() {
-                  var input      = this,
-                      item = input.input_parent,
-                      module     = input.module;
-
-                  //check if we are in the pre Item case => if so, the locations might be empty
-                  if ( ! _.has( item(), 'locations') || _.isEmpty( item().locations ) )
-                    return;
-
-                  var _selected_locations = $('select[data-type="locations"]', input.container ).val(),
-                      available_locs = api.sidebar_insights('available_locations')(),
-                      _unavailable = _.filter( _selected_locations, function( loc ) {
-                        return ! _.contains(available_locs, loc);
+      initialize: function( id, constructorOptions ) {
+              var module = this;
+
+              api.CZRDynModule.prototype.initialize.call( this, id, constructorOptions );
+
+              //extend the module with new template Selectors
+              $.extend( module, {
+                    itemPreAddEl : 'czr-module-widgets-pre-add-view-content',
+                    itemInputList : 'czr-module-widgets-item-input-list',
+                    itemInputListReduced : 'czr-module-widgets-item-input-list-reduced',
+                    ruItemPart : 'czr-module-widgets-ru-item-part'
+              } );
+
+              //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
+              module.inputConstructor = api.CZRInput.extend( module.CZRWZonesInputMths || {} );
+              //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
+              module.itemConstructor = api.CZRItem.extend( module.CZRWZonesItem || {} );
+
+              module.serverParams = serverControlParams.widget_area_el_params || {};
+
+              //add a shortcut to the server side json properties
+              module.contexts = _.has( module.serverParams , 'sidebar_contexts') ? module.serverParams.sidebar_contexts : {};
+
+              //context match map
+              module.context_match_map = {
+                      is_404 : '404',
+                      is_category : 'archive-category',
+                      is_home : 'home',
+                      is_page : 'page',
+                      is_search : 'search',
+                      is_single : 'single'
+              };
+
+
+              module.locations = _.has( module.serverParams , 'sidebar_locations') ? module.serverParams.sidebar_locations : {};
+
+              //declares a default model
+              module.defaultItemModel = {
+                      id : '',
+                      title : serverControlParams.translatedStrings.widgetZone,
+                      contexts : _.without( _.keys(module.contexts), '_all_' ),//the server list of contexts is an object, we only need the keys, whitout _all_
+                      locations : [ module.serverParams.defaultWidgetLocation ],
+                      description : ''
+              };
+
+              //overrides the default success message
+              this.itemAddedMessage = serverControlParams.translatedStrings.widgetZoneAdded;
+
+              //Observe and react to sidebar insights from the preview frame
+              // SIDEBAR INSIGHTS => stores and observes the sidebars and widgets settings sent by the preview */
+              if ( ! _.has( api, 'sidebar_insights' ) ) {
+                    api.sidebar_insights = new api.Values();
+                    api.sidebar_insights.create('candidates');//will store the sidebar candidates on preview refresh
+                    api.sidebar_insights.create('actives');//will record the refreshed active list of active sidebars sent from the preview
+                    api.sidebar_insights.create('inactives');
+                    api.sidebar_insights.create('registered');
+                    api.sidebar_insights.create('available_locations');
+              }
+
+
+              this.listenToSidebarInsights();
+
+              //React on 'houston-widget-settings'
+              //actives :  data.renderedSidebars,
+              // inactives :  _inactives,
+              // registered :  _registered,
+              // candidates :  _candidates,
+              // available_locations :  data.availableWidgetLocations//built server side
+              api.czr_widgetZoneSettings = api.czr_widgetZoneSettings || new api.Value();
+              api.czr_widgetZoneSettings.bind( function( updated_data_sent_from_preview , from ) {
+                      module.isReady.then( function() {
+                            _.each( updated_data_sent_from_preview, function( _data, _key ) {
+                                  api.sidebar_insights( _key ).set( _data );
+                            });
                       });
-
-                  //check if we are in the pre Item case => if so, the id is empty
-                  if ( ! _.has( item(), 'id' ) || _.isEmpty( item().id ) ) {
-                        module.preItem_location_alert_view_state.set( ! _.isEmpty( _unavailable ) ? 'expanded' : 'closed' );
-                  } else {
-                        item.czr_itemLocationAlert.set( ! _.isEmpty( _unavailable ) ? 'expanded' : 'closed' );
-                  }
-          }
-  },//CZRWZonesInputMths
+              });
 
 
 
 
+              //AVAILABLE LOCATIONS FOR THE PRE MODEL
+              //1) add an observable value to module.preItem to handle the alert visibility
+              module.preItem_location_alert_view_state = new api.Value( 'closed');
+              //2) add state listeners
+              module.preItem_location_alert_view_state.callbacks.add( function( to, from ) {
+                        module._toggleLocationAlertExpansion( module.container, to );
+              });
+
+
+              //REACT ON ADD / REMOVE ITEMS
+              module.bind( 'item_added', function( model ) {
+                      module.addWidgetSidebar( model );
+              });
+
+              module.bind( 'pre_item_api_remove' , function(model) {
+                      module.removeWidgetSidebar( model );
+              });
+
+
+              //records the top margin value of the widgets panel on each expansion
+              var fixTopMargin = new api.Values();
+              fixTopMargin.create('fixed_for_current_session');
+              fixTopMargin.create('value');
+
+              api.section(module.serverParams.dynWidgetSection).fixTopMargin = fixTopMargin;
+              api.section(module.serverParams.dynWidgetSection).fixTopMargin('fixed_for_current_session').set(false);
+
+
+              //setup reactions on widget section expansion
+              //change the expanded behaviour for the widget zone section
+              //api.section(module.serverParams.dynWidgetSection).expanded.callbacks.add( function() { return module.widgetSectionReact.apply(module, arguments ); } );
+
+              //bind actions on widget panel expansion and widget zone section expansion
+              //Fire the module
+              api.panel('widgets').expanded.callbacks.add( function(to, from) {
+                    module.widgetPanelReact();//setup some visual adjustments, must be ran each time panel is closed or expanded
+
+                    //Fire the module if not done already
+                    if ( 'resolved' == module.isReady.state() )
+                      return;
+                    module.ready();
+              });
+      },//initialize
+
+
+
+
+      //When the control is embedded on the page, this method is fired in api.CZRBaseModuleControl:ready()
+      //=> right after the module is instantiated.
+      ready : function() {
+              var module = this;
+              api.CZRDynModule.prototype.ready.call( module );
+
+              //add state listener on pre Item view
+              module.preItemExpanded.callbacks.add( function( to, from ) {
+                    if ( ! to )
+                      return;
+                    //refresh the location list
+                    module.preItem.czr_Input('locations')._setupLocationSelect( true );//true for refresh
+                    //refresh the location alert message
+                    module.preItem.czr_Input('locations').mayBeDisplayModelAlert();
+              });
+      },
+
+
+
+      //overrides parent method
+      //adds the default widget zones in the items
+      initializeModuleModel : function( constructorOptions ) {
+                  var module = this, dfd = $.Deferred();
+                  constructorOptions.items = _.union( _.has( module.serverParams, 'default_zones' ) ? module.serverParams.default_zones : [], constructorOptions.items );
+                  return dfd.resolve( constructorOptions ).promise();
+      },
 
 
 
@@ -11622,222 +11506,358 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
 
-  CZRWZonesItem : {
-          initialize : function( id, options ) {
-                  var item = this,
-                      module = item.module;
-
-                  //Add some observable values for this item
-                  item.czr_itemLocationAlert = new api.Value();
-
-                  api.CZRItem.prototype.initialize.call( item, null, options );
-          },
 
 
 
-          //extend parent setupview
-          itemWrapperViewSetup : function() {
-                  var item = this,
-                      module = item.module;
-
-                  api.CZRItem.prototype.itemWrapperViewSetup.call(item);
-
-                  /// ALERT FOR NOT AVAILABLE LOCATION
-                  item.czr_itemLocationAlert.set('closed');
-
-                  //add a state listener on expansion change
-                  item.czr_itemLocationAlert.callbacks.add( function( to, from ) {
-                        module._toggleLocationAlertExpansion( item.container , to );
-                  });
-
-                  //update item title
-                  item.writeSubtitleInfos(item());
-
-                  //this is fired just after the itemWrapperViewSetupApiListeners
-                  //=> add a callback to refresh the availability status of the locations in the select location picker
-                  //add a state listener on expansion change
-                  item.viewState.callbacks.add( function( to, from ) {
-                        if ( -1 == to.indexOf('expanded') )//can take the expanded_noscroll value !
-                          return;
-                        //don't try to invoke the input instances before the content is actually rendered
-                        //=> there might be cases when the content rendering is debounced...
-                        item.bind('contentRendered', function() {
-                              //refresh the location list
-                              item.czr_Input('locations')._setupLocationSelect( true );//true for refresh
-                              //refresh the location alert message
-                              item.czr_Input('locations').mayBeDisplayModelAlert();
-                        });
-
-                  });
-          },
 
 
-          //extend parent listener
-          itemReact : function(to, from) {
-                  var item = this;
-                  api.CZRItem.prototype.itemReact.call(item, to, from);
+      CZRWZonesInputMths : {
+            ready : function() {
+                    var input = this;
 
-                  item.writeSubtitleInfos(to);
-                  item.updateSectionTitle(to).setModelUpdateTimer();
-          },
+                    input.bind('locations:changed', function(){
+                        input.mayBeDisplayModelAlert();
+                    });
+
+                    api.CZRInput.prototype.ready.call( input);
+            },
 
 
 
-          //Fired in setupItemListeners. Reacts to model change.
-          //Write html informations under the title : location(s) and context(s)
-          writeSubtitleInfos : function(model) {
-                  var item = this,
-                      module = item.module,
-                      _model = _.clone( model || item() ),
-                      _locations = [],
-                      _contexts = [],
-                      _html = '';
+            //////////////////////////////////////////////////
+            ///SETUP SELECTS
+            //////////////////////////////////////////////////
+            //setup select on view_rendered|item_content_event_map
+            setupSelect : function() {
+                    var input      = this;
+                    if ( 'locations' == this.id )
+                      this._setupLocationSelect();
+                    if ( 'contexts' == this.id )
+                      this._setupContextSelect();
 
-                  if ( ! item.container.length )
-                    return this;
+            },
 
-                  //generate the locations and the contexts text from the json data if exists
-                  _model.locations =_.isString(_model.locations) ? [_model.locations] : _model.locations;
-                  _.each( _model.locations, function( loc ) {
-                        if ( _.has( module.locations , loc ) )
-                          _locations.push(module.locations[loc]);
-                        else
-                          _locations.push(loc);
+            //helper
+            _setupContextSelect : function() {
+                    var input      = this,
+                        input_contexts = input(),
+                        item = input.input_parent,
+                        module     = input.module;
+
+                    //generates the contexts options
+                    _.each( module.contexts, function( title, key ) {
+                          var _attributes = {
+                                value : key,
+                                html: title
+                              };
+                          if ( key == input_contexts || _.contains( input_contexts, key ) )
+                            $.extend( _attributes, { selected : "selected" } );
+
+                          $( 'select[data-type="contexts"]', input.container ).append( $('<option>', _attributes) );
+                    });
+                    //fire select2
+                    $( 'select[data-type="contexts"]', input.container ).select2();
+            },
+
+
+            //helper
+            //the refresh param is a bool
+            _setupLocationSelect : function(refresh ) {
+                    var input      = this,
+                        input_locations = input(),
+                        item = input.input_parent,
+                        module     = input.module,
+                        available_locs = api.sidebar_insights('available_locations')();
+
+                    //generates the locations options
+                    //append them if not set yet
+                    if ( ! $( 'select[data-type="locations"]', input.container ).children().length ) {
+                          _.each( module.locations, function( title, key ) {
+                                var _attributes = {
+                                      value : key,
+                                      html: title
+                                    };
+
+                                if ( key == input_locations || _.contains( input_locations, key ) )
+                                  $.extend( _attributes, { selected : "selected" } );
+
+                                $( 'select[data-type="locations"]', input.container ).append( $('<option>', _attributes) );
+                          });
+                    }//if
+
+                    function setAvailability( state ) {
+                          if (! state.id) { return state.text; }
+                          if (  _.contains(available_locs, state.element.value) ) { return state.text; }
+                          var $state = $(
+                            '<span class="czr-unavailable-location fa fa-ban" title="' + serverControlParams.translatedStrings.unavailableLocation + '">&nbsp;&nbsp;' + state.text + '</span>'
+                          );
+                          return $state;
                     }
-                  );
 
-                  //build the context list
-                  _model.contexts =_.isString(_model.contexts) ? [_model.contexts] : _model.contexts;
+                    if ( refresh ) {
+                          $( 'select[data-type="locations"]', input.container ).select2( 'destroy' );
+                    }
 
-                  //all contexts cases ?
-                  if ( item._hasModelAllContexts( model ) ) {
-                    _contexts.push(module.contexts._all_);
-                  } else {
-                    _.each( _model.contexts, function( con ) {
-                            if ( _.has( module.contexts , con ) )
-                              _contexts.push(module.contexts[con]);
-                            else
-                              _contexts.push(con);
-                          }
-                    );
-                  }
+                    //fire select2
+                    $( 'select[data-type="locations"]', input.container ).select2( {
+                      templateResult: setAvailability,
+                      templateSelection: setAvailability
+                    });
+            },
 
-                  //Translated strings
-                  var _locationText = serverControlParams.translatedStrings.locations,
-                      _contextText = serverControlParams.translatedStrings.contexts,
-                      _notsetText = serverControlParams.translatedStrings.notset;
+            //fired on view event map : 'locations:changed'
+            //@param obj { dom_el: $() , model : {} )
+            mayBeDisplayModelAlert : function() {
+                    var input      = this,
+                        item = input.input_parent,
+                        module     = input.module;
 
-                  _locations = _.isEmpty( _locations ) ? '<span style="font-weight: bold;">' + _notsetText + '</span>' : _locations.join(', ');
-                  _contexts = _.isEmpty( _contexts ) ? '<span style="font-weight: bold;">' + _notsetText + '</span>' : _contexts.join(', ');
+                    //check if we are in the pre Item case => if so, the locations might be empty
+                    if ( ! _.has( item(), 'locations') || _.isEmpty( item().locations ) )
+                      return;
 
-                  //write the description if builtin
-                  //else, write the dynamic location
-                  // if ( _.has(_model, 'description') && _.has(_model, 'is_builtin') )
-                  //   _html =  _model.description + ' <strong>|</strong> <u>Contexts</u> : ' + _contexts;
-                  // else
-
-                  _html = '<u>' + _locationText + '</u> : ' + _locations + ' <strong>|</strong> <u>' + _contextText + '</u> : ' + _contexts;
-
-                  if ( ! $('.czr-zone-infos', item.container ).length ) {
-                        var $_zone_infos = $('<div/>', {
-                          class : [ 'czr-zone-infos' , module.control.css_attr.item_sort_handle ].join(' '),
-                          html : _html
+                    var _selected_locations = $('select[data-type="locations"]', input.container ).val(),
+                        available_locs = api.sidebar_insights('available_locations')(),
+                        _unavailable = _.filter( _selected_locations, function( loc ) {
+                          return ! _.contains(available_locs, loc);
                         });
-                        $( '.' + module.control.css_attr.item_btns, item.container ).after($_zone_infos);
-                  } else {
-                        $('.czr-zone-infos', item.container ).html(_html);
-                  }
 
-                  return this;
-          },//writeSubtitleInfos
+                    //check if we are in the pre Item case => if so, the id is empty
+                    if ( ! _.has( item(), 'id' ) || _.isEmpty( item().id ) ) {
+                          module.preItem_location_alert_view_state.set( ! _.isEmpty( _unavailable ) ? 'expanded' : 'closed' );
+                    } else {
+                          item.czr_itemLocationAlert.set( ! _.isEmpty( _unavailable ) ? 'expanded' : 'closed' );
+                    }
+            }
+      },//CZRWZonesInputMths
 
 
 
-          ////Fired in setupItemListeners
-          updateSectionTitle : function(model) {
-                  var _sidebar_id = 'sidebar-widgets-' + model.id,
-                      _new_title  = model.title;
-                  //does this section exists ?
-                  if ( ! api.section.has(_sidebar_id) )
+
+
+
+
+
+
+
+
+
+
+
+
+      CZRWZonesItem : {
+            initialize : function( id, options ) {
+                    var item = this,
+                        module = item.module;
+
+                    //Add some observable values for this item
+                    item.czr_itemLocationAlert = new api.Value();
+
+                    api.CZRItem.prototype.initialize.call( item, null, options );
+            },
+
+
+
+            //extend parent setupview
+            itemWrapperViewSetup : function() {
+                    var item = this,
+                        module = item.module;
+
+                    api.CZRItem.prototype.itemWrapperViewSetup.call(item);
+
+                    /// ALERT FOR NOT AVAILABLE LOCATION
+                    item.czr_itemLocationAlert.set('closed');
+
+                    //add a state listener on expansion change
+                    item.czr_itemLocationAlert.callbacks.add( function( to, from ) {
+                          module._toggleLocationAlertExpansion( item.container , to );
+                    });
+
+                    //update item title
+                    item.writeSubtitleInfos(item());
+
+                    //this is fired just after the itemWrapperViewSetupApiListeners
+                    //=> add a callback to refresh the availability status of the locations in the select location picker
+                    //add a state listener on expansion change
+                    item.viewState.callbacks.add( function( to, from ) {
+                          if ( -1 == to.indexOf('expanded') )//can take the expanded_noscroll value !
+                            return;
+                          //don't try to invoke the input instances before the content is actually rendered
+                          //=> there might be cases when the content rendering is debounced...
+                          item.bind('contentRendered', function() {
+                                //refresh the location list
+                                item.czr_Input('locations')._setupLocationSelect( true );//true for refresh
+                                //refresh the location alert message
+                                item.czr_Input('locations').mayBeDisplayModelAlert();
+                          });
+
+                    });
+            },
+
+
+            //extend parent listener
+            itemReact : function(to, from) {
+                    var item = this;
+                    api.CZRItem.prototype.itemReact.call(item, to, from);
+
+                    item.writeSubtitleInfos(to);
+                    item.updateSectionTitle(to).setModelUpdateTimer();
+            },
+
+
+
+            //Fired in setupItemListeners. Reacts to model change.
+            //Write html informations under the title : location(s) and context(s)
+            writeSubtitleInfos : function(model) {
+                    var item = this,
+                        module = item.module,
+                        _model = _.clone( model || item() ),
+                        _locations = [],
+                        _contexts = [],
+                        _html = '';
+
+                    if ( ! item.container.length )
+                      return this;
+
+                    //generate the locations and the contexts text from the json data if exists
+                    _model.locations =_.isString(_model.locations) ? [_model.locations] : _model.locations;
+                    _.each( _model.locations, function( loc ) {
+                          if ( _.has( module.locations , loc ) )
+                            _locations.push(module.locations[loc]);
+                          else
+                            _locations.push(loc);
+                      }
+                    );
+
+                    //build the context list
+                    _model.contexts =_.isString(_model.contexts) ? [_model.contexts] : _model.contexts;
+
+                    //all contexts cases ?
+                    if ( item._hasModelAllContexts( model ) ) {
+                      _contexts.push(module.contexts._all_);
+                    } else {
+                      _.each( _model.contexts, function( con ) {
+                              if ( _.has( module.contexts , con ) )
+                                _contexts.push(module.contexts[con]);
+                              else
+                                _contexts.push(con);
+                            }
+                      );
+                    }
+
+                    //Translated strings
+                    var _locationText = serverControlParams.translatedStrings.locations,
+                        _contextText = serverControlParams.translatedStrings.contexts,
+                        _notsetText = serverControlParams.translatedStrings.notset;
+
+                    _locations = _.isEmpty( _locations ) ? '<span style="font-weight: bold;">' + _notsetText + '</span>' : _locations.join(', ');
+                    _contexts = _.isEmpty( _contexts ) ? '<span style="font-weight: bold;">' + _notsetText + '</span>' : _contexts.join(', ');
+
+                    //write the description if builtin
+                    //else, write the dynamic location
+                    // if ( _.has(_model, 'description') && _.has(_model, 'is_builtin') )
+                    //   _html =  _model.description + ' <strong>|</strong> <u>Contexts</u> : ' + _contexts;
+                    // else
+
+                    _html = '<u>' + _locationText + '</u> : ' + _locations + ' <strong>|</strong> <u>' + _contextText + '</u> : ' + _contexts;
+
+                    if ( ! $('.czr-zone-infos', item.container ).length ) {
+                          var $_zone_infos = $('<div/>', {
+                            class : [ 'czr-zone-infos' , module.control.css_attr.item_sort_handle ].join(' '),
+                            html : _html
+                          });
+                          $( '.' + module.control.css_attr.item_btns, item.container ).after($_zone_infos);
+                    } else {
+                          $('.czr-zone-infos', item.container ).html(_html);
+                    }
+
                     return this;
+            },//writeSubtitleInfos
 
-                  //update the section title
-                  $('.accordion-section-title', api.section(_sidebar_id).container ).text(_new_title);
 
-                  //update the top title ( visible when inside the expanded section )
-                  $('.customize-section-title h3', api.section(_sidebar_id).container ).html(
-                    '<span class="customize-action">' + api.section(_sidebar_id).params.customizeAction + '</span>' + _new_title
-                  );
-                  // $('.customize-section-title h3', api.section(_sidebar_id).container )
-                  //   .append('<span>', {
-                  //       class: 'customize-section-back',
-                  //       html: api.section(_sidebar_id).params.customizeAction
-                  //     } )
-                  //   .append(_new_title);
 
-                  //remove and re-instanciate
-                  //=> works for the section but the controls are not activated anymore.
-                  //Should be easy to fix but useless to go further here. Jquery does the job.
-                  // var _params = _.clone( api.section(_sidebar_id).params );
-                  // _params.title = _new_title;
-                  // api.section(_sidebar_id).container.remove();
-                  // api.section.remove(_sidebar_id);
-                  // api.section.add( _sidebar_id, new api.sectionConstructor[_params.type]( _params.id ,{ params : _params } ) );
-                  return this;
-          },
+            ////Fired in setupItemListeners
+            updateSectionTitle : function(model) {
+                    var _sidebar_id = 'sidebar-widgets-' + model.id,
+                        _new_title  = model.title;
+                    //does this section exists ?
+                    if ( ! api.section.has(_sidebar_id) )
+                      return this;
 
+                    //update the section title
+                    $('.accordion-section-title', api.section(_sidebar_id).container ).text(_new_title);
 
-          //fired on model_update
-          //Don't hammer the preview with too many refreshs
-          //2 seconds delay
-          setModelUpdateTimer : function() {
-                  var item = this,
-                      module = item.module;
+                    //update the top title ( visible when inside the expanded section )
+                    $('.customize-section-title h3', api.section(_sidebar_id).container ).html(
+                      '<span class="customize-action">' + api.section(_sidebar_id).params.customizeAction + '</span>' + _new_title
+                    );
+                    // $('.customize-section-title h3', api.section(_sidebar_id).container )
+                    //   .append('<span>', {
+                    //       class: 'customize-section-back',
+                    //       html: api.section(_sidebar_id).params.customizeAction
+                    //     } )
+                    //   .append(_new_title);
 
-                  clearTimeout( $.data(this, 'modelUpdateTimer') );
-                  $.data(
-                      this,
-                      'modelUpdateTimer',
-                      setTimeout( function() {
-                          //refresh preview
-                          module.control.refreshPreview();
-                      } , 1000)
-                  );//$.data
-          },
+                    //remove and re-instanciate
+                    //=> works for the section but the controls are not activated anymore.
+                    //Should be easy to fix but useless to go further here. Jquery does the job.
+                    // var _params = _.clone( api.section(_sidebar_id).params );
+                    // _params.title = _new_title;
+                    // api.section(_sidebar_id).container.remove();
+                    // api.section.remove(_sidebar_id);
+                    // api.section.add( _sidebar_id, new api.sectionConstructor[_params.type]( _params.id ,{ params : _params } ) );
+                    return this;
+            },
 
 
-          //@return bool
-          //takes the model unique id
-          _hasModelAllContexts : function( model ) {
-                  var item = this,
-                      module = item.module,
-                      moduleContexts = _.keys(module.contexts);
+            //fired on model_update
+            //Don't hammer the preview with too many refreshs
+            //2 seconds delay
+            setModelUpdateTimer : function() {
+                    var item = this,
+                        module = item.module;
 
-                  model = model || this();
+                    clearTimeout( $.data(this, 'modelUpdateTimer') );
+                    $.data(
+                        this,
+                        'modelUpdateTimer',
+                        setTimeout( function() {
+                            //refresh preview
+                            module.control.refreshPreview();
+                        } , 1000)
+                    );//$.data
+            },
 
-                  if ( ! _.has(model, 'contexts') )
-                    return;
 
-                  if ( _.contains( model.contexts, '_all_') )
-                    return true;
+            //@return bool
+            //takes the model unique id
+            _hasModelAllContexts : function( model ) {
+                    var item = this,
+                        module = item.module,
+                        moduleContexts = _.keys(module.contexts);
 
-                  //case when model does not have _all_ but all the others
-                  return _.isEmpty( _.difference( _.without(moduleContexts, '_all_') , model.contexts ) );
-          },
+                    model = model || this();
 
-          //@param contexts = array of contexts
-          //api.czr_wpQueryInfos is refreshed on each preview refresh
-          _getMatchingContexts : function( defaults ) {
-                  var module = this,
-                      _current = api.czr_wpQueryInfos().conditional_tags || {},
-                      _matched = _.filter( module.context_match_map, function( hu, wp ) { return true === _current[wp]; } );
+                    if ( ! _.has(model, 'contexts') )
+                      return;
 
-                  return _.isEmpty( _matched ) ? defaults : _matched;
-          }
-  },//CZRWZonesItem
+                    if ( _.contains( model.contexts, '_all_') )
+                      return true;
 
+                    //case when model does not have _all_ but all the others
+                    return _.isEmpty( _.difference( _.without(moduleContexts, '_all_') , model.contexts ) );
+            },
 
+            //@param contexts = array of contexts
+            //api.czr_wpQueryInfos is refreshed on each preview refresh
+            _getMatchingContexts : function( defaults ) {
+                    var module = this,
+                        _current = api.czr_wpQueryInfos().conditional_tags || {},
+                        _matched = _.filter( module.context_match_map, function( hu, wp ) { return true === _current[wp]; } );
 
+                    return _.isEmpty( _matched ) ? defaults : _matched;
+            }
+      },//CZRWZonesItem
 
 
 
@@ -11849,45 +11869,45 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
 
-  //DEPRECATED : THE CONTROLS TO SYNCHRONIZE HAVE BEEN REMOVED
 
-  //fired on model_added_by_user and from the timer method
-  //1) model_added, before renderItemWrapper action
-  //    when a new model is manually added ( isTrigger is undefined )
-  //    => refresh the select options of the other controls using this collection
-  //2) model_updated, before updateCollection
-  // addControlOptions : function(obj) {
-  //   var _controls = _.where( api.settings.controls, {section:"sidebars_select_sec"});
-  //   _.map( _controls, function( _control ) {
-  //       var $_select = api.control( _control.settings.default ).container.find('select');
 
-  //       //if this option has already been added, simply updates its attributes
-  //       if ( 1 === $_select.find('option[value="' + obj.model.id + '"]').length ) {
-  //         $_select.find('option[value="' + obj.model.id + '"]').html(obj.model.title);
-  //         $_select.selecter("destroy").selecter();
-  //       } else {
-  //         $_select.append( $('<option>', {value: obj.model.id, html:obj.model.title } ) ).selecter("destroy").selecter();
-  //       }
-  //   });//map
-  // },
 
-  //fired on model_removed
-  // removeControlOptions : function(obj) {
-  //   var _controls = _.where( api.settings.controls, {section:"sidebars_select_sec"});
+      //DEPRECATED : THE CONTROLS TO SYNCHRONIZE HAVE BEEN REMOVED
 
-  //   _.map( _controls, function( _control ) {
-  //       var $_select = api.control( _control.settings.default ).container.find('select');
+      //fired on model_added_by_user and from the timer method
+      //1) model_added, before renderItemWrapper action
+      //    when a new model is manually added ( isTrigger is undefined )
+      //    => refresh the select options of the other controls using this collection
+      //2) model_updated, before updateCollection
+      // addControlOptions : function(obj) {
+      //   var _controls = _.where( api.settings.controls, {section:"sidebars_select_sec"});
+      //   _.map( _controls, function( _control ) {
+      //       var $_select = api.control( _control.settings.default ).container.find('select');
 
-  //       if ( ! $_select.find('option[value="' + obj.model.id + '"]').length )
-  //         return;
+      //       //if this option has already been added, simply updates its attributes
+      //       if ( 1 === $_select.find('option[value="' + obj.model.id + '"]').length ) {
+      //         $_select.find('option[value="' + obj.model.id + '"]').html(obj.model.title);
+      //         $_select.selecter("destroy").selecter();
+      //       } else {
+      //         $_select.append( $('<option>', {value: obj.model.id, html:obj.model.title } ) ).selecter("destroy").selecter();
+      //       }
+      //   });//map
+      // },
 
-  //       $( 'option[value="' + obj.model.id +'"]', $_select).remove();
-  //       $_select.selecter("destroy").selecter();
-  //   });//map
-  // },
+      //fired on model_removed
+      // removeControlOptions : function(obj) {
+      //   var _controls = _.where( api.settings.controls, {section:"sidebars_select_sec"});
 
+      //   _.map( _controls, function( _control ) {
+      //       var $_select = api.control( _control.settings.default ).container.find('select');
 
+      //       if ( ! $_select.find('option[value="' + obj.model.id + '"]').length )
+      //         return;
 
+      //       $( 'option[value="' + obj.model.id +'"]', $_select).remove();
+      //       $_select.selecter("destroy").selecter();
+      //   });//map
+      // },
 
 
 
@@ -11897,471 +11917,468 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
 
-  /////////////////////////////////////////
-  /// ADD / REMOVE WIDGET ZONES
-  ////////////////////////////////////////
-  //fired on model_added_by_user
-  //
-  //can also be called statically when a dynamic sidebar is added in the preview
-  //in this case the parameter are the sidebar data with id and name
-  addWidgetSidebar : function( model, sidebar_data ) {
-          if ( ! _.isObject(model) && _.isEmpty(sidebar_data) ) {
-            throw new Error('No valid input were provided to add a new Widget Zone.');
-          }
 
 
-          //ADD the new sidebar to the existing collection
-          //Clone the serverControlParams.defaultWidgetSidebar sidebar
-          var module = this,
-              _model        = ! _.isEmpty(model) ? _.clone(model) : sidebar_data,
-              _new_sidebar  = _.isEmpty(model) ? sidebar_data : $.extend(
-                _.clone( _.findWhere( api.Widgets.data.registeredSidebars, { id: module.serverParams.defaultWidgetSidebar } ) ),
-                {
-                  name : _model.title,
-                  id : _model.id
-                }
-              );
 
-          //Add it to the backbone collection
-          api.Widgets.registeredSidebars.add( _new_sidebar );
+      /////////////////////////////////////////
+      /// ADD / REMOVE WIDGET ZONES
+      ////////////////////////////////////////
+      //fired on model_added_by_user
+      //
+      //can also be called statically when a dynamic sidebar is added in the preview
+      //in this case the parameter are the sidebar data with id and name
+      addWidgetSidebar : function( model, sidebar_data ) {
+            if ( ! _.isObject(model) && _.isEmpty(sidebar_data) ) {
+                  throw new Error('No valid input were provided to add a new Widget Zone.');
+            }
 
-          //test if added:
-          //api.Widgets.registeredSidebars('czr_sidebars_8');
 
-
-          //ADD the sidebar section
-          var _params = $.extend(
-                  _.clone( api.section( "sidebar-widgets-" + module.serverParams.defaultWidgetSidebar ).params ),
-                  {
-                    id : "sidebar-widgets-" + _model.id,
-                    instanceNumber: _.max(api.settings.sections, function(sec){ return sec.instanceNumber; }).instanceNumber + 1,
-                    sidebarId: _new_sidebar.id,
-                    title: _new_sidebar.name,
-                    description : 'undefined' != typeof(sidebar_data) ? sidebar_data.description : api.section( "sidebar-widgets-" + module.serverParams.defaultWidgetSidebar ).params.description,
-                    //always set the new priority to the maximum + 1 ( module.serverParams.dynWidgetSection is excluded from this calculation because it must always be at the bottom )
-                    priority: _.max( _.omit( api.settings.sections, module.serverParams.dynWidgetSection), function(sec){ return sec.instanceNumber; }).priority + 1,
-                  }
-          );
-
-          api.section.add( _params.id, new api.sectionConstructor[ _params.type ]( _params.id ,{ params : _params } ) );
-
-          //add it to the static collection of settings
-          api.settings.sections[ _params.id ] = _params.id;
-
-          //ADD A SETTING
-          //Clone the module.serverParams.defaultWidgetSidebar sidebar widget area setting
-          var _new_set_id = 'sidebars_widgets['+_model.id+']',
-              _new_set    = $.extend(
-                _.clone( api.settings.settings['sidebars_widgets[' + module.serverParams.defaultWidgetSidebar + ']'] ),
-                {
-                  value:[]
-                }
-              );
-
-          //add it to the static collection of settings
-          api.settings.settings[ _new_set_id ] = _new_set;
-
-          //instanciate it
-          api.create( _new_set_id, _new_set_id, _new_set.value, {
-                  transport: _new_set.transport,
-                  previewer: api.previewer,
-                  dirty: false
-          } );
-
-
-
-          //ADD A CONTROL
-          var _cloned_control = $.extend(
-                    _.clone( api.settings.controls['sidebars_widgets[' + module.serverParams.defaultWidgetSidebar + ']'] ),
-                    {
-                      settings : { default : _new_set_id }
-                }),
-              _new_control = {};
-
-
-          //replace  serverControlParams.defaultWidgetSidebar  by the new sidebar id
-          _.each( _cloned_control, function( param, key ) {
-                  if ( 'string' == typeof(param) ) {
-                    param = param.replace( module.serverParams.defaultWidgetSidebar , _model.id );
-                  }
-                  _new_control[key] = param;
-          });
-
-          //set the instance number (no sure if needed)
-          _new_control.instanceNumber = _.max(api.settings.controls, function(con){ return con.instanceNumber; }).instanceNumber + 1;
-
-          //add it to the static collection of controls
-          api.settings.controls[_new_set_id] = _new_control;
-
-          //instanciate it
-          api.control.add( _new_set_id, new api.controlConstructor[ _new_control.type ]( _new_set_id, {
-                  params: _new_control,
-                  previewer: api.previewer
-          } ) );
-
-
-          //say it to the control container
-          //only if we are in an instanciated object => because this method can be accessed statically
-          if ( _.has(this, 'container') )
-            this.container.trigger( 'widget_zone_created', { model : _model, section_id : "sidebar-widgets-" + _model.id , setting_id : _new_set_id });
-
-  },//addWidgetSidebar
-
-
-  //fired on "after_modelRemoved"
-  removeWidgetSidebar : function( model ) {
-          var module = this;
-          if ( ! _.isObject(model) || _.isEmpty(model) ) {
-            throw new Error('No valid data were provided to remove a Widget Zone.');
-          }
-
-          //Remove this sidebar from the backbone collection
-          api.Widgets.registeredSidebars.remove( model.id );
-
-          //remove the section from the api values and the DOM if exists
-          if ( api.section.has("sidebar-widgets-" + model.id) ) {
-                  //Remove the section container from the DOM
-                  api.section("sidebar-widgets-" + model.id).container.remove();
-                  //Remove the sidebar section from the api
-                  api.section.remove( "sidebar-widgets-" + model.id );
-                  //Remove this section from the static collection
-                  delete api.settings.sections[ "sidebar-widgets-" + model.id ];
-          }
-
-          //remove the setting from the api if exists
-          if ( api.has('sidebars_widgets['+model.id+']') ) {
-                  //Remove this setting from the api
-                  api.remove( 'sidebars_widgets['+model.id+']' );
-                  //Remove this setting from the static collection
-                  delete api.settings.settings['sidebars_widgets['+model.id+']'];
-          }
-
-          //remove the widget control of this sidebar from the api and the DOM if exists
-          if ( api.control.has('sidebars_widgets['+model.id+']') ) {
-                  //Remove the control container from the DOM
-                  api.control( 'sidebars_widgets['+model.id+']' ).container.remove();
-                  //Remove this control from the api
-                  api.control.remove( 'sidebars_widgets['+model.id+']' );
-                  //Remove it to the static collection of controls
-                  delete api.settings.controls['sidebars_widgets['+model.id+']'];
-          }
-
-          //refresh
-          var _refresh = function() {
-            api.previewer.refresh();
-          };
-          _refresh = _.debounce( _refresh, 500 );
-          $.when( _refresh() ).done( function() {
-                //say it
-                module.trigger( 'widget_zone_removed',
+            //ADD the new sidebar to the existing collection
+            //Clone the serverControlParams.defaultWidgetSidebar sidebar
+            var module = this,
+                _model        = ! _.isEmpty(model) ? _.clone(model) : sidebar_data,
+                _new_sidebar  = _.isEmpty(model) ? sidebar_data : $.extend(
+                      _.clone( _.findWhere( api.Widgets.data.registeredSidebars, { id: module.serverParams.defaultWidgetSidebar } ) ),
                       {
-                            model : model,
-                            section_id : "sidebar-widgets-" + model.id ,
-                            setting_id : 'sidebars_widgets['+model.id+']'
+                            name : _model.title,
+                            id : _model.id
                       }
                 );
-          });
+
+            //Add it to the backbone collection
+            api.Widgets.registeredSidebars.add( _new_sidebar );
+
+            //test if added:
+            //api.Widgets.registeredSidebars('czr_sidebars_8');
 
 
-  },
+            //ADD the sidebar section
+            var _params = $.extend(
+                    _.clone( api.section( "sidebar-widgets-" + module.serverParams.defaultWidgetSidebar ).params ),
+                    {
+                          id : "sidebar-widgets-" + _model.id,
+                          instanceNumber: _.max(api.settings.sections, function(sec){ return sec.instanceNumber; }).instanceNumber + 1,
+                          sidebarId: _new_sidebar.id,
+                          title: _new_sidebar.name,
+                          description : 'undefined' != typeof(sidebar_data) ? sidebar_data.description : api.section( "sidebar-widgets-" + module.serverParams.defaultWidgetSidebar ).params.description,
+                          //always set the new priority to the maximum + 1 ( module.serverParams.dynWidgetSection is excluded from this calculation because it must always be at the bottom )
+                          priority: _.max( _.omit( api.settings.sections, module.serverParams.dynWidgetSection), function(sec){ return sec.instanceNumber; }).priority + 1,
+                    }
+            );
+
+            api.section.add( _params.id, new api.sectionConstructor[ _params.type ]( _params.id ,{ params : _params } ) );
+
+            //add it to the static collection of settings
+            api.settings.sections[ _params.id ] = _params.id;
+
+            //ADD A SETTING
+            //Clone the module.serverParams.defaultWidgetSidebar sidebar widget area setting
+            var _new_set_id = 'sidebars_widgets['+_model.id+']',
+                _new_set    = $.extend(
+                      _.clone( api.settings.settings['sidebars_widgets[' + module.serverParams.defaultWidgetSidebar + ']'] ),
+                      {
+                            value:[]
+                      }
+                );
+
+            //add it to the static collection of settings
+            api.settings.settings[ _new_set_id ] = _new_set;
+
+            //instanciate it
+            api.create( _new_set_id, _new_set_id, _new_set.value, {
+                    transport: _new_set.transport,
+                    previewer: api.previewer,
+                    dirty: false
+            } );
 
 
 
+            //ADD A CONTROL
+            var _cloned_control = $.extend(
+                      _.clone( api.settings.controls['sidebars_widgets[' + module.serverParams.defaultWidgetSidebar + ']'] ),
+                      {
+                        settings : { default : _new_set_id }
+                  }),
+                _new_control = {};
 
 
+            //replace  serverControlParams.defaultWidgetSidebar  by the new sidebar id
+            _.each( _cloned_control, function( param, key ) {
+                    if ( 'string' == typeof(param) ) {
+                      param = param.replace( module.serverParams.defaultWidgetSidebar , _model.id );
+                    }
+                    _new_control[key] = param;
+            });
+
+            //set the instance number (no sure if needed)
+            _new_control.instanceNumber = _.max(api.settings.controls, function(con){ return con.instanceNumber; }).instanceNumber + 1;
+
+            //add it to the static collection of controls
+            api.settings.controls[_new_set_id] = _new_control;
+
+            //instanciate it
+            api.control.add( _new_set_id, new api.controlConstructor[ _new_control.type ]( _new_set_id, {
+                    params: _new_control,
+                    previewer: api.previewer
+            } ) );
 
 
+            //say it to the control container
+            //only if we are in an instanciated object => because this method can be accessed statically
+            if ( _.has(this, 'container') )
+              this.container.trigger( 'widget_zone_created', { model : _model, section_id : "sidebar-widgets-" + _model.id , setting_id : _new_set_id });
+      },//addWidgetSidebar
 
 
+      //fired on "after_modelRemoved"
+      removeWidgetSidebar : function( model ) {
+            var module = this;
+            if ( ! _.isObject(model) || _.isEmpty(model) ) {
+                  throw new Error('No valid data were provided to remove a Widget Zone.');
+            }
 
+            //Remove this sidebar from the backbone collection
+            api.Widgets.registeredSidebars.remove( model.id );
 
-  /////////////////////////////////////////
-  /// SET EXPANSION CALLBACKS FOR WIDGET PANEL AND WIDGET ZONE CREATION SECTION
-  ////////////////////////////////////////
-  //cb of : api.panel('widgets').expanded.callbacks.add
-  widgetPanelReact : function() {
-          var module = this;
-          //will be used for adjustments
-          var _top_margin = api.panel('widgets').container.find( '.control-panel-content' ).css('margin-top');
-          api.section(module.serverParams.dynWidgetSection).fixTopMargin('value').set( _top_margin );
+            //remove the section from the api values and the DOM if exists
+            if ( api.section.has("sidebar-widgets-" + model.id) ) {
+                    //Remove the section container from the DOM
+                    api.section("sidebar-widgets-" + model.id).container.remove();
+                    //Remove the sidebar section from the api
+                    api.section.remove( "sidebar-widgets-" + model.id );
+                    //Remove this section from the static collection
+                    delete api.settings.sections[ "sidebar-widgets-" + model.id ];
+            }
 
-          var _section_content = api.section(module.serverParams.dynWidgetSection).container.find( '.accordion-section-content' ),
-            _panel_content = api.panel('widgets').container.find( '.control-panel-content' ),
-            _set_margins = function() {
-                  _section_content.css( 'margin-top', '' );
-                  _panel_content.css('margin-top', api.section(module.serverParams.dynWidgetSection).fixTopMargin('value')() );
+            //remove the setting from the api if exists
+            if ( api.has('sidebars_widgets['+model.id+']') ) {
+                    //Remove this setting from the api
+                    api.remove( 'sidebars_widgets['+model.id+']' );
+                    //Remove this setting from the static collection
+                    delete api.settings.settings['sidebars_widgets['+model.id+']'];
+            }
+
+            //remove the widget control of this sidebar from the api and the DOM if exists
+            if ( api.control.has('sidebars_widgets['+model.id+']') ) {
+                    //Remove the control container from the DOM
+                    api.control( 'sidebars_widgets['+model.id+']' ).container.remove();
+                    //Remove this control from the api
+                    api.control.remove( 'sidebars_widgets['+model.id+']' );
+                    //Remove it to the static collection of controls
+                    delete api.settings.controls['sidebars_widgets['+model.id+']'];
+            }
+
+            //refresh
+            var _refresh = function() {
+              api.previewer.refresh();
             };
+            _refresh = _.debounce( _refresh, 500 );
+            $.when( _refresh() ).done( function() {
+                  //say it
+                  module.trigger( 'widget_zone_removed',
+                        {
+                              model : model,
+                              section_id : "sidebar-widgets-" + model.id ,
+                              setting_id : 'sidebars_widgets['+model.id+']'
+                        }
+                  );
+            });
+      },
 
-          // Fix the top margin after reflow.
-          api.bind( 'pane-contents-reflowed', _.debounce( function() {
+
+
+
+
+
+
+
+
+
+
+      /////////////////////////////////////////
+      /// SET EXPANSION CALLBACKS FOR WIDGET PANEL AND WIDGET ZONE CREATION SECTION
+      ////////////////////////////////////////
+      //cb of : api.panel('widgets').expanded.callbacks.add
+      widgetPanelReact : function() {
+            var module = this;
+            //will be used for adjustments
+            var _top_margin = api.panel('widgets').container.find( '.control-panel-content' ).css('margin-top');
+
+            api.section(module.serverParams.dynWidgetSection).fixTopMargin('value').set( _top_margin );
+
+            var _section_content = api.section(module.serverParams.dynWidgetSection).container.find( '.accordion-section-content' ),
+              _panel_content = api.panel('widgets').container.find( '.control-panel-content' ),
+              _set_margins = function() {
+                    _section_content.css( 'margin-top', '' );
+                    _panel_content.css('margin-top', api.section(module.serverParams.dynWidgetSection).fixTopMargin('value')() );
+              };
+
+            // Fix the top margin after reflow.
+            api.bind( 'pane-contents-reflowed', _.debounce( function() {
                   _set_margins();
-          }, 150 ) );
+            }, 150 ) );
 
-          //Close all views on widget panel expansion/clos
-          module.closeAllItems().closeRemoveDialogs();
-          //Close preItem dialog box if exists
-          if ( _.has( module, 'preItemExpanded' ) )
-            module.preItemExpanded.set(false);
-  },//widgetPanelReact()
-
-
-  //cb of api.section(module.serverParams.dynWidgetSection).expanded.callbacks
-  widgetSectionReact : function( to, from ) {
-          var module = this,
-              section =  api.section(module.serverParams.dynWidgetSection),
-              container = section.container.closest( '.wp-full-overlay-sidebar-content' ),
-              content = section.container.find( '.accordion-section-content' ),
-              overlay = section.container.closest( '.wp-full-overlay' ),
-              backBtn = section.container.find( '.customize-section-back' ),
-              sectionTitle = section.container.find( '.accordion-section-title' ).first(),
-              headerActionsHeight = $( '#customize-header-actions' ).height(),
-              resizeContentHeight, expand, position, scroll;
-
-          if ( to ) {
-            overlay.removeClass( 'section-open' );
-            content.css( 'height', 'auto' );
-            //section.container.removeClass( 'open' );
-            sectionTitle.attr( 'tabindex', '0' );
-            content.css( 'margin-top', '' );
-            container.scrollTop( 0 );
-          }
-
-          module.closeAllItems().closeRemoveDialogs();
-
-          content.slideToggle();
-  },
+            //Close all views on widget panel expansion/clos
+            module.closeAllItems().closeRemoveDialogs();
+            //Close preItem dialog box if exists
+            if ( _.has( module, 'preItemExpanded' ) )
+              module.preItemExpanded.set(false);
+      },//widgetPanelReact()
 
 
+      //cb of api.section(module.serverParams.dynWidgetSection).expanded.callbacks
+      widgetSectionReact : function( to, from ) {
+            var module = this,
+                section =  api.section(module.serverParams.dynWidgetSection),
+                container = section.container.closest( '.wp-full-overlay-sidebar-content' ),
+                content = section.container.find( '.accordion-section-content' ),
+                overlay = section.container.closest( '.wp-full-overlay' ),
+                backBtn = section.container.find( '.customize-section-back' ),
+                sectionTitle = section.container.find( '.accordion-section-title' ).first(),
+                headerActionsHeight = $( '#customize-header-actions' ).height(),
+                resizeContentHeight, expand, position, scroll;
+
+            if ( to ) {
+                  overlay.removeClass( 'section-open' );
+                  content.css( 'height', 'auto' );
+                  //section.container.removeClass( 'open' );
+                  sectionTitle.attr( 'tabindex', '0' );
+                  content.css( 'margin-top', '' );
+                  container.scrollTop( 0 );
+            }
+
+            module.closeAllItems().closeRemoveDialogs();
+
+            content.slideToggle();
+      },
 
 
 
 
 
-  /////////////////////////////////////////
-  /// LISTEN TO SIDEBAR INSIGHTS FROM THE PREVIEW FRAME
-  /// REACT TO THEM
-  ////////////////////////////////////////
-  listenToSidebarInsights : function() {
-          var module = this;
 
-          //VISIBILITY BASED ON THE SIDEBAR INSIGHTS
-          api.sidebar_insights('registered').callbacks.add( function( _registered_zones ) {
-                  var _current_collection = _.clone( module.itemCollection() );
-                  _.map(_current_collection, function( _model ) {
-                    if ( ! module.getViewEl(_model.id).length )
-                      return;
 
-                    module.getViewEl(_model.id).css('display' , _.contains( _registered_zones, _model.id ) ? 'block' : 'none' );
-                  });
-          });
+      /////////////////////////////////////////
+      /// LISTEN TO SIDEBAR INSIGHTS FROM THE PREVIEW FRAME
+      /// REACT TO THEM
+      ////////////////////////////////////////
+      listenToSidebarInsights : function() {
+            var module = this;
 
-          //OPACITY SIDEBAR INSIGHTS BASED
-          api.sidebar_insights('inactives').callbacks.add( function( _inactives_zones ) {
-                  var _current_collection = _.clone( module.itemCollection() );
-                  _.map(_current_collection, function( _model ) {
-                    if ( ! module.getViewEl(_model.id).length )
-                      return;
+            //VISIBILITY BASED ON THE SIDEBAR INSIGHTS
+            api.sidebar_insights('registered').callbacks.add( function( _registered_zones ) {
+                    var _current_collection = _.clone( module.itemCollection() );
+                    _.each( _current_collection, function( _model ) {
+                          if ( ! module.getViewEl(_model.id).length )
+                            return;
 
-                    if ( _.contains( _inactives_zones, _model.id ) ) {
-                      module.getViewEl( _model.id ).addClass('inactive');
-                      if ( ! module.getViewEl( _model.id ).find('.czr-inactive-alert').length )
-                        module.getViewEl( _model.id ).find('.czr-item-title').append(
-                          $('<span/>', {class : "czr-inactive-alert", html : " [ " + serverControlParams.translatedStrings.inactiveWidgetZone + " ]" })
-                        );
-                    }
-                    else {
-                      module.getViewEl( _model.id ).removeClass('inactive');
-                      if ( module.getViewEl( _model.id ).find('.czr-inactive-alert').length )
-                        module.getViewEl( _model.id ).find('.czr-inactive-alert').remove();
-                    }
-                  });
-          });
+                          module.getViewEl(_model.id).css('display' , _.contains( _registered_zones, _model.id ) ? 'block' : 'none' );
+                    });
+            });
 
-          //WIDGET SIDEBAR CREATION BASED ON SIDEBAR INSIGHTS
-          //react to a new register candidate(s) on preview refresh
-          api.sidebar_insights('candidates').callbacks.add( function(_candidates) {
+            //OPACITY SIDEBAR INSIGHTS BASED
+            api.sidebar_insights('inactives').callbacks.add( function( _inactives_zones ) {
+                    var _current_collection = _.clone( module.itemCollection() );
+                    _.each( _current_collection, function( _model ) {
+                          if ( ! module.getViewEl(_model.id).length )
+                            return;
+
+                          if ( _.contains( _inactives_zones, _model.id ) ) {
+                                module.getViewEl( _model.id ).addClass('inactive');
+                                if ( ! module.getViewEl( _model.id ).find('.czr-inactive-alert').length ) {
+                                      module.getViewEl( _model.id ).find('.czr-item-title').append(
+                                        $('<span/>', {class : "czr-inactive-alert", html : " [ " + serverControlParams.translatedStrings.inactiveWidgetZone + " ]" })
+                                      );
+                                }
+                          }
+                          else {
+                                module.getViewEl( _model.id ).removeClass('inactive');
+                                if ( module.getViewEl( _model.id ).find('.czr-inactive-alert').length )
+                                  module.getViewEl( _model.id ).find('.czr-inactive-alert').remove();
+                          }
+                    });
+            });
+
+            //WIDGET SIDEBAR CREATION BASED ON SIDEBAR INSIGHTS
+            //react to a new register candidate(s) on preview refresh
+            api.sidebar_insights('candidates').callbacks.add( function(_candidates) {
                   if ( ! _.isArray(_candidates) )
                     return;
-                  _.map( _candidates, function( _sidebar ) {
-                    if ( ! _.isObject(_sidebar) )
-                      return;
-                    //add this widget sidebar and the related setting and control.
-                    //Only if not added already
-                    if ( api.section.has("sidebar-widgets-" +_sidebar.id ) )
-                      return;
+                  _.each( _candidates, function( _sidebar ) {
+                        if ( ! _.isObject(_sidebar) )
+                          return;
+                        //add this widget sidebar and the related setting and control.
+                        //Only if not added already
+                        if ( api.section.has("sidebar-widgets-" +_sidebar.id ) )
+                          return;
 
-                    //access the registration method statically
-                    module.addWidgetSidebar( {}, _sidebar );
-                    //activate it if so
-                    if ( _.has( api.sidebar_insights('actives')(), _sidebar.id ) && api.section.has("sidebar-widgets-" +_sidebar.id ) )
-                      api.section( "sidebar-widgets-" +_sidebar.id ).activate();
+                        //access the registration method statically
+                        module.addWidgetSidebar( {}, _sidebar );
+                        //activate it if so
+                        if ( _.has( api.sidebar_insights('actives')(), _sidebar.id ) && api.section.has("sidebar-widgets-" +_sidebar.id ) )
+                          api.section( "sidebar-widgets-" +_sidebar.id ).activate();
                   });
-          });
-  },//listenToSidebarInsights()
-
-
-
-
-
-
-
-  /////////////////////////////////////////
-  /// OVERRIDEN METHODS
-  ////////////////////////////////////////
-  //fired in toggleItemExpansion()
-  //has to be overridden for the widget zones control because this control is embedded directly in a panel and not in a section
-  //therefore the module to animate the scrollTop is not the section container but $('.wp-full-overlay-sidebar-content')
-  _adjustScrollExpandedBlock : function( $_block_el, adjust ) {
-          if ( ! $_block_el.length )
-            return;
-          var module = this,
-              _currentScrollTopVal = $('.wp-full-overlay-sidebar-content').scrollTop(),
-              _scrollDownVal,
-              _adjust = adjust || 90;
-          setTimeout( function() {
-              if ( ( $_block_el.offset().top + $_block_el.height() + _adjust ) > $(window.top).height() ) {
-                _scrollDownVal = $_block_el.offset().top + $_block_el.height() + _adjust - $(window.top).height();
-                $('.wp-full-overlay-sidebar-content').animate({
-                    scrollTop:  _currentScrollTopVal + _scrollDownVal
-                }, 600);
-              }
-          }, 50);
-  },
-
-
-
-  //overrides the parent class default model getter
-  //=> add a dynamic title
-  getDefaultItemModel : function(id) {
-          var module = this,
-              _current_collection = module.itemCollection(),
-              _default = _.clone( module.defaultItemModel ),
-              _default_contexts = _default.contexts;
-          return $.extend( _default, {
-              title : 'Widget Zone ' +  ( _.size(_current_collection)*1 + 1 )
-              //contexts : module._getMatchingContexts( _default_contexts )
             });
-  },
-
-
-
-  //overrides parent
-  //called before rendering a view. Fired in module::renderItemWrapper()
-  //can be overridden to set a specific view template depending on the model properties
-  //@return string
-  //@type can be
-  //Read Update Delete (rud...)
-  //Read Update (ru)
-  //...
-  //@item_model is an object describing the current item model
-  getTemplateEl : function( type, item_model ) {
-          var module = this, _el;
-          //force view-content type to ru-item-part if the model is a built-in (primary, secondary, footer-1, ...)
-          //=> user can't delete a built-in model.
-          if ( 'rudItemPart' == type ) {
-              type = ( _.has(item_model, 'is_builtin') && item_model.is_builtin ) ? 'ruItemPart' : type;
-          } else if ( 'itemInputList' == type ) {
-              type = ( _.has(item_model, 'is_builtin') && item_model.is_builtin ) ? 'itemInputListReduced' : type;
-          }
-
-          switch(type) {
-                case 'rudItemPart' :
-                  _el = module.rudItemPart;
-                    break;
-                case 'ruItemPart' :
-                  _el = module.ruItemPart;
-                  break;
-                case 'itemInputList' :
-                  _el = module.itemInputList;
-                  break;
-                case 'itemInputListReduced' :
-                  _el = module.itemInputListReduced;
-                  break;
-          }
-
-          if ( _.isEmpty(_el) ) {
-            throw new Error( 'No valid template has been found in getTemplateEl()' );
-          } else {
-            return _el;
-          }
-  },
+      },//listenToSidebarInsights()
 
 
 
 
 
 
-  _toggleLocationAlertExpansion : function($view, to) {
-          var $_alert_el = $view.find('.czr-location-alert');
 
-          if ( ! $_alert_el.length ) {
-                var _html = [
-                  '<span>' + serverControlParams.translatedStrings.locationWarning + '</span>',
-                  api.CZR_Helpers.getDocSearchLink( serverControlParams.translatedStrings.locationWarning ),
-                ].join('');
+      /////////////////////////////////////////
+      /// OVERRIDEN METHODS
+      ////////////////////////////////////////
+      //fired in toggleItemExpansion()
+      //has to be overridden for the widget zones control because this control is embedded directly in a panel and not in a section
+      //therefore the module to animate the scrollTop is not the section container but $('.wp-full-overlay-sidebar-content')
+      _adjustScrollExpandedBlock : function( $_block_el, adjust ) {
+            if ( ! $_block_el.length )
+              return;
+            var module = this,
+                _currentScrollTopVal = $('.wp-full-overlay-sidebar-content').scrollTop(),
+                _scrollDownVal,
+                _adjust = adjust || 90;
+            setTimeout( function() {
+                  if ( ( $_block_el.offset().top + $_block_el.height() + _adjust ) > $(window.top).height() ) {
+                    _scrollDownVal = $_block_el.offset().top + $_block_el.height() + _adjust - $(window.top).height();
+                    $('.wp-full-overlay-sidebar-content').animate({
+                        scrollTop:  _currentScrollTopVal + _scrollDownVal
+                    }, 600);
+                  }
+            }, 50);
+      },
 
-                $_alert_el = $('<div/>', {
-                      class:'czr-location-alert',
-                      html:_html,
-                      style:"display:none"
+
+
+      //overrides the parent class default model getter
+      //=> add a dynamic title
+      getDefaultItemModel : function( id ) {
+              var module = this,
+                  _current_collection = module.itemCollection(),
+                  _default = _.clone( module.defaultItemModel ),
+                  _default_contexts = _default.contexts;
+              return $.extend( _default, {
+                  title : 'Widget Zone ' +  ( _.size(_current_collection)*1 + 1 )
+                  //contexts : module._getMatchingContexts( _default_contexts )
                 });
-
-                $('select[data-type="locations"]', $view ).closest('div').after($_alert_el);
-          }
-          $_alert_el.toggle( 'expanded' == to);
-  }
+      },
 
 
-});//$.extend()//extends api.CZRModule
+
+      //overrides parent
+      //called before rendering a view. Fired in module::renderItemWrapper()
+      //can be overridden to set a specific view template depending on the model properties
+      //@return string
+      //@type can be
+      //Read Update Delete (rud...)
+      //Read Update (ru)
+      //...
+      //@item_model is an object describing the current item model
+      getTemplateEl : function( type, item_model ) {
+              var module = this, _el;
+              //force view-content type to ru-item-part if the model is a built-in (primary, secondary, footer-1, ...)
+              //=> user can't delete a built-in model.
+              if ( 'rudItemPart' == type ) {
+                  type = ( _.has(item_model, 'is_builtin') && item_model.is_builtin ) ? 'ruItemPart' : type;
+              } else if ( 'itemInputList' == type ) {
+                  type = ( _.has(item_model, 'is_builtin') && item_model.is_builtin ) ? 'itemInputListReduced' : type;
+              }
+
+              switch(type) {
+                    case 'rudItemPart' :
+                      _el = module.rudItemPart;
+                        break;
+                    case 'ruItemPart' :
+                      _el = module.ruItemPart;
+                      break;
+                    case 'itemInputList' :
+                      _el = module.itemInputList;
+                      break;
+                    case 'itemInputListReduced' :
+                      _el = module.itemInputListReduced;
+                      break;
+              }
+
+              if ( _.isEmpty(_el) ) {
+                throw new Error( 'No valid template has been found in getTemplateEl()' );
+              } else {
+                return _el;
+              }
+      },
+
+
+      _toggleLocationAlertExpansion : function( $view, to ) {
+              var $_alert_el = $view.find('.czr-location-alert');
+              if ( ! $_alert_el.length ) {
+                    var _html = [
+                      '<span>' + serverControlParams.translatedStrings.locationWarning + '</span>',
+                      api.CZR_Helpers.getDocSearchLink( serverControlParams.translatedStrings.locationWarning ),
+                    ].join('');
+
+                    $_alert_el = $('<div/>', {
+                          class:'czr-location-alert',
+                          html:_html,
+                          style:"display:none"
+                    });
+
+                    $('select[data-type="locations"]', $view ).closest('div').after($_alert_el);
+              }
+              $_alert_el.toggle( 'expanded' == to);
+      }
+});//$.extend()
+})( wp.customize , jQuery, _ );
+//extends api.CZRModule
 var CZRBodyBgModuleMths = CZRBodyBgModuleMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRBodyBgModuleMths, {
-  initialize: function( id, options ) {
-          var module = this;
-          //run the parent initialize
-          api.CZRModule.prototype.initialize.call( module, id, options );
+      initialize: function( id, options ) {
+            var module = this;
+            //run the parent initialize
+            api.CZRModule.prototype.initialize.call( module, id, options );
 
-          //extend the module with new template Selectors
-          $.extend( module, {
-                itemInputList : 'czr-module-bodybg-item-content'
-          } );
+            //extend the module with new template Selectors
+            $.extend( module, {
+                  itemInputList : 'czr-module-bodybg-item-content'
+            } );
 
-          //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
-          module.inputConstructor = api.CZRInput.extend( module.CZRBodyBgInputMths || {} );
-          //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
-          module.itemConstructor = api.CZRItem.extend( module.CZBodyBgItemMths || {} );
+            //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
+            module.inputConstructor = api.CZRInput.extend( module.CZRBodyBgInputMths || {} );
+            //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
+            module.itemConstructor = api.CZRItem.extend( module.CZBodyBgItemMths || {} );
 
-          //declares a default model
-          module.defaultItemModel = {
-                'background-color' : '#eaeaea',
-                'background-image' : '',
-                'background-repeat' : 'no-repeat',
-                'background-attachment' : 'fixed',
-                'background-position' : 'center center',
-                'background-size' : 'cover'
-          };
-          api.consoleLog('module ID', module.id );
-          //fired ready :
-          //1) on section expansion
-          //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled
-          if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
-             module.ready();
-          }
-          api.section( module.control.section() ).expanded.bind(function(to) {
-                if ( 'resolved' == module.isReady.state() )
-                  return;
-                module.ready();
-          });
-  },//initialize
+            //declares a default model
+            module.defaultItemModel = {
+                  'background-color' : '#eaeaea',
+                  'background-image' : '',
+                  'background-repeat' : 'no-repeat',
+                  'background-attachment' : 'fixed',
+                  'background-position' : 'center center',
+                  'background-size' : 'cover'
+            };
+            api.consoleLog('module ID', module.id );
+            //fired ready :
+            //1) on section expansion
+            //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled
+            if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
+                  module.ready();
+            }
+            api.section( module.control.section() ).expanded.bind(function(to) {
+                  if ( 'resolved' == module.isReady.state() )
+                    return;
+                  module.ready();
+            });
+      },//initialize
 
 
 
-  CZRBodyBgInputMths : {
-          //////////////////////////////////////////////////
-          ///SETUP SELECTS
-          //////////////////////////////////////////////////
-          //setup select on view_rendered|item_content_event_map
-          setupSelect : function() {
+      CZRBodyBgInputMths : {
+            //////////////////////////////////////////////////
+            ///SETUP SELECTS
+            //////////////////////////////////////////////////
+            //setup select on view_rendered|item_content_event_map
+            setupSelect : function() {
                   var input         = this,
                       _id_param_map = {
                         'background-repeat' : 'bg_repeat_options',
@@ -12394,37 +12411,36 @@ $.extend( CZRBodyBgModuleMths, {
                   });
                   //fire select2
                   $( 'select[data-type]', input.container ).select2();
+            }
+      },
 
-          }
-  },
 
+      CZBodyBgItemMths : {
+            //Fired if the item has been instantiated
+            //The item.callbacks are declared.
+            ready : function() {
+                  var item = this;
+                  api.CZRItem.prototype.ready.call( item );
 
-  CZBodyBgItemMths : {
-          //Fired if the item has been instantiated
-          //The item.callbacks are declared.
-          ready : function() {
-                var item = this;
-                api.CZRItem.prototype.ready.call( item );
+                  item.czr_Input('background-image').isReady.done( function( input_instance ) {
+                        var set_visibilities = function( bg_val  ) {
+                              var is_bg_img_set = ! _.isEmpty( bg_val ) ||_.isNumber( bg_val);
+                              _.each( ['background-repeat', 'background-attachment', 'background-position', 'background-size'], function( dep ) {
+                                    item.czr_Input(dep).container.toggle( is_bg_img_set || false );
+                              });
+                        };
+                        set_visibilities( input_instance() );
+                        //update the item model on 'background-image' change
+                        item.bind('background-image:changed', function(){
+                              set_visibilities( item.czr_Input('background-image')() );
+                        });
+                  });
+            },
 
-                item.czr_Input('background-image').isReady.done( function( input_instance ) {
-                    var set_visibilities = function( bg_val  ) {
-                          var is_bg_img_set = ! _.isEmpty( bg_val ) ||_.isNumber( bg_val);
-                          _.each( ['background-repeat', 'background-attachment', 'background-position', 'background-size'], function( dep ) {
-                                item.czr_Input(dep).container.toggle( is_bg_img_set || false );
-                          });
-                    };
-                    set_visibilities( input_instance() );
-                    //update the item model on 'background-image' change
-                    item.bind('background-image:changed', function(){
-                          set_visibilities( item.czr_Input('background-image')() );
-                    });
-                });
-          },
-
-  }
-});
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );
 (function ( api, $, _ ) {
-
 //provides a description of each module
       //=> will determine :
       //1) how to initialize the module model. If not crud, then the initial item(s) model shall be provided
@@ -12454,7 +12470,6 @@ $.extend( CZRBodyBgModuleMths, {
                   name : 'Slider'
             }
       });
-
 })( wp.customize, jQuery, _ );//BASE CONTROL CLASS
 //extends api.Control
 //define a set of methods, mostly helpers, to extend the base WP control class
@@ -12462,1426 +12477,1420 @@ $.extend( CZRBodyBgModuleMths, {
 //EARLY SETUP
 
 var CZRBaseControlMths = CZRBaseControlMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRBaseControlMths, {
+      initialize: function( id, options ) {
+            var control = this;
+            //add a shortcut to the css properties declared in the php controls
+            control.css_attr = _.has( serverControlParams , 'css_attr') ? serverControlParams.css_attr : {};
+            api.Control.prototype.initialize.call( control, id, options );
 
-  initialize: function( id, options ) {
-          var control = this;
-          //add a shortcut to the css properties declared in the php controls
-          control.css_attr = _.has( serverControlParams , 'css_attr') ? serverControlParams.css_attr : {};
-          api.Control.prototype.initialize.call( control, id, options );
+            //When a partial refresh is done we need to send back all postMessage input to the preview
+            //=> makes sure that all post message inputs not yet saved in db are properly applied
+            control.bind( 'czr-partial-refresh-done', function() {
+                  if ( _.has( control, 'czr_moduleCollection' ) ) {
+                        _.each( control.czr_moduleCollection(), function( _mod_ ) {
+                              if ( ! control.czr_Module( _mod_.id ) )
+                                return;
 
-          //When a partial refresh is done we need to send back all postMessage input to the preview
-          //=> makes sure that all post message inputs not yet saved in db are properly applied
-          control.bind( 'czr-partial-refresh-done', function() {
-                if ( _.has( control, 'czr_moduleCollection' ) ) {
-                      _.each( control.czr_moduleCollection(), function( _mod_ ) {
-                            if ( ! control.czr_Module( _mod_.id ) )
-                              return;
+                              control.czr_Module( _mod_.id ).sendModuleInputsToPreview();
+                        });
+                  }
+            });
+      },
 
-                            control.czr_Module( _mod_.id ).sendModuleInputsToPreview();
-                      });
-                }
-          });
-  },
-
-  //@return void()
-  refreshPreview : function( obj ) {
-          this.previewer.refresh();
-  }
-
+      //@return void()
+      refreshPreview : function( obj ) {
+            this.previewer.refresh();
+      }
 });//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
 //BASE CONTROL CLASS
 //extends api.CZRBaseControl
 //define a set of methods, mostly helpers, to extend the base WP control class
 //this will become our base constructor for main complex controls
 //EARLY SETUP
 var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRBaseModuleControlMths, {
+      initialize: function( id, options ) {
+              var control = this;
 
-  initialize: function( id, options ) {
-          var control = this;
+              control.czr_Module = new api.Values();
 
-          control.czr_Module = new api.Values();
+              //czr_collection stores the module collection
+              control.czr_moduleCollection = new api.Value();
+              control.czr_moduleCollection.set([]);
 
-          //czr_collection stores the module collection
-          control.czr_moduleCollection = new api.Value();
-          control.czr_moduleCollection.set([]);
+              //let's store the state of the initial module collection
+              control.moduleCollectionReady = $.Deferred();
+              //and listen to changes when it's ready
+              control.moduleCollectionReady.done( function( obj ) {
+                    if ( ! control.isMultiModuleControl( options.params ) ) {
+                      //api.consoleLog('MODULE COLLECTION READY IN CONTROL : ', control.id , obj.id, control.isModuleRegistered( obj.id ) );
+                    }
+                    //if the module is not registered yet for a single module control
+                    //=> push it to the collection now, before listening to the module collection changes
+                    // if (  ! control.isModuleRegistered( module.id ) ) {
+                    //     control.updateModulesCollection( { module : constructorOptions } );
+                    // }
 
-          //let's store the state of the initial module collection
-          control.moduleCollectionReady = $.Deferred();
-          //and listen to changes when it's ready
-          control.moduleCollectionReady.done( function( obj ) {
-                if ( ! control.isMultiModuleControl( options.params ) ) {
-                  //api.consoleLog('MODULE COLLECTION READY IN CONTROL : ', control.id , obj.id, control.isModuleRegistered( obj.id ) );
-                }
-                //if the module is not registered yet for a single module control
-                //=> push it to the collection now, before listening to the module collection changes
-                // if (  ! control.isModuleRegistered( module.id ) ) {
-                //     control.updateModulesCollection( { module : constructorOptions } );
-                // }
+                    //LISTEN TO MODULE COLLECTION
+                    control.czr_moduleCollection.callbacks.add( function() { return control.moduleCollectionReact.apply( control, arguments ); } );
 
-                //LISTEN TO MODULE COLLECTION
-                control.czr_moduleCollection.callbacks.add( function() { return control.moduleCollectionReact.apply( control, arguments ); } );
+                    //control.removeModule( _mod );
+              } );
 
-                //control.removeModule( _mod );
-          } );
+              //FOR MULTI MODULE CONTROL : Stores the module instance of the synchronized sektion
+              if ( control.isMultiModuleControl( options.params ) ) {
+                    control.syncSektionModule = new api.Value();
+              }
 
-          //FOR MULTI MODULE CONTROL : Stores the module instance of the synchronized sektion
-          if ( control.isMultiModuleControl( options.params ) ) {
-                control.syncSektionModule = new api.Value();
-          }
+              api.CZRBaseControl.prototype.initialize.call( control, id, options );
 
-          api.CZRBaseControl.prototype.initialize.call( control, id, options );
+              //FOR TEST PURPOSES
+              // api(this.id).bind( function( to, from) {
+              //     api.consoleLog( 'SETTING ', control.id, ' HAS CHANGED : ', to, from );
+              // });
 
-          //FOR TEST PURPOSES
-          // api(this.id).bind( function( to, from) {
-          //     api.consoleLog( 'SETTING ', control.id, ' HAS CHANGED : ', to, from );
-          // });
+              //close any open item and dialog boxes on section expansion
+              api.section( control.section() ).expanded.bind(function(to) {
+                    control.czr_Module.each( function( _mod ){
+                          _mod.closeAllItems().closeRemoveDialogs();
+                          if ( _.has( _mod, 'preItem' ) ) {
+                                _mod.preItemExpanded(false);
+                          }
+                    });
+              });
 
-          //close any open item and dialog boxes on section expansion
-          api.section( control.section() ).expanded.bind(function(to) {
-                control.czr_Module.each( function( _mod ){
-                      _mod.closeAllItems().closeRemoveDialogs();
-                      if ( _.has( _mod, 'preItem' ) ) {
-                            _mod.preItemExpanded(false);
-                      }
-                });
-          });
-
-  },
-
+      },
 
 
 
-  //////////////////////////////////
-  ///READY = CONTROL INSTANTIATED AND DOM ELEMENT EMBEDDED ON THE PAGE
-  ///FIRED BEFORE API READY
-  //////////////////////////////////
-  ready : function() {
-          var control = this;
-          if ( control.isMultiModuleControl() ) {
-                //POPULATE THE SAVED MODULE COLLECTION WHEN THE SYNCHRONIZED SEKTIONS SETTING HAS PROVIDED ITS INSTANCE
-                control.syncSektionModule.bind( function( sektion_module_instance, from) {
-                      if ( 'resolved' == control.moduleCollectionReady.state() )
-                        return;
-                      control.registerModulesOnInit( sektion_module_instance );
-                      //the module collection is ready
-                      control.moduleCollectionReady.resolve();
-                });
-          } else {
-                var single_module = {};
-                //inits the collection with the saved module => there's only one module to instantiate in this case.
-                //populates the collection with the saved module
-                _.each( control.getSavedModules() , function( _mod, _key ) {
-                      //stores it
-                      single_module = _mod;
 
-                      //adds it to the collection
-                      //=> it will be fired ready usually when the control section is expanded
-                      try { control.instantiateModule( _mod, {} ); } catch( er ) {
-                            api.errorLog( 'Failed to instantiate module ' + _mod.id + ' ' + er );
+      //////////////////////////////////
+      ///READY = CONTROL INSTANTIATED AND DOM ELEMENT EMBEDDED ON THE PAGE
+      ///FIRED BEFORE API READY
+      //////////////////////////////////
+      ready : function() {
+              var control = this;
+              if ( control.isMultiModuleControl() ) {
+                    //POPULATE THE SAVED MODULE COLLECTION WHEN THE SYNCHRONIZED SEKTIONS SETTING HAS PROVIDED ITS INSTANCE
+                    control.syncSektionModule.bind( function( sektion_module_instance, from) {
+                          if ( 'resolved' == control.moduleCollectionReady.state() )
                             return;
-                      }
+                          control.registerModulesOnInit( sektion_module_instance );
+                          //the module collection is ready
+                          control.moduleCollectionReady.resolve();
+                    });
+              } else {
+                    var single_module = {};
+                    //inits the collection with the saved module => there's only one module to instantiate in this case.
+                    //populates the collection with the saved module
+                    _.each( control.getSavedModules() , function( _mod, _key ) {
+                          //stores it
+                          single_module = _mod;
 
-                      //adds the module name to the control container element
-                      control.container.attr('data-module', _mod.id );
-                });
-                //the module collection is ready
-                control.moduleCollectionReady.resolve( single_module );
-          }
+                          //adds it to the collection
+                          //=> it will be fired ready usually when the control section is expanded
+                          try { control.instantiateModule( _mod, {} ); } catch( er ) {
+                                api.errorLog( 'Failed to instantiate module ' + _mod.id + ' ' + er );
+                                return;
+                          }
 
-
-          //LISTEN TO MODULE CANDIDATES ADDED BY USERS
-          control.bind( 'user-module-candidate', function( _module ) {
-                var module;
-                //instanciate + fire ready()
-                //=> the module will be added in the collection on isReady.done()
-                try {
-                      module = control.instantiateModule( _module, {} ); //module, constructor
-                } catch( er ) {
-                      api.errorLog( 'Failed to instantiate module ' + _module.id + ' ' + er );
-                      return;
-                }
-                //If everything went fine, fires ready
-                module.ready( _module.is_added_by_user );
-          });
-  },
-
-
-
-
-
-
-
-
-
-  //////////////////////////////////
-  /// VARIOUS HELPERS
-  //////////////////////////////////
-  ///
-  //@return the default API model {} needed to instantiate a module
-  //Depending on the module context, control or sektion, the default model has to hold different properties
-  getDefaultModuleApiModel : function() {
-          //Modules share the common model either they are in a sektion or in a control
-          var commonAPIModel = {
-                id : '',//module.id,
-                module_type : '',//module.module_type,
-                modOpt : {},//the module modOpt property, typically high level properties that area applied to all items of the module
-                items   : [],//$.extend( true, {}, module.items ),
-                crud : false,
-                multi_item : false,
-                sortable : false,//<= a module can be multi-item but not necessarily sortable
-                control : {},//control,
-          };
-
-          //if embedded in a control, amend the common model with the section id
-          if ( ! this.isMultiModuleControl() ) {
-              return $.extend( commonAPIModel, {
-                  section : ''//id of the control section
-              } );
-          } else {
-              return $.extend( commonAPIModel, {
-                  column_id : '',//a string like col_7
-                  sektion : {},// => the sektion instance
-                  sektion_id : '',
-                  is_added_by_user : false,
-                  dirty : false
-              } );
-          }
-  },
-
-  //@return the default DB model {} that will be used when the setting will send the ajax save request
-  //Depending on the module context, control or sektion, the default DB model has to hold different properties
-  getDefaultModuleDBModel : function() {
-          var commonDBModel = {
-                items   : [],//$.extend( true, {}, module.items ),
-          };
-
-          //if embedded in a sektion, we need more the item(s) collection
-          if ( this.isMultiModuleControl() ) {
-              return $.extend( commonDBModel, {
-                  id : '',
-                  module_type : '',
-                  column_id : '',
-                  sektion_id : '',
-                  dirty : false
-              } );
-          } else {
-              return commonDBModel;
-          }
-  },
-
-
-  //@return bool
-  isMultiModuleControl : function( params ) {
-          return 'czr_multi_module' == ( params || this.params ).type;
-  },
-
-
-  //@return the control instance of the synchronized collection of modules
-  getSyncCollectionControl : function() {
-        var control = this;
-        if ( _.isUndefined( control.params.syncCollection ) ) {
-            throw new Error( 'Control ' + control.id + ' has no synchronized sektion control defined.');
-        }
-        return api.control( api.CZR_Helpers.build_setId( control.params.syncCollection ) );
-  },
-
-
-  //@return the collection [] of saved module(s) to instantiate
-  //This method does not make sure that the module model is ready for API.
-  //=> it just returns an array of saved module candidates to instantiate.
-  //
-  //Before instantiation, we will make sure that all required property are defined for the modules with the method control.prepareModuleForAPI()
-  // control     : control,
-  // crud        : bool
-  // id          : '',
-  // items       : [], module.items,
-  // modOpt       : {}
-  // module_type : module.module_type,
-  // multi_item  : bool
-  // section     : module.section,
-  // is_added_by_user : is_added_by_user || false
-  getSavedModules : function() {
-          var control = this,
-              _savedModulesCandidates = [],
-              _module_type = control.params.module_type,
-              _raw_saved_module_val = [],
-              _saved_items = [],
-              _saved_modOpt = {};
-
-          //In the case of multi module control synchronized with a sektion
-          // => the saved modules is a collection saved in the setting
-          //For a module embedded in a regular control, we need to hard code the single module collection
-          // => in this case, the corresponding setting will store the collection of item(s)
-          if ( control.isMultiModuleControl() ) {
-              _savedModulesCandidates = $.extend( true, [], api( control.id )() );//deep clone
-          } else {
-              //What is the current server saved value for this setting?
-              //in a normal case, it should be an array of saved properties
-              //But it might not be if coming from a previous option system.
-              //=> let's normalize it.
-              //First let's perform a quick check on the current saved db val.
-              //If the module is not multi-item, the saved value should be an object or empty if not set yet
-              if ( api.CZR_Helpers.isMultiItemModule( _module_type ) && ! _.isEmpty( api( control.id )() ) && ! _.isObject( api( control.id )() ) ) {
-                  api.consoleLog('Module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
+                          //adds the module name to the control container element
+                          control.container.attr('data-module', _mod.id );
+                    });
+                    //the module collection is ready
+                    control.moduleCollectionReady.resolve( single_module );
               }
 
-              //SPLIT ITEMS [] and MODOPT {}
-              //In database, items and modOpt are saved in the same option array.
-              //If the module has modOpt ( the slider module for example ), the modOpt are described by an object which is always unshifted at the beginning of the setting value.
 
-              //the raw DB setting value is an array :  modOpt {} + the saved items :
-              ////META IS THE FIRST ARRAY ELEMENT: A modOpt has no unique id and has the property is_modOpt set to true
-              //[
-              //  is_mod_opt : true //<= inform us that this is not an item but a modOpt
-              //],
-              ////THEN COME THE ITEMS
-              //[
-              //  id : "czr_slide_module_0"
-              //     slide-background : 21,
-              //     ....
-              //   ],
-              //   [
-              // id : "czr_slide_module_1"
-              //     slide-background : 21,
-              //     ....
-              //   ]
-              //  [...]
-
-              //POPULATE THE ITEMS [] and the MODOPT {} FROM THE RAW DB SAVED SETTING VAL
-              _raw_saved_module_val = _.isArray( api( control.id )() ) ? api( control.id )() : [ api( control.id )() ];
-
-              _.each( _raw_saved_module_val, function( item_or_mod_opt_candidate , key ) {
-                    if ( api.CZR_Helpers.hasModuleModOpt( _module_type ) && 0*0 === key ) {
-                          // a saved module mod_opt object should not have an id
-                          if ( _.has( item_or_mod_opt_candidate, 'id') ) {
-                                api.consoleLog( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no mod_opt defined while it should.' );
-                          } else {
-                                _saved_modOpt = item_or_mod_opt_candidate;
-                          }
+              //LISTEN TO MODULE CANDIDATES ADDED BY USERS
+              control.bind( 'user-module-candidate', function( _module ) {
+                    var module;
+                    //instanciate + fire ready()
+                    //=> the module will be added in the collection on isReady.done()
+                    try {
+                          module = control.instantiateModule( _module, {} ); //module, constructor
+                    } catch( er ) {
+                          api.errorLog( 'Failed to instantiate module ' + _module.id + ' ' + er );
+                          return;
                     }
-                    if ( _.has( item_or_mod_opt_candidate, 'id') && ! _.has( item_or_mod_opt_candidate, 'is_mod_opt' ) ) {
-                          _saved_items.push( item_or_mod_opt_candidate );
-                    }
+                    //If everything went fine, fires ready
+                    module.ready( _module.is_added_by_user );
               });
+      },
 
 
-              //for now this is a collection with one module
-              _savedModulesCandidates.push(
-                    {
-                          id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
-                          module_type : control.params.module_type,
-                          section : control.section(),
-                          modOpt : $.extend( true, {} , _saved_modOpt ),//disconnect with a deep cloning
-                          items : $.extend( true, [] , _saved_items )//disconnect with a deep cloning
-                    }
-              );
-          }
-          return _savedModulesCandidates;
-  },
 
 
-  //this helper allows to check if a module has been registered in the collection
-  //no matter if it's not instantiated yet
-  isModuleRegistered : function( id_candidate ) {
-        var control = this;
-        return ! _.isUndefined( _.findWhere( control.czr_moduleCollection(), { id : id_candidate}) );
-  },
 
 
+
+
+
+      //////////////////////////////////
+      /// VARIOUS HELPERS
+      //////////////////////////////////
+      ///
+      //@return the default API model {} needed to instantiate a module
+      //Depending on the module context, control or sektion, the default model has to hold different properties
+      getDefaultModuleApiModel : function() {
+              //Modules share the common model either they are in a sektion or in a control
+              var commonAPIModel = {
+                    id : '',//module.id,
+                    module_type : '',//module.module_type,
+                    modOpt : {},//the module modOpt property, typically high level properties that area applied to all items of the module
+                    items   : [],//$.extend( true, {}, module.items ),
+                    crud : false,
+                    multi_item : false,
+                    sortable : false,//<= a module can be multi-item but not necessarily sortable
+                    control : {},//control,
+              };
+
+              //if embedded in a control, amend the common model with the section id
+              if ( ! this.isMultiModuleControl() ) {
+                  return $.extend( commonAPIModel, {
+                      section : ''//id of the control section
+                  } );
+              } else {
+                  return $.extend( commonAPIModel, {
+                      column_id : '',//a string like col_7
+                      sektion : {},// => the sektion instance
+                      sektion_id : '',
+                      is_added_by_user : false,
+                      dirty : false
+                  } );
+              }
+      },
+
+      //@return the default DB model {} that will be used when the setting will send the ajax save request
+      //Depending on the module context, control or sektion, the default DB model has to hold different properties
+      getDefaultModuleDBModel : function() {
+              var commonDBModel = {
+                    items   : [],//$.extend( true, {}, module.items ),
+              };
+
+              //if embedded in a sektion, we need more the item(s) collection
+              if ( this.isMultiModuleControl() ) {
+                  return $.extend( commonDBModel, {
+                      id : '',
+                      module_type : '',
+                      column_id : '',
+                      sektion_id : '',
+                      dirty : false
+                  } );
+              } else {
+                  return commonDBModel;
+              }
+      },
+
+
+      //@return bool
+      isMultiModuleControl : function( params ) {
+              return 'czr_multi_module' == ( params || this.params ).type;
+      },
+
+
+      //@return the control instance of the synchronized collection of modules
+      getSyncCollectionControl : function() {
+            var control = this;
+            if ( _.isUndefined( control.params.syncCollection ) ) {
+                throw new Error( 'Control ' + control.id + ' has no synchronized sektion control defined.');
+            }
+            return api.control( api.CZR_Helpers.build_setId( control.params.syncCollection ) );
+      },
+
+
+      //@return the collection [] of saved module(s) to instantiate
+      //This method does not make sure that the module model is ready for API.
+      //=> it just returns an array of saved module candidates to instantiate.
+      //
+      //Before instantiation, we will make sure that all required property are defined for the modules with the method control.prepareModuleForAPI()
+      // control     : control,
+      // crud        : bool
+      // id          : '',
+      // items       : [], module.items,
+      // modOpt       : {}
+      // module_type : module.module_type,
+      // multi_item  : bool
+      // section     : module.section,
+      // is_added_by_user : is_added_by_user || false
+      getSavedModules : function() {
+              var control = this,
+                  _savedModulesCandidates = [],
+                  _module_type = control.params.module_type,
+                  _raw_saved_module_val = [],
+                  _saved_items = [],
+                  _saved_modOpt = {};
+
+              //In the case of multi module control synchronized with a sektion
+              // => the saved modules is a collection saved in the setting
+              //For a module embedded in a regular control, we need to hard code the single module collection
+              // => in this case, the corresponding setting will store the collection of item(s)
+              if ( control.isMultiModuleControl() ) {
+                  _savedModulesCandidates = $.extend( true, [], api( control.id )() );//deep clone
+              } else {
+                  //What is the current server saved value for this setting?
+                  //in a normal case, it should be an array of saved properties
+                  //But it might not be if coming from a previous option system.
+                  //=> let's normalize it.
+                  //First let's perform a quick check on the current saved db val.
+                  //If the module is not multi-item, the saved value should be an object or empty if not set yet
+                  if ( api.CZR_Helpers.isMultiItemModule( _module_type ) && ! _.isEmpty( api( control.id )() ) && ! _.isObject( api( control.id )() ) ) {
+                      api.consoleLog('Module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
+                  }
+
+                  //SPLIT ITEMS [] and MODOPT {}
+                  //In database, items and modOpt are saved in the same option array.
+                  //If the module has modOpt ( the slider module for example ), the modOpt are described by an object which is always unshifted at the beginning of the setting value.
+
+                  //the raw DB setting value is an array :  modOpt {} + the saved items :
+                  ////META IS THE FIRST ARRAY ELEMENT: A modOpt has no unique id and has the property is_modOpt set to true
+                  //[
+                  //  is_mod_opt : true //<= inform us that this is not an item but a modOpt
+                  //],
+                  ////THEN COME THE ITEMS
+                  //[
+                  //  id : "czr_slide_module_0"
+                  //     slide-background : 21,
+                  //     ....
+                  //   ],
+                  //   [
+                  // id : "czr_slide_module_1"
+                  //     slide-background : 21,
+                  //     ....
+                  //   ]
+                  //  [...]
+
+                  //POPULATE THE ITEMS [] and the MODOPT {} FROM THE RAW DB SAVED SETTING VAL
+                  _raw_saved_module_val = _.isArray( api( control.id )() ) ? api( control.id )() : [ api( control.id )() ];
+
+                  _.each( _raw_saved_module_val, function( item_or_mod_opt_candidate , key ) {
+                        if ( api.CZR_Helpers.hasModuleModOpt( _module_type ) && 0*0 === key ) {
+                              // a saved module mod_opt object should not have an id
+                              if ( _.has( item_or_mod_opt_candidate, 'id') ) {
+                                    api.consoleLog( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no mod_opt defined while it should.' );
+                              } else {
+                                    _saved_modOpt = item_or_mod_opt_candidate;
+                              }
+                        }
+                        if ( _.has( item_or_mod_opt_candidate, 'id') && ! _.has( item_or_mod_opt_candidate, 'is_mod_opt' ) ) {
+                              _saved_items.push( item_or_mod_opt_candidate );
+                        }
+                  });
+
+
+                  //for now this is a collection with one module
+                  _savedModulesCandidates.push(
+                        {
+                              id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
+                              module_type : control.params.module_type,
+                              section : control.section(),
+                              modOpt : $.extend( true, {} , _saved_modOpt ),//disconnect with a deep cloning
+                              items : $.extend( true, [] , _saved_items )//disconnect with a deep cloning
+                        }
+                  );
+              }
+              return _savedModulesCandidates;
+      },
+
+
+      //this helper allows to check if a module has been registered in the collection
+      //no matter if it's not instantiated yet
+      isModuleRegistered : function( id_candidate ) {
+            var control = this;
+            return ! _.isUndefined( _.findWhere( control.czr_moduleCollection(), { id : id_candidate}) );
+      }
 });//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
 //BASE CONTROL CLASS
 //extends api.CZRBaseControl
 //define a set of methods, mostly helpers, to extend the base WP control class
 //this will become our base constructor for main complex controls
 //EARLY SETUP
 var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRBaseModuleControlMths, {
-  //@param : module {}
-  //@param : constructor string
-  instantiateModule : function( module, constructor ) {
-          if ( ! _.has( module,'id') ) {
-            throw new Error('CZRModule::instantiateModule() : a module has no id and could not be added in the collection of : ' + this.id +'. Aborted.' );
-          }
-          var control = this;
-          //is a constructor provided ?
-          //if not try to look in the module object if we an find one
-          if ( _.isUndefined(constructor) || _.isEmpty(constructor) ) {
-              constructor = control.getModuleConstructor( module );
-          }
-          //on init, the module collection is populated with module already having an id
-          //For now, let's check if the id is empty and is not already part of the collection.
-          //@todo : improve this.
-          if ( ! _.isEmpty( module.id ) && control.czr_Module.has( module.id ) ) {
-                throw new Error('The module id already exists in the collection in control : ' + control.id );
-          }
+      //@param : module {}
+      //@param : constructor string
+      instantiateModule : function( module, constructor ) {
+              if ( ! _.has( module,'id') ) {
+                throw new Error('CZRModule::instantiateModule() : a module has no id and could not be added in the collection of : ' + this.id +'. Aborted.' );
+              }
+              var control = this;
+              //is a constructor provided ?
+              //if not try to look in the module object if we an find one
+              if ( _.isUndefined(constructor) || _.isEmpty(constructor) ) {
+                  constructor = control.getModuleConstructor( module );
+              }
+              //on init, the module collection is populated with module already having an id
+              //For now, let's check if the id is empty and is not already part of the collection.
+              //@todo : improve this.
+              if ( ! _.isEmpty( module.id ) && control.czr_Module.has( module.id ) ) {
+                    throw new Error('The module id already exists in the collection in control : ' + control.id );
+              }
 
-          var module_api_ready = control.prepareModuleForAPI( module );
+              var module_api_ready = control.prepareModuleForAPI( module );
 
-          //instanciate the module with the default constructor
-          control.czr_Module.add( module_api_ready.id, new constructor( module_api_ready.id, module_api_ready ) );
+              //instanciate the module with the default constructor
+              control.czr_Module.add( module_api_ready.id, new constructor( module_api_ready.id, module_api_ready ) );
 
-          if ( ! control.czr_Module.has( module_api_ready.id ) ) {
-              throw new Error('instantiateModule() : instantiation failed for module id ' + module_api_ready.id + ' in control ' + control.id  );
-          }
-          //return the module instance for chaining
-          return control.czr_Module(module_api_ready.id);
-  },
-
-
-
-  //@return a module constructor object
-  getModuleConstructor : function( module ) {
-          var control = this,
-              parentConstructor = {},
-              constructor = {};
-
-          if ( ! _.has( module, 'module_type' ) ) {
-              throw new Error('CZRModule::getModuleConstructor : no module type found for module ' + module.id );
-          }
-          if ( ! _.has( api.czrModuleMap, module.module_type ) ) {
-              throw new Error('Module type ' + module.module_type + ' is not listed in the module map api.czrModuleMap.' );
-          }
-
-          var _mthds = api.czrModuleMap[ module.module_type ].mthds,
-              _is_crud = api.czrModuleMap[ module.module_type ].crud,
-              _base_constructor = _is_crud ? api.CZRDynModule : api.CZRModule;
-
-          //in the general case of multi_module / sektion control, we need to extend the module constructors
-          if ( ! _.isEmpty( module.sektion_id ) ) {
-              parentConstructor = _base_constructor.extend( _mthds );
-              constructor = parentConstructor.extend( control.getMultiModuleExtender( parentConstructor ) );
-          } else {
-            //in the particular case of a module embedded in a control, the constructor is ready to be fired.
-              constructor = _base_constructor.extend( _mthds );
-          }
-
-          if ( _.isUndefined(constructor) || _.isEmpty(constructor) || ! constructor ) {
-              throw new Error('CZRModule::getModuleConstructor : no constructor found for module type : ' + module.module_type +'.' );
-          }
-          return constructor;
-  },
+              if ( ! control.czr_Module.has( module_api_ready.id ) ) {
+                  throw new Error('instantiateModule() : instantiation failed for module id ' + module_api_ready.id + ' in control ' + control.id  );
+              }
+              //return the module instance for chaining
+              return control.czr_Module(module_api_ready.id);
+      },
 
 
 
+      //@return a module constructor object
+      getModuleConstructor : function( module ) {
+              var control = this,
+                  parentConstructor = {},
+                  constructor = {};
+
+              if ( ! _.has( module, 'module_type' ) ) {
+                  throw new Error('CZRModule::getModuleConstructor : no module type found for module ' + module.id );
+              }
+              if ( ! _.has( api.czrModuleMap, module.module_type ) ) {
+                  throw new Error('Module type ' + module.module_type + ' is not listed in the module map api.czrModuleMap.' );
+              }
+
+              var _mthds = api.czrModuleMap[ module.module_type ].mthds,
+                  _is_crud = api.czrModuleMap[ module.module_type ].crud,
+                  _base_constructor = _is_crud ? api.CZRDynModule : api.CZRModule;
+
+              //in the general case of multi_module / sektion control, we need to extend the module constructors
+              if ( ! _.isEmpty( module.sektion_id ) ) {
+                  parentConstructor = _base_constructor.extend( _mthds );
+                  constructor = parentConstructor.extend( control.getMultiModuleExtender( parentConstructor ) );
+              } else {
+                //in the particular case of a module embedded in a control, the constructor is ready to be fired.
+                  constructor = _base_constructor.extend( _mthds );
+              }
+
+              if ( _.isUndefined(constructor) || _.isEmpty(constructor) || ! constructor ) {
+                  throw new Error('CZRModule::getModuleConstructor : no constructor found for module type : ' + module.module_type +'.' );
+              }
+              return constructor;
+      },
 
 
-  //@return an API ready module object
-  //To be instantiated in the API, the module model must have all the required properties defined in the defaultAPIModel properly set
-  prepareModuleForAPI : function( module_candidate ) {
-        if ( ! _.isObject( module_candidate ) ) {
-            throw new Error('prepareModuleForAPI : a module must be an object to be instantiated.');
-        }
 
-        var control = this,
-            api_ready_module = {};
 
-        _.each( control.getDefaultModuleApiModel() , function( _value, _key ) {
-              var _candidate_val = module_candidate[_key];
-              switch( _key ) {
-                    //PROPERTIES COMMON TO ALL MODULES IN ALL CONTEXTS
-                    case 'id' :
-                          if ( _.isEmpty( _candidate_val ) ) {
-                                api_ready_module[_key] = control.generateModuleId( module_candidate.module_type );
-                          } else {
-                                api_ready_module[_key] = _candidate_val;
-                          }
-                    break;
-                    case 'module_type' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                throw new Error('prepareModuleForAPI : a module type must a string not empty');
-                          }
-                          api_ready_module[_key] = _candidate_val;
-                    break;
-                    case 'items' :
+
+      //@return an API ready module object
+      //To be instantiated in the API, the module model must have all the required properties defined in the defaultAPIModel properly set
+      prepareModuleForAPI : function( module_candidate ) {
+            if ( ! _.isObject( module_candidate ) ) {
+                throw new Error('prepareModuleForAPI : a module must be an object to be instantiated.');
+            }
+
+            var control = this,
+                api_ready_module = {};
+
+            _.each( control.getDefaultModuleApiModel() , function( _value, _key ) {
+                  var _candidate_val = module_candidate[_key];
+                  switch( _key ) {
+                        //PROPERTIES COMMON TO ALL MODULES IN ALL CONTEXTS
+                        case 'id' :
+                              if ( _.isEmpty( _candidate_val ) ) {
+                                    api_ready_module[_key] = control.generateModuleId( module_candidate.module_type );
+                              } else {
+                                    api_ready_module[_key] = _candidate_val;
+                              }
+                        break;
+                        case 'module_type' :
+                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module type must a string not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case 'items' :
+                              if ( ! _.isArray( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : a module item list must be an array');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case 'modOpt' :
+                              if ( ! _.isObject( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : a module modOpt property must be an object');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case 'crud' :
+                              //get the value from the czrModuleMap
+                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
+                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "crud" must be a boolean');
+                              }
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        case 'multi_item' :
+                              //get the value from the czrModuleMap
+                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "multi_item" must be a boolean');
+                              }
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        //if the sortable property is not set, then check if crud or multi-item
+                        case 'sortable' :
+                              //get the value from the czrModuleMap
+                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].sortable || api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "sortable" must be a boolean');
+                              }
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        case  'control' :
+                              api_ready_module[_key] = control;//this
+                        break;
+
+
+
+                        //PROPERTIES FOR MODULE EMBEDDED IN A CONTROL
+                        case  'section' :
+                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module section must be a string not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+
+
+
+                        //PROPERTIES FOR MODULE EMBEDDED IN A SEKTION
+                        case  'column_id' :
+                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module column id must a string not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case  'sektion' :
+                              if ( ! _.isObject( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module sektion must be an object not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case  'sektion_id' :
+                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module sektion id must be a string not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case 'is_added_by_user' :
+                              if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "is_added_by_user" must be a boolean');
+                              }
+                            api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        case 'dirty' :
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                  }//switch
+            });
+            return api_ready_module;
+      },
+
+
+      //recursive
+      generateModuleId : function( module_type, key, i ) {
+              //prevent a potential infinite loop
+              i = i || 1;
+              if ( i > 100 ) {
+                    throw new Error('Infinite loop when generating of a module id.');
+              }
+              var control = this;
+              key = key || control._getNextModuleKeyInCollection();
+              var id_candidate = module_type + '_' + key;
+
+              //do we have a module collection value ?
+              if ( ! _.has(control, 'czr_moduleCollection') || ! _.isArray( control.czr_moduleCollection() ) ) {
+                    throw new Error('The module collection does not exist or is not properly set in control : ' + control.id );
+              }
+
+              //make sure the module is not already instantiated
+              if ( control.isModuleRegistered( id_candidate ) ) {
+                key++; i++;
+                return control.generateModuleId( module_type, key, i );
+              }
+
+              return id_candidate;
+      },
+
+
+      //helper : return an int
+      //=> the next available id of the module collection
+      _getNextModuleKeyInCollection : function() {
+              var control = this,
+                _max_mod_key = {},
+                _next_key = 0;
+
+              //get the initial key
+              //=> if we already have a collection, extract all keys, select the max and increment it.
+              //else, key is 0
+              if ( ! _.isEmpty( control.czr_moduleCollection() ) ) {
+                  _max_mod_key = _.max( control.czr_moduleCollection(), function( _mod ) {
+                      return parseInt( _mod.id.replace(/[^\/\d]/g,''), 10 );
+                  });
+                  _next_key = parseInt( _max_mod_key.id.replace(/[^\/\d]/g,''), 10 ) + 1;
+              }
+              return _next_key;
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+//BASE CONTROL CLASS
+//extends api.CZRBaseControl
+//define a set of methods, mostly helpers, to extend the base WP control class
+//this will become our base constructor for main complex controls
+//EARLY SETUP
+var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRBaseModuleControlMths, {
+      //Multi Module method
+      //fired when the main sektion module has synchronised its if with the module-collection control
+      registerModulesOnInit : function( sektion_module_instance ) {
+              var control = this,
+                  _orphan_mods = [];
+
+              _.each( control.getSavedModules() , function( _mod, _key ) {
+                      //a module previously embedded in a deleted sektion must not be registered
+                      if ( ! sektion_module_instance.czr_Item.has( _mod.sektion_id ) ) {
+                          api.consoleLog('Warning Module ' + _mod.id + ' is orphan : it has no sektion to be embedded to. It Must be removed.');
+                          _orphan_mods.push(_mod);
+                          return;
+                      }
+                      //@todo handle the case of a module embedded in a previously deleted column
+                      //=> register it in the first column of the sektion ?
+
+                      var _sektion = sektion_module_instance.czr_Item( _mod.sektion_id );
+
+                      if ( _.isUndefined( _sektion ) ) {
+                        throw new Error('sektion instance missing. Impossible to instantiate module : ' + _mod.id );
+                      }
+
+                      //add the sektion instance before update the api collection
+                      $.extend( _mod, {sektion : _sektion} );
+
+                      //push it to the collection of the module-collection control
+                      //=> the instantiation will take place later, on column instantiation
+                      control.updateModulesCollection( {module : _mod } );
+              });
+
+              //REMOVE ORPHAN MODULES ON INIT
+              //But only when the module collectionn has been resolved
+              control.moduleCollectionReady.then( function() {
+                    //if there are some orphans mods, the module-collection setting must be updated now.
+                    if ( ! _.isEmpty( _orphan_mods ) ) {
+                        control.moduleCollectionReact( control.czr_moduleCollection(), [], { orphans_module_removal : _orphan_mods } );
+                    }
+              });
+      },
+
+
+
+      //@param obj can be { collection : []}, or { module : {} }
+      //Can be called :
+      //1) for multimodule control, in register modules on init, when the main sektion module has synchronised with the module-collection control
+      //2) for all modules, in module.isReady.done() if the module is not registered in the collection yet.
+      //3) for all modules on moduleReact ( module.callbacks )
+      //
+      //=> sets the setting value via the module collection !
+      updateModulesCollection : function( obj ) {
+              var control = this,
+                  _current_collection = control.czr_moduleCollection(),
+                  _new_collection = $.extend( true, [], _current_collection);
+
+              //if a collection is provided in the passed obj then simply refresh the collection
+              //=> typically used when reordering the collection module with sortable or when a module is removed
+              if ( _.has( obj, 'collection' ) ) {
+                    //reset the collection
+                    control.czr_moduleCollection.set( obj.collection, obj.data || {} );
+                    return;
+              }
+
+              if ( ! _.has(obj, 'module') ) {
+                throw new Error('updateModulesCollection, no module provided ' + control.id + '. Aborting');
+              }
+
+              //normalizes the module for the API
+              var module_api_ready = control.prepareModuleForAPI( _.clone( obj.module ) );
+
+              //the module already exist in the collection
+              if ( _.findWhere( _new_collection, { id : module_api_ready.id } ) ) {
+                    _.each( _current_collection , function( _elt, _ind ) {
+                          if ( _elt.id != module_api_ready.id )
+                            return;
+
+                          //set the new val to the changed property
+                          _new_collection[_ind] = module_api_ready;
+                    });
+              }
+              //the module has to be added
+              else {
+                    _new_collection.push(module_api_ready);
+              }
+
+              //WHAT ARE THE PARAMS WE WANT TO PASS TO THE NEXT ACTIONS
+              var _params = {};
+              //if a data property has been passed,
+              //amend the data property with the changed module
+              if ( _.has( obj, 'data') ) {
+                  _params = $.extend( true, {}, obj.data );
+                  $.extend( _params, { module : module_api_ready } );
+              }
+
+              //Inform the collection
+              control.czr_moduleCollection.set( _new_collection, _params );
+      },
+
+
+
+
+
+
+      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      //cb of control.czr_moduleCollection.callbacks
+      //@data is an optional object. { silent : true }
+      moduleCollectionReact : function( to, from, data ) {
+            var control = this,
+                is_module_added = _.size(to) > _.size(from),
+                is_module_removed = _.size(from) > _.size(to),
+                is_module_update = _.size(from) == _.size(to);
+                is_collection_sorted = false;
+
+            //MODULE REMOVED
+            //Remove the module instance if needed
+            if ( is_module_removed ) {
+                  //find the module to remove
+                  var _to_remove = _.filter( from, function( _mod ){
+                      return _.isUndefined( _.findWhere( to, { id : _mod.id } ) );
+                  });
+                  _to_remove = _to_remove[0];
+                  control.czr_Module.remove( _to_remove.id );
+            }
+
+            //is there a passed module param ?
+            //if so prepare it for DB
+            //if a module is provided, we also want to pass its id to the preview => can be used to target specific selectors in a partial refresh scenario
+            if ( _.isObject( data  ) && _.has( data, 'module' ) ) {
+                  data.module_id = data.module.id;
+                  data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
+            }
+
+            //Inform the the setting
+            //If we are in a single module control (not a sektion, multimodule)
+            //AND that the module is being added to the collection for the first time,
+            //We don't want to say it to the setting, because it might alter the setting dirtyness for nothing on init.
+            if ( ! control.isMultiModuleControl() && is_module_added ) {
+                  return;
+            }
+            else {
+                  //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
+                  //if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
+                  api(this.id)
+                        .set( control.filterModuleCollectionBeforeAjax( to ), data )
+                        .done( function( to, from, o ) {});
+            }
+      },
+      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+      //an overridable method to act on the collection just before it is ajaxed
+      //@return the collection array
+      filterModuleCollectionBeforeAjax : function( collection ) {
+              var control = this,
+                  _filtered_collection = $.extend( true, [], collection ),
+                  _to_return;
+
+              _.each( collection , function( _mod, _key ) {
+                    var db_ready_mod = $.extend( true, {}, _mod );
+                    _filtered_collection[_key] = control.prepareModuleForDB( db_ready_mod );
+              });
+
+              //we don't want to save the same things if we the modules are embedded in a control or in a sektion
+              //=> in a sektion : we save the collection of modules
+              //=> in a control : we save
+              //1) the collection of item(s)
+              //2) the modOpt
+              if ( control.isMultiModuleControl() ) {
+                    return _filtered_collection;
+              } else {
+                    //at this point we should be in the case of a single module collection, typically use to populate a regular setting
+                    if ( _.size(collection) > 1 ) {
+                      throw new Error('There should not be several modules in the collection of control : ' + control.id );
+                    }
+                    if ( ! _.isArray(collection) || _.isEmpty(collection) || ! _.has( collection[0], 'items' ) ) {
+                      throw new Error('The setting value could not be populated in control : ' + control.id );
+                    }
+                    var module_id = collection[0].id;
+
+                    if ( ! control.czr_Module.has( module_id ) ) {
+                       throw new Error('The single module control (' + control.id + ') has no module registered with the id ' + module_id  );
+                    }
+                    var module_instance = control.czr_Module( module_id );
+                    if ( ! _.isArray( module_instance().items ) ) {
+                      throw new Error('The module ' + module_id + ' should be an array in control : ' + control.id );
+                    }
+
+                    //items
+                    _to_return = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
+
+                    //Add the modOpt if any
+                    return module_instance.hasModOpt() ? _.union( [ module_instance().modOpt ] , _to_return ) : _to_return;
+              }
+      },
+
+
+
+
+      //fired before adding a module to the collection of DB candidates
+      //the module must have the control.getDefaultModuleDBModel structure :
+      prepareModuleForDB : function ( module_db_candidate ) {
+            if ( ! _.isObject( module_db_candidate ) ) {
+                throw new Error('MultiModule Control::prepareModuleForDB : a module must be an object. Aborting.');
+            }
+            var control = this,
+                db_ready_module = {};
+
+            _.each( control.getDefaultModuleDBModel() , function( _value, _key ) {
+                  if ( ! _.has( module_db_candidate, _key ) ) {
+                      throw new Error('MultiModule Control::prepareModuleForDB : a module is missing the property : ' + _key + ' . Aborting.');
+                  }
+
+                  var _candidate_val = module_db_candidate[ _key ];
+                  switch( _key ) {
+                        //PROPERTIES COMMON TO ALL MODULES IN ALL CONTEXTS
+                        case 'items' :
                           if ( ! _.isArray( _candidate_val )  ) {
-                                throw new Error('prepareModuleForAPI : a module item list must be an array');
+                              throw new Error('prepareModuleForDB : a module item list must be an array');
                           }
-                          api_ready_module[_key] = _candidate_val;
-                    break;
-                    case 'modOpt' :
-                          if ( ! _.isObject( _candidate_val )  ) {
-                                throw new Error('prepareModuleForAPI : a module modOpt property must be an object');
-                          }
-                          api_ready_module[_key] = _candidate_val;
-                    break;
-                    case 'crud' :
-                          //get the value from the czrModuleMap
-                          if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
-                          } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                throw new Error('prepareModuleForAPI : the module param "crud" must be a boolean');
-                          }
-                          api_ready_module[_key] = _candidate_val || false;
-                    break;
-                    case 'multi_item' :
-                          //get the value from the czrModuleMap
-                          if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
-                          } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                throw new Error('prepareModuleForAPI : the module param "multi_item" must be a boolean');
-                          }
-                          api_ready_module[_key] = _candidate_val || false;
-                    break;
-                    //if the sortable property is not set, then check if crud or multi-item
-                    case 'sortable' :
-                          //get the value from the czrModuleMap
-                          if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                _candidate_val = api.czrModuleMap[ module_candidate.module_type ].sortable || api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
-                          } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                throw new Error('prepareModuleForAPI : the module param "sortable" must be a boolean');
-                          }
-                          api_ready_module[_key] = _candidate_val || false;
-                    break;
-                    case  'control' :
-                          api_ready_module[_key] = control;//this
-                    break;
-
-
-
-                    //PROPERTIES FOR MODULE EMBEDDED IN A CONTROL
-                    case  'section' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                throw new Error('prepareModuleForAPI : a module section must be a string not empty');
-                          }
-                          api_ready_module[_key] = _candidate_val;
-                    break;
-
-
-
-                    //PROPERTIES FOR MODULE EMBEDDED IN A SEKTION
-                    case  'column_id' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                throw new Error('prepareModuleForAPI : a module column id must a string not empty');
-                          }
-                          api_ready_module[_key] = _candidate_val;
-                    break;
-                    case  'sektion' :
-                          if ( ! _.isObject( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                throw new Error('prepareModuleForAPI : a module sektion must be an object not empty');
-                          }
-                          api_ready_module[_key] = _candidate_val;
-                    break;
-                    case  'sektion_id' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                throw new Error('prepareModuleForAPI : a module sektion id must be a string not empty');
-                          }
-                          api_ready_module[_key] = _candidate_val;
-                    break;
-                    case 'is_added_by_user' :
-                          if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                throw new Error('prepareModuleForAPI : the module param "is_added_by_user" must be a boolean');
-                          }
-                        api_ready_module[_key] = _candidate_val || false;
-                    break;
-                    case 'dirty' :
-                          api_ready_module[_key] = _candidate_val || false;
-                    break;
-              }//switch
-        });
-        return api_ready_module;
-  },
-
-
-  //recursive
-  generateModuleId : function( module_type, key, i ) {
-          //prevent a potential infinite loop
-          i = i || 1;
-          if ( i > 100 ) {
-                throw new Error('Infinite loop when generating of a module id.');
-          }
-          var control = this;
-          key = key || control._getNextModuleKeyInCollection();
-          var id_candidate = module_type + '_' + key;
-
-          //do we have a module collection value ?
-          if ( ! _.has(control, 'czr_moduleCollection') || ! _.isArray( control.czr_moduleCollection() ) ) {
-                throw new Error('The module collection does not exist or is not properly set in control : ' + control.id );
-          }
-
-          //make sure the module is not already instantiated
-          if ( control.isModuleRegistered( id_candidate ) ) {
-            key++; i++;
-            return control.generateModuleId( module_type, key, i );
-          }
-
-          return id_candidate;
-  },
-
-
-  //helper : return an int
-  //=> the next available id of the module collection
-  _getNextModuleKeyInCollection : function() {
-          var control = this,
-            _max_mod_key = {},
-            _next_key = 0;
-
-          //get the initial key
-          //=> if we already have a collection, extract all keys, select the max and increment it.
-          //else, key is 0
-          if ( ! _.isEmpty( control.czr_moduleCollection() ) ) {
-              _max_mod_key = _.max( control.czr_moduleCollection(), function( _mod ) {
-                  return parseInt( _mod.id.replace(/[^\/\d]/g,''), 10 );
-              });
-              _next_key = parseInt( _max_mod_key.id.replace(/[^\/\d]/g,''), 10 ) + 1;
-          }
-          return _next_key;
-  }
-});//$.extend//CZRBaseControlMths
-//BASE CONTROL CLASS
-//extends api.CZRBaseControl
-//define a set of methods, mostly helpers, to extend the base WP control class
-//this will become our base constructor for main complex controls
-//EARLY SETUP
-var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
-
-$.extend( CZRBaseModuleControlMths, {
-
-
-  //Multi Module method
-  //fired when the main sektion module has synchronised its if with the module-collection control
-  registerModulesOnInit : function( sektion_module_instance ) {
-          var control = this,
-              _orphan_mods = [];
-
-          _.each( control.getSavedModules() , function( _mod, _key ) {
-                  //a module previously embedded in a deleted sektion must not be registered
-                  if ( ! sektion_module_instance.czr_Item.has( _mod.sektion_id ) ) {
-                      api.consoleLog('Warning Module ' + _mod.id + ' is orphan : it has no sektion to be embedded to. It Must be removed.');
-                      _orphan_mods.push(_mod);
-                      return;
-                  }
-                  //@todo handle the case of a module embedded in a previously deleted column
-                  //=> register it in the first column of the sektion ?
-
-                  var _sektion = sektion_module_instance.czr_Item( _mod.sektion_id );
-
-                  if ( _.isUndefined( _sektion ) ) {
-                    throw new Error('sektion instance missing. Impossible to instantiate module : ' + _mod.id );
-                  }
-
-                  //add the sektion instance before update the api collection
-                  $.extend( _mod, {sektion : _sektion} );
-
-                  //push it to the collection of the module-collection control
-                  //=> the instantiation will take place later, on column instantiation
-                  control.updateModulesCollection( {module : _mod } );
-          });
-
-          //REMOVE ORPHAN MODULES ON INIT
-          //But only when the module collectionn has been resolved
-          control.moduleCollectionReady.then( function() {
-                //if there are some orphans mods, the module-collection setting must be updated now.
-                if ( ! _.isEmpty( _orphan_mods ) ) {
-                    control.moduleCollectionReact( control.czr_moduleCollection(), [], { orphans_module_removal : _orphan_mods } );
-                }
-          });
-  },
-
-
-
-  //@param obj can be { collection : []}, or { module : {} }
-  //Can be called :
-  //1) for multimodule control, in register modules on init, when the main sektion module has synchronised with the module-collection control
-  //2) for all modules, in module.isReady.done() if the module is not registered in the collection yet.
-  //3) for all modules on moduleReact ( module.callbacks )
-  //
-  //=> sets the setting value via the module collection !
-  updateModulesCollection : function( obj ) {
-          var control = this,
-              _current_collection = control.czr_moduleCollection(),
-              _new_collection = $.extend( true, [], _current_collection);
-
-          //if a collection is provided in the passed obj then simply refresh the collection
-          //=> typically used when reordering the collection module with sortable or when a module is removed
-          if ( _.has( obj, 'collection' ) ) {
-                //reset the collection
-                control.czr_moduleCollection.set( obj.collection, obj.data || {} );
-                return;
-          }
-
-          if ( ! _.has(obj, 'module') ) {
-            throw new Error('updateModulesCollection, no module provided ' + control.id + '. Aborting');
-          }
-
-          //normalizes the module for the API
-          var module_api_ready = control.prepareModuleForAPI( _.clone( obj.module ) );
-
-          //the module already exist in the collection
-          if ( _.findWhere( _new_collection, { id : module_api_ready.id } ) ) {
-                _.each( _current_collection , function( _elt, _ind ) {
-                      if ( _elt.id != module_api_ready.id )
-                        return;
-
-                      //set the new val to the changed property
-                      _new_collection[_ind] = module_api_ready;
-                });
-          }
-          //the module has to be added
-          else {
-                _new_collection.push(module_api_ready);
-          }
-
-          //WHAT ARE THE PARAMS WE WANT TO PASS TO THE NEXT ACTIONS
-          var _params = {};
-          //if a data property has been passed,
-          //amend the data property with the changed module
-          if ( _.has( obj, 'data') ) {
-              _params = $.extend( true, {}, obj.data );
-              $.extend( _params, { module : module_api_ready } );
-          }
-
-          //Inform the collection
-          control.czr_moduleCollection.set( _new_collection, _params );
-  },
-
-
-
-
-
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //cb of control.czr_moduleCollection.callbacks
-  //@data is an optional object. { silent : true }
-  moduleCollectionReact : function( to, from, data ) {
-        var control = this,
-            is_module_added = _.size(to) > _.size(from),
-            is_module_removed = _.size(from) > _.size(to),
-            is_module_update = _.size(from) == _.size(to);
-            is_collection_sorted = false;
-
-        //MODULE REMOVED
-        //Remove the module instance if needed
-        if ( is_module_removed ) {
-              //find the module to remove
-              var _to_remove = _.filter( from, function( _mod ){
-                  return _.isUndefined( _.findWhere( to, { id : _mod.id } ) );
-              });
-              _to_remove = _to_remove[0];
-              control.czr_Module.remove( _to_remove.id );
-        }
-
-        //is there a passed module param ?
-        //if so prepare it for DB
-        //if a module is provided, we also want to pass its id to the preview => can be used to target specific selectors in a partial refresh scenario
-        if ( _.isObject( data  ) && _.has( data, 'module' ) ) {
-              data.module_id = data.module.id;
-              data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
-        }
-
-        //Inform the the setting
-        //If we are in a single module control (not a sektion, multimodule)
-        //AND that the module is being added to the collection for the first time,
-        //We don't want to say it to the setting, because it might alter the setting dirtyness for nothing on init.
-        if ( ! control.isMultiModuleControl() && is_module_added ) {
-              return;
-        }
-        else {
-              //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
-              //if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
-              api(this.id)
-                    .set( control.filterModuleCollectionBeforeAjax( to ), data )
-                    .done( function( to, from, o ) {});
-        }
-  },
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-  //an overridable method to act on the collection just before it is ajaxed
-  //@return the collection array
-  filterModuleCollectionBeforeAjax : function( collection ) {
-          var control = this,
-              _filtered_collection = $.extend( true, [], collection ),
-              _to_return;
-
-          _.each( collection , function( _mod, _key ) {
-                var db_ready_mod = $.extend( true, {}, _mod );
-                _filtered_collection[_key] = control.prepareModuleForDB( db_ready_mod );
-          });
-
-          //we don't want to save the same things if we the modules are embedded in a control or in a sektion
-          //=> in a sektion : we save the collection of modules
-          //=> in a control : we save
-          //1) the collection of item(s)
-          //2) the modOpt
-          if ( control.isMultiModuleControl() ) {
-                return _filtered_collection;
-          } else {
-                //at this point we should be in the case of a single module collection, typically use to populate a regular setting
-                if ( _.size(collection) > 1 ) {
-                  throw new Error('There should not be several modules in the collection of control : ' + control.id );
-                }
-                if ( ! _.isArray(collection) || _.isEmpty(collection) || ! _.has( collection[0], 'items' ) ) {
-                  throw new Error('The setting value could not be populated in control : ' + control.id );
-                }
-                var module_id = collection[0].id;
-
-                if ( ! control.czr_Module.has( module_id ) ) {
-                   throw new Error('The single module control (' + control.id + ') has no module registered with the id ' + module_id  );
-                }
-                var module_instance = control.czr_Module( module_id );
-                if ( ! _.isArray( module_instance().items ) ) {
-                  throw new Error('The module ' + module_id + ' should be an array in control : ' + control.id );
-                }
-
-                //items
-                _to_return = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
-
-                //Add the modOpt if any
-                return module_instance.hasModOpt() ? _.union( [ module_instance().modOpt ] , _to_return ) : _to_return;
-          }
-  },
-
-
-
-
-  //fired before adding a module to the collection of DB candidates
-  //the module must have the control.getDefaultModuleDBModel structure :
-  prepareModuleForDB : function ( module_db_candidate ) {
-        if ( ! _.isObject( module_db_candidate ) ) {
-            throw new Error('MultiModule Control::prepareModuleForDB : a module must be an object. Aborting.');
-        }
-        var control = this,
-            db_ready_module = {};
-
-        _.each( control.getDefaultModuleDBModel() , function( _value, _key ) {
-              if ( ! _.has( module_db_candidate, _key ) ) {
-                  throw new Error('MultiModule Control::prepareModuleForDB : a module is missing the property : ' + _key + ' . Aborting.');
-              }
-
-              var _candidate_val = module_db_candidate[ _key ];
-              switch( _key ) {
-                    //PROPERTIES COMMON TO ALL MODULES IN ALL CONTEXTS
-                    case 'items' :
-                      if ( ! _.isArray( _candidate_val )  ) {
-                          throw new Error('prepareModuleForDB : a module item list must be an array');
-                      }
-                      db_ready_module[ _key ] = _candidate_val;
-                    break;
-
-
-
-                    //PROPERTIES FOR MODULE EMBEDDED IN A SEKTION
-                    case 'id' :
-                      if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                          throw new Error('prepareModuleForDB : a module id must a string not empty');
-                      }
-                      db_ready_module[ _key ] = _candidate_val;
-                    break;
-                    case 'module_type' :
-                      if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                          throw new Error('prepareModuleForDB : a module type must a string not empty');
-                      }
-                      db_ready_module[ _key ] = _candidate_val;
-                    break;
-                    case  'column_id' :
-                      if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                          throw new Error('prepareModuleForDB : a module column id must a string not empty');
-                      }
-                      db_ready_module[ _key ] = _candidate_val;
-                    break;
-                    case  'sektion_id' :
-                      if ( ! _.isObject( module_db_candidate.sektion ) || ! _.has( module_db_candidate.sektion, 'id' ) ) {
-                          throw new Error('prepareModuleForDB : a module sektion must be an object with an id.');
-                      }
-                      //in the API, the sektion property hold by the module is an instance
-                      //let's use only the id for the DB
-                      db_ready_module[ _key ] = module_db_candidate.sektion.id;
-                    break;
-                    case 'dirty' :
-                      if ( control.czr_Module.has( module_db_candidate.id ) )
-                          db_ready_module[ _key ] = control.czr_Module( module_db_candidate.id ).isDirty();
-                      else
                           db_ready_module[ _key ] = _candidate_val;
-                      if ( ! _.isBoolean( db_ready_module[ _key ] ) ) {
-                          throw new Error('prepareModuleForDB : a module dirty state must be a boolean.');
-                      }
-                    break;
-              }//switch
-        });
-        return db_ready_module;
-  }
+                        break;
 
+
+
+                        //PROPERTIES FOR MODULE EMBEDDED IN A SEKTION
+                        case 'id' :
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                              throw new Error('prepareModuleForDB : a module id must a string not empty');
+                          }
+                          db_ready_module[ _key ] = _candidate_val;
+                        break;
+                        case 'module_type' :
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                              throw new Error('prepareModuleForDB : a module type must a string not empty');
+                          }
+                          db_ready_module[ _key ] = _candidate_val;
+                        break;
+                        case  'column_id' :
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                              throw new Error('prepareModuleForDB : a module column id must a string not empty');
+                          }
+                          db_ready_module[ _key ] = _candidate_val;
+                        break;
+                        case  'sektion_id' :
+                          if ( ! _.isObject( module_db_candidate.sektion ) || ! _.has( module_db_candidate.sektion, 'id' ) ) {
+                              throw new Error('prepareModuleForDB : a module sektion must be an object with an id.');
+                          }
+                          //in the API, the sektion property hold by the module is an instance
+                          //let's use only the id for the DB
+                          db_ready_module[ _key ] = module_db_candidate.sektion.id;
+                        break;
+                        case 'dirty' :
+                          if ( control.czr_Module.has( module_db_candidate.id ) )
+                              db_ready_module[ _key ] = control.czr_Module( module_db_candidate.id ).isDirty();
+                          else
+                              db_ready_module[ _key ] = _candidate_val;
+                          if ( ! _.isBoolean( db_ready_module[ _key ] ) ) {
+                              throw new Error('prepareModuleForDB : a module dirty state must be a boolean.');
+                          }
+                        break;
+                  }//switch
+            });
+            return db_ready_module;
+      }
 });//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
 //extends api.CZRBaseModuleControl
 var CZRMultiModuleControlMths = CZRMultiModuleControlMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRMultiModuleControlMths, {
+      initialize: function( id, options ) {
+              var control = this;
 
-  initialize: function( id, options ) {
-          var control = this;
+              //listen to the module-collection setting changes
+              //=> synchronize the columns in the sektion setting
+              api.consoleLog('IN MULTI MODULE INITIALIZE ? ', options );
+              api(id).callbacks.add( function() { return control.syncColumn.apply( control, arguments ); } );
 
-          //listen to the module-collection setting changes
-          //=> synchronize the columns in the sektion setting
-          api.consoleLog('IN MULTI MODULE INITIALIZE ? ', options );
-          api(id).callbacks.add( function() { return control.syncColumn.apply( control, arguments ); } );
+              //when the synchronized sektion module sends its instance, check the consistency with the module-collection setting
+              //=> each modules of the module-collection setting should be present in a column of the synchronized sektion
+              // control.syncSektionModule().bind( function( sektion_module_instance ) {
+              //     sektion_module_instance.czr_columnCollection.each( function( _col ) {
+              //           api.consoleLog('_col.modules', _col.modules);
+              //     });
+              // });
 
-          //when the synchronized sektion module sends its instance, check the consistency with the module-collection setting
-          //=> each modules of the module-collection setting should be present in a column of the synchronized sektion
-          // control.syncSektionModule().bind( function( sektion_module_instance ) {
-          //     sektion_module_instance.czr_columnCollection.each( function( _col ) {
-          //           api.consoleLog('_col.modules', _col.modules);
-          //     });
-          // });
-
-          api.CZRBaseModuleControl.prototype.initialize.call( control, id, options );
-
-  },
+              api.CZRBaseModuleControl.prototype.initialize.call( control, id, options );
+      },
 
 
-  ready : function() {
-      var control = this;
-      api.consoleLog('MODULE-COLLECTION CONTROL READY', this.id );
-      api.CZRBaseModuleControl.prototype.ready.apply( control, arguments);
-  },
+      ready : function() {
+            var control = this;
+            api.consoleLog('MODULE-COLLECTION CONTROL READY', this.id );
+            api.CZRBaseModuleControl.prototype.ready.apply( control, arguments);
+      },
 
-  //cb of : api(control.id).callbacks.
-  syncColumn : function( to, from, data ) {
-        api.consoleLog('IN SYNC COLUMN', to, from, data );
-        if ( ! _.isUndefined(data) && data.silent )
-          return;
-        api.consoleLog('IN SYNXXX', api.control('hu_theme_options[module-collection]').syncSektionModule()(), this.syncSektionModule()(), this.id );
+      //cb of : api(control.id).callbacks.
+      syncColumn : function( to, from, data ) {
+            api.consoleLog('IN SYNC COLUMN', to, from, data );
+            if ( ! _.isUndefined(data) && data.silent )
+              return;
+            api.consoleLog('IN SYNXXX', api.control('hu_theme_options[module-collection]').syncSektionModule()(), this.syncSektionModule()(), this.id );
 
-        //ORPHANS MODULE REMOVED ON INIT, VOID()
-        //=> there's no column to synchronize
-        if ( _.has( data, 'orphans_module_removal' ) )
-          return;
+            //ORPHANS MODULE REMOVED ON INIT, VOID()
+            //=> there's no column to synchronize
+            if ( _.has( data, 'orphans_module_removal' ) )
+              return;
 
-        //always get the control instance from the api
-        //=> because the control on which this callback is binded can be re instantiated, typically on skope switch
-        var control = api.control( this.id );
-        //MODULE ADDED
-        //determine if a module has been added
-        var added_mod = _.filter( to, function( _mod, _key ){
-            return ! _.findWhere( from, { id : _mod.id } );
-        } );
-        if ( ! _.isEmpty( added_mod ) ) {
-              api.consoleLog('ADDED MODULE?', added_mod );
-              _.each( added_mod, function( _mod ) {
-                      control.syncSektionModule().czr_Column( _mod.column_id ).updateColumnModuleCollection( { module : _mod } );
-              });
-        }
+            //always get the control instance from the api
+            //=> because the control on which this callback is binded can be re instantiated, typically on skope switch
+            var control = api.control( this.id );
+            //MODULE ADDED
+            //determine if a module has been added
+            var added_mod = _.filter( to, function( _mod, _key ){
+                return ! _.findWhere( from, { id : _mod.id } );
+            } );
+            if ( ! _.isEmpty( added_mod ) ) {
+                  api.consoleLog('ADDED MODULE?', added_mod );
+                  _.each( added_mod, function( _mod ) {
+                          control.syncSektionModule().czr_Column( _mod.column_id ).updateColumnModuleCollection( { module : _mod } );
+                  });
+            }
 
-        //MODULE REMOVED
-        var removed_mod = _.filter( from, function( _mod, _key ){
-            return ! _.findWhere( to, { id : _mod.id } );
-        } );
-        if ( ! _.isEmpty( removed_mod ) ) {
-              _.each( removed_mod, function( _mod ) {
-                      control.syncSektionModule().czr_Column( _mod.column_id ).removeModuleFromColumnCollection( _mod );
-              });
-        }
+            //MODULE REMOVED
+            var removed_mod = _.filter( from, function( _mod, _key ){
+                return ! _.findWhere( to, { id : _mod.id } );
+            } );
+            if ( ! _.isEmpty( removed_mod ) ) {
+                  _.each( removed_mod, function( _mod ) {
+                          control.syncSektionModule().czr_Column( _mod.column_id ).removeModuleFromColumnCollection( _mod );
+                  });
+            }
 
-        //MODULE HAS BEEN MOVED TO ANOTHER COLUMN
-        if ( _.size(from) == _.size(to) && _.has( data, 'module') && _.has( data, 'source_column') && _.has( data, 'target_column') ) {
-                $.when( control.syncSektionModule().moveModuleFromTo( data.module, data.source_column, data.target_column ) ).done( function() {
-                      control.syncSektionModule().control.trigger('module-moved', { module : data.module, source_column: data.source_column, target_column :data.target_column });
-                } );
-        }
-        control.trigger( 'columns-synchronized', to );
-  },
-
-
-  ////////////////////////////////////////////
-  /// REMOVE MODULE
-  ///////////////////////////////////////////
-  //@param module = obj => the module model
-  removeModule : function( module ) {
-        var control = this;
-        //remove module from DOM if it's been embedded
-        if ( control.czr_Module.has( module.id ) && 'resolved' == control.czr_Module( module.id ).embedded.state() )
-            control.czr_Module( module.id ).container.remove();
-
-        //remove module from API
-        control.removeModuleFromCollection( module );
-  },
-
-
-  removeModuleFromCollection : function( module ) {
-        var control = this,
-            _current_collection = control.czr_moduleCollection(),
-            _new_collection = $.extend( true, [], _current_collection);
-
-        _new_collection = _.filter( _new_collection, function( _mod ) {
-              return _mod.id != module.id;
-        } );
-        control.czr_moduleCollection.set( _new_collection );
-  }
-
-});//$.extend//CZRBaseControlMths
-//extends api.CZRBaseModuleControl
-var CZRMultiModuleControlMths = CZRMultiModuleControlMths || {};
-$.extend( CZRMultiModuleControlMths, {
-  //adapt modules for them to be used in a multimodule control, synchronized with a sektions control.
-  //@todo. => create equivalent extender when they are used in controls.
-  getMultiModuleExtender : function( parentConstructor ) {
-        var control = this;
-        $.extend( control.CZRModuleExtended, {
-              initialize: function( id, constructorOptions ) {
-                    var module = this;
-                    //run the parent initialize
-                    parentConstructor.prototype.initialize.call( module, id, constructorOptions );
-
-                    api.consoleLog('MODULE INSTANTIATED : ', module.id );
-
-                    //extend the module with new template Selectors
-                    $.extend( module, {
-                          singleModuleWrapper : 'czr-single-module-wrapper',
-                          sektionModuleTitle : 'czr-module-sektion-title-part',
-                          ruModuleEl : 'czr-ru-module-sektion-content'
+            //MODULE HAS BEEN MOVED TO ANOTHER COLUMN
+            if ( _.size(from) == _.size(to) && _.has( data, 'module') && _.has( data, 'source_column') && _.has( data, 'target_column') ) {
+                    $.when( control.syncSektionModule().moveModuleFromTo( data.module, data.source_column, data.target_column ) ).done( function() {
+                          control.syncSektionModule().control.trigger('module-moved', { module : data.module, source_column: data.source_column, target_column :data.target_column });
                     } );
+            }
+            control.trigger( 'columns-synchronized', to );
+      },
 
-                    //ADD A MODULE STATE OBSERVER
-                    //czr_ModuleState stores the current expansion status of a given module
-                    //can take 2 values : expanded, closed
-                    module.czr_ModuleState = new api.Value( false );
 
-                    //SETUP MODULE VIEW WHEN MODULE READY
-                    module.isReady.done( function() {
-                          module.setupModuleView();
+      ////////////////////////////////////////////
+      /// REMOVE MODULE
+      ///////////////////////////////////////////
+      //@param module = obj => the module model
+      removeModule : function( module ) {
+            var control = this;
+            //remove module from DOM if it's been embedded
+            if ( control.czr_Module.has( module.id ) && 'resolved' == control.czr_Module( module.id ).embedded.state() )
+                control.czr_Module( module.id ).container.remove();
+
+            //remove module from API
+            control.removeModuleFromCollection( module );
+      },
+
+
+      removeModuleFromCollection : function( module ) {
+            var control = this,
+                _current_collection = control.czr_moduleCollection(),
+                _new_collection = $.extend( true, [], _current_collection);
+
+            _new_collection = _.filter( _new_collection, function( _mod ) {
+                  return _mod.id != module.id;
+            } );
+            control.czr_moduleCollection.set( _new_collection );
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+//extends api.CZRBaseModuleControl
+var CZRMultiModuleControlMths = CZRMultiModuleControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRMultiModuleControlMths, {
+      //adapt modules for them to be used in a multimodule control, synchronized with a sektions control.
+      //@todo. => create equivalent extender when they are used in controls.
+      getMultiModuleExtender : function( parentConstructor ) {
+            var control = this;
+            $.extend( control.CZRModuleExtended, {
+                  initialize: function( id, constructorOptions ) {
+                        var module = this;
+                        //run the parent initialize
+                        parentConstructor.prototype.initialize.call( module, id, constructorOptions );
+
+                        api.consoleLog('MODULE INSTANTIATED : ', module.id );
+
+                        //extend the module with new template Selectors
+                        $.extend( module, {
+                              singleModuleWrapper : 'czr-single-module-wrapper',
+                              sektionModuleTitle : 'czr-module-sektion-title-part',
+                              ruModuleEl : 'czr-ru-module-sektion-content'
+                        } );
+
+                        //ADD A MODULE STATE OBSERVER
+                        //czr_ModuleState stores the current expansion status of a given module
+                        //can take 2 values : expanded, closed
+                        module.czr_ModuleState = new api.Value( false );
+
+                        //SETUP MODULE VIEW WHEN MODULE READY
+                        module.isReady.done( function() {
+                              module.setupModuleView();
+                        });
+
+                        //ADD A MODULE TITLE ELEMENT EMBEDDED STATE
+                        module.moduleTitleEmbedded = $.Deferred();
+
+                        //ADD A MODULE COLUMN STATE OBSERVER
+                        module.modColumn = new api.Value();
+                        module.modColumn.set( constructorOptions.column_id );
+
+                        //React to a module column change. Typically fired when moving a module from one column to another.
+                        module.modColumn.bind( function( to, from ) {
+                              api.consoleLog('MODULE ' + module.id + ' HAS BEEN MOVED TO COLUMN', to, module() );
+                              var _current_model = module(),
+                                  _new_model = $.extend( true, {}, _current_model );
+
+                              _new_model.column_id = to;
+
+                              //When the module value changes, here's what happens :
+                              //IN THE MODULE COLLECTION CONTROL / SETTING
+                              //1) the module reacts and inform the control.czr_moduleCollection()
+                              //2) the control.czr_moduleCollection() reacts and inform the 'module-collection' setting
+                              //3) the module-collection setting react and inform the relevant column.columnModuleCollection() instance with the syncColumn() method
+                              //
+                              //IN THE SEKTIONS CONTROL / SETTING
+                              //4) the column.columnModuleCollection() instance reacts and inform the column() instance
+                              //5) the column() instance reacts and inform the sektion module.czr_columnCollection() instance
+                              //6) the module.czr_columnCollection() instance reacts and inform the relevant sektion() instance
+                              //7) the sektion() instance reacts and inform the itemCollection() (=> a sektion() is actually an item )
+                              //8) the itemCollection() reacts and inform its module() instance
+                              //9) the module() instance reacts and inform the moduleCollection() instance
+                              //10) the control.czr_moduleCollection() instance reacts and inform the 'sektions' setting
+                              module.set( _new_model, { target_column : to, source_column : from } );
+                              //var updatedModuleCollection = $.extend( true, [], module.control.czr_moduleCollection() );
+                              //api(module.control.id).set( module.control.filterModuleCollectionBeforeAjax( updatedModuleCollection ) );
+                        } );
+                  },
+
+                  //////////////////////////////////
+                  ///READY
+                  //////////////////////////////////
+                  //when a module is embedded in a sektion, we need to render it before ready is done
+                  //=> this allows us to override the container element declared in the parent initialize
+                  //when ready done => the module items are embedded (without their content)
+                  ready : function( is_added_by_user ) {
+                          var module = this;
+                           api.consoleLog('MODULE READY IN EXTENDED MODULE CLASS : ', module.id );
+                          $.when( module.renderModuleWrapper( is_added_by_user ) ).done( function( $_module_container ) {
+                                if ( _.isUndefined($_module_container) || false === $_module_container.length ) {
+                                    throw new Error( 'Module container has not been embedded for module :' + module.id );
+                                }
+                                module.container = $_module_container;
+                                module.embedded.resolve();
+                          } );
+                          //run the parent initialize
+                          parentConstructor.prototype.ready.call( module );
+                          //module.isReady.resolve();
+                  }
+
+            });
+            return control.CZRModuleExtended;
+      },
+
+
+      //this object holds the various methods allowing a module to be rendered in a multimodule control
+      CZRModuleExtended  : {
+            //fired in ready.
+            //=> before isReady.done().
+            renderModuleWrapper : function( is_added_by_user ) {
+                    //=> an array of objects
+                    var module = this;
+
+                    //has this module view already been rendered?
+                    if ( 'resolved' == module.embedded.state() )
+                      return module.container;
+
+                    //do we have view template script?
+                    if ( 0 === $( '#tmpl-' + module.singleModuleWrapper ).length ) {
+                      throw new Error('No template for module ' + module.id + '. The template script id should be : #tmpl-' + module.singleModuleWrapper );
+                    }
+
+                    var module_wrapper_tmpl = wp.template( module.singleModuleWrapper ),
+                        tmpl_data = {
+                            id : module.id,
+                            type : module.module_type
+                        },
+                        $_module_el = $(  module_wrapper_tmpl( tmpl_data ) );
+
+                    //append the module wrapper to the column
+                    //if added by user, search for the module candidate element, render after and delete the element
+                    if ( is_added_by_user ) {
+                        $.when( $( '.czr-module-collection-wrapper' , module._getColumn().container ).find( '.czr-module-candidate').after( $_module_el ) ).
+                          done( function() {
+                            $( '.czr-module-collection-wrapper' , module._getColumn().container ).find( '.czr-module-candidate').remove();
+                          });
+                    } else {
+                        $( '.czr-module-collection-wrapper' , module._getColumn().container).append( $_module_el );
+                    }
+
+
+                    // //then append the ru module template
+                    // var mod_content_wrapper_tmpl = wp.template( module.ruModuleEl ),
+                    //     $_mod_content_wrapper = $(  mod_content_wrapper_tmpl( tmpl_data ) );
+
+                    // $( '.czr-mod-content', $_module_el).append( $_mod_content_wrapper );
+
+                    return $_module_el;
+            },
+
+
+
+
+
+            setupModuleView : function() {
+                    var module = this;
+
+                    module.view_event_map = [
+                            //toggles remove view alert
+                            {
+                              trigger   : 'click keydown',
+                              selector  : [ '.czr-remove-mod', '.' + module.control.css_attr.cancel_alert_btn ].join(','),
+                              name      : 'toggle_remove_alert',
+                              actions   : ['toggleModuleRemoveAlert']
+                            },
+                            //removes module and destroys its view
+                            {
+                              trigger   : 'click keydown',
+                              selector  : '.' + module.control.css_attr.remove_view_btn,
+                              name      : 'remove_module',
+                              actions   : ['removeModule']
+                            },
+                            //edit view
+                            {
+                              trigger   : 'click keydown',
+                              selector  : '.czr-edit-mod',
+                              name      : 'edit_module',
+                              actions   : ['setModuleViewVisibility', 'sendEditModule']
+                            },
+                            {
+                              trigger   : 'click keydown',
+                              selector  : '.czr-module-back',
+                              name      : 'back_to_column',
+                              actions   : ['setModuleViewVisibility']
+                            },
+                            {
+                              trigger   : 'mouseenter',
+                              selector  : '.czr-mod-header',
+                              name      : 'hovering_module',
+                              actions   : function( obj ) {
+                                    module.control.previewer.send( 'start_hovering_module', {
+                                          id : module.id
+                                    });
+                              }
+                            },
+                            {
+                              trigger   : 'mouseleave',
+                              selector  : '.czr-mod-header',
+                              name      : 'hovering_module',
+                              actions   : function( obj ) {
+                                  module.control.previewer.send( 'stop_hovering_module', {
+                                        id : module.id
+                                  });
+                              }
+                            }
+                    ];
+
+                    //defer actions on module view embedded
+                    module.embedded.done( function() {
+                          //add a listener on view state change
+                          module.czr_ModuleState.callbacks.add( function() { return module.setupModuleViewStateListeners.apply(module, arguments ); } );
+
+                          //setup DOM listener
+                          api.CZR_Helpers.setupDOMListeners(
+                                module.view_event_map,//actions to execute
+                                { module : { id : module.id } , dom_el:module.container },//model + dom scope
+                                module //instance where to look for the cb methods
+                          );//listeners for the view wrapper
+                    });
+            },
+
+            //fired on click
+            setModuleViewVisibility : function( obj, is_added_by_user ) {
+                  var module = this;
+
+                  module.czr_ModuleState( ! module.czr_ModuleState() );
+
+                  //always close the module panel
+                  api.czrModulePanelState.set(false);
+                  //always close the sektion settings panel
+                  api.czrSekSettingsPanelState.set(false);
+
+                  //close all sektions but the one from which the button has been clicked
+                  module.control.syncSektionModule().closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
+
+                  // if ( is_added_by_user ) {
+                  //   item.viewState.set( 'expanded_noscroll' );
+                  // } else {
+                  //   module.closeAllItems( item.id );
+                  //   if ( _.has(module, 'preItem') ) {
+                  //     module.preItemExpanded.set( false );
+                  //   }
+                  //   }
+                  //   item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
+                  // }
+            },
+
+            //fired on click
+            sendEditModule : function( obj ) {
+                  var module = this;
+                  module.control.previewer.send( 'edit_module', {
+                        id : module.id
+                  });
+            },
+
+            //cb of module.czr_ModuleState.callbacks
+            //On first module expansion, render the module item(s) content
+            setupModuleViewStateListeners : function( expanded ) {
+                  var module = this;
+                  //setup an api value for the current opened module.
+                  api.czr_isModuleExpanded = api.czr_isModuleExpanded || new api.Value();
+
+                  if ( expanded )
+                    api.czr_isModuleExpanded( module );
+                  else
+                    api.czr_isModuleExpanded( false );
+
+                  //expand / collapse
+                  $.when( module.toggleModuleViewExpansion( expanded ) ).done( function() {
+                        if ( expanded ) {
+                              //render the module title
+                              module.renderModuleTitle();
+
+                              //populates the saved items collection
+                              module.populateSavedItemCollection();
+
+                              //render the item(s)
+                              //on first rendering, use the regular method.
+                              //for further re-rendering, when the embedded state is resolved()
+                              // => 1) re-render each item
+                              // => 2) re-instantiate each input
+                              // module.czr_Item.each ( function( item ) {
+                              //       if ( ! item.module.isMultiItem() )
+                              //           item.viewState.set('expanded');
+                              //       if ( 'resolved' == item.embedded.state() ) {
+                              //           $.when( item.renderItemWrapper() ).done( function( $_item_container ) {
+                              //               item.container = $_item_container;
+
+                              //               $.when( item.renderItemContent() ).done( function() {
+                              //                   api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
+                              //               });
+
+                              //               if ( ! item.module.isMultiItem() )
+                              //                   item.viewState.set('expanded');
+                              //           });
+
+                              //       }
+                              //       else {
+                              //           item.mayBeRenderItemWrapper();
+                              //       }
+                              // } );
+                        }
+                        else {
+                              module.czr_Item.each ( function( item ) {
+                                    item.viewState.set('closed');
+                                    item._destroyView( 0 );
+                                    //api.CZR_Helpers.removeInputCollection.call( item );
+                                    module.czr_Item.remove( item.id );
+                              } );
+                        }
+                  });
+            },
+
+
+            renderModuleTitle : function() {
+                  var module = this;
+                  if( 'resolved' == module.moduleTitleEmbedded.state() )
+                    return;
+
+                  //render the module title
+                  //do we have view template script?
+                  if ( 0 === $( '#tmpl-' + module.sektionModuleTitle ).length ) {
+                    throw new Error('No sektion title Module Part template for module ' + module.id + '. The template script id should be : #tmpl-' + module.sektionModuleTitle );
+                  }
+                  //append the title when in a sektion and resolve the embedded state
+                  $.when( $( module.container ).find('.czr-mod-content').prepend(
+                        $( wp.template( module.sektionModuleTitle )( { id : module.id } ) )
+                  ) ).done( function() {
+                        module.moduleTitleEmbedded.resolve();
+                  });
+            },
+
+
+            //fired in setupModuleViewStateListeners()
+            toggleModuleViewExpansion : function( expanded, duration ) {
+                  var module = this;
+
+                  //slide Toggle and toggle the 'open' class
+                  $( '.czr-mod-content' , module.container ).slideToggle( {
+                      duration : duration || 200,
+                      done : function() {
+                            var $_overlay = module.container.closest( '.wp-full-overlay' ),
+                                $_backBtn = module.container.find( '.czr-module-back' ),
+                                $_modTitle = module.container.find('.czr-module-title');
+
+                            module.container.toggleClass('open' , expanded );
+                            $_overlay.toggleClass('czr-module-open', expanded );
+                            $_modTitle.attr( 'tabindex', expanded ? '-1' : '0' );
+                            $_backBtn.attr( 'tabindex', expanded ? '0' : '-1' );
+
+                            if( expanded ) {
+                                $_backBtn.focus();
+                            } else {
+                                $_modTitle.focus();
+                            }
+
+                            //close all alerts
+                            //module.closeRemoveDialogs();
+
+                            //toggle the icon activate class depending on the status
+                            //switch icon
+                            //var $_edit_icon = $(this).siblings().find('.' + module.control.css_attr.edit_view_btn );
+
+                            // $_edit_icon.toggleClass('active' , expanded );
+                            // if ( expanded )
+                            //   $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.translatedStrings.close );
+                            // else
+                            //   $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.translatedStrings.edit );
+
+                            //scroll to the currently expanded view
+                            if ( expanded )
+                              module._adjustScrollExpandedBlock( module.container );
+                      }//done callback
+                    } );
+            },
+
+
+
+
+
+
+
+
+
+            toggleModuleRemoveAlert : function( obj ) {
+                    var module = this,
+                        control = this.control,
+                        $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, module.container ).first(),
+                        $_clicked = obj.dom_event,
+                        $_column_container = control.syncSektionModule().czr_Column( module.column_id ).container;
+
+                    //first close all open  views
+                    //module.closeAllItems();
+
+                    //close the main sektion pre_item view
+                    if ( _.has(module, 'preItem') ) {
+                        control.syncSektionModule().preItemExpanded.set( false );
+                    }
+
+                    //then close any other open remove alert in the column containuer
+                    $('.' + module.control.css_attr.remove_alert_wrapper, $_column_container ).not($_alert_el).each( function() {
+                          if ( $(this).hasClass('open') ) {
+                                $(this).slideToggle( {
+                                      duration : 200,
+                                      done : function() {
+                                            $(this).toggleClass('open' , false );
+                                            //deactivate the icons
+                                            $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass('active' , false );
+                                      }
+                                } );
+                          }
                     });
 
-                    //ADD A MODULE TITLE ELEMENT EMBEDDED STATE
-                    module.moduleTitleEmbedded = $.Deferred();
+                    //print the html
+                    //do we have an html template and a control container?
+                    if ( ! wp.template( module.AlertPart )  || ! module.container ) {
+                        throw new Error( 'No removal alert template available for module :' + module.id );
+                    }
 
-                    //ADD A MODULE COLUMN STATE OBSERVER
-                    module.modColumn = new api.Value();
-                    module.modColumn.set( constructorOptions.column_id );
+                    $_alert_el.html( wp.template( module.AlertPart )( { title : ( module().title || module.id ) } ) );
 
-                    //React to a module column change. Typically fired when moving a module from one column to another.
-                    module.modColumn.bind( function( to, from ) {
-                          api.consoleLog('MODULE ' + module.id + ' HAS BEEN MOVED TO COLUMN', to, module() );
-                          var _current_model = module(),
-                              _new_model = $.extend( true, {}, _current_model );
-
-                          _new_model.column_id = to;
-
-                          //When the module value changes, here's what happens :
-                          //IN THE MODULE COLLECTION CONTROL / SETTING
-                          //1) the module reacts and inform the control.czr_moduleCollection()
-                          //2) the control.czr_moduleCollection() reacts and inform the 'module-collection' setting
-                          //3) the module-collection setting react and inform the relevant column.columnModuleCollection() instance with the syncColumn() method
-                          //
-                          //IN THE SEKTIONS CONTROL / SETTING
-                          //4) the column.columnModuleCollection() instance reacts and inform the column() instance
-                          //5) the column() instance reacts and inform the sektion module.czr_columnCollection() instance
-                          //6) the module.czr_columnCollection() instance reacts and inform the relevant sektion() instance
-                          //7) the sektion() instance reacts and inform the itemCollection() (=> a sektion() is actually an item )
-                          //8) the itemCollection() reacts and inform its module() instance
-                          //9) the module() instance reacts and inform the moduleCollection() instance
-                          //10) the control.czr_moduleCollection() instance reacts and inform the 'sektions' setting
-                          module.set( _new_model, { target_column : to, source_column : from } );
-                          //var updatedModuleCollection = $.extend( true, [], module.control.czr_moduleCollection() );
-                          //api(module.control.id).set( module.control.filterModuleCollectionBeforeAjax( updatedModuleCollection ) );
+                    //toggle it
+                    $_alert_el.slideToggle( {
+                          duration : 200,
+                          done : function() {
+                                var _is_open = ! $(this).hasClass('open') && $(this).is(':visible');
+                                $(this).toggleClass('open' , _is_open );
+                                //set the active class of the clicked icon
+                                $( obj.dom_el ).find('.' + module.control.css_attr.display_alert_btn).toggleClass( 'active', _is_open );
+                                //adjust scrolling to display the entire dialog block
+                                if ( _is_open )
+                                  module._adjustScrollExpandedBlock( module.container );
+                          }
                     } );
-              },
-
-              //////////////////////////////////
-              ///READY
-              //////////////////////////////////
-              //when a module is embedded in a sektion, we need to render it before ready is done
-              //=> this allows us to override the container element declared in the parent initialize
-              //when ready done => the module items are embedded (without their content)
-              ready : function( is_added_by_user ) {
-                      var module = this;
-                       api.consoleLog('MODULE READY IN EXTENDED MODULE CLASS : ', module.id );
-                      $.when( module.renderModuleWrapper( is_added_by_user ) ).done( function( $_module_container ) {
-                            if ( _.isUndefined($_module_container) || false === $_module_container.length ) {
-                                throw new Error( 'Module container has not been embedded for module :' + module.id );
-                            }
-                            module.container = $_module_container;
-                            module.embedded.resolve();
-                      } );
-                      //run the parent initialize
-                      parentConstructor.prototype.ready.call( module );
-                      //module.isReady.resolve();
-              }
-
-        });
-        return control.CZRModuleExtended;
-  },
-
-
-  //this object holds the various methods allowing a module to be rendered in a multimodule control
-  CZRModuleExtended  : {
-        //fired in ready.
-        //=> before isReady.done().
-        renderModuleWrapper : function( is_added_by_user ) {
-                //=> an array of objects
-                var module = this;
-
-                //has this module view already been rendered?
-                if ( 'resolved' == module.embedded.state() )
-                  return module.container;
-
-                //do we have view template script?
-                if ( 0 === $( '#tmpl-' + module.singleModuleWrapper ).length ) {
-                  throw new Error('No template for module ' + module.id + '. The template script id should be : #tmpl-' + module.singleModuleWrapper );
-                }
-
-                var module_wrapper_tmpl = wp.template( module.singleModuleWrapper ),
-                    tmpl_data = {
-                        id : module.id,
-                        type : module.module_type
-                    },
-                    $_module_el = $(  module_wrapper_tmpl( tmpl_data ) );
-
-                //append the module wrapper to the column
-                //if added by user, search for the module candidate element, render after and delete the element
-                if ( is_added_by_user ) {
-                    $.when( $( '.czr-module-collection-wrapper' , module._getColumn().container ).find( '.czr-module-candidate').after( $_module_el ) ).
-                      done( function() {
-                        $( '.czr-module-collection-wrapper' , module._getColumn().container ).find( '.czr-module-candidate').remove();
-                      });
-                } else {
-                    $( '.czr-module-collection-wrapper' , module._getColumn().container).append( $_module_el );
-                }
-
-
-                // //then append the ru module template
-                // var mod_content_wrapper_tmpl = wp.template( module.ruModuleEl ),
-                //     $_mod_content_wrapper = $(  mod_content_wrapper_tmpl( tmpl_data ) );
-
-                // $( '.czr-mod-content', $_module_el).append( $_mod_content_wrapper );
-
-                return $_module_el;
-        },
-
-
-
-
-
-        setupModuleView : function() {
-                var module = this;
-
-                module.view_event_map = [
-                        //toggles remove view alert
-                        {
-                          trigger   : 'click keydown',
-                          selector  : [ '.czr-remove-mod', '.' + module.control.css_attr.cancel_alert_btn ].join(','),
-                          name      : 'toggle_remove_alert',
-                          actions   : ['toggleModuleRemoveAlert']
-                        },
-                        //removes module and destroys its view
-                        {
-                          trigger   : 'click keydown',
-                          selector  : '.' + module.control.css_attr.remove_view_btn,
-                          name      : 'remove_module',
-                          actions   : ['removeModule']
-                        },
-                        //edit view
-                        {
-                          trigger   : 'click keydown',
-                          selector  : '.czr-edit-mod',
-                          name      : 'edit_module',
-                          actions   : ['setModuleViewVisibility', 'sendEditModule']
-                        },
-                        {
-                          trigger   : 'click keydown',
-                          selector  : '.czr-module-back',
-                          name      : 'back_to_column',
-                          actions   : ['setModuleViewVisibility']
-                        },
-                        {
-                          trigger   : 'mouseenter',
-                          selector  : '.czr-mod-header',
-                          name      : 'hovering_module',
-                          actions   : function( obj ) {
-                                module.control.previewer.send( 'start_hovering_module', {
-                                      id : module.id
-                                });
-                          }
-                        },
-                        {
-                          trigger   : 'mouseleave',
-                          selector  : '.czr-mod-header',
-                          name      : 'hovering_module',
-                          actions   : function( obj ) {
-                              module.control.previewer.send( 'stop_hovering_module', {
-                                    id : module.id
-                              });
-                          }
-                        }
-                ];
-
-                //defer actions on module view embedded
-                module.embedded.done( function() {
-                      //add a listener on view state change
-                      module.czr_ModuleState.callbacks.add( function() { return module.setupModuleViewStateListeners.apply(module, arguments ); } );
-
-                      //setup DOM listener
-                      api.CZR_Helpers.setupDOMListeners(
-                            module.view_event_map,//actions to execute
-                            { module : { id : module.id } , dom_el:module.container },//model + dom scope
-                            module //instance where to look for the cb methods
-                      );//listeners for the view wrapper
-                });
-        },
-
-        //fired on click
-        setModuleViewVisibility : function( obj, is_added_by_user ) {
-              var module = this;
-
-              module.czr_ModuleState( ! module.czr_ModuleState() );
-
-              //always close the module panel
-              api.czrModulePanelState.set(false);
-              //always close the sektion settings panel
-              api.czrSekSettingsPanelState.set(false);
-
-              //close all sektions but the one from which the button has been clicked
-              module.control.syncSektionModule().closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
-
-              // if ( is_added_by_user ) {
-              //   item.viewState.set( 'expanded_noscroll' );
-              // } else {
-              //   module.closeAllItems( item.id );
-              //   if ( _.has(module, 'preItem') ) {
-              //     module.preItemExpanded.set( false );
-              //   }
-              //   }
-              //   item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
-              // }
-        },
-
-        //fired on click
-        sendEditModule : function( obj ) {
-              var module = this;
-              module.control.previewer.send( 'edit_module', {
-                    id : module.id
-              });
-        },
-
-        //cb of module.czr_ModuleState.callbacks
-        //On first module expansion, render the module item(s) content
-        setupModuleViewStateListeners : function( expanded ) {
-              var module = this;
-              //setup an api value for the current opened module.
-              api.czr_isModuleExpanded = api.czr_isModuleExpanded || new api.Value();
-
-              if ( expanded )
-                api.czr_isModuleExpanded( module );
-              else
-                api.czr_isModuleExpanded( false );
-
-              //expand / collapse
-              $.when( module.toggleModuleViewExpansion( expanded ) ).done( function() {
-                    if ( expanded ) {
-                          //render the module title
-                          module.renderModuleTitle();
-
-                          //populates the saved items collection
-                          module.populateSavedItemCollection();
-
-                          //render the item(s)
-                          //on first rendering, use the regular method.
-                          //for further re-rendering, when the embedded state is resolved()
-                          // => 1) re-render each item
-                          // => 2) re-instantiate each input
-                          // module.czr_Item.each ( function( item ) {
-                          //       if ( ! item.module.isMultiItem() )
-                          //           item.viewState.set('expanded');
-                          //       if ( 'resolved' == item.embedded.state() ) {
-                          //           $.when( item.renderItemWrapper() ).done( function( $_item_container ) {
-                          //               item.container = $_item_container;
-
-                          //               $.when( item.renderItemContent() ).done( function() {
-                          //                   api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
-                          //               });
-
-                          //               if ( ! item.module.isMultiItem() )
-                          //                   item.viewState.set('expanded');
-                          //           });
-
-                          //       }
-                          //       else {
-                          //           item.mayBeRenderItemWrapper();
-                          //       }
-                          // } );
-                    }
-                    else {
-                          module.czr_Item.each ( function( item ) {
-                                item.viewState.set('closed');
-                                item._destroyView( 0 );
-                                //api.CZR_Helpers.removeInputCollection.call( item );
-                                module.czr_Item.remove( item.id );
-                          } );
-                    }
-              });
-        },
-
-
-        renderModuleTitle : function() {
-              var module = this;
-              if( 'resolved' == module.moduleTitleEmbedded.state() )
-                return;
-
-              //render the module title
-              //do we have view template script?
-              if ( 0 === $( '#tmpl-' + module.sektionModuleTitle ).length ) {
-                throw new Error('No sektion title Module Part template for module ' + module.id + '. The template script id should be : #tmpl-' + module.sektionModuleTitle );
-              }
-              //append the title when in a sektion and resolve the embedded state
-              $.when( $( module.container ).find('.czr-mod-content').prepend(
-                    $( wp.template( module.sektionModuleTitle )( { id : module.id } ) )
-              ) ).done( function() {
-                    module.moduleTitleEmbedded.resolve();
-              });
-        },
-
-
-        //fired in setupModuleViewStateListeners()
-        toggleModuleViewExpansion : function( expanded, duration ) {
-              var module = this;
-
-              //slide Toggle and toggle the 'open' class
-              $( '.czr-mod-content' , module.container ).slideToggle( {
-                  duration : duration || 200,
-                  done : function() {
-                        var $_overlay = module.container.closest( '.wp-full-overlay' ),
-                            $_backBtn = module.container.find( '.czr-module-back' ),
-                            $_modTitle = module.container.find('.czr-module-title');
-
-                        module.container.toggleClass('open' , expanded );
-                        $_overlay.toggleClass('czr-module-open', expanded );
-                        $_modTitle.attr( 'tabindex', expanded ? '-1' : '0' );
-                        $_backBtn.attr( 'tabindex', expanded ? '0' : '-1' );
-
-                        if( expanded ) {
-                            $_backBtn.focus();
-                        } else {
-                            $_modTitle.focus();
-                        }
-
-                        //close all alerts
-                        //module.closeRemoveDialogs();
-
-                        //toggle the icon activate class depending on the status
-                        //switch icon
-                        //var $_edit_icon = $(this).siblings().find('.' + module.control.css_attr.edit_view_btn );
-
-                        // $_edit_icon.toggleClass('active' , expanded );
-                        // if ( expanded )
-                        //   $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.translatedStrings.close );
-                        // else
-                        //   $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.translatedStrings.edit );
-
-                        //scroll to the currently expanded view
-                        if ( expanded )
-                          module._adjustScrollExpandedBlock( module.container );
-                  }//done callback
-                } );
-        },
-
-
-
-
-
-
-
-
-
-        toggleModuleRemoveAlert : function( obj ) {
-                var module = this,
-                    control = this.control,
-                    $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, module.container ).first(),
-                    $_clicked = obj.dom_event,
-                    $_column_container = control.syncSektionModule().czr_Column( module.column_id ).container;
-
-                //first close all open  views
-                //module.closeAllItems();
-
-                //close the main sektion pre_item view
-                if ( _.has(module, 'preItem') ) {
-                    control.syncSektionModule().preItemExpanded.set( false );
-                }
-
-                //then close any other open remove alert in the column containuer
-                $('.' + module.control.css_attr.remove_alert_wrapper, $_column_container ).not($_alert_el).each( function() {
-                      if ( $(this).hasClass('open') ) {
-                            $(this).slideToggle( {
-                                  duration : 200,
-                                  done : function() {
-                                        $(this).toggleClass('open' , false );
-                                        //deactivate the icons
-                                        $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass('active' , false );
-                                  }
-                            } );
-                      }
-                });
-
-                //print the html
-                //do we have an html template and a control container?
-                if ( ! wp.template( module.AlertPart )  || ! module.container ) {
-                    throw new Error( 'No removal alert template available for module :' + module.id );
-                }
-
-                $_alert_el.html( wp.template( module.AlertPart )( { title : ( module().title || module.id ) } ) );
-
-                //toggle it
-                $_alert_el.slideToggle( {
-                      duration : 200,
-                      done : function() {
-                            var _is_open = ! $(this).hasClass('open') && $(this).is(':visible');
-                            $(this).toggleClass('open' , _is_open );
-                            //set the active class of the clicked icon
-                            $( obj.dom_el ).find('.' + module.control.css_attr.display_alert_btn).toggleClass( 'active', _is_open );
-                            //adjust scrolling to display the entire dialog block
-                            if ( _is_open )
-                              module._adjustScrollExpandedBlock( module.container );
-                      }
-                } );
-        },
-
-
-
-
-        //@param module = obj => the module model
-        //Fired on click
-        removeModule : function( obj ) {
-              this.control.removeModule( obj.module );
-        },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        _getColumn : function() {
-                var module = this;
-                return module.control.syncSektionModule().czr_Column( module.modColumn() );
-        },
-
-        _getSektion : function() {
-
-        }
-
-  }
+            },
 
+
+
+
+            //@param module = obj => the module model
+            //Fired on click
+            removeModule : function( obj ) {
+                  this.control.removeModule( obj.module );
+            },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            _getColumn : function() {
+                    var module = this;
+                    return module.control.syncSektionModule().czr_Column( module.modColumn() );
+            },
+
+            _getSektion : function() {
+
+            }
+      }
 });//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
 var CZRMultiplePickerMths = CZRMultiplePickerMths || {};
 /* Multiple Picker */
 /**
@@ -13889,237 +13898,240 @@ var CZRMultiplePickerMths = CZRMultiplePickerMths || {};
  * @augments wp.customize.Control
  * @augments wp.customize.Class
  */
+( function ( api, $, _ ) {
 $.extend( CZRMultiplePickerMths , {
-  ready: function() {
-    var control  = this,
-        _select  = this.container.find('select');
+      ready: function() {
+            var control  = this,
+                _select  = this.container.find('select');
 
 
-    _select.select2({
-      closeOnSelect: false,
-      templateSelection: czrEscapeMarkup
-    });
+            _select.select2({
+                  closeOnSelect: false,
+                  templateSelection: czrEscapeMarkup
+            });
 
-    function czrEscapeMarkup(obj) {
-      //trim dashes
-      return obj.text.replace(/\u2013|\u2014/g, "");
-    }
+            function czrEscapeMarkup(obj) {
+                  //trim dashes
+                  return obj.text.replace(/\u2013|\u2014/g, "");
+            }
 
-    //handle case when all choices become unselected
-    _select.on('change', function(e){
-      if ( 0 === $(this).find("option:selected").length )
-        control.setting.set([]);
-    });
-  }
+            //handle case when all choices become unselected
+            _select.on('change', function(e){
+                  if ( 0 === $(this).find("option:selected").length )
+                    control.setting.set([]);
+            });
+      }
 });//$.extend
+})( wp.customize , jQuery, _ );
 var CZRCroppedImageMths = CZRCroppedImageMths || {};
 
 (function (api, $, _) {
-  /* IMAGE UPLOADER CONTROL IN THE CUSTOMIZER */
-  //CroppedImageControl is not available before wp 4.3
-  if ( 'function' != typeof wp.media.controller.Cropper  || 'function' != typeof api.CroppedImageControl  )
-    return;
+      /* IMAGE UPLOADER CONTROL IN THE CUSTOMIZER */
+      //CroppedImageControl is not available before wp 4.3
+      if ( 'function' != typeof wp.media.controller.Cropper  || 'function' != typeof api.CroppedImageControl  )
+        return;
 
 
-    /* CZRCustomizeImage Cropper */
-    /**
-    * Custom version of:
-    * wp.media.controller.CustomizeImageCropper (wp-includes/js/media-views.js)
-    *
-    * In order to use image destination sizes different than the suggested ones
-    *
-    * A state for cropping an image.
-    *
-    * @class
-    * @augments wp.media.controller.Cropper
-    * @augments wp.media.controller.State
-    * @augments Backbone.Model
-    */
-    wp.media.controller.CZRCustomizeImageCropper = wp.media.controller.Cropper.extend({
-      doCrop: function( attachment ) {
-        var cropDetails = attachment.get( 'cropDetails' ),
-            control = this.get( 'control' );
-
-        cropDetails.dst_width  = control.params.dst_width;
-        cropDetails.dst_height = control.params.dst_height;
-
-        return wp.ajax.post( 'crop-image', {
-            wp_customize: 'on',
-            nonce: attachment.get( 'nonces' ).edit,
-            id: attachment.get( 'id' ),
-            context: control.id,
-            cropDetails: cropDetails
-        } );
-      }
-    });
-
-
-
-    /* CZRCroppedImageControl */
-    $.extend( CZRCroppedImageMths , {
+      /* CZRCustomizeImage Cropper */
       /**
-      * Create a media modal select frame, and store it so the instance can be reused when needed.
-      * CZR: We don't want to crop svg (cropping fails), gif (animated gifs become static )
-      * @Override
-      * We need to override this in order to use our ImageCropper custom extension of wp.media.controller.Cropper
+      * Custom version of:
+      * wp.media.controller.CustomizeImageCropper (wp-includes/js/media-views.js)
       *
-      * See api.CroppedImageControl:initFrame() ( wp-admin/js/customize-controls.js )
+      * In order to use image destination sizes different than the suggested ones
+      *
+      * A state for cropping an image.
+      *
+      * @class
+      * @augments wp.media.controller.Cropper
+      * @augments wp.media.controller.State
+      * @augments Backbone.Model
       */
-      initFrame: function() {
+      wp.media.controller.CZRCustomizeImageCropper = wp.media.controller.Cropper.extend({
+            doCrop: function( attachment ) {
+                  var cropDetails = attachment.get( 'cropDetails' ),
+                      control = this.get( 'control' );
 
-        var l10n = _wpMediaViewsL10n;
+                  cropDetails.dst_width  = control.params.dst_width;
+                  cropDetails.dst_height = control.params.dst_height;
 
-        this.frame = wp.media({
-            button: {
-                text: l10n.select,
-                close: false
+                  return wp.ajax.post( 'crop-image', {
+                        wp_customize: 'on',
+                        nonce: attachment.get( 'nonces' ).edit,
+                        id: attachment.get( 'id' ),
+                        context: control.id,
+                        cropDetails: cropDetails
+                  } );
+            }
+      });
+
+
+
+      /* CZRCroppedImageControl */
+      $.extend( CZRCroppedImageMths , {
+            /**
+            * Create a media modal select frame, and store it so the instance can be reused when needed.
+            * CZR: We don't want to crop svg (cropping fails), gif (animated gifs become static )
+            * @Override
+            * We need to override this in order to use our ImageCropper custom extension of wp.media.controller.Cropper
+            *
+            * See api.CroppedImageControl:initFrame() ( wp-admin/js/customize-controls.js )
+            */
+            initFrame: function() {
+
+                  var l10n = _wpMediaViewsL10n;
+
+                  this.frame = wp.media({
+                        button: {
+                            text: l10n.select,
+                            close: false
+                        },
+                        states: [
+                            new wp.media.controller.Library({
+                                title: this.params.button_labels.frame_title,
+                                library: wp.media.query({ type: 'image' }),
+                                multiple: false,
+                                date: false,
+                                priority: 20,
+                                suggestedWidth: this.params.width,
+                                suggestedHeight: this.params.height
+                            }),
+                            new wp.media.controller.CZRCustomizeImageCropper({
+                                imgSelectOptions: this.calculateImageSelectOptions,
+                                control: this
+                            })
+                        ]
+                  });
+
+                  this.frame.on( 'select', this.onSelect, this );
+                  this.frame.on( 'cropped', this.onCropped, this );
+                  this.frame.on( 'skippedcrop', this.onSkippedCrop, this );
             },
-            states: [
-                new wp.media.controller.Library({
-                    title: this.params.button_labels.frame_title,
-                    library: wp.media.query({ type: 'image' }),
-                    multiple: false,
-                    date: false,
-                    priority: 20,
-                    suggestedWidth: this.params.width,
-                    suggestedHeight: this.params.height
-                }),
-                new wp.media.controller.CZRCustomizeImageCropper({
-                    imgSelectOptions: this.calculateImageSelectOptions,
-                    control: this
-                })
-            ]
-        });
 
-        this.frame.on( 'select', this.onSelect, this );
-        this.frame.on( 'cropped', this.onCropped, this );
-        this.frame.on( 'skippedcrop', this.onSkippedCrop, this );
-      },
-
-      /**
-      * After an image is selected in the media modal, switch to the cropper
-      * state if the image isn't the right size.
-      *
-      * CZR: We don't want to crop svg (cropping fails), gif (animated gifs become static )
-      * @Override
-      * See api.CroppedImageControl:onSelect() ( wp-admin/js/customize-controls.js )
-      */
-      onSelect: function() {
-        var attachment = this.frame.state().get( 'selection' ).first().toJSON();
-        if ( ! ( attachment.mime && attachment.mime.indexOf("image") > -1 ) ){
-          //Todo: better error handling, show some message?
-          this.frame.trigger( 'content:error' );
-          return;
-        }
-        if ( ( _.contains( ['image/svg+xml', 'image/gif'], attachment.mime ) ) || //do not crop gifs or svgs
-                this.params.width === attachment.width && this.params.height === attachment.height && ! this.params.flex_width && ! this.params.flex_height ) {
-            this.setImageFromAttachment( attachment );
-            this.frame.close();
-        } else {
-            this.frame.setState( 'cropper' );
-        }
-      },
-    });//Method definition
-
+            /**
+            * After an image is selected in the media modal, switch to the cropper
+            * state if the image isn't the right size.
+            *
+            * CZR: We don't want to crop svg (cropping fails), gif (animated gifs become static )
+            * @Override
+            * See api.CroppedImageControl:onSelect() ( wp-admin/js/customize-controls.js )
+            */
+            onSelect: function() {
+                  var attachment = this.frame.state().get( 'selection' ).first().toJSON();
+                  if ( ! ( attachment.mime && attachment.mime.indexOf("image") > -1 ) ){
+                        //Todo: better error handling, show some message?
+                        this.frame.trigger( 'content:error' );
+                        return;
+                  }
+                  if ( ( _.contains( ['image/svg+xml', 'image/gif'], attachment.mime ) ) || //do not crop gifs or svgs
+                          this.params.width === attachment.width && this.params.height === attachment.height && ! this.params.flex_width && ! this.params.flex_height ) {
+                        this.setImageFromAttachment( attachment );
+                        this.frame.close();
+                  } else {
+                        this.frame.setState( 'cropper' );
+                  }
+            },
+      });//extend
 })( wp.customize, jQuery, _);
-var CZRUploadMths = CZRUploadMths || {};
 
+var CZRUploadMths = CZRUploadMths || {};
+( function ( api, $, _ ) {
 /**
  * @constructor
  * @augments wp.customize.Control
  * @augments wp.customize.Class
  */
 $.extend( CZRUploadMths, {
-  ready: function() {
-    var control = this;
+      ready: function() {
+            var control = this;
 
-    this.params.removed = this.params.removed || '';
+            this.params.removed = this.params.removed || '';
 
-    this.success = $.proxy( this.success, this );
+            this.success = $.proxy( this.success, this );
 
-    this.uploader = $.extend({
-      container: this.container,
-      browser:   this.container.find('.czr-upload'),
-      //dropzone:  this.container.find('.upload-dropzone'),
-      success:   this.success,
-      plupload:  {},
-      params:    {}
-    }, this.uploader || {} );
+            this.uploader = $.extend({
+                  container: this.container,
+                  browser:   this.container.find('.czr-upload'),
+                  //dropzone:  this.container.find('.upload-dropzone'),
+                  success:   this.success,
+                  plupload:  {},
+                  params:    {}
+            }, this.uploader || {} );
 
-    if ( control.params.extensions ) {
-      control.uploader.plupload.filters = [{
-        title:      api.l10n.allowedFiles,
-        extensions: control.params.extensions
-      }];
-    }
+            if ( control.params.extensions ) {
+                  control.uploader.plupload.filters = [{
+                    title:      api.l10n.allowedFiles,
+                    extensions: control.params.extensions
+                  }];
+            }
 
-    if ( control.params.context )
-      control.uploader.params['post_data[context]'] = this.params.context;
+            if ( control.params.context )
+              control.uploader.params['post_data[context]'] = this.params.context;
 
-    if ( api.settings.theme.stylesheet )
-      control.uploader.params['post_data[theme]'] = api.settings.theme.stylesheet;
+            if ( api.settings.theme.stylesheet )
+              control.uploader.params['post_data[theme]'] = api.settings.theme.stylesheet;
 
-    this.uploader = new wp.Uploader( this.uploader );
+            this.uploader = new wp.Uploader( this.uploader );
 
-    this.remover = this.container.find('.remove');
-    this.remover.on( 'click keydown', function( event ) {
-      if ( event.type === 'keydown' &&  13 !== event.which ) // enter
-        return;
-      control.setting.set( control.params.removed );
-      event.preventDefault();
-    });
+            this.remover = this.container.find('.remove');
+            this.remover.on( 'click keydown', function( event ) {
+                  if ( event.type === 'keydown' &&  13 !== event.which ) // enter
+                    return;
+                  control.setting.set( control.params.removed );
+                  event.preventDefault();
+            });
 
-    this.removerVisibility = $.proxy( this.removerVisibility, this );
-    this.setting.bind( this.removerVisibility );
-    this.removerVisibility( this.setting() );
-  },
+            this.removerVisibility = $.proxy( this.removerVisibility, this );
+            this.setting.bind( this.removerVisibility );
+            this.removerVisibility( this.setting() );
+      },
 
 
-  success: function( attachment ) {
-    this.setting.set( attachment.get('id') );
-  },
-  removerVisibility: function( to ) {
-    this.remover.toggle( to != this.params.removed );
-  }
-});//method definition
+      success: function( attachment ) {
+            this.setting.set( attachment.get('id') );
+      },
+      removerVisibility: function( to ) {
+            this.remover.toggle( to != this.params.removed );
+      }
+});//extend
+})( wp.customize , jQuery, _ );
 var CZRLayoutSelectMths = CZRLayoutSelectMths || {};
-
+( function ( api, $, _ ) {
 $.extend( CZRLayoutSelectMths , {
-  ready: function() {
-    this.setupSelect();
-  },
+      ready: function() {
+            this.setupSelect();
+      },
 
+      setupSelect : function( obj ) {
+            var control = this;
+                $_select  = this.container.find('select');
 
-  setupSelect : function( obj ) {
-    var control = this;
-        $_select  = this.container.find('select');
+            function addImg( state ) {
+                  if (! state.id) { return state.text; }
+                  if ( ! _.has( control.params.layouts, state.element.value ) )
+                    return;
 
-    function addImg( state ) {
-      if (! state.id) { return state.text; }
-      if ( ! _.has( control.params.layouts, state.element.value ) )
-        return;
+                  var _layout_data = control.params.layouts[state.element.value],
+                      _src = _layout_data.src,
+                      _title = _layout_data.label,
+                      $state = $(
+                    '<img src="' + _src +'" class="czr-layout-img" title="' + _title + '" /><span class="czr-layout-title">' + _title + '</span>'
+                  );
+                  return $state;
+            }
 
-      var _layout_data = control.params.layouts[state.element.value],
-          _src = _layout_data.src,
-          _title = _layout_data.label,
-          $state = $(
-        '<img src="' + _src +'" class="czr-layout-img" title="' + _title + '" /><span class="czr-layout-title">' + _title + '</span>'
-      );
-      return $state;
-    }
+            //destroy selected if set
+            //$_select.selecter("destroy");
 
-    //destroy selected if set
-    //$_select.selecter("destroy");
-
-    //fire select2
-    $_select.select2( {
-        templateResult: addImg,
-        templateSelection: addImg,
-        minimumResultsForSearch: Infinity
-    });
-  },
+            //fire select2
+            $_select.select2( {
+                  templateResult: addImg,
+                  templateSelection: addImg,
+                  minimumResultsForSearch: Infinity
+            });
+      },
 });//$.extend
-(function ( api, $, _ ) {
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
       //Extends some constructors with the events manager
       $.extend( CZRBaseControlMths, api.Events );
       $.extend( api.Control.prototype, api.Events );//ensures that the default WP control constructor is extended as well
@@ -14227,633 +14239,633 @@ $.extend( CZRLayoutSelectMths , {
             password : '',
             range_slider : 'setupRangeSlider'
       });
-
 })( wp.customize, jQuery, _ );
-(function (api, $, _) {
-  var $_nav_section_container,
-      translatedStrings = serverControlParams.translatedStrings || {};
+( function (api, $, _) {
+      var $_nav_section_container,
+          translatedStrings = serverControlParams.translatedStrings || {};
 
-  api.czr_CrtlDependenciesReady = $.Deferred();
+      api.czr_CrtlDependenciesReady = $.Deferred();
 
-  api.bind( 'ready' , function() {
-        if ( _.has( api, 'czr_ctrlDependencies') )
-          return;
-        if ( serverControlParams.isSkopOn ) {
-              // If skope is on, we need to wait for the initial setup to be finished
-              // otherwise, we might refer to not instantiated skopes when processing silent updates further in the code
-              //Skope is ready when :
-              //1) the initial skopes collection has been populated
-              //2) the initial skope has been switched to
-              if ( 'resolved' != api.czr_skopeReady.state() ) {
-                    api.czr_skopeReady.done( function() {
-                          api.czr_ctrlDependencies = new api.CZR_ctrlDependencies();
-                          api.czr_CrtlDependenciesReady.resolve();
-                    });
-              }
-        } else {
-              api.czr_ctrlDependencies = new api.CZR_ctrlDependencies();
-              api.czr_CrtlDependenciesReady.resolve();
-        }
-
-  } );
-
-
-  api.CZR_ctrlDependencies = api.Class.extend( {
-          dominiDeps : [],
-          initialize: function() {
-                var self = this;
-
-                this.defaultDominusParams = {
-                      dominus : '',
-                      servi : [],
-                      visibility : null,
-                      actions : null,
-                      onSectionExpand : true
-                };
-
-                //store the default control dependencies
-                this.dominiDeps = _.extend( this.dominiDeps, this._getControlDeps() );
-                if ( ! _.isArray( self.dominiDeps ) ) {
-                    throw new Error('Visibilities : the dominos dependency array is not an array.');
-                }
-                api.czr_activeSectionId.bind( function( section_id ) {
-                      if ( ! _.isEmpty( section_id ) && api.section.has( section_id ) ) {
-                            try {
-                                  self.setServiDependencies( section_id );
-                            } catch( er ) {
-                                  api.errorLog( 'In api.CZR_ctrlDependencies : ' + er );
-                            }
-                      }
-                });
-
-
-                //@param target_source is an object :
-                // {
-                //    target : section_id to awake
-                //    source : section_id from which the request for awaking has been done
-                // }
-                api.bind( 'awaken-section', function( target_source ) {
-                      //if skope on ( serverControlParams.isSkopOn ), then defer the visibility awakening after the silent updates
-                      if ( serverControlParams.isSkopOn && _.has( api ,'czr_skopeBase' ) ) {
-                            api.czr_skopeBase.processSilentUpdates( {
-                                  candidates : {},
-                                  section_id : target_source.target,
-                                  refresh : false
-                            } ).then( function() {
-                                  try {
-                                        self.setServiDependencies( target_source.target, target_source.source );
-                                  } catch( er ) {
-                                        api.errorLog( 'On awaken-section, ctrl deps : ' + er );
-                                  }
-                            });
-                      } else {
-                            try {
-                                  self.setServiDependencies( target_source.target, target_source.source );
-                            } catch( er ) {
-                                  api.errorLog( 'On awaken-section, ctrl deps : ' + er );
-                            }
-                      }
-                });
-
-                //FAVICON SPECIFICS
-                //@todo => move to the theme ?
-                //favicon note on load and on change(since wp 4.3)
-                this._handleFaviconNote();
-          },
-
-
-          //Process the visibility callbacks for the controls of a target targetSectionId
-          //@param targetSectionId : string
-          //@param sourceSectionId : string, the section from which the request has been done
-          setServiDependencies : function( targetSectionId, sourceSectionId, refresh ) {
-                var self = this, params, dfd = $.Deferred();
-
-                refresh = refresh || false;
-
-                if ( _.isUndefined( targetSectionId ) || ! api.section.has( targetSectionId ) ) {
-                      throw new Error( 'Control Dependencies : the targetSectionId is missing or not registered : ' + targetSectionId );
-                }
-
-                //Assign a visibility state deferred to the target section
-                api.section( targetSectionId ).czr_ctrlDependenciesReady = api.section( targetSectionId ).czr_ctrlDependenciesReady || $.Deferred();
-
-                //Bail here if this section has already been setup for ctrl dependencies
-                if ( ! refresh && 'resolved' == api.section( targetSectionId ).czr_ctrlDependenciesReady.state() )
-                  return dfd.resolve().promise();
-
-                //FIND DOMINI IN THE TARGET SECTION
-                //=> setup their callbacks
-                _.each( self.dominiDeps , function( params ) {
-                      if ( ! _.has( params, 'dominus' ) || ! _.isString( params.dominus ) || _.isEmpty( params.dominus ) ) {
-                            throw new Error( 'Control Dependencies : a dominus control id must be a not empty string.');
-                      }
-
-                      var wpDominusId = api.CZR_Helpers.build_setId( params.dominus );
-                      if ( ! api.control.has( wpDominusId ) )
-                        return;
-
-                      if ( api.control( wpDominusId ).section() != targetSectionId )
-                        return;
-
-                      //Attempt to normalize the params
-                      try {
-                            params = self._prepareDominusParams( params );
-                      } catch( er ) {
-                            api.errorLog( 'prepareDominus Params error : ' + e );
-                            return;
-                      }
-
-
-                      self._processDominusCallbacks( params.dominus, params, refresh )
-                            .fail( function() {
-                                  api.consoleLog( 'self._processDominusCallbacks fail for section ' + targetSectionId );
-                                  dfd.reject();
-                            })
-                            .done( function() {
-                                  dfd.resolve();
-                            });
-                });
-
-
-                //EXTERNAL DOMINI : AWAKE THE SECTIONS
-                //check if any control of the current section is the servus of a dominus located in another section
-                var _secCtrls = api.CZR_Helpers.getSectionControlIds( targetSectionId ),
-                    _getServusDomini = function( shortServudId ) {
-                          var _dominiIds = [];
-                          _.each( self.dominiDeps , function( params ) {
-                                if ( ! _.has( params, 'servi' ) || ! _.isArray( params.servi ) || ! _.has( params, 'dominus' ) || _.isEmpty( params.dominus ) ) {
-                                      throw new Error( 'Control Dependencies : wrong params in _getServusDomini.');
-                                }
-
-                                if ( _.contains( params.servi , shortServudId ) && ! _.contains( _dominiIds , params.dominus ) ) {
-                                      //Attempt to normalize the params
-                                      try {
-                                            params = self._prepareDominusParams( params );
-                                      } catch( e ) {
-                                            api.consoleLog( 'prepareDominus Params error : ' + e );
-                                            return;
-                                      }
-                                      _dominiIds.push( params.dominus );
-                                }
-                          });
-                          return ! _.isArray( _dominiIds ) ? [] : _dominiIds;
-                    },
-                    _servusDominiIds = [];
-
-                //Build the domini array
-                _.each( _secCtrls, function( servusCandidateId ) {
-                      if ( _.isEmpty( _getServusDomini( servusCandidateId ) ) )
-                        return;
-
-                      _servusDominiIds = _.union( _servusDominiIds, _getServusDomini( servusCandidateId ) );
-                });
-
-                //let's loop on the domini ids and check if we need to "awake" an external section
-                _.each( _servusDominiIds, function( shortDominusId ){
-
-                      var wpDominusId = api.CZR_Helpers.build_setId( shortDominusId );
-                      //This dominus must be located in another section
-                      if ( api.control( wpDominusId ).section() == targetSectionId )
-                          return;
-                      //The dominus section can't be the current source if set. => otherwise potential infinite loop scenario.
-                      if ( sourceSectionId == api.control( wpDominusId ).section() )
-                          return;
-                      //inform the api that a section has to be awaken
-                      //=> first silently update the section controls if skope on
-                      //=> then fire the visibilities
-                      api.trigger( 'awaken-section', {
-                            target : api.control( wpDominusId ).section(),
-                            source : targetSectionId
-                      } );
-                } );
-
-                //This section has been setup for ctrl dependencies
-                dfd.always( function() {
-                      api.section( targetSectionId ).czr_ctrlDependenciesReady.resolve();
-                });
-                return dfd.promise();
-          },
-
-
-          //This method fires a callback when a control is registered in the api.
-          //If the control is registered, then it fires the callback when it is embedded
-          //If the control is embedeed, it fires the callback
-          //=> typical use case : a control can be both removed from the API and the DOM, and then added back on skope switch
-          //
-          //@param wpCtrlId : string name of the control as registered in the WP API
-          //@param callback : fn callback to fire
-          //@param args : [] or callback arguments
-          _deferCallbackForControl : function( wpCrtlId, callback, args ) {
-                var dfd = $.Deferred();
-                if ( _.isEmpty(wpCrtlId) || ! _.isString(wpCrtlId) ) {
-                    throw new Error( '_deferCallbackForControl : the control id is missing.' );
-                }
-                if ( ! _.isFunction( callback ) ) {
-                    throw new Error( '_deferCallbackForControl : callback must be a funtion.' );
-                }
-                args = ( _.isUndefined(args) || ! _.isArray( args ) ) ? [] : args;
-
-                if ( api.control.has( wpCrtlId ) ) {
-                      if ( 'resolved' == api.control(wpCrtlId ).deferred.embedded.state() ) {
-                            $.when( callback.apply( null, args ) )
-                                  .fail( function() { dfd.reject(); })
-                                  .done( function() { dfd.resolve(); });
-                      } else {
-                            api.control( wpCrtlId ).deferred.embedded.then( function() {
-                                  $.when( callback.apply( null, args ) )
-                                        .fail( function() { dfd.reject(); })
-                                        .done( function() { dfd.resolve(); });
-                            });
-                      }
-                } else {
-                      api.control.when( wpCrtlId, function() {
-                            api.control( wpCrtlId ).deferred.embedded.then( function() {
-                                  $.when( callback.apply( null, args ) )
-                                        .fail( function() { dfd.reject(); })
-                                        .done( function() { dfd.resolve(); });
-                            });
-                      });
-                }
-                return dfd.promise();
-          },
-
-
-          /*
-          * @return void
-          * show or hide setting according to the dependency + callback pair
-          * @params setId = the short setting id, whitout the theme option prefix OR the WP built-in setting
-          * @params o = { controls [], callback fn, onSectionExpand bool }
-          */
-          _processDominusCallbacks : function( shortDominusId, dominusParams, refresh ) {
-                var self = this,
-                    wpDominusId = api.CZR_Helpers.build_setId( shortDominusId ),
-                    dominusSetInst = api( wpDominusId ),
-                    dfd = $.Deferred(),
-                    hasProcessed = false;
-
-                //loop on the dominus servi and apply + bind the visibility cb
-                _.each( dominusParams.servi , function( servusShortSetId ) {
-                        if ( ! api.control.has( api.CZR_Helpers.build_setId( servusShortSetId ) ) ) {
-                            return;
-                        }
-                        //set visibility when control is embedded
-                        //or when control is added to the api
-                        //=> solves the problem of visibility callbacks lost when control are re-rendered
-                        var _fireDominusCallbacks = function( dominusSetVal, servusShortSetId, dominusParams, refresh ) {
-                                  var _toFire = [],
-                                      _args = arguments;
-                                  _.each( dominusParams, function( _item, _key ) {
-                                        switch( _key ) {
-                                            case 'visibility' :
-                                                self._setVisibility.apply( null, _args );
-                                            break;
-                                            case 'actions' :
-                                                if ( _.isFunction( _item ) )
-                                                    _item.apply( null, _args );
-                                            break;
-                                        }
-                                  });
-                            },
-                            _deferCallbacks = function( dominusSetVal ) {
-                                  dominusSetVal = dominusSetVal  || dominusSetInst();
-                                  var wpServusSetId = api.CZR_Helpers.build_setId( servusShortSetId );
-                                  self._deferCallbackForControl(
-                                              wpServusSetId,
-                                              _fireDominusCallbacks,
-                                              [ dominusSetVal, servusShortSetId, dominusParams ]
-                                        )
-                                        .always( function() { hasProcessed = true; })
-                                        .fail( function() { dfd.reject(); })
-                                        .done( function() { dfd.resolve(); });
-                            };
-
-
-                        //APPLY THE DEPENDENCIES
-                        _deferCallbacks();
-
-                        //BIND THE DOMINUS SETTING INSTANCE
-                        //store the visibility bound state
-                        if ( ! _.has( dominusSetInst, 'czr_visibilityServi' ) )
-                            dominusSetInst.czr_visibilityServi = new api.Value( [] );
-
-                        //Maybe bind to react on setting _dirty change
-                        var _currentDependantBound = dominusSetInst.czr_visibilityServi();
-                        //Make sure a dependant visibility action is bound only once for a setting id to another setting control id
-                        if ( ! _.contains( _currentDependantBound, servusShortSetId ) ) {
-                              dominusSetInst.bind( function( dominusSetVal ) {
-                                  _deferCallbacks( dominusSetVal );
-                              });
-                              dominusSetInst.czr_visibilityServi( _.union( _currentDependantBound, [ servusShortSetId ] ) );
-                        }
-                } );//_.each
-                if ( ! hasProcessed )
-                  return dfd.resolve().promise();
-                return dfd.promise();
-          },
-
-
-
-          //@return void()
-          _setVisibility : function ( dominusSetVal, servusShortSetId, dominusParams, refresh ) {
-                var wpServusSetId = api.CZR_Helpers.build_setId( servusShortSetId ),
-                    visibility = dominusParams.visibility( dominusSetVal, servusShortSetId, dominusParams.dominus );
-
-                refresh = refresh || false;
-                //Allows us to filter between visibility callbacks and other actions
-                //a non visibility callback shall return null
-                if ( ! _.isBoolean( visibility ) || ( 'unchanged' == visibility && ! refresh ) )
-                  return;
-
-                //when skope is enabled, we might be doing a silent update
-                //=> this method should be bailed if so
-                var _doVisibilitiesWhenPossible = function() {
-                        if ( api.state.has( 'silent-update-processing' ) && api.state( 'silent-update-processing' )() )
-                          return;
-                        api.control( wpServusSetId, function( _controlInst ) {
-                              var _args = {
-                                    duration : 'fast',
-                                    completeCallback : function() {},
-                                    unchanged : false
-                              };
-
-                              if ( _.has( _controlInst, 'active' ) )
-                                visibility = visibility && _controlInst.active();
-
-                              if ( _.has( _controlInst, 'defaultActiveArguments' ) )
-                                _args = control.defaultActiveArguments;
-
-                              _controlInst.onChangeActive( visibility , _controlInst.defaultActiveArguments );
+      api.bind( 'ready' , function() {
+            if ( _.has( api, 'czr_ctrlDependencies') )
+              return;
+            if ( serverControlParams.isSkopOn ) {
+                  // If skope is on, we need to wait for the initial setup to be finished
+                  // otherwise, we might refer to not instantiated skopes when processing silent updates further in the code
+                  //Skope is ready when :
+                  //1) the initial skopes collection has been populated
+                  //2) the initial skope has been switched to
+                  if ( 'resolved' != api.czr_skopeReady.state() ) {
+                        api.czr_skopeReady.done( function() {
+                              api.czr_ctrlDependencies = new api.CZR_ctrlDependencies();
+                              api.czr_CrtlDependenciesReady.resolve();
                         });
-                        if ( api.state.has( 'silent-update-processing' ) ) {
-                              api.state( 'silent-update-processing' ).unbind( _doVisibilitiesWhenPossible );
-                        }
-                };
+                  }
+            } else {
+                  api.czr_ctrlDependencies = new api.CZR_ctrlDependencies();
+                  api.czr_CrtlDependenciesReady.resolve();
+            }
 
-                if ( api.state.has( 'silent-update-processing' ) && api.state( 'silent-update-processing' )() ) {
-                      api.state( 'silent-update-processing' ).bind( _doVisibilitiesWhenPossible );
-                } else {
-                      _doVisibilitiesWhenPossible();
-                }
-
-          },
+      } );
 
 
+      api.CZR_ctrlDependencies = api.Class.extend( {
+              dominiDeps : [],
+              initialize: function() {
+                    var self = this;
 
+                    this.defaultDominusParams = {
+                          dominus : '',
+                          servi : [],
+                          visibility : null,
+                          actions : null,
+                          onSectionExpand : true
+                    };
 
-
-
-
-
-
-
-          /*****************************************************************************
-          * HELPERS
-          *****************************************************************************/
-          /*
-          * Abstract
-          * Will be provided by the theme
-          * @return main control dependencies object
-          */
-          _getControlDeps : function() {
-            return {};
-          },
-
-
-          //@return a visibility ready object of param describing the dependencies between a dominus and its servi.
-          //this.defaultDominusParams = {
-          //       dominus : '',
-          //       servi : [],
-          //       visibility : fn() {},
-          //       actions : fn() {},
-          //       onSectionExpand : true
-          // };
-          _prepareDominusParams : function( params_candidate ) {
-                var self = this,
-                    _ready_params = {};
-
-                //Check mandatory conditions
-                if ( ! _.isObject( params_candidate ) ) {
-                    throw new Error('Visibilities : a dominus param definition must be an object.');
-                }
-                if ( ! _.has( params_candidate, 'visibility' ) && ! _.has( params_candidate, 'actions' ) ) {
-                    throw new Error('Visibilities : a dominus definition must include a visibility or an actions callback.');
-                }
-                if ( ! _.has( params_candidate, 'dominus' ) || ! _.isString( params_candidate.dominus ) || _.isEmpty( params_candidate.dominus ) ) {
-                      throw new Error( 'Visibilities : a dominus control id must be a not empty string.');
-                }
-                var wpDominusId = api.CZR_Helpers.build_setId( params_candidate.dominus );
-                if ( ! api.control.has( wpDominusId ) ) {
-                      throw new Error( 'Visibilities : a dominus control id is not registered : ' + wpDominusId );
-                }
-                if ( ! _.has( params_candidate, 'servi' ) || _.isUndefined( params_candidate.servi ) || ! _.isArray( params_candidate.servi ) || _.isEmpty( params_candidate.servi ) ) {
-                      throw new Error( 'Visibilities : servi must be set as an array not empty.');
-                }
-
-                _.each( self.defaultDominusParams , function( _value, _key ) {
-                    var _candidate_val = params_candidate[ _key ];
-
-                    switch( _key ) {
-                          case 'visibility' :
-                              if ( ! _.isUndefined( _candidate_val ) && ! _.isEmpty( _candidate_val ) && ! _.isFunction( _candidate_val ) ) {
-                                    throw new Error( 'Visibilities : a dominus visibility callback must be a function : ' + params_candidate.dominus );
-                              }
-                          break;
-                          case 'actions' :
-                              if ( ! _.isUndefined( _candidate_val ) && ! _.isEmpty( _candidate_val ) && ! _.isFunction( _candidate_val ) ) {
-                                    throw new Error( 'Visibilities : a dominus actions callback must be a function : ' + params_candidate.dominus );
-                              }
-                          break;
-                          case 'onSectionExpand' :
-                              if ( ! _.isUndefined( _candidate_val ) && ! _.isEmpty( _candidate_val ) && ! _.isBoolean( _candidate_val ) ) {
-                                    throw new Error( 'Visibilities : a dominus onSectionExpand param must be a boolean : ' + params_candidate.dominus );
-                              }
-                          break;
+                    //store the default control dependencies
+                    this.dominiDeps = _.extend( this.dominiDeps, this._getControlDeps() );
+                    if ( ! _.isArray( self.dominiDeps ) ) {
+                        throw new Error('Visibilities : the dominos dependency array is not an array.');
                     }
-                    _ready_params[_key] = _candidate_val;
-                });
+                    api.czr_activeSectionId.bind( function( section_id ) {
+                          if ( ! _.isEmpty( section_id ) && api.section.has( section_id ) ) {
+                                try {
+                                      self.setServiDependencies( section_id );
+                                } catch( er ) {
+                                      api.errorLog( 'In api.CZR_ctrlDependencies : ' + er );
+                                }
+                          }
+                    });
 
-                return _ready_params;
-          },
+
+                    //@param target_source is an object :
+                    // {
+                    //    target : section_id to awake
+                    //    source : section_id from which the request for awaking has been done
+                    // }
+                    api.bind( 'awaken-section', function( target_source ) {
+                          //if skope on ( serverControlParams.isSkopOn ), then defer the visibility awakening after the silent updates
+                          if ( serverControlParams.isSkopOn && _.has( api ,'czr_skopeBase' ) ) {
+                                api.czr_skopeBase.processSilentUpdates( {
+                                      candidates : {},
+                                      section_id : target_source.target,
+                                      refresh : false
+                                } ).then( function() {
+                                      try {
+                                            self.setServiDependencies( target_source.target, target_source.source );
+                                      } catch( er ) {
+                                            api.errorLog( 'On awaken-section, ctrl deps : ' + er );
+                                      }
+                                });
+                          } else {
+                                try {
+                                      self.setServiDependencies( target_source.target, target_source.source );
+                                } catch( er ) {
+                                      api.errorLog( 'On awaken-section, ctrl deps : ' + er );
+                                }
+                          }
+                    });
+
+                    //FAVICON SPECIFICS
+                    //@todo => move to the theme ?
+                    //favicon note on load and on change(since wp 4.3)
+                    this._handleFaviconNote();
+              },
+
+
+              //Process the visibility callbacks for the controls of a target targetSectionId
+              //@param targetSectionId : string
+              //@param sourceSectionId : string, the section from which the request has been done
+              setServiDependencies : function( targetSectionId, sourceSectionId, refresh ) {
+                    var self = this, params, dfd = $.Deferred();
+
+                    refresh = refresh || false;
+
+                    if ( _.isUndefined( targetSectionId ) || ! api.section.has( targetSectionId ) ) {
+                          throw new Error( 'Control Dependencies : the targetSectionId is missing or not registered : ' + targetSectionId );
+                    }
+
+                    //Assign a visibility state deferred to the target section
+                    api.section( targetSectionId ).czr_ctrlDependenciesReady = api.section( targetSectionId ).czr_ctrlDependenciesReady || $.Deferred();
+
+                    //Bail here if this section has already been setup for ctrl dependencies
+                    if ( ! refresh && 'resolved' == api.section( targetSectionId ).czr_ctrlDependenciesReady.state() )
+                      return dfd.resolve().promise();
+
+                    //FIND DOMINI IN THE TARGET SECTION
+                    //=> setup their callbacks
+                    _.each( self.dominiDeps , function( params ) {
+                          if ( ! _.has( params, 'dominus' ) || ! _.isString( params.dominus ) || _.isEmpty( params.dominus ) ) {
+                                throw new Error( 'Control Dependencies : a dominus control id must be a not empty string.');
+                          }
+
+                          var wpDominusId = api.CZR_Helpers.build_setId( params.dominus );
+                          if ( ! api.control.has( wpDominusId ) )
+                            return;
+
+                          if ( api.control( wpDominusId ).section() != targetSectionId )
+                            return;
+
+                          //Attempt to normalize the params
+                          try {
+                                params = self._prepareDominusParams( params );
+                          } catch( er ) {
+                                api.errorLog( 'prepareDominus Params error : ' + e );
+                                return;
+                          }
+
+
+                          self._processDominusCallbacks( params.dominus, params, refresh )
+                                .fail( function() {
+                                      api.consoleLog( 'self._processDominusCallbacks fail for section ' + targetSectionId );
+                                      dfd.reject();
+                                })
+                                .done( function() {
+                                      dfd.resolve();
+                                });
+                    });
+
+
+                    //EXTERNAL DOMINI : AWAKE THE SECTIONS
+                    //check if any control of the current section is the servus of a dominus located in another section
+                    var _secCtrls = api.CZR_Helpers.getSectionControlIds( targetSectionId ),
+                        _getServusDomini = function( shortServudId ) {
+                              var _dominiIds = [];
+                              _.each( self.dominiDeps , function( params ) {
+                                    if ( ! _.has( params, 'servi' ) || ! _.isArray( params.servi ) || ! _.has( params, 'dominus' ) || _.isEmpty( params.dominus ) ) {
+                                          throw new Error( 'Control Dependencies : wrong params in _getServusDomini.');
+                                    }
+
+                                    if ( _.contains( params.servi , shortServudId ) && ! _.contains( _dominiIds , params.dominus ) ) {
+                                          //Attempt to normalize the params
+                                          try {
+                                                params = self._prepareDominusParams( params );
+                                          } catch( e ) {
+                                                api.consoleLog( 'prepareDominus Params error : ' + e );
+                                                return;
+                                          }
+                                          _dominiIds.push( params.dominus );
+                                    }
+                              });
+                              return ! _.isArray( _dominiIds ) ? [] : _dominiIds;
+                        },
+                        _servusDominiIds = [];
+
+                    //Build the domini array
+                    _.each( _secCtrls, function( servusCandidateId ) {
+                          if ( _.isEmpty( _getServusDomini( servusCandidateId ) ) )
+                            return;
+
+                          _servusDominiIds = _.union( _servusDominiIds, _getServusDomini( servusCandidateId ) );
+                    });
+
+                    //let's loop on the domini ids and check if we need to "awake" an external section
+                    _.each( _servusDominiIds, function( shortDominusId ){
+
+                          var wpDominusId = api.CZR_Helpers.build_setId( shortDominusId );
+                          //This dominus must be located in another section
+                          if ( api.control( wpDominusId ).section() == targetSectionId )
+                              return;
+                          //The dominus section can't be the current source if set. => otherwise potential infinite loop scenario.
+                          if ( sourceSectionId == api.control( wpDominusId ).section() )
+                              return;
+                          //inform the api that a section has to be awaken
+                          //=> first silently update the section controls if skope on
+                          //=> then fire the visibilities
+                          api.trigger( 'awaken-section', {
+                                target : api.control( wpDominusId ).section(),
+                                source : targetSectionId
+                          } );
+                    } );
+
+                    //This section has been setup for ctrl dependencies
+                    dfd.always( function() {
+                          api.section( targetSectionId ).czr_ctrlDependenciesReady.resolve();
+                    });
+                    return dfd.promise();
+              },
+
+
+              //This method fires a callback when a control is registered in the api.
+              //If the control is registered, then it fires the callback when it is embedded
+              //If the control is embedeed, it fires the callback
+              //=> typical use case : a control can be both removed from the API and the DOM, and then added back on skope switch
+              //
+              //@param wpCtrlId : string name of the control as registered in the WP API
+              //@param callback : fn callback to fire
+              //@param args : [] or callback arguments
+              _deferCallbackForControl : function( wpCrtlId, callback, args ) {
+                    var dfd = $.Deferred();
+                    if ( _.isEmpty(wpCrtlId) || ! _.isString(wpCrtlId) ) {
+                        throw new Error( '_deferCallbackForControl : the control id is missing.' );
+                    }
+                    if ( ! _.isFunction( callback ) ) {
+                        throw new Error( '_deferCallbackForControl : callback must be a funtion.' );
+                    }
+                    args = ( _.isUndefined(args) || ! _.isArray( args ) ) ? [] : args;
+
+                    if ( api.control.has( wpCrtlId ) ) {
+                          if ( 'resolved' == api.control(wpCrtlId ).deferred.embedded.state() ) {
+                                $.when( callback.apply( null, args ) )
+                                      .fail( function() { dfd.reject(); })
+                                      .done( function() { dfd.resolve(); });
+                          } else {
+                                api.control( wpCrtlId ).deferred.embedded.then( function() {
+                                      $.when( callback.apply( null, args ) )
+                                            .fail( function() { dfd.reject(); })
+                                            .done( function() { dfd.resolve(); });
+                                });
+                          }
+                    } else {
+                          api.control.when( wpCrtlId, function() {
+                                api.control( wpCrtlId ).deferred.embedded.then( function() {
+                                      $.when( callback.apply( null, args ) )
+                                            .fail( function() { dfd.reject(); })
+                                            .done( function() { dfd.resolve(); });
+                                });
+                          });
+                    }
+                    return dfd.promise();
+              },
+
+
+              /*
+              * @return void
+              * show or hide setting according to the dependency + callback pair
+              * @params setId = the short setting id, whitout the theme option prefix OR the WP built-in setting
+              * @params o = { controls [], callback fn, onSectionExpand bool }
+              */
+              _processDominusCallbacks : function( shortDominusId, dominusParams, refresh ) {
+                    var self = this,
+                        wpDominusId = api.CZR_Helpers.build_setId( shortDominusId ),
+                        dominusSetInst = api( wpDominusId ),
+                        dfd = $.Deferred(),
+                        hasProcessed = false;
+
+                    //loop on the dominus servi and apply + bind the visibility cb
+                    _.each( dominusParams.servi , function( servusShortSetId ) {
+                            if ( ! api.control.has( api.CZR_Helpers.build_setId( servusShortSetId ) ) ) {
+                                return;
+                            }
+                            //set visibility when control is embedded
+                            //or when control is added to the api
+                            //=> solves the problem of visibility callbacks lost when control are re-rendered
+                            var _fireDominusCallbacks = function( dominusSetVal, servusShortSetId, dominusParams, refresh ) {
+                                      var _toFire = [],
+                                          _args = arguments;
+                                      _.each( dominusParams, function( _item, _key ) {
+                                            switch( _key ) {
+                                                case 'visibility' :
+                                                    self._setVisibility.apply( null, _args );
+                                                break;
+                                                case 'actions' :
+                                                    if ( _.isFunction( _item ) )
+                                                        _item.apply( null, _args );
+                                                break;
+                                            }
+                                      });
+                                },
+                                _deferCallbacks = function( dominusSetVal ) {
+                                      dominusSetVal = dominusSetVal  || dominusSetInst();
+                                      var wpServusSetId = api.CZR_Helpers.build_setId( servusShortSetId );
+                                      self._deferCallbackForControl(
+                                                  wpServusSetId,
+                                                  _fireDominusCallbacks,
+                                                  [ dominusSetVal, servusShortSetId, dominusParams ]
+                                            )
+                                            .always( function() { hasProcessed = true; })
+                                            .fail( function() { dfd.reject(); })
+                                            .done( function() { dfd.resolve(); });
+                                };
+
+
+                            //APPLY THE DEPENDENCIES
+                            _deferCallbacks();
+
+                            //BIND THE DOMINUS SETTING INSTANCE
+                            //store the visibility bound state
+                            if ( ! _.has( dominusSetInst, 'czr_visibilityServi' ) )
+                                dominusSetInst.czr_visibilityServi = new api.Value( [] );
+
+                            //Maybe bind to react on setting _dirty change
+                            var _currentDependantBound = dominusSetInst.czr_visibilityServi();
+                            //Make sure a dependant visibility action is bound only once for a setting id to another setting control id
+                            if ( ! _.contains( _currentDependantBound, servusShortSetId ) ) {
+                                  dominusSetInst.bind( function( dominusSetVal ) {
+                                      _deferCallbacks( dominusSetVal );
+                                  });
+                                  dominusSetInst.czr_visibilityServi( _.union( _currentDependantBound, [ servusShortSetId ] ) );
+                            }
+                    } );//_.each
+                    if ( ! hasProcessed )
+                      return dfd.resolve().promise();
+                    return dfd.promise();
+              },
 
 
 
-          /*****************************************************************************
-          * FAVICON SPECIFICS
-          *****************************************************************************/
-          /**
-          * Fired on api ready
-          * May change the site_icon description on load
-          * May add a callback to site_icon
-          * @return void()
-          */
-          _handleFaviconNote : function() {
-                var self = this,
-                    _fav_setId = api.CZR_Helpers.build_setId( serverControlParams.faviconOptionName );
-                //do nothing if (||)
-                //1) WP version < 4.3 where site icon has been introduced
-                //2) User had not defined a favicon
-                //3) User has already set WP site icon
-                if ( ! api.has('site_icon') || ! api.control('site_icon') || ( api.has( _fav_setId ) && 0 === + api( _fav_setId )() ) || + api('site_icon')() > 0 )
-                  return;
+              //@return void()
+              _setVisibility : function ( dominusSetVal, servusShortSetId, dominusParams, refresh ) {
+                    var wpServusSetId = api.CZR_Helpers.build_setId( servusShortSetId ),
+                        visibility = dominusParams.visibility( dominusSetVal, servusShortSetId, dominusParams.dominus );
 
-                var _oldDes     = api.control('site_icon').params.description;
-                    _newDes     = ['<strong>' , translatedStrings.faviconNote || '' , '</strong><br/><br/>' ].join('') + _oldDes;
+                    refresh = refresh || false;
+                    //Allows us to filter between visibility callbacks and other actions
+                    //a non visibility callback shall return null
+                    if ( ! _.isBoolean( visibility ) || ( 'unchanged' == visibility && ! refresh ) )
+                      return;
 
-                //on api ready
-                self._printFaviconNote(_newDes );
+                    //when skope is enabled, we might be doing a silent update
+                    //=> this method should be bailed if so
+                    var _doVisibilitiesWhenPossible = function() {
+                            if ( api.state.has( 'silent-update-processing' ) && api.state( 'silent-update-processing' )() )
+                              return;
+                            api.control( wpServusSetId, function( _controlInst ) {
+                                  var _args = {
+                                        duration : 'fast',
+                                        completeCallback : function() {},
+                                        unchanged : false
+                                  };
 
-                //on site icon change
-                api('site_icon').callbacks.add( function(to) {
-                  if ( +to > 0 ) {
-                    //reset the description to default
-                    api.control('site_icon').container.find('.description').text(_oldDes);
-                    //reset the previous favicon setting
-                    if ( api.has( _fav_setId ) )
-                      api( _fav_setId ).set("");
-                  }
-                  else {
+                                  if ( _.has( _controlInst, 'active' ) )
+                                    visibility = visibility && _controlInst.active();
+
+                                  if ( _.has( _controlInst, 'defaultActiveArguments' ) )
+                                    _args = control.defaultActiveArguments;
+
+                                  _controlInst.onChangeActive( visibility , _controlInst.defaultActiveArguments );
+                            });
+                            if ( api.state.has( 'silent-update-processing' ) ) {
+                                  api.state( 'silent-update-processing' ).unbind( _doVisibilitiesWhenPossible );
+                            }
+                    };
+
+                    if ( api.state.has( 'silent-update-processing' ) && api.state( 'silent-update-processing' )() ) {
+                          api.state( 'silent-update-processing' ).bind( _doVisibilitiesWhenPossible );
+                    } else {
+                          _doVisibilitiesWhenPossible();
+                    }
+
+              },
+
+
+
+
+
+
+
+
+
+
+              /*****************************************************************************
+              * HELPERS
+              *****************************************************************************/
+              /*
+              * Abstract
+              * Will be provided by the theme
+              * @return main control dependencies object
+              */
+              _getControlDeps : function() {
+                return {};
+              },
+
+
+              //@return a visibility ready object of param describing the dependencies between a dominus and its servi.
+              //this.defaultDominusParams = {
+              //       dominus : '',
+              //       servi : [],
+              //       visibility : fn() {},
+              //       actions : fn() {},
+              //       onSectionExpand : true
+              // };
+              _prepareDominusParams : function( params_candidate ) {
+                    var self = this,
+                        _ready_params = {};
+
+                    //Check mandatory conditions
+                    if ( ! _.isObject( params_candidate ) ) {
+                        throw new Error('Visibilities : a dominus param definition must be an object.');
+                    }
+                    if ( ! _.has( params_candidate, 'visibility' ) && ! _.has( params_candidate, 'actions' ) ) {
+                        throw new Error('Visibilities : a dominus definition must include a visibility or an actions callback.');
+                    }
+                    if ( ! _.has( params_candidate, 'dominus' ) || ! _.isString( params_candidate.dominus ) || _.isEmpty( params_candidate.dominus ) ) {
+                          throw new Error( 'Visibilities : a dominus control id must be a not empty string.');
+                    }
+                    var wpDominusId = api.CZR_Helpers.build_setId( params_candidate.dominus );
+                    if ( ! api.control.has( wpDominusId ) ) {
+                          throw new Error( 'Visibilities : a dominus control id is not registered : ' + wpDominusId );
+                    }
+                    if ( ! _.has( params_candidate, 'servi' ) || _.isUndefined( params_candidate.servi ) || ! _.isArray( params_candidate.servi ) || _.isEmpty( params_candidate.servi ) ) {
+                          throw new Error( 'Visibilities : servi must be set as an array not empty.');
+                    }
+
+                    _.each( self.defaultDominusParams , function( _value, _key ) {
+                        var _candidate_val = params_candidate[ _key ];
+
+                        switch( _key ) {
+                              case 'visibility' :
+                                  if ( ! _.isUndefined( _candidate_val ) && ! _.isEmpty( _candidate_val ) && ! _.isFunction( _candidate_val ) ) {
+                                        throw new Error( 'Visibilities : a dominus visibility callback must be a function : ' + params_candidate.dominus );
+                                  }
+                              break;
+                              case 'actions' :
+                                  if ( ! _.isUndefined( _candidate_val ) && ! _.isEmpty( _candidate_val ) && ! _.isFunction( _candidate_val ) ) {
+                                        throw new Error( 'Visibilities : a dominus actions callback must be a function : ' + params_candidate.dominus );
+                                  }
+                              break;
+                              case 'onSectionExpand' :
+                                  if ( ! _.isUndefined( _candidate_val ) && ! _.isEmpty( _candidate_val ) && ! _.isBoolean( _candidate_val ) ) {
+                                        throw new Error( 'Visibilities : a dominus onSectionExpand param must be a boolean : ' + params_candidate.dominus );
+                                  }
+                              break;
+                        }
+                        _ready_params[_key] = _candidate_val;
+                    });
+
+                    return _ready_params;
+              },
+
+
+
+              /*****************************************************************************
+              * FAVICON SPECIFICS
+              *****************************************************************************/
+              /**
+              * Fired on api ready
+              * May change the site_icon description on load
+              * May add a callback to site_icon
+              * @return void()
+              */
+              _handleFaviconNote : function() {
+                    var self = this,
+                        _fav_setId = api.CZR_Helpers.build_setId( serverControlParams.faviconOptionName );
+                    //do nothing if (||)
+                    //1) WP version < 4.3 where site icon has been introduced
+                    //2) User had not defined a favicon
+                    //3) User has already set WP site icon
+                    if ( ! api.has('site_icon') || ! api.control('site_icon') || ( api.has( _fav_setId ) && 0 === + api( _fav_setId )() ) || + api('site_icon')() > 0 )
+                      return;
+
+                    var _oldDes     = api.control('site_icon').params.description;
+                        _newDes     = ['<strong>' , translatedStrings.faviconNote || '' , '</strong><br/><br/>' ].join('') + _oldDes;
+
+                    //on api ready
                     self._printFaviconNote(_newDes );
-                  }
-                });
-          },
 
-          //Add a note to the WP control description if user has already defined a favicon
-          _printFaviconNote : function( _newDes ) {
-                api.control('site_icon').container.find('.description').html(_newDes);
-          }
-    }
-  );//api.Class.extend() //api.CZR_ctrlDependencies
+                    //on site icon change
+                    api('site_icon').callbacks.add( function(to) {
+                      if ( +to > 0 ) {
+                        //reset the description to default
+                        api.control('site_icon').container.find('.description').text(_oldDes);
+                        //reset the previous favicon setting
+                        if ( api.has( _fav_setId ) )
+                          api( _fav_setId ).set("");
+                      }
+                      else {
+                        self._printFaviconNote(_newDes );
+                      }
+                    });
+              },
 
-})( wp.customize, jQuery, _);//DOM READY :
+              //Add a note to the WP control description if user has already defined a favicon
+              _printFaviconNote : function( _newDes ) {
+                    api.control('site_icon').container.find('.description').html(_newDes);
+              }
+        }
+      );//api.Class.extend() //api.CZR_ctrlDependencies
+})( wp.customize, jQuery, _);
+//DOM READY :
 //1) FIRE SPECIFIC INPUT PLUGINS
 //2) ADD SOME COOL STUFFS
 //3) SPECIFIC CONTROLS ACTIONS
-(function (wp, $) {
-  $( function($) {
-    var api = wp.customize || api;
+( function ( wp, $ ) {
+      $( function($) {
+            var api = wp.customize || api;
 
-    //WHAT IS HAPPENING IN THE MESSENGER
-    // $(window.parent).on( 'message', function(e, o) {
-    //   api.consoleLog('SENT STUFFS', JSON.parse( e.originalEvent.data), e );
-    // });
-    // $( window ).on( 'message', function(e, o) {
-    //   api.consoleLog('INCOMING MESSAGE', JSON.parse( e.originalEvent.data), e );
-    // });
-    // $(window.document).bind("ajaxSend", function(e, o){
-    //    api.consoleLog('AJAX SEND', e, arguments );
-    // }).bind("ajaxComplete", function(e, o){
-    //    api.consoleLog('AJAX COMPLETE', e, o);
-    // });
+            //WHAT IS HAPPENING IN THE MESSENGER
+            // $(window.parent).on( 'message', function(e, o) {
+            //   api.consoleLog('SENT STUFFS', JSON.parse( e.originalEvent.data), e );
+            // });
+            // $( window ).on( 'message', function(e, o) {
+            //   api.consoleLog('INCOMING MESSAGE', JSON.parse( e.originalEvent.data), e );
+            // });
+            // $(window.document).bind("ajaxSend", function(e, o){
+            //    api.consoleLog('AJAX SEND', e, arguments );
+            // }).bind("ajaxComplete", function(e, o){
+            //    api.consoleLog('AJAX COMPLETE', e, o);
+            // });
 
-    /* RECENTER CURRENT SECTIONS */
-    $('.accordion-section').not('.control-panel').click( function () {
-      _recenter_current_section($(this));
-    });
-
-    function _recenter_current_section( section ) {
-      var $siblings               = section.siblings( '.open' );
-      //check if clicked element is above or below sibling with offset.top
-      if ( 0 !== $siblings.length &&  $siblings.offset().top < 0 ) {
-        $('.wp-full-overlay-sidebar-content').animate({
-              scrollTop:  - $('#customize-theme-controls').offset().top - $siblings.height() + section.offset().top + $('.wp-full-overlay-sidebar-content').offset().top
-        }, 700);
-      }
-    }//end of fn
-
-
-    /* CHECKBOXES */
-    api.czrSetupCheckbox = function( controlId, refresh ) {
-      $('input[type=checkbox]', api.control(controlId).container ).each( function() {
-        //first fix the checked / unchecked status
-        if ( 0 === $(this).val() || '0' == $(this).val() || 'off' == $(this).val() || _.isEmpty($(this).val() ) ) {
-          $(this).prop('checked', false);
-        } else {
-          $(this).prop('checked', true);
-        }
-
-        //then render icheck if not done already
-        if ( 0 !== $(this).closest('div[class^="icheckbox"]').length )
-          return;
-
-        $(this).iCheck({
-          checkboxClass: 'icheckbox_flat-grey',
-          //checkedClass: 'checked',
-          radioClass: 'iradio_flat-grey',
-        })
-        .on( 'ifChanged', function(e){
-          $(this).val( false === $(this).is(':checked') ? 0 : 1 );
-          $(e.currentTarget).trigger('change');
-        });
-      });
-    };//api.czrSetupCheckbox()
-
-    /* SELECT INPUT */
-    api.czrSetupSelect = function(controlId, refresh) {
-      //Exclude no-selecter-js
-      $('select[data-customize-setting-link]', api.control(controlId).container )
-            .not('.no-selecter-js')
-            .each( function() {
-                  $(this).selecter({
-                  //triggers a change event on the view, passing the newly selected value + index as parameters.
-                  // callback : function(value, index) {
-                  //   self.triggerSettingChange( window.event || {} , value, index); // first param is a null event.
-                  // }
-                  });
+            /* RECENTER CURRENT SECTIONS */
+            $('.accordion-section').not('.control-panel').click( function () {
+                  _recenter_current_section($(this));
             });
-    };//api.czrSetupSelect()
+
+            function _recenter_current_section( section ) {
+                  var $siblings               = section.siblings( '.open' );
+                  //check if clicked element is above or below sibling with offset.top
+                  if ( 0 !== $siblings.length &&  $siblings.offset().top < 0 ) {
+                        $('.wp-full-overlay-sidebar-content').animate({
+                              scrollTop:  - $('#customize-theme-controls').offset().top - $siblings.height() + section.offset().top + $('.wp-full-overlay-sidebar-content').offset().top
+                        }, 700);
+                  }
+            }//end of fn
 
 
-    /* NUMBER INPUT */
-    api.czrSetupStepper = function( controlId, refresh ) {
-          //Exclude no-selecter-js
-          $('input[type="number"]', api.control(controlId).container ).each( function() {
-                $(this).stepper();
-          });
-    };//api.czrSetupStepper()
+            /* CHECKBOXES */
+            api.czrSetupCheckbox = function( controlId, refresh ) {
+                  $('input[type=checkbox]', api.control(controlId).container ).each( function() {
+                        //first fix the checked / unchecked status
+                        if ( 0 === $(this).val() || '0' == $(this).val() || 'off' == $(this).val() || _.isEmpty($(this).val() ) ) {
+                              $(this).prop('checked', false);
+                        } else {
+                              $(this).prop('checked', true);
+                        }
 
-    api.control.each(function(control){
-          if ( ! _.has(control,'id') )
-            return;
-          //exclude widget controls and menu controls for checkboxes
-          if ( 'widget_' != control.id.substring(0, 'widget_'.length ) && 'nav_menu' != control.id.substring( 0, 'nav_menu'.length ) ) {
-                api.czrSetupCheckbox(control.id);
-          }
-          if ( 'nav_menu_locations' != control.id.substring( 0, 'nav_menu_locations'.length ) ) {
-                api.czrSetupSelect(control.id);
-          }
-          api.czrSetupStepper(control.id);
-    });
+                        //then render icheck if not done already
+                        if ( 0 !== $(this).closest('div[class^="icheckbox"]').length )
+                          return;
+
+                        $(this).iCheck({
+                              checkboxClass: 'icheckbox_flat-grey',
+                              //checkedClass: 'checked',
+                              radioClass: 'iradio_flat-grey',
+                        })
+                        .on( 'ifChanged', function(e){
+                              $(this).val( false === $(this).is(':checked') ? 0 : 1 );
+                              $(e.currentTarget).trigger('change');
+                        });
+                  });
+            };//api.czrSetupCheckbox()
+
+            /* SELECT INPUT */
+            api.czrSetupSelect = function(controlId, refresh) {
+                  //Exclude no-selecter-js
+                  $('select[data-customize-setting-link]', api.control(controlId).container )
+                        .not('.no-selecter-js')
+                        .each( function() {
+                              $(this).selecter({
+                              //triggers a change event on the view, passing the newly selected value + index as parameters.
+                              // callback : function(value, index) {
+                              //   self.triggerSettingChange( window.event || {} , value, index); // first param is a null event.
+                              // }
+                              });
+                        });
+            };//api.czrSetupSelect()
 
 
-    var fireHeaderButtons = function() {
-          var $home_button = $('<span/>', { class:'customize-controls-home fa fa-home', html:'<span class="screen-reader-text">Home</span>' } );
-          $.when( $('#customize-header-actions').append( $home_button ) )
-                .done( function() {
-                      $home_button
-                            .keydown( function( event ) {
-                                  if ( 9 === event.which ) // tab
-                                    return;
-                                  if ( 13 === event.which ) // enter
-                                    this.click();
-                                  event.preventDefault();
-                            })
-                            .on( 'click.customize-controls-home', function() {
-                                  //event.preventDefault();
-                                  //close everything
-                                  if ( api.section.has( api.czr_activeSectionId() ) ) {
-                                        api.section( api.czr_activeSectionId() ).expanded( false );
-                                  } else {
-                                        api.section.each( function( _s ) {
-                                            _s.expanded( false );
-                                        });
-                                  }
-                                  api.panel.each( function( _p ) {
-                                        _p.expanded( false );
-                                  });
-                            });
-                });
-      };
-      fireHeaderButtons();
-  });//end of $( function($) ) dom ready
+            /* NUMBER INPUT */
+            api.czrSetupStepper = function( controlId, refresh ) {
+                  //Exclude no-selecter-js
+                  $('input[type="number"]', api.control(controlId).container ).each( function() {
+                        $(this).stepper();
+                  });
+            };//api.czrSetupStepper()
 
-})( wp, jQuery);
+            api.control.each(function(control){
+                  if ( ! _.has(control,'id') )
+                    return;
+                  //exclude widget controls and menu controls for checkboxes
+                  if ( 'widget_' != control.id.substring(0, 'widget_'.length ) && 'nav_menu' != control.id.substring( 0, 'nav_menu'.length ) ) {
+                        api.czrSetupCheckbox(control.id);
+                  }
+                  if ( 'nav_menu_locations' != control.id.substring( 0, 'nav_menu_locations'.length ) ) {
+                        api.czrSetupSelect(control.id);
+                  }
+                  api.czrSetupStepper(control.id);
+            });
+
+
+            var fireHeaderButtons = function() {
+                  var $home_button = $('<span/>', { class:'customize-controls-home fa fa-home', html:'<span class="screen-reader-text">Home</span>' } );
+                  $.when( $('#customize-header-actions').append( $home_button ) )
+                        .done( function() {
+                              $home_button
+                                    .keydown( function( event ) {
+                                          if ( 9 === event.which ) // tab
+                                            return;
+                                          if ( 13 === event.which ) // enter
+                                            this.click();
+                                          event.preventDefault();
+                                    })
+                                    .on( 'click.customize-controls-home', function() {
+                                          //event.preventDefault();
+                                          //close everything
+                                          if ( api.section.has( api.czr_activeSectionId() ) ) {
+                                                api.section( api.czr_activeSectionId() ).expanded( false );
+                                          } else {
+                                                api.section.each( function( _s ) {
+                                                    _s.expanded( false );
+                                                });
+                                          }
+                                          api.panel.each( function( _p ) {
+                                                _p.expanded( false );
+                                          });
+                                    });
+                        });
+            };
+
+            fireHeaderButtons();
+
+      });//end of $( function($) ) dom ready
+})( wp, jQuery );

@@ -1,5 +1,6 @@
 
 var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeSaveMths, {
       initialize: function() {
             var self = this;
@@ -160,3 +161,4 @@ $.extend( CZRSkopeSaveMths, {
             return self.globalSaveDeferred.promise();
       }//save
 });//$.extend
+})( wp.customize , jQuery, _ );

@@ -1,5 +1,6 @@
 
 var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
+( function ( api, $, _ ) {
 $.extend( CZRSkopeSaveMths, {
       //@return a promise()
       getSubmitPromise : function( skope_id ) {
@@ -205,3 +206,4 @@ $.extend( CZRSkopeSaveMths, {
             return submit_dfd.promise();
       }//submit()
 });//$.extend
+})( wp.customize , jQuery, _ );
