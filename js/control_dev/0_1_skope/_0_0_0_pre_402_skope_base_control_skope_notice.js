@@ -76,7 +76,7 @@ $.extend( CZRSkopeBaseMths, {
                                 } else {
                                     _html.push( [
                                           'Customized. Will be applied to',//@to_translate
-                                          '<strong>' + api.czr_skope( _inheritedFromSkopeId )().ctx_title + '.' + '</strong>',
+                                          '<strong>' + api.czr_skope( _inheritedFromSkopeId )().ctx_title + '</strong>',
                                           'once published.'
                                     ].join(' ') );
                                 }
@@ -138,8 +138,8 @@ $.extend( CZRSkopeBaseMths, {
                                 '<strong>' + api.czr_skope( _localSkopeId )().ctx_title + '</strong>',
                                 ! _isCustomized ? 'is set in' : 'is customized in',//@to_translate
                                 self.buildSkopeLink( _overridedBySkopeId ),
-                                'which has a higher priority than',
-                                '<strong>' + api.czr_skope( _currentSkopeId )().title + '.' + '</strong>'
+                                'which has a higher priority than the current option scope',
+                                '<strong>( ' + api.czr_skope( _currentSkopeId )().title + ' ).</strong>'
                                 //@to_translate
                           ].join(' ') );
                     }

@@ -38,308 +38,318 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
 };
 
 var api = api || wp.customize, $ = $ || jQuery;
-(function (api, $, _) {
-      //Dev mode aware and IE compatible api.consoleLog()
-      api.consoleLog = function() {
-            // if ( ! serverControlParams.isDevMode )
-            //   return;
-            //fix for IE, because console is only defined when in F12 debugging mode in IE
-            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
-              return;
+(function ( api, $, _ ) {
+//@return [] for console method
+//@bgCol @textCol are hex colors
+//@arguments : the original console arguments
+var _prettyPrintLog = function( args ) {
+      var _defaults = {
+            bgCol : '#5ed1f5',
+            textCol : '#000',
+            consoleArguments : []
+      };
+      args = _.extend( _defaults, args );
 
-            var _toArr = Array.from( arguments );
+      var _toArr = Array.from( args.consoleArguments );
+
+      //if the array to print is not composed exclusively of strings, then let's stringify it
+      //else join()
+      if ( ! _.isEmpty( _.filter( _toArr, function( it ) { return ! _.isString( it ); } ) ) ) {
+            _toArr =  JSON.stringify( _toArr );
+      } else {
             _toArr = _toArr.join(' ');
-            var _styled = [
-                '%c ' + _toArr,
-                'background: #008ec2; color: white; display: block;',
-            ];
-            console.log.apply( console, _styled );
-      };
-
-      api.errorLog = function( ) {
-            //fix for IE, because console is only defined when in F12 debugging mode in IE
-            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
-              return;
-
-            var _toArr = Array.from( arguments );
-            _toArr = _toArr.join(' ');
-            var _styled = [
-                '%c ' + _toArr,
-                'background: #ff0016; color: white; display: block;',
-            ];
-            console.log.apply( console, _styled );
-      };
-
-      api.czr_isSkopOn = function() {
-            return serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
-      };
-
-      api.czr_isChangeSetOn = function() {
-            return serverControlParams.isChangeSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
-      };
-
-
-
-      /*****************************************************************************
-      * DEFINE SOME USEFUL OBSERVABLE VALUES
-      *****************************************************************************/
-      //STORE THE CURRENTLY ACTIVE SECTION AND PANELS IN AN OBSERVABLE VALUE
-      //BIND EXISTING AND FUTURE SECTIONS AND PANELS
-      api.czr_activeSectionId = new api.Value('');
-      api.czr_activePanelId = new api.Value('');
-
-      /*****************************************************************************
-      * OBSERVE UBIQUE CONTROL'S SECTIONS EXPANSION
-      *****************************************************************************/
-      if ( 'function' === typeof api.Section ) {
-            //move controls back and forth in declared ubique sections
-            //=> implemented in the customizr theme for the social links boolean visibility controls ( socials in header, sidebar, footer )
-            api.control.bind( 'add', function( _ctrl ) {
-                  if ( _ctrl.params.ubq_section && _ctrl.params.ubq_section.section ) {
-                        //save original state
-                        _ctrl.params.original_priority = _ctrl.params.priority;
-                        _ctrl.params.original_section  = _ctrl.params.section;
-
-                        api.section.when( _ctrl.params.ubq_section.section, function( _section_instance ) {
-                                _section_instance.expanded.bind( function( expanded ) {
-                                      if ( expanded ) {
-                                            if ( _ctrl.params.ubq_section.priority ) {
-                                                  _ctrl.priority( _ctrl.params.ubq_section.priority );
-                                            }
-                                            _ctrl.section( _ctrl.params.ubq_section.section );
-                                      }
-                                      else {
-                                            _ctrl.priority( _ctrl.params.original_priority );
-                                            _ctrl.section( _ctrl.params.original_section );
-                                      }
-                                });
-
-                        } );
-                  }
-            });
       }
+      return [
+            '%c ' + _toArr,
+            [ 'background:' + args.bgCol, 'color:' + args.textCol, 'display: block;' ].join(';')
+      ];
+};
+//Dev mode aware and IE compatible api.consoleLog()
+api.consoleLog = function() {
+      // if ( ! serverControlParams.isDevMode )
+      //   return;
+      //fix for IE, because console is only defined when in F12 debugging mode in IE
+      if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
+        return;
 
-      /*****************************************************************************
-      * CLOSE THE MOD OPTION PANEL ( if exists ) ON : section change, panel change, skope switch
-      *****************************************************************************/
-      //@return void()
-      var _closeModOpt = function() {
-            if ( ! _.has( api, 'czr_ModOptVisible') )
-              return;
-            api.czr_ModOptVisible(false);
-      };
-      api.czr_activeSectionId.bind( _closeModOpt );
-      api.czr_activePanelId.bind( _closeModOpt );
+      console.log.apply( console, _prettyPrintLog( { consoleArguments : arguments } ) );
+};
 
-      /*****************************************************************************
-      * OBSERVE SECTIONS AND PANEL EXPANSION
-      * /store the current expanded section and panel
-      *****************************************************************************/
-      api.bind('ready', function() {
-            if ( 'function' != typeof api.Section ) {
-              throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
-            }
-            var _storeCurrentSection = function( expanded, section_id ) {
-                  api.czr_activeSectionId( expanded ? section_id : '' );
-            };
-            api.section.each( function( _sec ) {
-                  _sec.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, _sec.id ); } );
-            });
-            api.section.bind( 'add', function( section_instance ) {
-                  api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
-                  section_instance.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, section_instance.id ); } );
-            });
+api.errorLog = function() {
+      //fix for IE, because console is only defined when in F12 debugging mode in IE
+      if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
+        return;
 
-            var _storeCurrentPanel = function( expanded, panel_id ) {
-                  api.czr_activePanelId( expanded ? panel_id : '' );
-                  //if the expanded panel id becomes empty (typically when switching back to the root panel), make sure that no section is set as currently active
-                  //=> fixes the problem of add_menu section staying expanded when switching back to another panel
-                  if ( _.isEmpty( api.czr_activePanelId() ) ) {
-                        api.czr_activeSectionId( '' );
-                  }
-            };
-            api.panel.each( function( _panel ) {
-                  _panel.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, _panel.id ); } );
-            });
-            api.panel.bind( 'add', function( panel_instance ) {
-                  panel_instance.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, panel_instance.id ); } );
-            });
-      });
+      console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : arguments } ) );
+};
 
-      //SET THE ACTIVE STATE OF THE THEMES SECTION BASED ON WHAT THE SERVER SENT
-      api.bind('ready', function() {
-            var _do = function() {
-                  api.section('themes').active.bind( function( active ) {
-                        if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
-                          return;
-                        api.section('themes').active(false);
-                        //reset the callbacks
-                        api.section('themes').active.callbacks = $.Callbacks();
-                  });
-            };
-            if ( api.section.has( 'themes') )
-                _do();
-            else
-                api.section.when( 'themes', function( _s ) {
-                      _do();
-                });
-      });
+api.czr_isSkopOn = function() {
+      return serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
+};
+
+api.czr_isChangeSetOn = function() {
+      return serverControlParams.isChangeSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
+};
 
 
-      /*****************************************************************************
-      * FIRE SKOPE ON READY
-      *****************************************************************************/
-      //this promise will be resolved when
-      //1) the initial skopes collection has been populated
-      //2) the initial skope has been switched to
-      api.czr_skopeReady = $.Deferred();
-      api.bind( 'ready' , function() {
-            if ( serverControlParams.isSkopOn ) {
-                  api.czr_isLoadingSkope  = new api.Value( false );
-                  api.czr_isLoadingSkope.bind( function( loading ) {
-                        toggleSkopeLoadPane( loading );
-                  });
-                  api.czr_skopeBase   = new api.CZR_skopeBase();
-                  api.czr_skopeSave   = new api.CZR_skopeSave();
-                  api.czr_skopeReset  = new api.CZR_skopeReset();
 
-                  api.trigger('czr-skope-started');
+/*****************************************************************************
+* DEFINE SOME USEFUL OBSERVABLE VALUES
+*****************************************************************************/
+//STORE THE CURRENTLY ACTIVE SECTION AND PANELS IN AN OBSERVABLE VALUE
+//BIND EXISTING AND FUTURE SECTIONS AND PANELS
+api.czr_activeSectionId = new api.Value('');
+api.czr_activePanelId = new api.Value('');
 
-                  api.czr_skopeReady
-                        .done( function() {
-                              api.trigger('czr-skope-ready');
-                        })
-                        .fail( function( error ) {
-                              api.errorLog( 'Skope could not be instantiated : ' + error );
-                              serverControlParams.isSkopOn = false;
-                              api.czr_isLoadingSkope( false );
-                        });
+/*****************************************************************************
+* OBSERVE UBIQUE CONTROL'S SECTIONS EXPANSION
+*****************************************************************************/
+if ( 'function' === typeof api.Section ) {
+      //move controls back and forth in declared ubique sections
+      //=> implemented in the customizr theme for the social links boolean visibility controls ( socials in header, sidebar, footer )
+      api.control.bind( 'add', function( _ctrl ) {
+            if ( _ctrl.params.ubq_section && _ctrl.params.ubq_section.section ) {
+                  //save original state
+                  _ctrl.params.original_priority = _ctrl.params.priority;
+                  _ctrl.params.original_section  = _ctrl.params.section;
 
-                  //If skope was properly instantiated but there's another problem occuring after, display a self closing top notification after 30 s
-                  if ( 'rejected' != api.czr_skopeReady.state() ) {
-                        //Make sure the loading icon panel is destroyed after a moment
-                        //Typically if there was a problem in the WP js API and the skope could not be initialized
-                        setTimeout( function() {
-                            if ( 'pending' == api.czr_skopeReady.state() )  {
-                                  //This top note will be rendered 20s and self closed if not closed before by the user
-                                  api.czr_skopeBase.toggleTopNote( true, {
-                                        title : 'There was a problem when trying to load the customizer.',//@to_translate
-                                        message : 'Please open your <a href="http://docs.presscustomizr.com/article/272-inspect-your-webpages-in-your-browser-with-the-development-tools" target="_blank">browser debug tool</a>, and report any error message (in red) printed in the javascript console in the <a href="https://wordpress.org/support/theme/hueman" target="_blank">Hueman theme forum</a>.',//@to_translate
-                                        selfCloseAfter : 40000
-                                  });
+                  api.section.when( _ctrl.params.ubq_section.section, function( _section_instance ) {
+                          _section_instance.expanded.bind( function( expanded ) {
+                                if ( expanded ) {
+                                      if ( _ctrl.params.ubq_section.priority ) {
+                                            _ctrl.priority( _ctrl.params.ubq_section.priority );
+                                      }
+                                      _ctrl.section( _ctrl.params.ubq_section.section );
+                                }
+                                else {
+                                      _ctrl.priority( _ctrl.params.original_priority );
+                                      _ctrl.section( _ctrl.params.original_section );
+                                }
+                          });
 
-                                  api.czr_isLoadingSkope( false );
-                            }
-                        }, 30000);
-                  }
-            }
-
-            //let's set a lower autosave interval ( default is 60000 ms )
-            if ( serverControlParams.isChangeSetOn ) {
-                  api.settings.timeouts.changesetAutoSave = 10000;
-            }
-      } );
-
-      //INCLUDE THE REVISION COUNT IF WP < 4.7
-      if ( ! _.has( api, '_latestRevision') ) {
-            /**
-             * Current change count.
-             */
-            api._latestRevision = 0;
-
-            /**
-             * Latest revisions associated with the updated setting.
-             */
-            api._latestSettingRevisions = {};
-
-            /*
-             * Keep track of the revision associated with each updated setting so that
-             * requestChangesetUpdate knows which dirty settings to include. Also, once
-             * ready is triggered and all initial settings have been added, increment
-             * revision for each newly-created initially-dirty setting so that it will
-             * also be included in changeset update requests.
-             */
-            api.bind( 'change', function incrementChangedSettingRevision( setting ) {
-                  api._latestRevision += 1;
-                  api._latestSettingRevisions[ setting.id ] = api._latestRevision;
-            } );
-            api.bind( 'ready', function() {
-                  api.bind( 'add', function incrementCreatedSettingRevision( setting ) {
-                        if ( setting._dirty ) {
-                              api._latestRevision += 1;
-                              api._latestSettingRevisions[ setting.id ] = api._latestRevision;
-                        }
                   } );
-            } );
+            }
+      });
+}
+
+/*****************************************************************************
+* CLOSE THE MOD OPTION PANEL ( if exists ) ON : section change, panel change, skope switch
+*****************************************************************************/
+//@return void()
+var _closeModOpt = function() {
+      if ( ! _.has( api, 'czr_ModOptVisible') )
+        return;
+      api.czr_ModOptVisible(false);
+};
+api.czr_activeSectionId.bind( _closeModOpt );
+api.czr_activePanelId.bind( _closeModOpt );
+
+/*****************************************************************************
+* OBSERVE SECTIONS AND PANEL EXPANSION
+* /store the current expanded section and panel
+*****************************************************************************/
+api.bind('ready', function() {
+      if ( 'function' != typeof api.Section ) {
+        throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
+      }
+      var _storeCurrentSection = function( expanded, section_id ) {
+            api.czr_activeSectionId( expanded ? section_id : '' );
+      };
+      api.section.each( function( _sec ) {
+            _sec.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, _sec.id ); } );
+      });
+      api.section.bind( 'add', function( section_instance ) {
+            api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
+            section_instance.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, section_instance.id ); } );
+      });
+
+      var _storeCurrentPanel = function( expanded, panel_id ) {
+            api.czr_activePanelId( expanded ? panel_id : '' );
+            //if the expanded panel id becomes empty (typically when switching back to the root panel), make sure that no section is set as currently active
+            //=> fixes the problem of add_menu section staying expanded when switching back to another panel
+            if ( _.isEmpty( api.czr_activePanelId() ) ) {
+                  api.czr_activeSectionId( '' );
+            }
+      };
+      api.panel.each( function( _panel ) {
+            _panel.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, _panel.id ); } );
+      });
+      api.panel.bind( 'add', function( panel_instance ) {
+            panel_instance.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, panel_instance.id ); } );
+      });
+});
+
+//SET THE ACTIVE STATE OF THE THEMES SECTION BASED ON WHAT THE SERVER SENT
+api.bind('ready', function() {
+      var _do = function() {
+            api.section('themes').active.bind( function( active ) {
+                  if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
+                    return;
+                  api.section('themes').active(false);
+                  //reset the callbacks
+                  api.section('themes').active.callbacks = $.Callbacks();
+            });
+      };
+      if ( api.section.has( 'themes') )
+          _do();
+      else
+          api.section.when( 'themes', function( _s ) {
+                _do();
+          });
+});
+
+
+/*****************************************************************************
+* FIRE SKOPE ON READY
+*****************************************************************************/
+//this promise will be resolved when
+//1) the initial skopes collection has been populated
+//2) the initial skope has been switched to
+api.czr_skopeReady = $.Deferred();
+api.bind( 'ready' , function() {
+      if ( serverControlParams.isSkopOn ) {
+            api.czr_isLoadingSkope  = new api.Value( false );
+            api.czr_isLoadingSkope.bind( function( loading ) {
+                  toggleSkopeLoadPane( loading );
+            });
+            api.czr_skopeBase   = new api.CZR_skopeBase();
+            api.czr_skopeSave   = new api.CZR_skopeSave();
+            api.czr_skopeReset  = new api.CZR_skopeReset();
+
+            api.trigger('czr-skope-started');
+
+            api.czr_skopeReady
+                  .done( function() {
+                        api.trigger('czr-skope-ready');
+                  })
+                  .fail( function( error ) {
+                        api.errorLog( 'Skope could not be instantiated : ' + error );
+                        serverControlParams.isSkopOn = false;
+                        api.czr_isLoadingSkope( false );
+                  });
+
+            //If skope was properly instantiated but there's another problem occuring after, display a self closing top notification after 30 s
+            if ( 'rejected' != api.czr_skopeReady.state() ) {
+                  //Make sure the loading icon panel is destroyed after a moment
+                  //Typically if there was a problem in the WP js API and the skope could not be initialized
+                  setTimeout( function() {
+                      if ( 'pending' == api.czr_skopeReady.state() )  {
+                            //This top note will be rendered 20s and self closed if not closed before by the user
+                            api.czr_skopeBase.toggleTopNote( true, {
+                                  title : 'There was a problem when trying to load the customizer.',//@to_translate
+                                  message : 'Please open your <a href="http://docs.presscustomizr.com/article/272-inspect-your-webpages-in-your-browser-with-the-development-tools" target="_blank">browser debug tool</a>, and report any error message (in red) printed in the javascript console in the <a href="https://wordpress.org/support/theme/hueman" target="_blank">Hueman theme forum</a>.',//@to_translate
+                                  selfCloseAfter : 40000
+                            });
+
+                            api.czr_isLoadingSkope( false );
+                      }
+                  }, 30000);
+            }
       }
 
-      //@fired before skopeReady
-      var toggleSkopeLoadPane = function( loading ) {
-            loading = _.isUndefined( loading ) ? true : loading;
-            var self = this, $skopeLoadingPanel,
-                _render = function() {
-                      var dfd = $.Deferred();
-                      try {
-                            _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
-                      } catch( er ) {
-                            api.errorLog( 'In toggleSkopeLoadPane : error when parsing the the reset skope template : ' + er );//@to_translate
-                            dfd.resolve( false );
-                      }
-                      $.when( $('#customize-preview').after( $( _tmpl ) ) )
-                            .always( function() {
-                                  dfd.resolve( $( '#czr-skope-pane' ) );
-                            });
+      //let's set a lower autosave interval ( default is 60000 ms )
+      if ( serverControlParams.isChangeSetOn ) {
+            api.settings.timeouts.changesetAutoSave = 10000;
+      }
+} );
 
-                      return dfd.promise();
-                },
-                _destroy = function() {
-                      _.delay( function() {
-                            $.when( $('body').removeClass('czr-skope-pane-open') ).done( function() {
-                                  _.delay( function() {
-                                        $.when( $('body').removeClass('czr-skop-loading') ).done( function() {
-                                              if ( false !== $( '#czr-skope-pane' ).length ) {
-                                                    setTimeout( function() {
-                                                          $( '#czr-skope-pane' ).remove();
-                                                    }, 400 );
-                                              }
-                                        });
-                                  }, 200);
-                            });
-                      }, 50);
-                };
+//INCLUDE THE REVISION COUNT IF WP < 4.7
+if ( ! _.has( api, '_latestRevision') ) {
+      /**
+       * Current change count.
+       */
+      api._latestRevision = 0;
 
-            //display load pane if skope is not yet ready and loading is true
-            if ( 'pending' == api.czr_skopeReady.state() && loading ) {
-                  $('body').addClass('czr-skop-loading');
-                  _render()
-                        .done( function( $_el ) {
-                              $skopeLoadingPanel = $_el;
-                        })
-                        .then( function() {
-                              if ( ! $skopeLoadingPanel.length )
-                                return;
+      /**
+       * Latest revisions associated with the updated setting.
+       */
+      api._latestSettingRevisions = {};
 
-                              _.delay( function() {
-                                    //set height
-                                    var _height = $('#customize-preview').height();
-                                    $skopeLoadingPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
-                                    //display
-                                    $('body').addClass('czr-skope-pane-open');
-                              }, 50 );
-                        });
-            }
+      /*
+       * Keep track of the revision associated with each updated setting so that
+       * requestChangesetUpdate knows which dirty settings to include. Also, once
+       * ready is triggered and all initial settings have been added, increment
+       * revision for each newly-created initially-dirty setting so that it will
+       * also be included in changeset update requests.
+       */
+      api.bind( 'change', function incrementChangedSettingRevision( setting ) {
+            api._latestRevision += 1;
+            api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+      } );
+      api.bind( 'ready', function() {
+            api.bind( 'add', function incrementCreatedSettingRevision( setting ) {
+                  if ( setting._dirty ) {
+                        api._latestRevision += 1;
+                        api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+                  }
+            } );
+      } );
+}
 
-            api.czr_skopeReady.done( function() {
-                  _destroy();
-            });
-            //if a destroy is requested, typically when the loading delay exceeds 15 seconds
-            if ( ! loading ) {
-                  _destroy();
-            }
-      };//toggleSkopeLoadPane
+//@fired before skopeReady
+var toggleSkopeLoadPane = function( loading ) {
+      loading = _.isUndefined( loading ) ? true : loading;
+      var self = this, $skopeLoadingPanel,
+          _render = function() {
+                var dfd = $.Deferred();
+                try {
+                      _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
+                } catch( er ) {
+                      api.errorLog( 'In toggleSkopeLoadPane : error when parsing the the reset skope template : ' + er );//@to_translate
+                      dfd.resolve( false );
+                }
+                $.when( $('#customize-preview').after( $( _tmpl ) ) )
+                      .always( function() {
+                            dfd.resolve( $( '#czr-skope-pane' ) );
+                      });
 
+                return dfd.promise();
+          },
+          _destroy = function() {
+                _.delay( function() {
+                      $.when( $('body').removeClass('czr-skope-pane-open') ).done( function() {
+                            _.delay( function() {
+                                  $.when( $('body').removeClass('czr-skop-loading') ).done( function() {
+                                        if ( false !== $( '#czr-skope-pane' ).length ) {
+                                              setTimeout( function() {
+                                                    $( '#czr-skope-pane' ).remove();
+                                              }, 400 );
+                                        }
+                                  });
+                            }, 200);
+                      });
+                }, 50);
+          };
 
+      //display load pane if skope is not yet ready and loading is true
+      if ( 'pending' == api.czr_skopeReady.state() && loading ) {
+            $('body').addClass('czr-skop-loading');
+            _render()
+                  .done( function( $_el ) {
+                        $skopeLoadingPanel = $_el;
+                  })
+                  .then( function() {
+                        if ( ! $skopeLoadingPanel.length )
+                          return;
 
+                        _.delay( function() {
+                              //set height
+                              var _height = $('#customize-preview').height();
+                              $skopeLoadingPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
+                              //display
+                              $('body').addClass('czr-skope-pane-open');
+                        }, 50 );
+                  });
+      }
+
+      api.czr_skopeReady.done( function() {
+            _destroy();
+      });
+      //if a destroy is requested, typically when the loading delay exceeds 15 seconds
+      if ( ! loading ) {
+            _destroy();
+      }
+};//toggleSkopeLoadPane
 })( wp.customize , jQuery, _);
 
   //WHAT IS A SKOPE ?
@@ -486,492 +496,497 @@ var api = api || wp.customize, $ = $ || jQuery;
 * THE SKOPE BASE OBJECT
 *****************************************************************************/
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
-$.extend( CZRSkopeBaseMths, {
+(function ( api, $, _ ) {
+      $.extend( CZRSkopeBaseMths, {
 
-    globalSettingVal : {},//will store the global setting val. Populated on init.
+          globalSettingVal : {},//will store the global setting val. Populated on init.
 
-    initialize: function() {
-          var self = this;
-          ///////////////////// DEFINITIONS /////////////////////
-          self.skope_colors = {
-                global : 'rgb(255, 255, 255)',
-                special_group : 'rgba(173, 213, 247, 0.55)',
-                group  : 'rgba(173, 213, 247, 0.55)',
-                local  : 'rgba(78, 122, 199, 0.35)'
-          };
-          //Deferred used to make sure the overridden api.previewer.query method has been taken into account
-          api.czr_isPreviewerSkopeAware   = $.Deferred();
-          //Store the state of the first skope collection state
-          api.czr_initialSkopeCollectionPopulated = $.Deferred();
-          //store the embed state
-          self.skopeWrapperEmbedded       = $.Deferred();
+          initialize: function() {
+                var self = this;
+                ///////////////////// DEFINITIONS /////////////////////
+                self.skope_colors = {
+                      global : 'rgb(255, 255, 255)',
+                      special_group : 'rgba(173, 213, 247, 0.55)',
+                      group  : 'rgba(173, 213, 247, 0.55)',
+                      local  : 'rgba(78, 122, 199, 0.35)'
+                };
+                //Deferred used to make sure the overridden api.previewer.query method has been taken into account
+                api.czr_isPreviewerSkopeAware   = $.Deferred();
+                //Store the state of the first skope collection state
+                api.czr_initialSkopeCollectionPopulated = $.Deferred();
+                //store the embed state
+                self.skopeWrapperEmbedded       = $.Deferred();
 
-          //the skope instance constructor
-          api.czr_skope                   = new api.Values();
+                //the skope instance constructor
+                api.czr_skope                   = new api.Values();
 
-          //the czr_skopeCollection stores all skopes instantiated by the user
-          //this collection is not updated directly
-          //=> it's updated on skope() instance change
-          api.czr_skopeCollection         = new api.Value([]);//all available skope, including the current skopes
-          //the current skopes collection get updated each time the 'czr-skopes-synced' event is triggered on the api by the preview
-          api.czr_currentSkopesCollection = new api.Value([]);
-
-
-          //the currently active skope
-          api.czr_activeSkopeId           = new api.Value();
-          //Store the global dirtyness state of the API
-          api.czr_dirtyness               = new api.Value( false );
-          //store the resetting state
-          api.czr_isResettingSkope        = new api.Value( false );
-
-          //Add new state to the api
-          api.state.create('switching-skope')( false );
-
-          ///////////////////// SKOPIFY THE API AND THE PANEL /////////////////////
-          //REACT TO API DIRTYNESS
-          api.czr_dirtyness.callbacks.add( function() { return self.apiDirtynessReact.apply(self, arguments ); } );
-
-          //LOADING ICON DURING INITIAL SKOPE SETUP
-          //this api.Value() and its callback are declared in pre_base
-          api.czr_isLoadingSkope( true );
-
-          //LISTEN TO EACH API SETTING CHANGES
-          // => POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
-          self.bindAPISettings();
-
-          //LISTEN TO THE API STATES => SET SAVE BUTTON STATE
-          //=> this value is set on control and skope reset
-          //+ set by wp
-          api.state.bind( 'change', function() {
-                self.setSaveButtonStates();
-          });
-
-          //EMBED THE SKOPE WRAPPER
-          //=> WAIT FOR SKOPE TO BE READY api.czr_skopeReady.state == 'resolved'
-          api.czr_skopeReady.then( function() {
-                if ( 'pending' == self.skopeWrapperEmbedded.state() ) {
-                      $.when( self.embedSkopeWrapper() ).done( function() {
-                            self.skopeWrapperEmbedded.resolve();
-                      });
-                }
-          });
+                //the czr_skopeCollection stores all skopes instantiated by the user
+                //this collection is not updated directly
+                //=> it's updated on skope() instance change
+                api.czr_skopeCollection         = new api.Value([]);//all available skope, including the current skopes
+                //the current skopes collection get updated each time the 'czr-skopes-synced' event is triggered on the api by the preview
+                api.czr_currentSkopesCollection = new api.Value([]);
 
 
-          ///////////////////// SKOPE COLLECTIONS SYNCHRONISATION AND LISTNENERS /////////////////////
-          //LISTEN TO SKOPE SYNC => UPDATE SKOPE COLLECTION ON START AND ON EACH REFRESH
-          //Will make sure server DB values are always synchronized with the instantiated skopes
-          //the sent data look like :
-          //{
-          //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
-          //  isChangesetDirty : boolean
-          // }
-          //
-          //Bail if skope has not been properly instantiated 'rejected' == api.czr_skopeReady.state()
-          api.previewer.bind( 'czr-skopes-synced', function( data ) {
-                if ( ! serverControlParams.isSkopOn || 'rejected' == api.czr_skopeReady.state() )
-                  return;
-                //api.consoleLog('czr-skopes-ready DATA', data );
-                var preview = this,
-                    previousSkopeCollection = api.czr_currentSkopesCollection();
-                //initialize skopes with the server sent data
-                if ( ! _.has( data, 'czr_skopes') ) {
-                      api.errorLog( "On 'czr-skopes-synced' : missing skopes in the server data" );
-                      return;
-                }
+                //the currently active skope
+                api.czr_activeSkopeId           = new api.Value();
+                //Store the global dirtyness state of the API
+                api.czr_dirtyness               = new api.Value( false );
+                //store the resetting state
+                api.czr_isResettingSkope        = new api.Value( false );
 
-                //1) Updated the collection with normalized skopes  => prepareSkopeForAPI + api.czr_currentSkopesCollection( collection )
-                //2) When the api.czr_currentSkopesCollection() Value is set => instantiates the missing skope
-                //3) Set the skope layout view when the skope embedded promise is resolved
-                try {
-                      api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
-                } catch ( er ) {
-                      api.czr_skopeReady.reject( er );
-                      return;
-                }
+                //Add new state to the api
+                api.state.create('switching-skope')( false );
 
-                //Always wait for the initial collection to be populated
-                api.czr_initialSkopeCollectionPopulated.then( function() {
-                      var refreshActiveSkope = _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) );
-                      api.czr_skopeBase.reactWhenSkopeSyncedDone( data ).done( function() {
-                            //if the current active skope has been removed from the current skopes collection
-                            //=> set relevant scope as active. Falls back on 'global'
-                            if ( refreshActiveSkope ) {
-                                  try {
-                                        api.czr_activeSkopeId( self.getActiveSkopeId() )
-                                              .done( function() {
-                                                    if ( 'resolved' != api.czr_skopeReady.state() ) {
-                                                          api.czr_skopeReady.resolve( self.getActiveSkopeId() );
-                                                    }
-                                                    //write the current skope title
-                                                    self._writeCurrentSkopeTitle();
-                                              })
-                                              .fail( function() {
-                                                    throw new Error( 'Error when trying to set the active skope after skope synced.' );
-                                              });
-                                  } catch ( er ) {
-                                        api.errorLog( 'In reactWhenSkopeSyncedDone => api.czr_activeSkopeId() : ' + er );
+                ///////////////////// SKOPIFY THE API AND THE PANEL /////////////////////
+                //REACT TO API DIRTYNESS
+                api.czr_dirtyness.callbacks.add( function() { return self.apiDirtynessReact.apply(self, arguments ); } );
+
+                //LOADING ICON DURING INITIAL SKOPE SETUP
+                //this api.Value() and its callback are declared in pre_base
+                api.czr_isLoadingSkope( true );
+
+                //LISTEN TO EACH API SETTING CHANGES
+                // => POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
+                self.bindAPISettings();
+
+                //LISTEN TO THE API STATES => SET SAVE BUTTON STATE
+                //=> this value is set on control and skope reset
+                //+ set by wp
+                api.state.bind( 'change', function() {
+                      self.setSaveButtonStates();
+                });
+
+                //EMBED THE SKOPE WRAPPER
+                //=> WAIT FOR SKOPE TO BE READY api.czr_skopeReady.state == 'resolved'
+                api.czr_skopeReady.then( function() {
+                      if ( 'pending' == self.skopeWrapperEmbedded.state() ) {
+                            $.when( self.embedSkopeWrapper() ).done( function() {
+                                  self.skopeWrapperEmbedded.resolve();
+                            });
+                      }
+                });
+
+
+                ///////////////////// SKOPE COLLECTIONS SYNCHRONISATION AND LISTNENERS /////////////////////
+                //LISTEN TO SKOPE SYNC => UPDATE SKOPE COLLECTION ON START AND ON EACH REFRESH
+                //Will make sure server DB values are always synchronized with the instantiated skopes
+                //the sent data look like :
+                //{
+                //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+                //  isChangesetDirty : boolean
+                // }
+                //
+                //Bail if skope has not been properly instantiated 'rejected' == api.czr_skopeReady.state()
+                api.previewer.bind( 'czr-skopes-synced', function( data ) {
+                      if ( ! serverControlParams.isSkopOn || 'rejected' == api.czr_skopeReady.state() )
+                        return;
+                      //api.consoleLog('czr-skopes-ready DATA', data );
+                      var preview = this,
+                          previousSkopeCollection = api.czr_currentSkopesCollection();
+                      //initialize skopes with the server sent data
+                      if ( ! _.has( data, 'czr_skopes') ) {
+                            api.errorLog( "On 'czr-skopes-synced' : missing skopes in the server data" );
+                            return;
+                      }
+
+                      //1) Updated the collection with normalized skopes  => prepareSkopeForAPI + api.czr_currentSkopesCollection( collection )
+                      //2) When the api.czr_currentSkopesCollection() Value is set => instantiates the missing skope
+                      //3) Set the skope layout view when the skope embedded promise is resolved
+                      try {
+                            api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
+                      } catch ( er ) {
+                            api.czr_skopeReady.reject( er );
+                            return;
+                      }
+
+                      //Always wait for the initial collection to be populated
+                      api.czr_initialSkopeCollectionPopulated.then( function() {
+                            var refreshActiveSkope = _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) );
+                            api.czr_skopeBase.reactWhenSkopeSyncedDone( data ).done( function() {
+                                  //if the current active skope has been removed from the current skopes collection
+                                  //=> set relevant scope as active. Falls back on 'global'
+                                  if ( refreshActiveSkope ) {
+                                        try {
+                                              api.czr_activeSkopeId( self.getActiveSkopeId() )
+                                                    .done( function() {
+                                                          if ( 'resolved' != api.czr_skopeReady.state() ) {
+                                                                api.czr_skopeReady.resolve( self.getActiveSkopeId() );
+                                                          }
+                                                          //write the current skope title
+                                                          self._writeCurrentSkopeTitle();
+                                                    })
+                                                    .fail( function() {
+                                                          throw new Error( 'Error when trying to set the active skope after skope synced.' );
+                                                    });
+                                        } catch ( er ) {
+                                              api.errorLog( 'In reactWhenSkopeSyncedDone => api.czr_activeSkopeId() : ' + er );
+                                        }
+                                  } else if ( ! _.isEmpty( previousSkopeCollection ) ) { //Rewrite the title when the local skope has changed
+                                        var _prevLoc = _.findWhere( previousSkopeCollection , { skope : 'local' } ).opt_name,
+                                            _newLoc  =_.findWhere( data.czr_skopes, { skope : 'local' } ).opt_name;
+
+                                        if ( _newLoc !== _prevLoc && 'resolved' == api.czr_skopeReady.state() ) {
+                                              //write the current skope title
+                                              self._writeCurrentSkopeTitle();
+                                        }
                                   }
-                            } else if ( ! _.isEmpty( previousSkopeCollection ) ) { //Rewrite the title when the local skope has changed
-                                  var _prevLoc = _.findWhere( previousSkopeCollection , { skope : 'local' } ).opt_name,
-                                      _newLoc  =_.findWhere( data.czr_skopes, { skope : 'local' } ).opt_name;
-
-                                  if ( _newLoc !== _prevLoc && 'resolved' == api.czr_skopeReady.state() ) {
-                                        //write the current skope title
-                                        self._writeCurrentSkopeTitle();
-                                  }
-                            }
+                            });
                       });
                 });
-          });
 
 
-          //CURRENT SKOPE COLLECTION LISTENER
-          //The skope collection is set on 'czr-skopes-synced' triggered by the preview
-          //setup the callbacks of the skope collection update
-          //on init and on preview change : the collection of skopes is populated with new skopes
-          //=> instanciate the relevant skope object + render them
-          api.czr_currentSkopesCollection.bind( function( to, from ) {
-                return self.currentSkopesCollectionReact( to, from );
-          }, { deferred : true });
+                //CURRENT SKOPE COLLECTION LISTENER
+                //The skope collection is set on 'czr-skopes-synced' triggered by the preview
+                //setup the callbacks of the skope collection update
+                //on init and on preview change : the collection of skopes is populated with new skopes
+                //=> instanciate the relevant skope object + render them
+                api.czr_currentSkopesCollection.bind( function( to, from ) {
+                      return self.currentSkopesCollectionReact( to, from );
+                }, { deferred : true });
 
 
-          //WHEN THE INITIAL SKOPE COLLECTION HAS BEEN POPULATED ( in currentSkopesCollectionReact )
-          //LET'S BIND CALLBACKS TO ACTIVE SKOPE AND ACTIVE SECTION
-          api.czr_initialSkopeCollectionPopulated.done( function() {
-                //LISTEN AND REACT TO ACTIVE SKOPE UPDATE
-                //api.czr_activeSkopeId.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
-                api.czr_activeSkopeId.bind( function( to, from ) {
-                        //Always close the mod option panel if exists
-                        if ( _.has( api, 'czr_ModOptVisible') ) {
-                              api.czr_ModOptVisible( false );
-                        }
-                        return self.activeSkopeReact( to, from ).then( function( _updatedSetIds ) {
-                              api.trigger( 'skope-switched-done',
-                                    {
-                                          current_skope_id    : to,
-                                          previous_skope_id   : from,
-                                          updated_setting_ids : _updatedSetIds || []
-                                    }
-                              );
-                        });
-                }, { deferred : true } );
+                //WHEN THE INITIAL SKOPE COLLECTION HAS BEEN POPULATED ( in currentSkopesCollectionReact )
+                //LET'S BIND CALLBACKS TO ACTIVE SKOPE AND ACTIVE SECTION
+                api.czr_initialSkopeCollectionPopulated.done( function() {
+                      //LISTEN AND REACT TO ACTIVE SKOPE UPDATE
+                      //api.czr_activeSkopeId.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
+                      api.czr_activeSkopeId.bind( function( to, from ) {
+                              //Always close the mod option panel if exists
+                              if ( _.has( api, 'czr_ModOptVisible') ) {
+                                    api.czr_ModOptVisible( false );
+                              }
+                              return self.activeSkopeReact( to, from ).then( function( _updatedSetIds ) {
+                                    api.trigger( 'skope-switched-done',
+                                          {
+                                                current_skope_id    : to,
+                                                previous_skope_id   : from,
+                                                updated_setting_ids : _updatedSetIds || []
+                                          }
+                                    );
+                              });
+                      }, { deferred : true } );
 
-                //REACT TO EXPANDED ACTIVE SECTION
-                //=> silently update all eligible controls of this sektion with the current skope values
-                api.czr_activeSectionId.callbacks.add( function() { return self.activeSectionReact.apply(self, arguments ); } );
+                      //REACT TO EXPANDED ACTIVE SECTION
+                      //=> silently update all eligible controls of this sektion with the current skope values
+                      api.czr_activeSectionId.callbacks.add( function() { return self.activeSectionReact.apply(self, arguments ); } );
 
-                //REACT TO EXPANDED ACTIVE PANEL
-                //=> silently update all eligible controls of this sektion with the current skope values
-                api.czr_activePanelId.callbacks.add( function() { return self.activePanelReact.apply(self, arguments ); } );
+                      //REACT TO EXPANDED ACTIVE PANEL
+                      //=> silently update all eligible controls of this sektion with the current skope values
+                      api.czr_activePanelId.callbacks.add( function() { return self.activePanelReact.apply(self, arguments ); } );
 
-                //GLOBAL SKOPE COLLECTION LISTENER
-                //api.czr_skopeCollection.callbacks.add( function() { return self.globalSkopeCollectionReact.apply(self, arguments ); } );
-          });
+                      //GLOBAL SKOPE COLLECTION LISTENER
+                      //api.czr_skopeCollection.callbacks.add( function() { return self.globalSkopeCollectionReact.apply(self, arguments ); } );
+                });
 
 
-          //////////////// LISTEN TO SKOPE SWITCH EVENT //////////////////
-          //1) reset visibilities
-          //2) update control skope notices
+                //////////////// LISTEN TO SKOPE SWITCH EVENT //////////////////
+                //1) reset visibilities
+                //2) update control skope notices
+                //@args =
+                //{
+                //  current_skope_id : string
+                //  previous_skope_id : string
+                //  updated_setting_ids : [] //<= can be empty if no section was expanded
+                //}
+                api.bind( 'skope-switched-done', function( args ) {
+                      args = _.extend(
+                            {
+                                  current_skope_id : '',
+                                  previous_skope_id : '',
+                                  updated_setting_ids : []
+                            },
+                            args
+                      );
+                      return self.skopeSwitchedDoneReact( args );
+                });
+
+
+                ///////////////////// LISTEN TO THE SERVER /////////////////////
+                //SERVER NOTIFICATION SETUP
+                api.czr_serverNotification   = new api.Value( {status : 'success', message : '', expanded : true} );
+                api.czr_serverNotification.bind( function( to, from ) {
+                        self.toggleServerNotice( to );
+                });
+
+
+                ///////////////////// TOP NOTE BLOCK /////////////////////
+                api.czr_topNoteVisible = new api.Value( false );
+                api.czr_skopeReady.then( function() {
+                      api.czr_topNoteVisible.bind( function( visible ) {
+                              var noteParams = {},
+                                  _defaultParams = {
+                                        title : '',
+                                        message : '',
+                                        actions : '',
+                                        selfCloseAfter : 20000
+                                  };
+                              //noteParams is an object :
+                              //{
+                              // title : '',
+                              // message : '',
+                              // actions : fn(),
+                              // selfCloseAfter : 20000 in ms
+                              //}
+                              noteParams = $.extend( _defaultParams , serverControlParams.topNoteParams );
+
+                              //SPECIFIC AJAX ACTION FOR THE WELCOME NOTE
+                              noteParams.actions = function() {
+                                    var _query = $.extend(
+                                          api.previewer.query(),
+                                          { nonce:  api.previewer.nonce.save }
+                                    );
+                                    wp.ajax.post( 'czr_dismiss_top_note' , _query )
+                                          .always( function () {})
+                                          .fail( function ( response ) { api.consoleLog( 'czr_dismiss_top_note failed', _query, response ); })
+                                          .done( function( response ) {});
+                              };
+
+                              self.toggleTopNote( visible, noteParams );
+                      });
+
+                      //Toggle the top note on initialization
+                      _.delay( function() {
+                            api.czr_topNoteVisible( ! _.isEmpty( serverControlParams.isTopNoteOn ) || 1 == serverControlParams.isTopNoteOn );
+                      }, 2000 );
+                });
+
+
+                ///////////////////// SKOPE SWITCHER EVENT MAP /////////////////
+                self.scopeSwitcherEventMap = [
+                      //skope reset : do reset
+                      {
+                            trigger   : 'click keydown',
+                            selector  : '.czr-dismiss-notification',
+                            name      : 'dismiss-notification',
+                            actions   : function() {
+                                  api.czr_serverNotification( { expanded : false } );
+                            }
+                      },
+                      //toggle title notice
+                      {
+                            trigger   : 'click keydown',
+                            selector  : '.czr-toggle-title-notice',
+                            name      : 'toggle-title-notice',
+                            actions   : function( params ) {
+                                  if ( _.isUndefined( self.skopeTitleNoticeVisible ) ) {
+                                        self.skopeTitleNoticeVisible = new api.Value( false );
+                                        self.skopeTitleNoticeVisible.bind( function( to ) {
+                                              params.dom_el.find( '.czr-skope-title')
+                                                    .toggleClass( 'notice-visible', to );
+                                        });
+                                  }
+
+                                  self.skopeTitleNoticeVisible( ! self.skopeTitleNoticeVisible() );
+                            }
+                      }
+                ];
+
+                //Setup DOM user actions when api.czr_skopeReady => self.skopeWrapperEmbedded are resolved
+                self.skopeWrapperEmbedded.then( function() {
+                      api.CZR_Helpers.setupDOMListeners( self.scopeSwitcherEventMap , { dom_el : $('.czr-scope-switcher') }, self );
+                });
+
+
+                ///////////////////// VARIOUS /////////////////////
+                //DECLARE THE LIST OF CONTROL TYPES FOR WHICH THE VIEW IS REFRESHED ON CHANGE
+                self.refreshedControls = [ 'czr_cropped_image'];// [ 'czr_cropped_image', 'czr_multi_module', 'czr_module' ];
+
+                //WIDGETS AND SIDEBAR SPECIFIC TREATMENTS
+                self.initWidgetSidebarSpecifics();
+
+                //LISTEN TO GLOBAL DB OPTION CHANGES
+                //When an option is reset on the global skope,
+                //we need to update it in the initially sent _wpCustomizeSettings.settings
+                //api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
+
+
+                ///////////////////// LISTEN TO PAINT EVENT /////////////////////
+                //The paint event occurs :
+                //1) on skope switch
+                //2) on sektion expansion
+                //3) on panel expansion
+                api.bind( 'czr-paint', function( params ) {
+                      api.czr_skopeReady.then( function() {
+                            self.wash( params ).paint( params );
+                      });
+                });
+          },//initialize
+
+
+          /*****************************************************************************
+          * EMBED WRAPPER
+          *****************************************************************************/
+          //fired in initialize
+          //=> embed the wrapper for all skope boxes
+          //=> add a specific class to the body czr-skop-on
+          //=> Listen to skope switch in main title
+          embedSkopeWrapper : function() {
+                var self = this;
+                $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher', html:'<div class="czr-skopes-wrapper"></div>'}) );
+                $('body').addClass('czr-skop-on');
+                var _eventMap = [
+                    //skope reset : do reset
+                    {
+                          trigger   : 'click keydown',
+                          selector  : '.czr-skope-switch',
+                          name      : 'control_skope_switch',
+                          actions   : function( params ) {
+                                var _skopeIdToSwithTo = $( params.dom_event.currentTarget, params.dom_el ).attr('data-skope-id');
+                                if ( ! _.isEmpty( _skopeIdToSwithTo ) && api.czr_skope.has( _skopeIdToSwithTo ) )
+                                  api.czr_activeSkopeId( _skopeIdToSwithTo );
+                          }
+                    }
+                ];
+                api.CZR_Helpers.setupDOMListeners( _eventMap , { dom_el : $('.czr-scope-switcher') }, self );
+          },
+
+
+          /*****************************************************************************
+          * API DIRTYNESS REACTIONS
+          *****************************************************************************/
+          //cb of api.czr_dirtyness()
+          apiDirtynessReact : function( is_dirty ) {
+                $('body').toggleClass('czr-api-dirty', is_dirty );
+                api.state( 'saved')( ! is_dirty );
+          },
+
+
+          /*****************************************************************************
+          * OVERRIDE SAVE BUTTON STATES : api.state.bind( 'change') callback
+          *****************************************************************************/
+          //@return void()
+          setSaveButtonStates : function() {
+                //the 'saving' state was introduced in 4.7
+                //For prior versions, let's declare it and add its callback that we need in the api.previewer.save() method
+                if ( ! api.state.has('saving') ) {
+                      api.state.create('saving');
+                      api.state('saving').bind( function( isSaving ) {
+                            $( document.body ).toggleClass( 'saving', isSaving );
+                      } );
+                }
+                var saveBtn   = $( '#save' ),
+                    closeBtn  = $( '.customize-controls-close' ),
+                    saved     = api.state( 'saved'),
+                    saving    = api.state( 'saving'),
+                    activated = api.state( 'activated' ),
+                    changesetStatus = api.state.has('changesetStatus' ) ? api.state( 'changesetStatus' )() : 'auto-draft';
+
+                if ( api.czr_dirtyness() || ! saved() ) {
+                      saveBtn.val( api.l10n.save );
+                      closeBtn.find( '.screen-reader-text' ).text( api.l10n.cancel );
+                } else {
+                      saveBtn.val( api.l10n.saved );
+                      closeBtn.find( '.screen-reader-text' ).text( api.l10n.close );
+                }
+                var canSave = ! saving() && ( ! activated() || ! saved() ) && 'publish' !== changesetStatus;
+                saveBtn.prop( 'disabled', ! canSave );
+          },
+
+
+          //cb of 'skope-switched-done' event => fired when the api.czr_activeSkopeId().done() <=> refresh is done()
+          //1) set the ctrl dependencies in the currently active section
+          //2) update ctrl skope notices in the currently active section + expand the ctrl notice if skope is not 'global'
+          //3) adds a skope level class to the #customize-controls wrapper
           //@args =
           //{
           //  current_skope_id : string
           //  previous_skope_id : string
           //  updated_setting_ids : [] //<= can be empty if no section was expanded
           //}
-          api.bind( 'skope-switched-done', function( args ) {
-                args = _.extend(
-                      {
-                            current_skope_id : '',
-                            previous_skope_id : '',
-                            updated_setting_ids : []
-                      },
-                      args
-                );
-                return self.skopeSwitchedDoneReact( args );
-          });
+          skopeSwitchedDoneReact : function( args ) {
+                var self = this,
+                    _doWhenSkopeReady = function() {
+                          //CURRENTLY EXPANDED SECTION : SET CTRL DEPENDENCIES WHEN POSSIBLE
+                          api.czr_CrtlDependenciesReady.then( function() {
+                            if ( ! _.isUndefined( api.czr_activeSectionId() ) && ! _.isEmpty( api.czr_activeSectionId() ) ) {
+                                  try {
+                                        api.czr_ctrlDependencies.setServiDependencies( api.czr_activeSectionId(), null, true );//target sec id, source sec id, refresh
+                                  } catch( er ) {
+                                        api.errorLog( 'On skope-switched-done : ' + er );
+                                  }
+                                }
+                          });
 
+                          //CURRENTLY EXPANDED SECTION : UPDATE CURRENT SKOPE CONTROL NOTICES AND MAYBE EXPAND THE NOTICE
+                          self.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
 
-          ///////////////////// LISTEN TO THE SERVER /////////////////////
-          //SERVER NOTIFICATION SETUP
-          api.czr_serverNotification   = new api.Value( {status : 'success', message : '', expanded : true} );
-          api.czr_serverNotification.bind( function( to, from ) {
-                  self.toggleServerNotice( to );
-          });
-
-
-          ///////////////////// TOP NOTE BLOCK /////////////////////
-          api.czr_topNoteVisible = new api.Value( false );
-          api.czr_skopeReady.then( function() {
-                api.czr_topNoteVisible.bind( function( visible ) {
-                        var noteParams = {},
-                            _defaultParams = {
-                                  title : '',
-                                  message : '',
-                                  actions : '',
-                                  selfCloseAfter : 20000
-                            };
-                        //noteParams is an object :
-                        //{
-                        // title : '',
-                        // message : '',
-                        // actions : fn(),
-                        // selfCloseAfter : 20000 in ms
-                        //}
-                        noteParams = $.extend( _defaultParams , serverControlParams.topNoteParams );
-
-                        //SPECIFIC AJAX ACTION FOR THE WELCOME NOTE
-                        noteParams.actions = function() {
-                              var _query = $.extend(
-                                    api.previewer.query(),
-                                    { nonce:  api.previewer.nonce.save }
-                              );
-                              wp.ajax.post( 'czr_dismiss_top_note' , _query )
-                                  .always( function () {})
-                                  .fail( function ( response ) { api.consoleLog( 'czr_dismiss_top_note failed', _query, response ); })
-                                  .done( function( response ) {});
-                        };
-
-                        self.toggleTopNote( visible, noteParams );
-                });
-
-                //Toggle the top note on initialization
-                _.delay( function() {
-                      api.czr_topNoteVisible( ! _.isEmpty( serverControlParams.isTopNoteOn ) || 1 == serverControlParams.isTopNoteOn );
-                }, 2000 );
-          });
-
-
-          ///////////////////// SKOPE SWITCHER EVENT MAP /////////////////
-          self.scopeSwitcherEventMap = [
-                //skope reset : do reset
-                {
-                      trigger   : 'click keydown',
-                      selector  : '.czr-dismiss-notification',
-                      name      : 'dismiss-notification',
-                      actions   : function() {
-                            api.czr_serverNotification( { expanded : false } );
-                      }
-                },
-                //toggle title notice
-                {
-                      trigger   : 'click keydown',
-                      selector  : '.czr-toggle-title-notice',
-                      name      : 'toggle-title-notice',
-                      actions   : function( params ) {
-                            if ( _.isUndefined( self.skopeTitleNoticeVisible ) ) {
-                                  self.skopeTitleNoticeVisible = new api.Value( false );
-                                  self.skopeTitleNoticeVisible.bind( function( to ) {
-                                        params.dom_el.find( '.czr-skope-title')
-                                              .toggleClass( 'notice-visible', to );
-                                  });
-                            }
-
-                            self.skopeTitleNoticeVisible( ! self.skopeTitleNoticeVisible() );
-                      }
-                }
-          ];
-          api.CZR_Helpers.setupDOMListeners( self.scopeSwitcherEventMap , { dom_el : $('.czr-scope-switcher') }, self );
-
-
-
-          ///////////////////// VARIOUS /////////////////////
-          //DECLARE THE LIST OF CONTROL TYPES FOR WHICH THE VIEW IS REFRESHED ON CHANGE
-          self.refreshedControls = [ 'czr_cropped_image'];// [ 'czr_cropped_image', 'czr_multi_module', 'czr_module' ];
-
-          //WIDGETS AND SIDEBAR SPECIFIC TREATMENTS
-          self.initWidgetSidebarSpecifics();
-
-          //LISTEN TO GLOBAL DB OPTION CHANGES
-          //When an option is reset on the global skope,
-          //we need to update it in the initially sent _wpCustomizeSettings.settings
-          //api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
-
-
-          ///////////////////// LISTEN TO PAINT EVENT /////////////////////
-          //The paint event occurs :
-          //1) on skope switch
-          //2) on sektion expansion
-          //3) on panel expansion
-          api.bind( 'czr-paint', function( params ) {
-                api.czr_skopeReady.then( function() {
-                      self.wash( params ).paint( params );
-                });
-          });
-    },//initialize
-
-
-    /*****************************************************************************
-    * EMBED WRAPPER
-    *****************************************************************************/
-    //fired in initialize
-    //=> embed the wrapper for all skope boxes
-    //=> add a specific class to the body czr-skop-on
-    //=> Listen to skope switch in main title
-    embedSkopeWrapper : function() {
-          var self = this;
-          $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher', html:'<div class="czr-skopes-wrapper"></div>'}) );
-          $('body').addClass('czr-skop-on');
-          var _eventMap = [
-              //skope reset : do reset
-              {
-                    trigger   : 'click keydown',
-                    selector  : '.czr-skope-switch',
-                    name      : 'control_skope_switch',
-                    actions   : function( params ) {
-                          var _skopeIdToSwithTo = $( params.dom_event.currentTarget, params.dom_el ).attr('data-skope-id');
-                          if ( ! _.isEmpty( _skopeIdToSwithTo ) && api.czr_skope.has( _skopeIdToSwithTo ) )
-                            api.czr_activeSkopeId( _skopeIdToSwithTo );
-                    }
-              }
-          ];
-          api.CZR_Helpers.setupDOMListeners( _eventMap , { dom_el : $('.czr-scope-switcher') }, self );
-    },
-
-
-    /*****************************************************************************
-    * API DIRTYNESS REACTIONS
-    *****************************************************************************/
-    //cb of api.czr_dirtyness()
-    apiDirtynessReact : function( is_dirty ) {
-          $('body').toggleClass('czr-api-dirty', is_dirty );
-          api.state( 'saved')( ! is_dirty );
-    },
-
-
-    /*****************************************************************************
-    * OVERRIDE SAVE BUTTON STATES : api.state.bind( 'change') callback
-    *****************************************************************************/
-    //@return void()
-    setSaveButtonStates : function() {
-          //the 'saving' state was introduced in 4.7
-          //For prior versions, let's declare it and add its callback that we need in the api.previewer.save() method
-          if ( ! api.state.has('saving') ) {
-                api.state.create('saving');
-                api.state('saving').bind( function( isSaving ) {
-                      $( document.body ).toggleClass( 'saving', isSaving );
-                } );
-          }
-          var saveBtn   = $( '#save' ),
-              closeBtn  = $( '.customize-controls-close' ),
-              saved     = api.state( 'saved'),
-              saving    = api.state( 'saving'),
-              activated = api.state( 'activated' ),
-              changesetStatus = api.state.has('changesetStatus' ) ? api.state( 'changesetStatus' )() : 'auto-draft';
-
-          if ( api.czr_dirtyness() || ! saved() ) {
-                saveBtn.val( api.l10n.save );
-                closeBtn.find( '.screen-reader-text' ).text( api.l10n.cancel );
-          } else {
-                saveBtn.val( api.l10n.saved );
-                closeBtn.find( '.screen-reader-text' ).text( api.l10n.close );
-          }
-          var canSave = ! saving() && ( ! activated() || ! saved() ) && 'publish' !== changesetStatus;
-          saveBtn.prop( 'disabled', ! canSave );
-    },
-
-
-    //cb of 'skope-switched-done' event => fired when the api.czr_activeSkopeId().done() <=> refresh is done()
-    //1) set the ctrl dependencies in the currently active section
-    //2) update ctrl skope notices in the currently active section + expand the ctrl notice if skope is not 'global'
-    //3) adds a skope level class to the #customize-controls wrapper
-    //@args =
-    //{
-    //  current_skope_id : string
-    //  previous_skope_id : string
-    //  updated_setting_ids : [] //<= can be empty if no section was expanded
-    //}
-    skopeSwitchedDoneReact : function( args ) {
-          var self = this,
-              _doWhenSkopeReady = function() {
-                    //CURRENTLY EXPANDED SECTION : SET CTRL DEPENDENCIES WHEN POSSIBLE
-                    api.czr_CrtlDependenciesReady.then( function() {
-                      if ( ! _.isUndefined( api.czr_activeSectionId() ) && ! _.isEmpty( api.czr_activeSectionId() ) ) {
-                            try {
-                                  api.czr_ctrlDependencies.setServiDependencies( api.czr_activeSectionId(), null, true );//target sec id, source sec id, refresh
-                            } catch( er ) {
-                                  api.errorLog( 'On skope-switched-done : ' + er );
-                            }
+                          //ADD A SKOPE LEVEL CSS CLASS TO THE #customize-controls wrapper
+                          if ( api.czr_skope.has( args.previous_skope_id ) ) {
+                                $( '#customize-controls' ).removeClass( [ 'czr-', api.czr_skope( args.previous_skope_id )().skope, '-skope-level'].join('') );
                           }
-                    });
+                          if ( api.czr_skope.has( args.current_skope_id ) ) {
+                                $( '#customize-controls' ).addClass( [ 'czr-', api.czr_skope( args.current_skope_id )().skope, '-skope-level'].join('') );
+                          }
 
-                    //CURRENTLY EXPANDED SECTION : UPDATE CURRENT SKOPE CONTROL NOTICES AND MAYBE EXPAND THE NOTICE
-                    self.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
+                          //CURRENTLY EXPANDED SECTION
+                          //=> Display ctrl notice if skope is not global
+                          //=> Hide the reset dialog
+                          var _setupSectionControlDialogs = function() {
+                                if ( _.isUndefined( api.czr_activeSectionId() ) || _.isEmpty( api.czr_activeSectionId() ) )
+                                  return;
+                                var ctrls = api.CZR_Helpers.getSectionControlIds( api.czr_activeSectionId()  );
+                                _.each( ctrls, function( ctrlId ) {
+                                      api.control.when( ctrlId, function() {
+                                            var ctrl = api.control( ctrlId );
+                                            if ( ! _.has( ctrl, 'czr_states' ) )
+                                              return;
 
-                    //ADD A SKOPE LEVEL CSS CLASS TO THE #customize-controls wrapper
-                    if ( api.czr_skope.has( args.previous_skope_id ) ) {
-                          $( '#customize-controls' ).removeClass( [ 'czr-', api.czr_skope( args.previous_skope_id )().skope, '-skope-level'].join('') );
-                    }
-                    if ( api.czr_skope.has( args.current_skope_id ) ) {
-                          $( '#customize-controls' ).addClass( [ 'czr-', api.czr_skope( args.current_skope_id )().skope, '-skope-level'].join('') );
-                    }
-
-                    //CURRENTLY EXPANDED SECTION
-                    //=> Display ctrl notice if skope is not global
-                    //=> Hide the reset dialog
-                    var _setupSectionControlDialogs = function() {
-                          if ( _.isUndefined( api.czr_activeSectionId() ) || _.isEmpty( api.czr_activeSectionId() ) )
-                            return;
-                          var ctrls = api.CZR_Helpers.getSectionControlIds( api.czr_activeSectionId()  );
-                          _.each( ctrls, function( ctrlId ) {
-                                api.control.when( ctrlId, function() {
-                                      var ctrl = api.control( ctrlId );
-                                      if ( ! _.has( ctrl, 'czr_states' ) )
-                                        return;
-
-                                      ctrl.deferred.embedded.then( function() {
-                                            //Always display the notice when skope is not global
-                                            //=> let user understand where the setting value is coming from
-                                            ctrl.czr_states( 'noticeVisible' )( self.isCtrlNoticeVisible( ctrlId ) );
-                                            ctrl.czr_states( 'resetVisible' )( false );
+                                            ctrl.deferred.embedded.then( function() {
+                                                  //Always display the notice when skope is not global
+                                                  //=> let user understand where the setting value is coming from
+                                                  ctrl.czr_states( 'noticeVisible' )( self.isCtrlNoticeVisible( ctrlId ) );
+                                                  ctrl.czr_states( 'resetVisible' )( false );
+                                            });
                                       });
                                 });
-                          });
+                          };
+
+                          //Setup control dialogs after a delay on skope switched.
+                          //=> the delay is needed for controls that have been re-rendered.
+                          _.delay( function() {
+                                _setupSectionControlDialogs();
+                          }, 500 );
                     };
 
-                    //Setup control dialogs after a delay on skope switched.
-                    //=> the delay is needed for controls that have been re-rendered.
-                    _.delay( function() {
-                          _setupSectionControlDialogs();
-                    }, 500 );
-              };
 
-
-          //api.consoleLog('SKOPE SWITCHED TO', args.current_skope_id, api.czr_activeSectionId() );
-          //Skope is ready when :
-          //1) the initial skopes collection has been populated
-          //2) the initial skope has been switched to
-          api.czr_skopeReady.then( function() {
-                _doWhenSkopeReady();
-          });
-    }
+                //api.consoleLog('SKOPE SWITCHED TO', args.current_skope_id, api.czr_activeSectionId() );
+                //Skope is ready when :
+                //1) the initial skopes collection has been populated
+                //2) the initial skope has been switched to
+                api.czr_skopeReady.then( function() {
+                      _doWhenSkopeReady();
+                });
+          }
 
 
 
 
 
-    //cb of api.czr_globalDBoptions.callbacks
-    //update the _wpCustomizeSettings.settings if they have been updated by a reset of global skope, or a control reset of global skope
-    //When an option is reset on the global skope, we need to set the new value to default in _wpCustomizeSettings.settings
-    // globalDBoptionsReact : function( to, from ) {
-    //       var self = this,
-    //           resetted_opts = _.difference( from, to );
+          //cb of api.czr_globalDBoptions.callbacks
+          //update the _wpCustomizeSettings.settings if they have been updated by a reset of global skope, or a control reset of global skope
+          //When an option is reset on the global skope, we need to set the new value to default in _wpCustomizeSettings.settings
+          // globalDBoptionsReact : function( to, from ) {
+          //       var self = this,
+          //           resetted_opts = _.difference( from, to );
 
-    //       //reset option case
-    //       if ( ! _.isEmpty(resetted_opts) ) {
-    //             api.consoleLog( 'HAS RESET OPTIONS', resetted_opts );
-    //             //reset each reset setting to its default val
-    //             _.each( resetted_opts, function( shortSetId ) {
-    //                   var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
-    //                   if ( _.has( api.settings.settings, wpSetId) )
-    //                     api.settings.settings[wpSetId].value = serverControlParams.defaultOptionsValues[shortSetId];
-    //                   self.processSilentUpdates( { refresh : false } );//silently update with no refresh
-    //             });
-    //       }
+          //       //reset option case
+          //       if ( ! _.isEmpty(resetted_opts) ) {
+          //             api.consoleLog( 'HAS RESET OPTIONS', resetted_opts );
+          //             //reset each reset setting to its default val
+          //             _.each( resetted_opts, function( shortSetId ) {
+          //                   var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
+          //                   if ( _.has( api.settings.settings, wpSetId) )
+          //                     api.settings.settings[wpSetId].value = serverControlParams.defaultOptionsValues[shortSetId];
+          //                   self.processSilentUpdates( { refresh : false } );//silently update with no refresh
+          //             });
+          //       }
 
-    //       //make sure the hasDBValues is synchronized with the server
-    //       api.czr_skope( self.getGlobalSkopeId() ).hasDBValues( ! _.isEmpty( to ) );//might trigger cb hasDBValuesReact()
-    // }
-});//$.extend()
+          //       //make sure the hasDBValues is synchronized with the server
+          //       api.czr_skope( self.getGlobalSkopeId() ).hasDBValues( ! _.isEmpty( to ) );//might trigger cb hasDBValuesReact()
+          // }
+      });//$.extend()
+})( wp.customize , jQuery, _);
 
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 $.extend( CZRSkopeBaseMths, {
@@ -4107,7 +4122,7 @@ $.extend( CZRSkopeBaseMths, {
                                 } else {
                                     _html.push( [
                                           'Customized. Will be applied to',//@to_translate
-                                          '<strong>' + api.czr_skope( _inheritedFromSkopeId )().ctx_title + '.' + '</strong>',
+                                          '<strong>' + api.czr_skope( _inheritedFromSkopeId )().ctx_title + '</strong>',
                                           'once published.'
                                     ].join(' ') );
                                 }
@@ -4169,8 +4184,8 @@ $.extend( CZRSkopeBaseMths, {
                                 '<strong>' + api.czr_skope( _localSkopeId )().ctx_title + '</strong>',
                                 ! _isCustomized ? 'is set in' : 'is customized in',//@to_translate
                                 self.buildSkopeLink( _overridedBySkopeId ),
-                                'which has a higher priority than',
-                                '<strong>' + api.czr_skope( _currentSkopeId )().title + '.' + '</strong>'
+                                'which has a higher priority than the current option scope',
+                                '<strong>( ' + api.czr_skope( _currentSkopeId )().title + ' ).</strong>'
                                 //@to_translate
                           ].join(' ') );
                     }
@@ -7603,18 +7618,56 @@ $.extend( CZRSkopeMths, {
         },
 
 
-        //@obj = {model : model, dom_el : $_view_el, refreshed : _refreshed }
-        setupDOMListeners : function( event_map , obj, instance ) {
-                var control = this;
+        //@args = {model : model, dom_el : $_view_el, refreshed : _refreshed }
+        setupDOMListeners : function( event_map , args, instance ) {
+                var control = this,
+                    _defaultArgs = {
+                          model : {},
+                          dom_el : {}
+                    };
+
                 instance = instance || control;
+                //event_map : are we good ?
+                if ( ! _.isArray( event_map ) ) {
+                      api.errorLog( 'setupDomListeners : event_map should be an array', args );
+                      return;
+                }
+
+                //args : are we good ?
+                if ( ! _.isObject( args ) ) {
+                      api.errorLog( 'setupDomListeners : args should be an object', event_map );
+                      return;
+                }
+
+                args = _.extend( _defaultArgs, args );
+                // => we need an existing dom element
+                if ( ! args.dom_el instanceof jQuery || 1 != args.dom_el.length ) {
+                      api.errorLog( 'setupDomListeners : dom element should be an existing dom element', args );
+                      return;
+                }
+
                 //loop on the event map and map the relevant callbacks by event name
+                // @param _event :
+                //{
+                //       trigger : '',
+                //       selector : '',
+                //       name : '',
+                //       actions : ''
+                // },
                 _.map( event_map , function( _event ) {
                       if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
                             api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
                             return;
                       }
+
+                      //Are we good ?
+                      if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
+                            api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
+                            return;
+                      }
+
                       //LISTEN TO THE DOM => USES EVENT DELEGATION
-                      obj.dom_el.on( _event.trigger , _event.selector, function( e, event_params ) {
+                      args.dom_el.on( _event.trigger , _event.selector, function( e, event_params ) {
                             //stop propagation to ancestors modules, typically a sektion
                             e.stopPropagation();
                             //particular treatment
@@ -7623,36 +7676,35 @@ $.extend( CZRSkopeMths, {
                             }
                             e.preventDefault(); // Keep this AFTER the key filter above
 
-                            //! use a new cloned object
-                            var _obj = _.clone(obj);
+                            //It is important to deconnect the original object from its source
+                            //=> because we will extend it when used as params for the action chain execution
+                            var actionsParams = $.extend( true, {}, args );
 
                             //always get the latest model from the collection
-                            if ( _.has(_obj, 'model') && _.has( _obj.model, 'id') ) {
+                            if ( _.has( actionsParams, 'model') && _.has( actionsParams.model, 'id') ) {
                                   if ( _.has( instance, 'get' ) )
-                                    _obj.model = instance();
+                                    actionsParams.model = instance();
                                   else
-                                    _obj.model = instance.getModel( _obj.model.id );
+                                    actionsParams.model = instance.getModel( actionsParams.model.id );
                             }
 
-                            //always add the event obj to the passed obj
+                            //always add the event obj to the passed args
                             //+ the dom event
-                            $.extend( _obj, { event : _event, dom_event : e } );
+                            $.extend( actionsParams, { event : _event, dom_event : e } );
 
                             //add the event param => useful for triggered event
-                            $.extend( _obj, event_params );
+                            $.extend( actionsParams, event_params );
 
                             //SETUP THE EMITTERS
                             //inform the container that something has happened
                             //pass the model and the current dom_el
                             //the model is always passed as parameter
-                            if ( ! _.has( _obj, 'event' ) || ! _.has( _obj.event, 'actions' ) ) {
+                            if ( ! _.has( actionsParams, 'event' ) || ! _.has( actionsParams.event, 'actions' ) ) {
                                   api.errorLog( 'executeEventActionChain : missing obj.event or obj.event.actions' );
                                   return;
                             }
-                            try {
-                                  control.executeEventActionChain( _obj, instance );
-                            } catch( er ) {
-                                  api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + _obj.event.actions );
+                            try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
+                                  api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
                                   api.errorLog( 'Error : ' + er );
                             }
                       });//.on()
@@ -7662,49 +7714,48 @@ $.extend( CZRSkopeMths, {
 
 
         //GENERIC METHOD TO SETUP EVENT LISTENER
-        //NOTE : the obj.event must alway be defined
-        executeEventActionChain : function( obj, instance ) {
+        //NOTE : the args.event must alway be defined
+        executeEventActionChain : function( args, instance ) {
                 var control = this;
 
                 //if the actions param is a anonymous function, fire it and stop there
-                if ( 'function' === typeof( obj.event.actions ) )
-                  return obj.event.actions.call( instance, obj );
+                if ( 'function' === typeof( args.event.actions ) )
+                  return args.event.actions.call( instance, args );
 
                 //execute the various actions required
                 //first normalizes the provided actions into an array of callback methods
                 //then loop on the array and fire each cb if exists
-                if ( ! _.isArray( obj.event.actions ) )
-                  obj.event.actions = [ obj.event.actions ];
+                if ( ! _.isArray( args.event.actions ) )
+                  args.event.actions = [ args.event.actions ];
 
                 //if one of the callbacks returns false, then we break the loop
                 //=> allows us to stop a chain of callbacks if a condition is not met
                 var _break = false;
-                _.map( obj.event.actions, function( _cb ) {
+                _.map( args.event.actions, function( _cb ) {
                       if ( _break )
                         return;
 
                       if ( 'function' != typeof( instance[ _cb ] ) ) {
-                            throw new Error( 'executeEventActionChain : the action : ' + _cb + ' has not been found when firing event : ' + obj.event.selector );
+                            throw new Error( 'executeEventActionChain : the action : ' + _cb + ' has not been found when firing event : ' + args.event.selector );
                       }
 
-                      //allow other actions to be bound before
+                      //Allow other actions to be bound before action and after
+                      //
                       //=> we don't want the event in the object here => we use the one in the event map if set
-                      //=> otherwise will loop infinitely because triggering always the same cb from obj.event.actions[_cb]
-                      //=> the dom element shall be get from the passed obj and fall back to the controler container.
-                      var $_dom_el = ( _.has(obj, 'dom_el') && -1 != obj.dom_el.length ) ? obj.dom_el : control.container;
+                      //=> otherwise will loop infinitely because triggering always the same cb from args.event.actions[_cb]
+                      //=> the dom element shall be get from the passed args and fall back to the controler container.
+                      var $_dom_el = ( _.has(args, 'dom_el') && -1 != args.dom_el.length ) ? args.dom_el : control.container;
 
-                      $_dom_el.trigger( 'before_' + _cb, _.omit( obj, 'event' ) );
+                      $_dom_el.trigger( 'before_' + _cb, _.omit( args, 'event' ) );
 
                       //executes the _cb and stores the result in a local var
-                      var _cb_return = instance[ _cb ].call( instance, obj );
+                      var _cb_return = instance[ _cb ].call( instance, args );
                       //shall we stop the action chain here ?
                       if ( false === _cb_return )
                         _break = true;
 
                       //allow other actions to be bound after
-                      //=> we don't want the event in the object here => we use the one in the event map if set
-                      $_dom_el.trigger('after_' + _cb, _.omit( obj, 'event' ) );
-
+                      $_dom_el.trigger( 'after_' + _cb, _.omit( args, 'event' ) );
                 });//_.map
         }
   });//$.extend

@@ -21,18 +21,56 @@
         },
 
 
-        //@obj = {model : model, dom_el : $_view_el, refreshed : _refreshed }
-        setupDOMListeners : function( event_map , obj, instance ) {
-                var control = this;
+        //@args = {model : model, dom_el : $_view_el, refreshed : _refreshed }
+        setupDOMListeners : function( event_map , args, instance ) {
+                var control = this,
+                    _defaultArgs = {
+                          model : {},
+                          dom_el : {}
+                    };
+
                 instance = instance || control;
+                //event_map : are we good ?
+                if ( ! _.isArray( event_map ) ) {
+                      api.errorLog( 'setupDomListeners : event_map should be an array', args );
+                      return;
+                }
+
+                //args : are we good ?
+                if ( ! _.isObject( args ) ) {
+                      api.errorLog( 'setupDomListeners : args should be an object', event_map );
+                      return;
+                }
+
+                args = _.extend( _defaultArgs, args );
+                // => we need an existing dom element
+                if ( ! args.dom_el instanceof jQuery || 1 != args.dom_el.length ) {
+                      api.errorLog( 'setupDomListeners : dom element should be an existing dom element', args );
+                      return;
+                }
+
                 //loop on the event map and map the relevant callbacks by event name
+                // @param _event :
+                //{
+                //       trigger : '',
+                //       selector : '',
+                //       name : '',
+                //       actions : ''
+                // },
                 _.map( event_map , function( _event ) {
                       if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
                             api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
                             return;
                       }
+
+                      //Are we good ?
+                      if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
+                            api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
+                            return;
+                      }
+
                       //LISTEN TO THE DOM => USES EVENT DELEGATION
-                      obj.dom_el.on( _event.trigger , _event.selector, function( e, event_params ) {
+                      args.dom_el.on( _event.trigger , _event.selector, function( e, event_params ) {
                             //stop propagation to ancestors modules, typically a sektion
                             e.stopPropagation();
                             //particular treatment
@@ -41,36 +79,35 @@
                             }
                             e.preventDefault(); // Keep this AFTER the key filter above
 
-                            //! use a new cloned object
-                            var _obj = _.clone(obj);
+                            //It is important to deconnect the original object from its source
+                            //=> because we will extend it when used as params for the action chain execution
+                            var actionsParams = $.extend( true, {}, args );
 
                             //always get the latest model from the collection
-                            if ( _.has(_obj, 'model') && _.has( _obj.model, 'id') ) {
+                            if ( _.has( actionsParams, 'model') && _.has( actionsParams.model, 'id') ) {
                                   if ( _.has( instance, 'get' ) )
-                                    _obj.model = instance();
+                                    actionsParams.model = instance();
                                   else
-                                    _obj.model = instance.getModel( _obj.model.id );
+                                    actionsParams.model = instance.getModel( actionsParams.model.id );
                             }
 
-                            //always add the event obj to the passed obj
+                            //always add the event obj to the passed args
                             //+ the dom event
-                            $.extend( _obj, { event : _event, dom_event : e } );
+                            $.extend( actionsParams, { event : _event, dom_event : e } );
 
                             //add the event param => useful for triggered event
-                            $.extend( _obj, event_params );
+                            $.extend( actionsParams, event_params );
 
                             //SETUP THE EMITTERS
                             //inform the container that something has happened
                             //pass the model and the current dom_el
                             //the model is always passed as parameter
-                            if ( ! _.has( _obj, 'event' ) || ! _.has( _obj.event, 'actions' ) ) {
+                            if ( ! _.has( actionsParams, 'event' ) || ! _.has( actionsParams.event, 'actions' ) ) {
                                   api.errorLog( 'executeEventActionChain : missing obj.event or obj.event.actions' );
                                   return;
                             }
-                            try {
-                                  control.executeEventActionChain( _obj, instance );
-                            } catch( er ) {
-                                  api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + _obj.event.actions );
+                            try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
+                                  api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
                                   api.errorLog( 'Error : ' + er );
                             }
                       });//.on()
@@ -80,49 +117,48 @@
 
 
         //GENERIC METHOD TO SETUP EVENT LISTENER
-        //NOTE : the obj.event must alway be defined
-        executeEventActionChain : function( obj, instance ) {
+        //NOTE : the args.event must alway be defined
+        executeEventActionChain : function( args, instance ) {
                 var control = this;
 
                 //if the actions param is a anonymous function, fire it and stop there
-                if ( 'function' === typeof( obj.event.actions ) )
-                  return obj.event.actions.call( instance, obj );
+                if ( 'function' === typeof( args.event.actions ) )
+                  return args.event.actions.call( instance, args );
 
                 //execute the various actions required
                 //first normalizes the provided actions into an array of callback methods
                 //then loop on the array and fire each cb if exists
-                if ( ! _.isArray( obj.event.actions ) )
-                  obj.event.actions = [ obj.event.actions ];
+                if ( ! _.isArray( args.event.actions ) )
+                  args.event.actions = [ args.event.actions ];
 
                 //if one of the callbacks returns false, then we break the loop
                 //=> allows us to stop a chain of callbacks if a condition is not met
                 var _break = false;
-                _.map( obj.event.actions, function( _cb ) {
+                _.map( args.event.actions, function( _cb ) {
                       if ( _break )
                         return;
 
                       if ( 'function' != typeof( instance[ _cb ] ) ) {
-                            throw new Error( 'executeEventActionChain : the action : ' + _cb + ' has not been found when firing event : ' + obj.event.selector );
+                            throw new Error( 'executeEventActionChain : the action : ' + _cb + ' has not been found when firing event : ' + args.event.selector );
                       }
 
-                      //allow other actions to be bound before
+                      //Allow other actions to be bound before action and after
+                      //
                       //=> we don't want the event in the object here => we use the one in the event map if set
-                      //=> otherwise will loop infinitely because triggering always the same cb from obj.event.actions[_cb]
-                      //=> the dom element shall be get from the passed obj and fall back to the controler container.
-                      var $_dom_el = ( _.has(obj, 'dom_el') && -1 != obj.dom_el.length ) ? obj.dom_el : control.container;
+                      //=> otherwise will loop infinitely because triggering always the same cb from args.event.actions[_cb]
+                      //=> the dom element shall be get from the passed args and fall back to the controler container.
+                      var $_dom_el = ( _.has(args, 'dom_el') && -1 != args.dom_el.length ) ? args.dom_el : control.container;
 
-                      $_dom_el.trigger( 'before_' + _cb, _.omit( obj, 'event' ) );
+                      $_dom_el.trigger( 'before_' + _cb, _.omit( args, 'event' ) );
 
                       //executes the _cb and stores the result in a local var
-                      var _cb_return = instance[ _cb ].call( instance, obj );
+                      var _cb_return = instance[ _cb ].call( instance, args );
                       //shall we stop the action chain here ?
                       if ( false === _cb_return )
                         _break = true;
 
                       //allow other actions to be bound after
-                      //=> we don't want the event in the object here => we use the one in the event map if set
-                      $_dom_el.trigger('after_' + _cb, _.omit( obj, 'event' ) );
-
+                      $_dom_el.trigger( 'after_' + _cb, _.omit( args, 'event' ) );
                 });//_.map
         }
   });//$.extend
