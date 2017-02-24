@@ -87,7 +87,7 @@ $.extend( CZRModOptMths , {
                               .find('.customize-control-title').first()//was.find('.customize-control-title')
                               .append( $( '<span/>', {
                                     class : [ ctrl.css_attr.edit_modopt_icon, 'fa fa-cog' ].join(' '),
-                                    title : serverControlParams.i18n.skope['Settings']
+                                    title : serverControlParams.i18n['Settings']
                               } ) ) )
                         .done( function(){
                               $( '.' + ctrl.css_attr.edit_modopt_icon, ctrl.container ).fadeIn( 400 );

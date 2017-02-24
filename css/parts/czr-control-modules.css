@@ -214,7 +214,7 @@
   width: 60%;
 }
 
-.width-100 .czr-input {
+.width-100 .czr-input, .czr-sub-set .customize-control-title.width-100 {
   width: 100%;
 }
 .czr-sub-set .customize-control-title {

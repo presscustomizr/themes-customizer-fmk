@@ -27,7 +27,7 @@ $.extend( CZRBodyBgModuleMths, {
                   'background-position' : 'center center',
                   'background-size' : 'cover'
             };
-            api.consoleLog('module ID', module.id );
+            api.consoleLog('New module instantiated : ', module.id );
             //fired ready :
             //1) on section expansion
             //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled
@@ -92,19 +92,24 @@ $.extend( CZRBodyBgModuleMths, {
                   var item = this;
                   api.CZRItem.prototype.ready.call( item );
 
-                  item.czr_Input('background-image').isReady.done( function( input_instance ) {
-                        var set_visibilities = function( bg_val  ) {
-                              var is_bg_img_set = ! _.isEmpty( bg_val ) ||_.isNumber( bg_val);
-                              _.each( ['background-repeat', 'background-attachment', 'background-position', 'background-size'], function( dep ) {
-                                    item.czr_Input(dep).container.toggle( is_bg_img_set || false );
+                  item.inputCollection.bind( function( _col_ ) {
+                        if ( ! _.isEmpty( _col ) && item.czr_Input && item.czr_Input.has( 'background-image' ) ) {
+                              item.czr_Input('background-image').isReady.done( function( input_instance ) {
+                                    var set_visibilities = function( bg_val  ) {
+                                          var is_bg_img_set = ! _.isEmpty( bg_val ) ||_.isNumber( bg_val);
+                                          _.each( ['background-repeat', 'background-attachment', 'background-position', 'background-size'], function( dep ) {
+                                                item.czr_Input(dep).container.toggle( is_bg_img_set || false );
+                                          });
+                                    };
+                                    set_visibilities( input_instance() );
+                                    //update the item model on 'background-image' change
+                                    item.bind('background-image:changed', function(){
+                                          set_visibilities( item.czr_Input('background-image')() );
+                                    });
                               });
-                        };
-                        set_visibilities( input_instance() );
-                        //update the item model on 'background-image' change
-                        item.bind('background-image:changed', function(){
-                              set_visibilities( item.czr_Input('background-image')() );
-                        });
+                        }
                   });
+
             },
 
       }

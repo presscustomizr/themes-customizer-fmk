@@ -97,25 +97,9 @@ $.extend( CZRItemMths , {
                   //listen to each single item change
                   item.callbacks.add( function() { return item.itemReact.apply(item, arguments ); } );
 
-                  //When shall we render the item ?
-                  //If the module is part of a simple control, the item can be render now,
-                  //If the module is part of a sektion, then the item will be rendered on module edit.
-                  // if ( ! item.module.isInSektion() ) {
-                  //       item.mayBeRenderItemWrapper();
-                  // }
-                  item.mayBeRenderItemWrapper();
-
-                  //ITEM WRAPPER VIEW SETUP
-                  //defer actions on item view embedded
-                  item.embedded.done( function() {
-                        //define the item view DOM event map
-                        //bind actions when the item is embedded : item title, etc.
-                        item.itemWrapperViewSetup( _initial_model );
-                  });
-
-
-                  //INPUTS SETUP
+                  //SCHEDULE INPUTS SETUP
                   //=> when the item content has been rendered. Typically on item expansion for a multi-items module.
+                  // => or for mono item, right on item.renderItemWrapper()
                   item.bind( 'contentRendered', function() {
                         //create the collection of inputs if needed
                         //first time or after a removal
@@ -132,12 +116,27 @@ $.extend( CZRItemMths , {
                         }
                   });
 
-                  //INPUTS DESTROY
+                  //SCHEDULE INPUTS DESTROY
                   item.bind( 'contentRemoved', function() {
                         if ( _.has(item, 'czr_Input') )
                           api.CZR_Helpers.removeInputCollection.call( item );
                   });
 
+                  //When shall we render the item ?
+                  //If the module is part of a simple control, the item can be render now,
+                  //If the module is part of a sektion, then the item will be rendered on module edit.
+                  // if ( ! item.module.isInSektion() ) {
+                  //       item.mayBeRenderItemWrapper();
+                  // }
+                  item.mayBeRenderItemWrapper();
+
+                  //ITEM WRAPPER VIEW SETUP
+                  //defer actions on item view embedded
+                  item.embedded.done( function() {
+                        //define the item view DOM event map
+                        //bind actions when the item is embedded : item title, etc.
+                        item.itemWrapperViewSetup( _initial_model );
+                  });
             });//item.isReady.done()
 
             //if an item is manually added : open it

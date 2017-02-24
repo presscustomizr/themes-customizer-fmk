@@ -87,10 +87,10 @@ $.extend( CZRModOptMths , {
 
               var _ctrlLabel = '';
               try {
-                    _ctrlLabel = [ serverControlParams.i18n.skope['Options for'], module.control.params.label ].join(' ');
+                    _ctrlLabel = [ serverControlParams.i18n['Options for'], module.control.params.label ].join(' ');
               } catch( er ) {
                     api.errorLog( 'In renderModOptContent : ' + er );
-                    _ctrlLabel = serverControlParams.i18n.skope['Settings'];
+                    _ctrlLabel = serverControlParams.i18n['Settings'];
               }
 
               $('#widgets-left').after( $( '<div/>', {

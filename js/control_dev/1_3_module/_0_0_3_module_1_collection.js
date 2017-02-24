@@ -13,7 +13,8 @@ $.extend( CZRModuleMths, {
       populateSavedItemCollection : function() {
               var module = this, _saved_items = [];
               if ( ! _.isArray( module().items ) ) {
-                  throw new Error( 'populateSavedItemCollection : The saved items collection must be an array in module :' + module.id );
+                    api.errorLog( 'populateSavedItemCollection : The saved items collection must be an array in module :' + module.id );
+                    return;
               }
 
               //populates the collection with the saved items

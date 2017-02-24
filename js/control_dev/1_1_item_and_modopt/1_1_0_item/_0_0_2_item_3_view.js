@@ -54,7 +54,7 @@ $.extend( CZRItemMths , {
             if ( item.module.isMultiItem() ) {
                   item.viewState.callbacks.add( function( to, from ) {
                         //viewState can take 3 states : expanded, expanded_noscroll, closed
-                        var _isExpanded = -1 !== to.indexOf('expanded');
+                        var _isExpanded = -1 !== to.indexOf( 'expanded' );
                         if ( _isExpanded ) {
                               //item already rendered ?
                               if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
@@ -90,8 +90,8 @@ $.extend( CZRItemMths , {
             } else {
                   //react to the item state changes
                   item.viewState.callbacks.add( function( to, from ) {
-                      //toggle on view state change
-                      item.toggleItemExpansion.apply(item, arguments );
+                        //toggle on view state change
+                        item.toggleItemExpansion.apply(item, arguments );
                   });
 
                   //renderview content now for a single item module
