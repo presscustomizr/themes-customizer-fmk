@@ -18,7 +18,12 @@ var czr_debug = {
             };
             args = _.extend( _defaults, args );
 
-            var _toArr = Array.from( args.consoleArguments );
+            var _toArr = Array.from( args.consoleArguments ),
+                _truncate = function( string ){
+                      if ( ! _.isString( string ) )
+                        return '';
+                      return string.length > 80 ? string.substr( 0, 79 ) : string;
+                };
 
             //if the array to print is not composed exclusively of strings, then let's stringify it
             //else join()
@@ -28,7 +33,7 @@ var czr_debug = {
                   _toArr = _toArr.join(' ');
             }
             return [
-                  '%c ' + _toArr,
+                  '%c ' + _truncate( _toArr ),
                   [ 'background:' + args.bgCol, 'color:' + args.textCol, 'display: block;' ].join(';')
             ];
       };
@@ -204,8 +209,18 @@ var czr_debug = {
                             if ( 'pending' == api.czr_skopeReady.state() )  {
                                   //This top note will be rendered 20s and self closed if not closed before by the user
                                   api.czr_skopeBase.toggleTopNote( true, {
-                                        title : 'There was a problem when trying to load the customizer.',//@to_translate
-                                        message : 'Please open your <a href="http://docs.presscustomizr.com/article/272-inspect-your-webpages-in-your-browser-with-the-development-tools" target="_blank">browser debug tool</a>, and report any error message (in red) printed in the javascript console in the <a href="https://wordpress.org/support/theme/hueman" target="_blank">Hueman theme forum</a>.',//@to_translate
+                                        title : serverControlParams.i18n.skope['There was a problem when trying to load the customizer.'],
+                                        message : [
+                                              serverControlParams.i18n.skope['Please open your'],
+                                              '<a href="http://docs.presscustomizr.com/article/272-inspect-your-webpages-in-your-browser-with-the-development-tools" target="_blank">',
+                                              serverControlParams.i18n.skope['browser debug tool'],
+                                              '</a>',
+                                              ',',
+                                              serverControlParams.i18n.skope['and report any error message (in red) printed in the javascript console in the'],
+                                              '<a href="https://wordpress.org/support/theme/hueman" target="_blank">',
+                                              serverControlParams.i18n.skope['Hueman theme forum'],
+                                              '</a>.'
+                                        ].join(' '),
                                         selfCloseAfter : 40000
                                   });
 
@@ -263,7 +278,7 @@ var czr_debug = {
                       try {
                             _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
                       } catch( er ) {
-                            api.errorLog( 'In toggleSkopeLoadPane : error when parsing the the reset skope template : ' + er );//@to_translate
+                            api.errorLog( 'In toggleSkopeLoadPane : error when parsing the the reset skope template : ' + er );
                             dfd.resolve( false );
                       }
                       $.when( $('#customize-preview').after( $( _tmpl ) ) )

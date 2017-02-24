@@ -383,7 +383,7 @@ $.extend( CZRSkopeMths, {
             var skope = this;
             $.when( this.container.toggleClass( 'dirty', to ) ).done( function() {
                 if ( to )
-                  $( '.czr-scope-reset', skope.container).fadeIn('slow').attr('title', [ 'Reset the current customizations for', skope().title ].join(' ') );//@to_translate
+                  $( '.czr-scope-reset', skope.container).fadeIn('slow').attr('title', [ serverControlParams.i18n.skope['Reset the current customizations for'], skope().title ].join(' ') );
                 else if ( ! skope.hasDBValues() )
                   $( '.czr-scope-reset', skope.container).fadeOut('fast');
             });
@@ -397,9 +397,9 @@ $.extend( CZRSkopeMths, {
                       $( '.czr-scope-reset', skope.container)
                             .fadeIn( 'slow')
                             .attr( 'title', [
-                                  'global' == skope().skope ? 'Reset the theme options published sitewide' : 'Reset your website published options for',//@to_translate
+                                  'global' == skope().skope ? serverControlParams.i18n.skope['Reset the theme options published sitewide'] : serverControlParams.i18n.skope['Reset your website published options for'],
                                   'global' == skope().skope ? '' : skope().title
-                            ].join(' ') );//@to_translate
+                            ].join(' ') );
                 }
                 else if ( ! skope.dirtyness() ) {
                       $( '.czr-scope-reset', skope.container ).fadeOut('fast');

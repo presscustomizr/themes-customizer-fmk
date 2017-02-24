@@ -25,7 +25,7 @@ $.extend( CZRSkopeBaseMths, {
                                   .find('.customize-control-title').first()//was.find('.customize-control-title')
                                   .append( $( '<span/>', {
                                         class : 'czr-toggle-notice fa fa-info-circle',
-                                        title : 'Display informations about the scope of this option.'//@to_translate
+                                        title : serverControlParams.i18n.skope['Display informations about the scope of this option.']
                                   } ) ) )
                             .done( function(){
                                   $('.czr-toggle-notice', ctrl.container).fadeIn( 400 );
@@ -57,7 +57,7 @@ $.extend( CZRSkopeBaseMths, {
                     /// CASE 0 : not skoped
                     if ( ! _isSkoped( setId ) ) {
                           _html.push( [
-                                "This option is always customized sitewide and can't be reset.",//@to_translate
+                                serverControlParams.i18n.skope['This option is always customized sitewide and cannot be reset.']
                           ].join(' ') );
                           return _html.join(' | ');
                     }
@@ -72,29 +72,29 @@ $.extend( CZRSkopeBaseMths, {
                           if ( _isCustomized ) {
                                 if ( 'global' == api.czr_skope( _inheritedFromSkopeId )().skope ) {
                                       _html.push( [
-                                            'Customized. Will be applied sitewide once published.',//@to_translate
+                                            serverControlParams.i18n.skope['Customized. Will be applied sitewide once published.'],
                                       ].join(' ') );
                                 } else {
                                     _html.push( [
-                                          'Customized. Will be applied to',//@to_translate
+                                          serverControlParams.i18n.skope['Customized. Will be applied to'],
                                           '<strong>' + api.czr_skope( _inheritedFromSkopeId )().ctx_title + '</strong>',
-                                          'once published.'
+                                          serverControlParams.i18n.skope['once published.']
                                     ].join(' ') );
                                 }
                           } else {
                                 if ( _hasDBVal ) {
                                       if ( 'global' == api.czr_skope( _inheritedFromSkopeId )().skope ) {
                                             _html.push( [
-                                                  'Customized and applied sitewide.',//@to_translate
+                                                  serverControlParams.i18n.skope['Customized and applied sitewide.'],
                                             ].join(' ') );
                                       } else {
                                             _html.push( [
-                                                  'Customized and applied to',//@to_translate
+                                                  serverControlParams.i18n.skope['Customized and applied to'],
                                                   '<strong>' + api.czr_skope( _inheritedFromSkopeId )().ctx_title + '.' + '</strong>'
                                             ].join(' ') );
                                       }
                                 } else {
-                                      _html.push( 'Default website value applied sitewide.' );//@to_translate
+                                      _html.push( serverControlParams.i18n.skope['Default website value applied sitewide.'] );
                                 }
                           }
                     }
@@ -109,20 +109,20 @@ $.extend( CZRSkopeBaseMths, {
                           if ( ! _isCustomized && ! _hasDBVal ) {
                                 _html.push(
                                       [
-                                            'Default website value.',
-                                            'You can customize this specifically for',
+                                            serverControlParams.i18n.skope['Default website value.'],
+                                            serverControlParams.i18n.skope['You can customize this specifically for'],
                                             '<strong>' + api.czr_skope( _currentSkopeId )().ctx_title + '.' + '</strong>'
                                       ].join(' ')
-                                );//@to_translate
+                                );
                           } else {
                                 _html.push(
                                       [
-                                            'Currently inherited from',
+                                            serverControlParams.i18n.skope['Currently inherited from'],
                                             self.buildSkopeLink( _inheritedFromSkopeId ) + '.',
-                                            'You can customize this specifically for',
+                                            serverControlParams.i18n.skope['You can customize this specifically for'],
                                             '<strong>' + api.czr_skope( _currentSkopeId )().ctx_title + '.' + '</strong>'
                                       ].join(' ')
-                                );//@to_translate
+                                );
                           }
                     }
 
@@ -135,13 +135,12 @@ $.extend( CZRSkopeBaseMths, {
                           _isCustomized = ! _.isUndefined( api.czr_skope( _overridedBySkopeId ).dirtyValues()[setId] );
 
                           _html.push( [
-                                ! _isCustomized ? 'The value currently applied to' : 'The value that will be applied to',//@to_translate
+                                ! _isCustomized ? serverControlParams.i18n.skope['The value currently applied to'] : serverControlParams.i18n.skope['The value that will be applied to'],
                                 '<strong>' + api.czr_skope( _localSkopeId )().ctx_title + '</strong>',
-                                ! _isCustomized ? 'is set in' : 'is customized in',//@to_translate
+                                ! _isCustomized ? serverControlParams.i18n.skope['is set in'] : serverControlParams.i18n.skope['is customized in'],
                                 self.buildSkopeLink( _overridedBySkopeId ),
-                                'which has a higher priority than the current option scope',
+                                serverControlParams.i18n.skope['which has a higher priority than the current option scope'],
                                 '<strong>( ' + api.czr_skope( _currentSkopeId )().title + ' ).</strong>'
-                                //@to_translate
                           ].join(' ') );
                     }
 

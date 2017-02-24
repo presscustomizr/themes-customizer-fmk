@@ -64,7 +64,7 @@ $.extend( CZRSlideModuleMths, {
             this.defaultItemModel = _.omit( serverControlParams.slideModuleParams.defaultSlideMod, 'slide-src');
 
             //overrides the default success message
-            this.itemAddedMessage = serverControlParams.i18n.slideAdded;
+            this.itemAddedMessage = serverControlParams.i18n.mods.slider['New Slide created ! Scroll down to edit it.'];
             //fired ready :
             //1) on section expansion
             //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled
@@ -249,7 +249,7 @@ $.extend( CZRSlideModuleMths, {
                   if ( 'slide-link' == input.id ) {
                         input.defaultContentPickerOption = [{
                               id          : '_custom_',
-                              title       : '<span style="font-weight:bold">Set a custom url</span>',//@to_translate
+                              title       : [ '<span style="font-weight:bold">' , serverControlParams.i18n.mods.slider['Set a custom url'], '</span>' ].join(''),
                               type_label  : '',
                               object_type : '',
                               url         : ''
@@ -430,7 +430,7 @@ $.extend( CZRSlideModuleMths, {
                                 return _itm.id === item.id;
                           });
                           _index = _.isUndefined( _index ) ? index : _index + 1;
-                          _title = [ serverControlParams.i18n.slideTitle, _index ].join( ' ' );
+                          _title = [ serverControlParams.i18n.mods.slider['Slide'], _index ].join( ' ' );
                     }
 
                     //if the slide title is set, use it

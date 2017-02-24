@@ -209,11 +209,11 @@ $.extend( CZRSkopeBaseMths, {
           ctrl.czr_states( 'hasDBVal' ).bind( function( bool ) {
                 ctrl.container.toggleClass( 'has-db-val', bool );
                 if ( bool ) {
-                      _title = 'Reset your customized ( and published ) value';//@to_translate
+                      _title = serverControlParams.i18n.skope['Reset your customized ( and published ) value'];
                 } else if ( ctrl.czr_states('isDirty')() ) {
-                      _title = 'Reset your customized ( but not yet published ) value';//@to_translate
+                      _title = serverControlParams.i18n.skope['Reset your customized ( but not yet published ) value'];
                 } else {
-                      _title = 'Not customized yet, nothing to reset';//@to_translate;
+                      _title = serverControlParams.i18n.skope['Not customized yet, nothing to reset'];
                 }
                 ctrl.container.find('.czr-setting-reset').attr( 'title', _title );
           });
@@ -223,11 +223,11 @@ $.extend( CZRSkopeBaseMths, {
                 ctrl.container.toggleClass( 'is-dirty', bool );
                 var _title;
                 if ( bool ) {
-                      _title = 'Reset your customized ( but not yet published ) value';//@to_translate
+                      _title = serverControlParams.i18n.skope['Reset your customized ( but not yet published ) value'];
                 } else if ( ctrl.czr_states('hasDBVal')() ) {
-                      _title = 'Reset your customized ( and published ) value';//@to_translate
+                      _title = serverControlParams.i18n.skope['Reset your customized ( and published ) value'];
                 } else {
-                      _title = 'Not customized yet, nothing to reset';//@to_translate;
+                      _title = serverControlParams.i18n.skope['Not customized yet, nothing to reset'];
                 }
                 ctrl.container.find('.czr-setting-reset').attr( 'title', _title );
           });

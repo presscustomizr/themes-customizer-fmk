@@ -45,20 +45,20 @@ $.extend( CZRSkopeMths, {
 
             if ( skope.dirtyness() ) {
                   warning_message = [
-                        'Please confirm that you want to reset your current ( not published ) customizations for',//@to_translate
+                        serverControlParams.i18n.skope['Please confirm that you want to reset your current ( not published ) customizations for'],
                         skope().ctx_title
                   ].join(' ');
                   success_message = [
-                        'Your customizations have been reset for',//@to_translate
+                        serverControlParams.i18n.skope['Your customizations have been reset for'],
                         skope().ctx_title
                   ].join(' ');
             } else {
                   warning_message = [
-                        'global' == skope().skope ? 'Please confirm that you want to reset your sitewide published customizations. Note : this will not reset the customizations made in other option scopes' : 'Please confirm that you want to reset your published customizations for',//@to_translate
+                        'global' == skope().skope ? serverControlParams.i18n.skope['Please confirm that you want to reset your sitewide published customizations. Note : this will not reset the customizations made in other option scopes'] : serverControlParams.i18n.skope['Please confirm that you want to reset your published customizations for'],
                         'global' == skope().skope ? '' : skope().ctx_title
                   ].join(' ');
                   success_message = [
-                        'Your published customizations have been reset for',//@to_translate
+                        serverControlParams.i18n.skope['Your published customizations have been reset for'],
                         skope().title
                   ].join(' ');
             }
@@ -72,7 +72,7 @@ $.extend( CZRSkopeMths, {
                         } )
                   );
             } catch( er ) {
-                  api.errorLog( 'Error when parsing the the reset skope template : ' + er );//@to_translate
+                  api.errorLog( 'Error when parsing the the reset skope template : ' + er );
                   return false;
             }
 

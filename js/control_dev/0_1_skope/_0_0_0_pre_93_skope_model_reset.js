@@ -33,7 +33,7 @@ $.extend( CZRSkopeMths, {
             //Bail if other process currenty running
             if ( ( api.state( 'czr-resetting')() || 0 !== api.state( 'processing' )() ) ) {
                     api.czr_serverNotification( {
-                          message: 'Slow down, you move too fast !',//@to_translate
+                          message: 'Slow down, you move too fast !',
                           status : 'success',
                           auto_collapse : true
                     });

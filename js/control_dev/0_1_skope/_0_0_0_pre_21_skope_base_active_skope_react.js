@@ -37,7 +37,7 @@ $.extend( CZRSkopeBaseMths, {
                 api.czr_serverNotification({
                       status:'success',
                       message : [
-                            'Widgets are created sitewide.'//@to_translate
+                            serverControlParams.i18n.skope['Widgets are created sitewide.']
                       ].join(' ')
                 });
                 //return dfd.resolve().promise();// _switchBack( api.panel( api.czr_activePanelId() ).params.title );
@@ -52,7 +52,7 @@ $.extend( CZRSkopeBaseMths, {
                 api.czr_serverNotification({
                       status:'success',
                       message : [
-                            'Menus are created sitewide.'//@to_translate
+                            serverControlParams.i18n.skope['Menus are created sitewide.']
                       ].join(' ')
                 });
                 //_switchBack( api.section( api.czr_activeSectionId() ).params.title );
@@ -167,11 +167,11 @@ $.extend( CZRSkopeBaseMths, {
                           'global' == api.czr_skope( skope_id || api.czr_activeSkopeId() )().skope ? current_title : ['Customizing', current_title ].join(' '),
                           '</span>',
                           '<span class="czr-skope-inherits-from">',
-                          'In this context :',//@to_translate
-                          _.isEmpty( _inheritedFrom ) ? ' ' : 'inherits from',//@to_translate
+                          serverControlParams.i18n.skope['In this context :'],
+                          _.isEmpty( _inheritedFrom ) ? ' ' : serverControlParams.i18n.skope['inherits from'],
                           _inheritedFrom,
-                          _.isEmpty( _inheritedFrom ) ? '' : _.isEmpty( _overrides ) ? '.' : ', and',//@to_translate
-                          _.isEmpty( _overrides ) ? ' ' : 'overridden by',//@to_translate
+                          _.isEmpty( _inheritedFrom ) ? '' : _.isEmpty( _overrides ) ? '.' : [',' , serverControlParams.i18n.skope['and'] ].join(' '),
+                          _.isEmpty( _overrides ) ? ' ' : serverControlParams.i18n.skope['overridden by'],
                           _overrides,
                           _.isEmpty( _overrides ) ? '' : '.',
                           '</span>'

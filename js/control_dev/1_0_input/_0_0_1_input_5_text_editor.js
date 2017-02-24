@@ -272,7 +272,7 @@ $.extend( CZRInputMths , {
       czrSetToggleButtonText : function( $_expanded ) {
               var input = this;
 
-              input.toggleButton.text( serverControlParams.i18n[ ! $_expanded ? 'textEditorOpen' : 'textEditorClose' ] );
+              input.toggleButton.text( serverControlParams.i18n.mods.textEditor[ ! $_expanded ? 'Edit' : 'Close Editor' ] );
       }
 });//$.extend
 })( wp.customize , jQuery, _ );

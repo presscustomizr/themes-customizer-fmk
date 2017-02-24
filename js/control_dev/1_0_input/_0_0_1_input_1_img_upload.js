@@ -84,25 +84,24 @@ $.extend( CZRInputMths , {
   * Create a media modal select frame, and store it so the instance can be reused when needed.
   */
   czrImgUploadInitFrame: function() {
-        var input = this;
+        var input = this,
+            button_labels = this.getUploaderLabels();
 
-        var button_labels = this.getUploaderLabels();
-
-         input.frame = wp.media({
-               button: {
-                   text: button_labels.frame_button
-               },
-               states: [
-                   new wp.media.controller.Library({
-                     title:     button_labels.frame_title,
-                     library:   wp.media.query({ type: 'image' }),
-                     multiple:  false,
-                     date:      false
-                   })
-               ]
-         });
-         // When a file is selected, run a callback.
-         input.frame.on( 'select', input.czrImgUploadSelect );
+        input.frame = wp.media({
+                button: {
+                      text: button_labels.frame_button
+                },
+                states: [
+                       new wp.media.controller.Library({
+                              title:     button_labels.frame_title,
+                              library:   wp.media.query({ type: 'image' }),
+                              multiple:  false,
+                              date:      false
+                       })
+                ]
+        });
+        // When a file is selected, run a callback.
+        input.frame.on( 'select', input.czrImgUploadSelect );
   },
 
   /**
@@ -192,11 +191,12 @@ $.extend( CZRInputMths , {
 
         //are we fine ?
         _.each( _map, function( ts_string, key ) {
-          if ( _.isUndefined( ts_string ) ) {
-            var input = this;
-            throw new Error( 'A translated string is missing ( ' + key + ' ) for the image uploader input in module : ' + input.module.id );
-          }
-        } );
+              if ( _.isUndefined( ts_string ) ) {
+                    var input = this;
+                    api.errorLog( 'A translated string is missing ( ' + key + ' ) for the image uploader input in module : ' + input.module.id );
+                    return '';
+              }
+        });
 
         return _map;
   }

@@ -76,7 +76,8 @@ $.extend( CZRModOptMths , {
 
               //do we have view content template script?
               if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) ).length ) {
-                  throw new Error('No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) );
+                    api.errorLog('renderModOptContent : No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) );
+                    return;
               }
               var  modOpt_content_template = wp.template( module.getTemplateEl( 'modOptInputList', modOpt_model ) );
 
@@ -86,10 +87,10 @@ $.extend( CZRModOptMths , {
 
               var _ctrlLabel = '';
               try {
-                    _ctrlLabel = 'Options for ' + module.control.params.label;//@to_translate
+                    _ctrlLabel = [ serverControlParams.i18n.skope['Options for'], module.control.params.label ].join(' ');
               } catch( er ) {
                     api.errorLog( 'In renderModOptContent : ' + er );
-                    _ctrlLabel = 'Settings';//@to_translate
+                    _ctrlLabel = serverControlParams.i18n.skope['Settings'];
               }
 
               $('#widgets-left').after( $( '<div/>', {
