@@ -16,10 +16,12 @@
             setting.notifications = new api.Values({ defaultConstructor: api.Notification });
 
             // Whenever the setting's value changes, refresh the preview.
+            setting.bind( setting.preview );
+
             // the deferred can be used in moduleCollectionReact to execute actions after the module has been set.
-            setting.bind( function( to, from , data ) {
-                  return setting.preview( to, from , data );
-            }, { deferred : true } );
+            // setting.bind( function( to, from , data ) {
+            //       return setting.preview( to, from , data );
+            // }, { deferred : true } );
       };
 
 

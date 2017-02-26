@@ -16,9 +16,9 @@ $.extend( CZRBaseModuleControlMths, {
               _.each( control.getSavedModules() , function( _mod, _key ) {
                       //a module previously embedded in a deleted sektion must not be registered
                       if ( ! sektion_module_instance.czr_Item.has( _mod.sektion_id ) ) {
-                          api.consoleLog('Warning Module ' + _mod.id + ' is orphan : it has no sektion to be embedded to. It Must be removed.');
-                          _orphan_mods.push(_mod);
-                          return;
+                            api.errorLog( 'Warning Module ' + _mod.id + ' is orphan : it has no sektion to be embedded to. It Must be removed.');
+                            _orphan_mods.push(_mod);
+                            return;
                       }
                       //@todo handle the case of a module embedded in a previously deleted column
                       //=> register it in the first column of the sektion ?
@@ -26,7 +26,7 @@ $.extend( CZRBaseModuleControlMths, {
                       var _sektion = sektion_module_instance.czr_Item( _mod.sektion_id );
 
                       if ( _.isUndefined( _sektion ) ) {
-                        throw new Error('sektion instance missing. Impossible to instantiate module : ' + _mod.id );
+                            throw new Error( 'sektion instance missing. Impossible to instantiate module : ' + _mod.id );
                       }
 
                       //add the sektion instance before update the api collection
@@ -150,9 +150,9 @@ $.extend( CZRBaseModuleControlMths, {
             else {
                   //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
                   //if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
-                  api(this.id)
-                        .set( control.filterModuleCollectionBeforeAjax( to ), data )
-                        .done( function( to, from, o ) {});
+                  api( this.id )
+                        .set( control.filterModuleCollectionBeforeAjax( to ), data );
+                        //.done( function( to, from, o ) {});
             }
       },
       /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

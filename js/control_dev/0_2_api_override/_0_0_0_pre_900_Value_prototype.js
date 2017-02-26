@@ -37,7 +37,7 @@
                   });
 
                   $.when.apply( null, _promises )
-                        .fail( function() { api.consoleLog( 'A deferred callback failed in api.Value::set()'); })
+                        .fail( function() { api.errorLog( 'A deferred callback failed in api.Value::set()'); })
                         .then( function() {
                               self.callbacks.fireWith( self, [ to, from, o ] );
                               dfd.resolveWith( self, [ to, from, o ] );

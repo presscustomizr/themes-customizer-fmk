@@ -102,10 +102,10 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
       getSectionControlIds : function( section_id ) {
             section_id = section_id || api.czr_activeSectionId();
             return ! api.section.has( section_id ) ?
-            [] :
-            _.map( api.section( section_id ).controls(), function( _ctrl ) {
-                  return _ctrl.id;
-            });
+                  [] :
+                  _.map( api.section( section_id ).controls(), function( _ctrl ) {
+                        return _ctrl.id;
+                  });
       },
 
 

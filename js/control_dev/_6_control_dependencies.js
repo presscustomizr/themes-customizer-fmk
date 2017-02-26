@@ -126,13 +126,9 @@
                             return;
 
                           //Attempt to normalize the params
-                          try {
-                                params = self._prepareDominusParams( params );
-                          } catch( er ) {
-                                api.errorLog( 'prepareDominus Params error : ' + e );
-                                return;
-                          }
-
+                          params = self._prepareDominusParams( params );
+                          if ( _.isEmpty(params) )
+                            return;
 
                           self._processDominusCallbacks( params.dominus, params, refresh )
                                 .fail( function() {
@@ -152,18 +148,17 @@
                               var _dominiIds = [];
                               _.each( self.dominiDeps , function( params ) {
                                     if ( ! _.has( params, 'servi' ) || ! _.isArray( params.servi ) || ! _.has( params, 'dominus' ) || _.isEmpty( params.dominus ) ) {
-                                          throw new Error( 'Control Dependencies : wrong params in _getServusDomini.');
+                                          api.errorLog( 'Control Dependencies : wrong params in _getServusDomini.');
+                                          return;
                                     }
 
                                     if ( _.contains( params.servi , shortServudId ) && ! _.contains( _dominiIds , params.dominus ) ) {
                                           //Attempt to normalize the params
-                                          try {
-                                                params = self._prepareDominusParams( params );
-                                          } catch( e ) {
-                                                api.consoleLog( 'prepareDominus Params error : ' + e );
-                                                return;
-                                          }
-                                          _dominiIds.push( params.dominus );
+                                          params = self._prepareDominusParams( params );
+                                          if ( _.isEmpty(params) )
+                                            return;
+                                          else
+                                            _dominiIds.push( params.dominus );
                                     }
                               });
                               return ! _.isArray( _dominiIds ) ? [] : _dominiIds;
@@ -403,20 +398,25 @@
 
                     //Check mandatory conditions
                     if ( ! _.isObject( params_candidate ) ) {
-                        throw new Error('Visibilities : a dominus param definition must be an object.');
+                          api.errorLog( 'Visibilities : a dominus param definition must be an object.');
+                          return _ready_params;
                     }
                     if ( ! _.has( params_candidate, 'visibility' ) && ! _.has( params_candidate, 'actions' ) ) {
-                        throw new Error('Visibilities : a dominus definition must include a visibility or an actions callback.');
+                          api.errorLog( 'Visibilities : a dominus definition must include a visibility or an actions callback.');
+                          return _ready_params;
                     }
                     if ( ! _.has( params_candidate, 'dominus' ) || ! _.isString( params_candidate.dominus ) || _.isEmpty( params_candidate.dominus ) ) {
-                          throw new Error( 'Visibilities : a dominus control id must be a not empty string.');
+                          api.errorLog( 'Visibilities : a dominus control id must be a not empty string.');
+                          return _ready_params;
                     }
                     var wpDominusId = api.CZR_Helpers.build_setId( params_candidate.dominus );
                     if ( ! api.control.has( wpDominusId ) ) {
-                          throw new Error( 'Visibilities : a dominus control id is not registered : ' + wpDominusId );
+                          api.errorLog( 'Visibilities : a dominus control id is not registered : ' + wpDominusId );
+                          return _ready_params;
                     }
                     if ( ! _.has( params_candidate, 'servi' ) || _.isUndefined( params_candidate.servi ) || ! _.isArray( params_candidate.servi ) || _.isEmpty( params_candidate.servi ) ) {
-                          throw new Error( 'Visibilities : servi must be set as an array not empty.');
+                          api.errorLog( 'Visibilities : servi must be set as an array not empty.');
+                          return _ready_params;
                     }
 
                     _.each( self.defaultDominusParams , function( _value, _key ) {

@@ -13,6 +13,7 @@ $.extend( CZRSkopeBaseMths, {
     //In this case, the param SetId is not null
     bindAPISettings : function( requestedSetId ) {
           var self = this,
+              //This is fired after the WP Core callback : setting.bind( setting.preview );
               _settingChangeReact = function( new_val, old_val, o ) {
                     //"this" is the setting instance
                     var setId = this.id,
@@ -24,8 +25,8 @@ $.extend( CZRSkopeBaseMths, {
                       return;
 
                     if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
-                      api.errorLog( 'The api.czr_activeSkopeId() is undefined in the api.czr_skopeBase.bindAPISettings method.');
-                      //return;
+                          api.errorLog( 'The api.czr_activeSkopeId() is undefined in the api.czr_skopeBase.bindAPISettings method.');
+                          //return;
                     }
 
                     //For skope eligible settings : Update the skope dirties with the new val of this setId
@@ -35,21 +36,20 @@ $.extend( CZRSkopeBaseMths, {
                     //       return api.czr_skopeBase.getSkopeDirties( api.czr_skopeBase.getGlobalSkopeId(), options );
                     // };
                     if ( api( setId )._dirty ) {
-                          //api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, old_val + ' => ' +  new_val, o );
                           skope_id = self.isSettingSkopeEligible( setId ) ? api.czr_activeSkopeId() : self.getGlobalSkopeId();
                           api.czr_skope( skope_id ).updateSkopeDirties( setId, new_val );
                     }
 
                     //collapse any expanded reset modifications if the control is not currently being reset.
                     if ( _.has( api.control(setId), 'czr_states' ) && ! api.control(setId).czr_states( 'isResetting' )() ) {
-                          api.control(setId).czr_states( 'resetVisible' )( false );
+                          api.control( setId ).czr_states( 'resetVisible' )( false );
                     }
 
                     //Update the skope inheritance notice for the setting control
                     if ( self.isSettingSkopeEligible( setId ) ) {
                           self.updateCtrlSkpNot( setId );
                     }
-              };//bindListener()
+              };//_settingChangeReact()
 
           //if a setting Id is requested
           if ( ! _.isUndefined( requestedSetId ) ) {

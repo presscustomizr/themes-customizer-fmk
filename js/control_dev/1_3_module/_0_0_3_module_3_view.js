@@ -169,7 +169,9 @@ $.extend( CZRModuleMths, {
                                 }
 
                                 module.closeAllItems().closeRemoveDialogs();
-
+                                var refreshPreview = function() {
+                                      api.previewer.refresh();
+                                };
                                 //refreshes the preview frame  :
                                 //1) only needed if transport is postMessage, because is triggered by wp otherwise
                                 //2) only needed when : add, remove, sort item(s).

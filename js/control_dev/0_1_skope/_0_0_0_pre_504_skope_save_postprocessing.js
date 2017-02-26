@@ -79,6 +79,20 @@ $.extend( CZRSkopeSaveMths, {
 
             //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
             api.czr_skopeBase.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
+
+            //MAKE SURE TO COLLAPSE THE CONTROL NOTICES AFTER SAVED IF CURRENT SKOPE IS GLOBAL
+            var _setupSectionCtrlNotices = function() {
+                  var sectionCtrls = api.CZR_Helpers.getSectionControlIds( api.czr_activeSectionId() );
+                  _.each( sectionCtrls, function( ctrlId ) {
+                        if ( ! api.has( ctrlId ) || _.isUndefined( api.control( ctrlId ) ) )
+                          return;
+                        var ctrl = api.control( ctrlId );
+                        if ( ! _.has( ctrl, 'czr_states' ) )
+                          return;
+                        ctrl.czr_states( 'noticeVisible' )( api.czr_skopeBase.isCtrlNoticeVisible( ctrlId ) );
+                  });
+            };
+            //_.delay( _setupSectionCtrlNotices, 500 );
       }
 });//$.extend
 })( wp.customize , jQuery, _ );

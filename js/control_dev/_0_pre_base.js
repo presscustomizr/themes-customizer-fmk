@@ -22,7 +22,7 @@ var czr_debug = {
                 _truncate = function( string ){
                       if ( ! _.isString( string ) )
                         return '';
-                      return string.length > 80 ? string.substr( 0, 79 ) : string;
+                      return string.length > 150 ? string.substr( 0, 149 ) : string;
                 };
 
             //if the array to print is not composed exclusively of strings, then let's stringify it

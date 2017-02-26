@@ -54,7 +54,7 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
                 _truncate = function( string ){
                       if ( ! _.isString( string ) )
                         return '';
-                      return string.length > 80 ? string.substr( 0, 79 ) : string;
+                      return string.length > 150 ? string.substr( 0, 149 ) : string;
                 };
 
             //if the array to print is not composed exclusively of strings, then let's stringify it
@@ -1268,6 +1268,7 @@ $.extend( CZRSkopeBaseMths, {
     //In this case, the param SetId is not null
     bindAPISettings : function( requestedSetId ) {
           var self = this,
+              //This is fired after the WP Core callback : setting.bind( setting.preview );
               _settingChangeReact = function( new_val, old_val, o ) {
                     //"this" is the setting instance
                     var setId = this.id,
@@ -1279,8 +1280,8 @@ $.extend( CZRSkopeBaseMths, {
                       return;
 
                     if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
-                      api.errorLog( 'The api.czr_activeSkopeId() is undefined in the api.czr_skopeBase.bindAPISettings method.');
-                      //return;
+                          api.errorLog( 'The api.czr_activeSkopeId() is undefined in the api.czr_skopeBase.bindAPISettings method.');
+                          //return;
                     }
 
                     //For skope eligible settings : Update the skope dirties with the new val of this setId
@@ -1290,21 +1291,20 @@ $.extend( CZRSkopeBaseMths, {
                     //       return api.czr_skopeBase.getSkopeDirties( api.czr_skopeBase.getGlobalSkopeId(), options );
                     // };
                     if ( api( setId )._dirty ) {
-                          //api.consoleLog('ELIGIBLE SETTING HAS CHANGED', setId, old_val + ' => ' +  new_val, o );
                           skope_id = self.isSettingSkopeEligible( setId ) ? api.czr_activeSkopeId() : self.getGlobalSkopeId();
                           api.czr_skope( skope_id ).updateSkopeDirties( setId, new_val );
                     }
 
                     //collapse any expanded reset modifications if the control is not currently being reset.
                     if ( _.has( api.control(setId), 'czr_states' ) && ! api.control(setId).czr_states( 'isResetting' )() ) {
-                          api.control(setId).czr_states( 'resetVisible' )( false );
+                          api.control( setId ).czr_states( 'resetVisible' )( false );
                     }
 
                     //Update the skope inheritance notice for the setting control
                     if ( self.isSettingSkopeEligible( setId ) ) {
                           self.updateCtrlSkpNot( setId );
                     }
-              };//bindListener()
+              };//_settingChangeReact()
 
           //if a setting Id is requested
           if ( ! _.isUndefined( requestedSetId ) ) {
@@ -5032,6 +5032,21 @@ $.extend( CZRSkopeSaveMths, {
 
             //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
             api.czr_skopeBase.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
+
+            //MAKE SURE TO COLLAPSE THE CONTROL NOTICES AFTER SAVED IF CURRENT SKOPE IS GLOBAL
+            var _setupSectionCtrlNotices = function() {
+                  var sectionCtrls = api.CZR_Helpers.getSectionControlIds( api.czr_activeSectionId() );
+                  _.each( sectionCtrls, function( ctrlId ) {
+                        if ( ! api.has( ctrlId ) || _.isUndefined( api.control( ctrlId ) ) )
+                          return;
+                        var ctrl = api.control( ctrlId );
+                        if ( ! _.has( ctrl, 'czr_states' ) )
+                          return;
+                        console.log('api.czr_skopeBase.isCtrlNoticeVisible', ctrlId, api.czr_skopeBase.isCtrlNoticeVisible( ctrlId ) );
+                        ctrl.czr_states( 'noticeVisible' )( api.czr_skopeBase.isCtrlNoticeVisible( ctrlId ) );
+                  });
+            };
+            _.delay( _setupSectionCtrlNotices, 500 );
       }
 });//$.extend
 })( wp.customize , jQuery, _ );
@@ -6171,7 +6186,7 @@ $.extend( CZRSkopeMths, {
                   });
 
                   $.when.apply( null, _promises )
-                        .fail( function() { api.consoleLog( 'A deferred callback failed in api.Value::set()'); })
+                        .fail( function() { api.errorLog( 'A deferred callback failed in api.Value::set()'); })
                         .then( function() {
                               self.callbacks.fireWith( self, [ to, from, o ] );
                               dfd.resolveWith( self, [ to, from, o ] );
@@ -7142,10 +7157,12 @@ $.extend( CZRSkopeMths, {
             setting.notifications = new api.Values({ defaultConstructor: api.Notification });
 
             // Whenever the setting's value changes, refresh the preview.
+            setting.bind( setting.preview );
+
             // the deferred can be used in moduleCollectionReact to execute actions after the module has been set.
-            setting.bind( function( to, from , data ) {
-                  return setting.preview( to, from , data );
-            }, { deferred : true } );
+            // setting.bind( function( to, from , data ) {
+            //       return setting.preview( to, from , data );
+            // }, { deferred : true } );
       };
 
 
@@ -7366,10 +7383,10 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
       getSectionControlIds : function( section_id ) {
             section_id = section_id || api.czr_activeSectionId();
             return ! api.section.has( section_id ) ?
-            [] :
-            _.map( api.section( section_id ).controls(), function( _ctrl ) {
-                  return _ctrl.id;
-            });
+                  [] :
+                  _.map( api.section( section_id ).controls(), function( _ctrl ) {
+                        return _ctrl.id;
+                  });
       },
 
 
@@ -10610,7 +10627,9 @@ $.extend( CZRModuleMths, {
                                 }
 
                                 module.closeAllItems().closeRemoveDialogs();
-
+                                var refreshPreview = function() {
+                                      api.previewer.refresh();
+                                };
                                 //refreshes the preview frame  :
                                 //1) only needed if transport is postMessage, because is triggered by wp otherwise
                                 //2) only needed when : add, remove, sort item(s).
@@ -13087,9 +13106,9 @@ $.extend( CZRBaseModuleControlMths, {
               _.each( control.getSavedModules() , function( _mod, _key ) {
                       //a module previously embedded in a deleted sektion must not be registered
                       if ( ! sektion_module_instance.czr_Item.has( _mod.sektion_id ) ) {
-                          api.consoleLog('Warning Module ' + _mod.id + ' is orphan : it has no sektion to be embedded to. It Must be removed.');
-                          _orphan_mods.push(_mod);
-                          return;
+                            api.errorLog( 'Warning Module ' + _mod.id + ' is orphan : it has no sektion to be embedded to. It Must be removed.');
+                            _orphan_mods.push(_mod);
+                            return;
                       }
                       //@todo handle the case of a module embedded in a previously deleted column
                       //=> register it in the first column of the sektion ?
@@ -13097,7 +13116,7 @@ $.extend( CZRBaseModuleControlMths, {
                       var _sektion = sektion_module_instance.czr_Item( _mod.sektion_id );
 
                       if ( _.isUndefined( _sektion ) ) {
-                        throw new Error('sektion instance missing. Impossible to instantiate module : ' + _mod.id );
+                            throw new Error( 'sektion instance missing. Impossible to instantiate module : ' + _mod.id );
                       }
 
                       //add the sektion instance before update the api collection
@@ -13221,9 +13240,9 @@ $.extend( CZRBaseModuleControlMths, {
             else {
                   //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
                   //if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
-                  api(this.id)
-                        .set( control.filterModuleCollectionBeforeAjax( to ), data )
-                        .done( function( to, from, o ) {});
+                  api( this.id )
+                        .set( control.filterModuleCollectionBeforeAjax( to ), data );
+                        //.done( function( to, from, o ) {});
             }
       },
       /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14392,13 +14411,9 @@ $.extend( CZRLayoutSelectMths , {
                             return;
 
                           //Attempt to normalize the params
-                          try {
-                                params = self._prepareDominusParams( params );
-                          } catch( er ) {
-                                api.errorLog( 'prepareDominus Params error : ' + e );
-                                return;
-                          }
-
+                          params = self._prepareDominusParams( params );
+                          if ( _.isEmpty(params) )
+                            return;
 
                           self._processDominusCallbacks( params.dominus, params, refresh )
                                 .fail( function() {
@@ -14418,18 +14433,17 @@ $.extend( CZRLayoutSelectMths , {
                               var _dominiIds = [];
                               _.each( self.dominiDeps , function( params ) {
                                     if ( ! _.has( params, 'servi' ) || ! _.isArray( params.servi ) || ! _.has( params, 'dominus' ) || _.isEmpty( params.dominus ) ) {
-                                          throw new Error( 'Control Dependencies : wrong params in _getServusDomini.');
+                                          api.errorLog( 'Control Dependencies : wrong params in _getServusDomini.');
+                                          return;
                                     }
 
                                     if ( _.contains( params.servi , shortServudId ) && ! _.contains( _dominiIds , params.dominus ) ) {
                                           //Attempt to normalize the params
-                                          try {
-                                                params = self._prepareDominusParams( params );
-                                          } catch( e ) {
-                                                api.consoleLog( 'prepareDominus Params error : ' + e );
-                                                return;
-                                          }
-                                          _dominiIds.push( params.dominus );
+                                          params = self._prepareDominusParams( params );
+                                          if ( _.isEmpty(params) )
+                                            return;
+                                          else
+                                            _dominiIds.push( params.dominus );
                                     }
                               });
                               return ! _.isArray( _dominiIds ) ? [] : _dominiIds;
@@ -14669,20 +14683,25 @@ $.extend( CZRLayoutSelectMths , {
 
                     //Check mandatory conditions
                     if ( ! _.isObject( params_candidate ) ) {
-                        throw new Error('Visibilities : a dominus param definition must be an object.');
+                          api.errorLog( 'Visibilities : a dominus param definition must be an object.');
+                          return _ready_params;
                     }
                     if ( ! _.has( params_candidate, 'visibility' ) && ! _.has( params_candidate, 'actions' ) ) {
-                        throw new Error('Visibilities : a dominus definition must include a visibility or an actions callback.');
+                          api.errorLog( 'Visibilities : a dominus definition must include a visibility or an actions callback.');
+                          return _ready_params;
                     }
                     if ( ! _.has( params_candidate, 'dominus' ) || ! _.isString( params_candidate.dominus ) || _.isEmpty( params_candidate.dominus ) ) {
-                          throw new Error( 'Visibilities : a dominus control id must be a not empty string.');
+                          api.errorLog( 'Visibilities : a dominus control id must be a not empty string.');
+                          return _ready_params;
                     }
                     var wpDominusId = api.CZR_Helpers.build_setId( params_candidate.dominus );
                     if ( ! api.control.has( wpDominusId ) ) {
-                          throw new Error( 'Visibilities : a dominus control id is not registered : ' + wpDominusId );
+                          api.errorLog( 'Visibilities : a dominus control id is not registered : ' + wpDominusId );
+                          return _ready_params;
                     }
                     if ( ! _.has( params_candidate, 'servi' ) || _.isUndefined( params_candidate.servi ) || ! _.isArray( params_candidate.servi ) || _.isEmpty( params_candidate.servi ) ) {
-                          throw new Error( 'Visibilities : servi must be set as an array not empty.');
+                          api.errorLog( 'Visibilities : servi must be set as an array not empty.');
+                          return _ready_params;
                     }
 
                     _.each( self.defaultDominusParams , function( _value, _key ) {
