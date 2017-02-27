@@ -158,7 +158,7 @@ var czr_debug = {
                   api.section('themes').active.bind( function( active ) {
                         if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
                           return;
-                        api.section('themes').active(false);
+                        api.section('themes').active( serverControlParams.isThemeSwitchOn );
                         //reset the callbacks
                         api.section('themes').active.callbacks = $.Callbacks();
                   });

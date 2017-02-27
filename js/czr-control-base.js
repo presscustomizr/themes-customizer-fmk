@@ -136,7 +136,7 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
                   api.section('themes').active.bind( function( active ) {
                         if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
                           return;
-                        api.section('themes').active(false);
+                        api.section('themes').active( serverControlParams.isThemeSwitchOn );
                         api.section('themes').active.callbacks = $.Callbacks();
                   });
             };
@@ -3378,11 +3378,9 @@ $.extend( CZRSkopeSaveMths, {
                         var ctrl = api.control( ctrlId );
                         if ( ! _.has( ctrl, 'czr_states' ) )
                           return;
-                        console.log('api.czr_skopeBase.isCtrlNoticeVisible', ctrlId, api.czr_skopeBase.isCtrlNoticeVisible( ctrlId ) );
                         ctrl.czr_states( 'noticeVisible' )( api.czr_skopeBase.isCtrlNoticeVisible( ctrlId ) );
                   });
             };
-            _.delay( _setupSectionCtrlNotices, 500 );
       }
 });//$.extend
 })( wp.customize , jQuery, _ );
