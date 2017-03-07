@@ -93,7 +93,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
               //REACT ON ADD / REMOVE ITEMS
-              module.bind( 'item_added', function( model ) {
+              module.bind( 'item-added', function( model ) {
                       module.addWidgetSidebar( model );
               });
 

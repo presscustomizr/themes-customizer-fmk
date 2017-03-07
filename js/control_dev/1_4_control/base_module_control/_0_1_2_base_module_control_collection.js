@@ -49,6 +49,7 @@ $.extend( CZRBaseModuleControlMths, {
 
 
 
+      //@return void()
       //@param obj can be { collection : []}, or { module : {} }
       //Can be called :
       //1) for multimodule control, in register modules on init, when the main sektion module has synchronised with the module-collection control
@@ -88,7 +89,7 @@ $.extend( CZRBaseModuleControlMths, {
               }
               //the module has to be added
               else {
-                    _new_collection.push(module_api_ready);
+                    _new_collection.push( module_api_ready );
               }
 
               //WHAT ARE THE PARAMS WE WANT TO PASS TO THE NEXT ACTIONS
@@ -99,7 +100,6 @@ $.extend( CZRBaseModuleControlMths, {
                   _params = $.extend( true, {}, obj.data );
                   $.extend( _params, { module : module_api_ready } );
               }
-
               //Inform the collection
               control.czr_moduleCollection.set( _new_collection, _params );
       },
@@ -188,10 +188,10 @@ $.extend( CZRBaseModuleControlMths, {
                     return _filtered_collection;
               } else {
                     //at this point we should be in the case of a single module collection, typically use to populate a regular setting
-                    if ( _.size(collection) > 1 ) {
+                    if ( _.size( collection ) > 1 ) {
                       throw new Error('There should not be several modules in the collection of control : ' + control.id );
                     }
-                    if ( ! _.isArray(collection) || _.isEmpty(collection) || ! _.has( collection[0], 'items' ) ) {
+                    if ( ! _.isArray( collection ) || _.isEmpty( collection ) || ! _.has( collection[0], 'items' ) ) {
                       throw new Error('The setting value could not be populated in control : ' + control.id );
                     }
                     var module_id = collection[0].id;

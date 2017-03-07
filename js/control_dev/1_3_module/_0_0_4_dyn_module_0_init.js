@@ -19,7 +19,6 @@ $.extend( CZRDynModuleMths, {
 
               //EXTENDS THE DEFAULT MONO MODEL CONSTRUCTOR WITH NEW METHODS
               //=> like remove item
-              //=> like remove item
               //module.itemConstructor = api.CZRItem.extend( module.CZRItemDynamicMths || {} );
 
               //default success message when item added
@@ -130,7 +129,7 @@ $.extend( CZRDynModuleMths, {
                     module.toggleSuccessMessage('on');
                     collapsePreItem();
 
-                    module.trigger('item_added', item );
+                    module.trigger('item-added', item );
                     //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
 
                     //refresh the preview frame (only needed if transport is postMessage )

@@ -223,7 +223,7 @@ $.extend( CZRModuleMths, {
             //cb of : module.callbacks
             var module            = this,
                 control           = module.control,
-                isItemUpdate    = ( _.size(from.items) == _.size(to.items) ) && ! _.isEmpty( _.difference(to.items, from.items) ),
+                isItemUpdate    = ( _.size( from.items ) == _.size( to.items ) ) && ! _.isEmpty( _.difference( to.items, from.items ) ),
                 isColumnUpdate  = to.column_id != from.column_id,
                 refreshPreview    = function() {
                       module.control.previewer.refresh();
@@ -382,7 +382,7 @@ $.extend( CZRModuleMths, {
             module.control.previewer.send( 'czr_input', {
                   set_id        : api.CZR_Helpers.getControlSettingId( module.control.id ),
                   module_id     : module.id,//<= will allow us to target the right dom element on front end
-                  module        : { items : $.extend( true, {}, module().items) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
+                  module        : { items : $.extend( true, {}, module().items ) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
                   input_parent_id : args.input_parent_id,//<= can be the mod opt or the item
                   input_id      : args.input_id,
                   value         : args.to

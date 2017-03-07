@@ -48,8 +48,11 @@ $.extend( CZRItemMths , {
               module.itemCollection.set( _new_collection );
               //hook here
               module.trigger('pre_item_api_remove', item() );
+
+              var _item_ = $.extend( true, {}, item() );
               //remove the item from the collection
-              module.czr_Item.remove(item.id);
+              module.czr_Item.remove( item.id );
+              module.trigger( 'item-removed', _item_ );
       },
 
       //@return the item {...} from the collection

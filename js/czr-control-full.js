@@ -7965,6 +7965,14 @@ $.extend( CZRInputMths , {
                 });
           });
 
+          //Visibility
+          input.enabled = new api.Value( true );
+          input.isReady.done( function() {
+                input.enabled.bind( function( enabled ) {
+                      input.container.toggleClass( 'disabled', ! enabled );
+                });
+          });
+
     },
 
 
@@ -8008,46 +8016,51 @@ $.extend( CZRInputMths , {
 
 
 
+    //@return void()
     //react to a single input change
     //update the collection of input
     //cb of input.callbacks.add
     inputReact : function( to, from, data ) {
-            var input = this,
-                _current_input_parent = input.input_parent(),
-                _new_model        = _.clone( _current_input_parent ),//initialize it to the current value
-                _isPreItemInput = input.is_preItemInput;
+          var input = this,
+              _current_input_parent = input.input_parent(),
+              _new_model        = _.clone( _current_input_parent ),//initialize it to the current value
+              _isPreItemInput = input.is_preItemInput;
 
-            //make sure the _new_model is an object and is not empty
-            _new_model =  ( ! _.isObject(_new_model) || _.isEmpty(_new_model) ) ? {} : _new_model;
-            //set the new val to the changed property
-            _new_model[input.id] = to;
+          //is this input currently enabled ?
+          if ( ! input.enabled() )
+            return;
 
-            //inform the input_parent : item or modOpt
-            input.input_parent.set( _new_model, {
-                  input_changed     : input.id,
-                  input_transport   : input.transport,
-                  not_preview_sent  : 'postMessage' === input.transport//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
-            } );
+          //make sure the _new_model is an object and is not empty
+          _new_model =  ( ! _.isObject(_new_model) || _.isEmpty(_new_model) ) ? {} : _new_model;
+          //set the new val to the changed property
+          _new_model[ input.id ] = to;
 
-            //Trigger and send specific events when changing a published input item
-            if ( ! _isPreItemInput ) {
-                  //inform the input_parent that an input has changed
-                  //=> useful to handle dependant reactions between different inputs
-                  input.input_parent.trigger( input.id + ':changed', to );
+          //inform the input_parent : item or modOpt
+          input.input_parent.set( _new_model, {
+                input_changed     : input.id,
+                input_transport   : input.transport,
+                not_preview_sent  : 'postMessage' === input.transport//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
+          } );
 
-                  //Each input instantiated in an item or a modOpt can have a specific transport set.
-                  //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
-                  //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
-                  //send input to the preview. On update only, not on creation.
-                  if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
-                        input.module.sendInputToPreview( {
-                              input_id        : input.id,
-                              input_parent_id : input.input_parent.id,
-                              to              : to,
-                              from            : from
-                        } );
-                  }
-            }
+          //Trigger and send specific events when changing a published input item
+          if ( ! _isPreItemInput ) {
+                //inform the input_parent that an input has changed
+                //=> useful to handle dependant reactions between different inputs
+                input.input_parent.trigger( input.id + ':changed', to );
+
+                //Each input instantiated in an item or a modOpt can have a specific transport set.
+                //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
+                //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
+                //send input to the preview. On update only, not on creation.
+                if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
+                      input.module.sendInputToPreview( {
+                            input_id        : input.id,
+                            input_parent_id : input.input_parent.id,
+                            to              : to,
+                            from            : from
+                      } );
+                }
+          }
     },
 
 
@@ -8376,6 +8389,15 @@ $.extend( CZRInputMths , {
 //             taxonomy : '_none_' //<= won't load or search in taxonomies when requesting wp in ajax
 //       }
 // });
+//
+// input is an object structured this way
+// {
+//  id:"2838"
+//  object_type:"post"
+//  title:"The Importance of Water and Drinking Lots Of It"
+//  type_label:"Post"
+//  url:"http://customizr-dev.dev/?p=2838"
+// }
 var CZRInputMths = CZRInputMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRInputMths , {
@@ -8403,7 +8425,7 @@ $.extend( CZRInputMths , {
                           selector  : 'select[data-select-type]',
                           name      : 'set_input_value',
                           actions   : function( obj ){
-                                var $_changed_input   = $(obj.dom_event.currentTarget, obj.dom_el ),
+                                var $_changed_input   = $( obj.dom_event.currentTarget, obj.dom_el ),
                                     _raw_val          = $( $_changed_input, obj.dom_el ).select2( 'data' ),
                                     _val_candidate    = {},
                                     _default          = {
@@ -8416,7 +8438,7 @@ $.extend( CZRInputMths , {
 
                                 _raw_val = _.isArray( _raw_val ) ? _raw_val[0] : _raw_val;
                                 if ( ! _.isObject( _raw_val ) || _.isEmpty( _raw_val ) ) {
-                                    api.consoleLog( 'Content Picker Input : the picked value should be an object not empty.');
+                                    api.errorLog( 'Content Picker Input : the picked value should be an object not empty.');
                                     return;
                                 }
 
@@ -8425,7 +8447,7 @@ $.extend( CZRInputMths , {
                                 _.each( _default, function( val, k ){
                                       if ( '_custom_' !== _raw_val.id ) {
                                             if ( ! _.has( _raw_val, k ) || _.isEmpty( _raw_val[ k ] ) ) {
-                                                  api.consoleLog( 'content_picker : missing input param : ' + k );
+                                                  api.errorLog( 'content_picker : missing input param : ' + k );
                                                   return;
                                             }
                                       }
@@ -8438,13 +8460,36 @@ $.extend( CZRInputMths , {
               ];
 
               input.setupDOMListeners( _event_map , { dom_el : input.container }, input );
-              input.setupContentSelecter();
+              //setup when ready.
+              input.isReady.done( function() {
+                    input.setupContentSelecter();
+              });
+
       },
 
+
+      // input is an object structured this way
+      // {
+      //  id:"2838"
+      //  object_type:"post"
+      //  title:"The Importance of Water and Drinking Lots Of It"
+      //  type_label:"Post"
+      //  url:"http://customizr-dev.dev/?p=2838"
+      // }
       setupContentSelecter : function() {
               var input = this;
+              //set the previously selected value
+              if ( ! _.isEmpty( input() ) ) {
+                    var _attributes = {
+                          value : input().id || '',
+                          title : input().title || '',
+                          selected : "selected"
+                    };
+                    //input.container.find('select')
+                    input.container.find('select').append( $( '<option>', _attributes ) );
+              }
 
-              input.container.find('select').select2( {
+              input.container.find( 'select' ).select2( {
                     placeholder: {
                           id: '-1', // the value of the option
                           title: 'Select'
@@ -8459,7 +8504,7 @@ $.extend( CZRInputMths , {
                           debug: true,
                           data: function ( params ) {
                                 //for some reason I'm not getting at the moment the params.page returned when searching is different
-                                var page = params.page ? params.page - 1 : 0;
+                                var page = params.page ? params.page : 0;
                                 page = params.term ? params.page : page;
                                 return {
                                       action          : params.term ? "search-available-content-items-customizer" : "load-available-content-items-customizer",
@@ -8485,8 +8530,9 @@ $.extend( CZRInputMths , {
                                 if ( ! data.success )
                                   return { results: input.defaultContentPickerOption };
 
+
                                 var items   = data.data.items,
-                                    _results = _.clone( input.defaultContentPickerOption );
+                                    _results = [];
 
                                 _.each( items, function( item ) {
                                       _results.push({
@@ -8500,25 +8546,32 @@ $.extend( CZRInputMths , {
                                 return {
                                       results: _results,
                                       //The pagination param will trigger the infinite load
-                                      pagination: { more: data.data.items.length == 10 }
+                                      pagination: { more: data.data.items.length >= 10 }//<= the pagination boolean param can be tricky => here set to >= 10 because we query 10 + add a custom link item on the first query
                                 };
                           },
                     },//ajax
                     templateSelection: input.czrFormatContentSelected,
                     templateResult: input.czrFormatContentSelected,
-                    escapeMarkup: function (markup) { return markup; },
+                    escapeMarkup: function ( markup ) { return markup; },
              });//select2 setup
       },
 
-
-      czrFormatContentSelected: function (item) {
+      // item is structured this way :
+      // {
+      // id          : item.id,
+      // title       : item.title,
+      // type_label  : item.type_label,
+      // object_type : item.object,
+      // url         : item.url
+      // }
+      czrFormatContentSelected: function ( item ) {
               if ( item.loading ) return item.text;
               var markup = "<div class='content-picker-item clearfix'>" +
                 "<div class='content-item-bar'>" +
-                  "<span class='item-title'>" + item.title + "</span>";
+                  "<span class='czr-picker-item-title'>" + item.title + "</span>";
 
               if ( item.type_label ) {
-                markup += "<span class='item-type'>" + item.type_label + "</span>";
+                markup += "<span class='czr-picker-item-type'>" + item.type_label + "</span>";
               }
 
               markup += "</div></div>";
@@ -9046,8 +9099,11 @@ $.extend( CZRItemMths , {
               module.itemCollection.set( _new_collection );
               //hook here
               module.trigger('pre_item_api_remove', item() );
+
+              var _item_ = $.extend( true, {}, item() );
               //remove the item from the collection
-              module.czr_Item.remove(item.id);
+              module.czr_Item.remove( item.id );
+              module.trigger( 'item-removed', _item_ );
       },
 
       //@return the item {...} from the collection
@@ -9305,7 +9361,7 @@ $.extend( CZRItemMths , {
                 _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
 
             _title = api.CZR_Helpers.truncate( _title, 20 );
-            $( '.' + module.control.css_attr.item_title , item.container ).text(_title );
+            $( '.' + module.control.css_attr.item_title , item.container ).text( _title );
             //add a hook here
             api.CZR_Helpers.doActions('after_writeViewTitle', item.container , _model, item );
       },
@@ -9431,8 +9487,8 @@ $.extend( CZRModOptMths , {
             //MOD OPT VISIBLE REACT
             api.czr_ModOptVisible.bind( function( visible ) {
                   if ( visible ) {
-                        //first close all opened remove dialogs
-                        modOpt.module.closeRemoveDialogs();
+                        //first close all opened remove dialogs and opened items
+                        modOpt.module.closeRemoveDialogs().closeAllItems();
 
                         modOpt.modOptWrapperViewSetup( _initial_model ).done( function( $_container ) {
                               modOpt.container = $_container;
@@ -9860,7 +9916,7 @@ $.extend( CZRModuleMths, {
             //cb of : module.callbacks
             var module            = this,
                 control           = module.control,
-                isItemUpdate    = ( _.size(from.items) == _.size(to.items) ) && ! _.isEmpty( _.difference(to.items, from.items) ),
+                isItemUpdate    = ( _.size( from.items ) == _.size( to.items ) ) && ! _.isEmpty( _.difference( to.items, from.items ) ),
                 isColumnUpdate  = to.column_id != from.column_id,
                 refreshPreview    = function() {
                       module.control.previewer.refresh();
@@ -10019,7 +10075,7 @@ $.extend( CZRModuleMths, {
             module.control.previewer.send( 'czr_input', {
                   set_id        : api.CZR_Helpers.getControlSettingId( module.control.id ),
                   module_id     : module.id,//<= will allow us to target the right dom element on front end
-                  module        : { items : $.extend( true, {}, module().items) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
+                  module        : { items : $.extend( true, {}, module().items ) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
                   input_parent_id : args.input_parent_id,//<= can be the mod opt or the item
                   input_id      : args.input_id,
                   value         : args.to
@@ -10736,7 +10792,6 @@ $.extend( CZRDynModuleMths, {
 
               //EXTENDS THE DEFAULT MONO MODEL CONSTRUCTOR WITH NEW METHODS
               //=> like remove item
-              //=> like remove item
               //module.itemConstructor = api.CZRItem.extend( module.CZRItemDynamicMths || {} );
 
               //default success message when item added
@@ -10847,7 +10902,7 @@ $.extend( CZRDynModuleMths, {
                     module.toggleSuccessMessage('on');
                     collapsePreItem();
 
-                    module.trigger('item_added', item );
+                    module.trigger('item-added', item );
                     //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
 
                     //refresh the preview frame (only needed if transport is postMessage )
@@ -11257,7 +11312,7 @@ $.extend( CZRSocialModuleMths, {
                         socialList   = module.social_icons,
                         _model       = item(),
                         //check if we are in the pre Item case => if so, the id is empty
-                        is_preItem   = _.isEmpty(_model.id);
+                        is_preItem   = _.isEmpty( _model.id );
 
                     //=> add the select text in the pre Item case
                     if ( is_preItem ) {
@@ -11470,7 +11525,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
               //REACT ON ADD / REMOVE ITEMS
-              module.bind( 'item_added', function( model ) {
+              module.bind( 'item-added', function( model ) {
                       module.addWidgetSidebar( model );
               });
 
@@ -13138,6 +13193,7 @@ $.extend( CZRBaseModuleControlMths, {
 
 
 
+      //@return void()
       //@param obj can be { collection : []}, or { module : {} }
       //Can be called :
       //1) for multimodule control, in register modules on init, when the main sektion module has synchronised with the module-collection control
@@ -13177,7 +13233,7 @@ $.extend( CZRBaseModuleControlMths, {
               }
               //the module has to be added
               else {
-                    _new_collection.push(module_api_ready);
+                    _new_collection.push( module_api_ready );
               }
 
               //WHAT ARE THE PARAMS WE WANT TO PASS TO THE NEXT ACTIONS
@@ -13188,7 +13244,6 @@ $.extend( CZRBaseModuleControlMths, {
                   _params = $.extend( true, {}, obj.data );
                   $.extend( _params, { module : module_api_ready } );
               }
-
               //Inform the collection
               control.czr_moduleCollection.set( _new_collection, _params );
       },
@@ -13277,10 +13332,10 @@ $.extend( CZRBaseModuleControlMths, {
                     return _filtered_collection;
               } else {
                     //at this point we should be in the case of a single module collection, typically use to populate a regular setting
-                    if ( _.size(collection) > 1 ) {
+                    if ( _.size( collection ) > 1 ) {
                       throw new Error('There should not be several modules in the collection of control : ' + control.id );
                     }
-                    if ( ! _.isArray(collection) || _.isEmpty(collection) || ! _.has( collection[0], 'items' ) ) {
+                    if ( ! _.isArray( collection ) || _.isEmpty( collection ) || ! _.has( collection[0], 'items' ) ) {
                       throw new Error('The setting value could not be populated in control : ' + control.id );
                     }
                     var module_id = collection[0].id;
@@ -15316,12 +15371,17 @@ $.extend( CZRSlideModuleMths, {
 
             });
 
-            //Always write the title on item collection sorted
-            module.bind('item-collection-sorted', function() {
+            //REFRESH ITEM TITLES
+            var _refreshItemsTitles = function() {
                   module.czr_Item.each( function( _itm_ ){
                         _itm_.writeItemViewTitle();
                   });
-            });
+            };
+            //Always write the title on :
+            //- item collection sorted
+            //- on item removed
+            module.bind( 'item-collection-sorted', _refreshItemsTitles );
+            module.bind( 'item-removed', _refreshItemsTitles );
       },//initialize
 
       //Overrides the default method.
@@ -15374,6 +15434,7 @@ $.extend( CZRSlideModuleMths, {
       _getServerDefaultSlideItem : function() {
 
       },
+
 
       ///////////////////////////////////////////////////////////////////
       /// MODULE SPECIFIC INPUTS METHOD USED FOR BOTH ITEMS AND MOD OPTS
@@ -15503,6 +15564,22 @@ $.extend( CZRSlideModuleMths, {
 
 
       CZRSliderModOptInputCtor : {
+            ready : function() {
+                  var input = this;
+                  //add the custom link option to the content picker
+                  if ( 'fixed-link' == input.id ) {
+                        input.defaultContentPickerOption = [{
+                              id          : '_custom_',
+                              title       : [ '<span style="font-weight:bold">' , serverControlParams.i18n.mods.slider['Set a custom url'], '</span>' ].join(''),
+                              type_label  : '',
+                              object_type : '',
+                              url         : ''
+                        }];
+                  }
+
+                  api.CZRInput.prototype.ready.call( input);
+            },
+
             //overrides the default method
             setupSelect : function() {
                   return this.module.slideModSetupSelect.call( this );
@@ -15522,31 +15599,105 @@ $.extend( CZRSlideModuleMths, {
               //overrides the parent ready
               ready : function() {
                     var item = this;
-                    //wait for the input collection to be populated, and then set the input visibility dependencies
+                    //wait for the input collection to be populated,
+                    //and then set the input visibility dependencies
                     item.inputCollection.bind( function( col ) {
                           if( _.isEmpty( col ) )
                             return;
-                          item.setInputVisibilityDeps();
+                          try { item.setInputVisibilityDeps(); } catch( er ) {
+                                api.errorLog( 'item.setInputVisibilityDeps() : ' + er );
+                          }
+
+                          //typically, hides the caption content input if user has selected a fixed content in the mod opts
+                          item.setModOptDependantsVisibilities();
                     });
+
                     //fire the parent
                     api.CZRItem.prototype.ready.call( item );
               },
+
+
+              //////////////////////////////FIXED CONTENT DEPENDENCIES //////////////////
+              ///////////////////////////////////////////////////////////////////////////
+              //@return void()
+              //Fired when module is ready
+              setModOptDependantsVisibilities : function() {
+                    var item = this,
+                        module = item.module,
+                        _dependants = [ 'slide-title', 'slide-subtitle', 'slide-cta', 'slide-link', 'slide-custom-link' ],
+                        modOptModel = module.czr_ModOpt();
+
+                    _.each( _dependants, function( _inpt_id ) {
+                          if ( ! item.czr_Input.has( _inpt_id ) )
+                            return;
+                          var _input_ = item.czr_Input( _inpt_id );
+
+                          //Fire on init
+                          _input_.enabled( ! module._isChecked( modOptModel['fixed-content'] ) );
+                    });
+
+                    if ( module._isChecked( modOptModel['fixed-content'] ) ) {
+                          //add a DOM listeners
+                          api.CZR_Helpers.setupDOMListeners(
+                                [     //toggle mod options
+                                      {
+                                            trigger   : 'click keydown',
+                                            selector  : '.open-mod-option',
+                                            name      : 'toggle_mod_option',
+                                            //=> open the module option and focus on the caption content tab
+                                            actions   : function() {
+                                                  api.czr_ModOptVisible( ! api.czr_ModOptVisible() ).done( function() {
+                                                        setTimeout( function() {
+                                                              if ( _.isNull(  module.czr_ModOpt.container ) || ! module.czr_ModOpt.container.find('[data-tab-id="section-topline-2"] a').length )
+                                                                return;
+                                                              module.czr_ModOpt.container.find('[data-tab-id="section-topline-2"] a').trigger('click');
+                                                        }, 200 );
+                                                  });
+                                            }
+                                      }
+                                ],//actions to execute
+                                { model : item(), dom_el : item.container },//model + dom scope
+                                item //instance where to look for the cb methods
+                          );
+
+                          var _html_ = [
+                              '<strong>',
+                              'The caption content is currently set in',
+                              '<a href="javascript:void(0)" class="open-mod-option">' + 'the general options' + '</a>',
+                              '</strong>'
+                          ].join(' ') + '.';
+
+                          item.czr_Input('slide-title').container.prepend( $('<p/>', { html : _html_, class : 'czr-fixed-content-notice' } ) );
+                    } else {
+                          var $_notice = item.container.find('.czr-fixed-content-notice');
+                          if ( false !== $_notice.length ) {
+                                $_notice.remove();
+                          }
+                    }
+
+              },
+
+              //@params : { before : 'slide-title' }
+              toggleDisabledNotice : function( params ) {
+                    var item = this;
+                    params = _.extend( { before : 'slide-title' }, params );
+
+              },
+              ////////////////////////////// END OF FIXED CONTENT DEPENDENCIES //////////////////
+              ///////////////////////////////////////////////////////////////////////////
+
+
 
               //Fired when the input collection is populated
               //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
               setInputVisibilityDeps : function() {
                     var item = this,
-                        //the slide-link value is an object which has always an id (post id) + other properties like title
-                        _isCustomLink = function( input_val ) {
-                              return _.isObject( input_val ) && '_custom_' === input_val.id;
-                        },
-                        _isChecked = function( v ) {
-                              return 0 !== v && '0' !== v && false !== v && 'off' !== v;
-                        },
+                        module = item.module,
                         _isCustom = function( val ) {
                               return 'custom' == val;
                         };
 
+                    //Internal item dependencies
                     item.czr_Input.each( function( input ) {
                           switch( input.id ) {
                                 // case 'slide-title' :
@@ -15562,50 +15713,50 @@ $.extend( CZRSlideModuleMths, {
                                 case 'slide-cta' :
                                       //Fire on init
                                       item.czr_Input('slide-link').visible( ! _.isEmpty( input() ) );
-                                      item.czr_Input('slide-custom-link').visible( ! _.isEmpty( input() ) && _isCustomLink( item.czr_Input('slide-link')() ) );
+                                      item.czr_Input('slide-custom-link').visible( ! _.isEmpty( input() ) && module._isCustomLink( item.czr_Input('slide-link')() ) );
 
                                       //React on change
                                       input.bind( function( to ) {
                                             item.czr_Input('slide-link').visible( ! _.isEmpty( to ) );
-                                            item.czr_Input('slide-custom-link').visible( ! _.isEmpty( to ) && _isCustomLink( item.czr_Input('slide-link')() ) );
+                                            item.czr_Input('slide-custom-link').visible( ! _.isEmpty( to ) && module._isCustomLink( item.czr_Input('slide-link')() ) );
                                       });
                                 break;
 
                                 //the slide-link value is an object which has always an id (post id) + other properties like title
                                 case 'slide-link' :
                                       //Fire on init
-                                      item.czr_Input('slide-custom-link').visible( _isCustomLink( input() ) );
+                                      item.czr_Input('slide-custom-link').visible( module._isCustomLink( input() ) );
                                       //React on change
                                       input.bind( function( to ) {
-                                            item.czr_Input('slide-custom-link').visible( _isCustomLink( to ) );
+                                            item.czr_Input('slide-custom-link').visible( module._isCustomLink( to ) );
                                       });
                                 break;
 
                                 case 'slide-use-custom-skin' :
                                       //Fire on init
-                                      item.czr_Input('slide-skin').visible( _isChecked( input() ) );
-                                      item.czr_Input('slide-skin-color').visible( _isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
-                                      item.czr_Input('slide-opacity').visible( _isChecked( input() ) );
-                                      item.czr_Input('slide-text-color').visible( _isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                      item.czr_Input('slide-skin').visible( module._isChecked( input() ) );
+                                      item.czr_Input('slide-skin-color').visible( module._isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                      item.czr_Input('slide-opacity').visible( module._isChecked( input() ) );
+                                      item.czr_Input('slide-text-color').visible( module._isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
 
                                       //React on change
                                       input.bind( function( to ) {
-                                            item.czr_Input('slide-skin').visible( _isChecked( to ) );
-                                            item.czr_Input('slide-skin-color').visible( _isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
-                                            item.czr_Input('slide-opacity').visible( _isChecked( to ) );
-                                            item.czr_Input('slide-text-color').visible( _isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                            item.czr_Input('slide-skin').visible( module._isChecked( to ) );
+                                            item.czr_Input('slide-skin-color').visible( module._isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                            item.czr_Input('slide-opacity').visible( module._isChecked( to ) );
+                                            item.czr_Input('slide-text-color').visible( module._isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
                                       });
                                 break;
 
                                 case 'slide-skin' :
                                       //Fire on init
-                                      item.czr_Input('slide-skin-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
-                                      item.czr_Input('slide-text-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+                                      item.czr_Input('slide-skin-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+                                      item.czr_Input('slide-text-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
 
                                       //React on change
                                       input.bind( function( to ) {
-                                            item.czr_Input('slide-skin-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
-                                            item.czr_Input('slide-text-color').visible( _isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                            item.czr_Input('slide-skin-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                            item.czr_Input('slide-text-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
                                       });
                                 break;
                           }
@@ -15719,13 +15870,20 @@ $.extend( CZRSlideModuleMths, {
 
       CZRSliderModOptCtor : {
             ready: function() {
-                  var modOpt = this;
+                  var modOpt = this,
+                      module = modOpt.module;
+
                   //wait for the input collection to be populated, and then set the input visibility dependencies
                   modOpt.inputCollection.bind( function( col ) {
                         if( _.isEmpty( col ) )
                           return;
-                        modOpt.setModOptInputVisibilityDeps();
+                        try {
+                              modOpt.setModOptInputVisibilityDeps();
+                        } catch( er ) {
+                              api.errorLog( 'setModOptInputVisibilityDeps : ' + er );
+                        }
                   });
+
                   //fire the parent
                   api.CZRModOpt.prototype.ready.call( modOpt );
             },
@@ -15735,23 +15893,11 @@ $.extend( CZRSlideModuleMths, {
             //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
             setModOptInputVisibilityDeps : function() {
                   var modOpt = this,
-                      _isChecked = function( v ) {
-                            return 0 !== v && '0' !== v && false !== v && 'off' !== v;
-                      };
+                      module = modOpt.module;
 
                   modOpt.czr_Input.each( function( input ) {
                         switch( input.id ) {
-                              case 'autoplay' :
-                                    //Fire on init
-                                    modOpt.czr_Input('slider-speed').visible( _isChecked( input() ) );
-                                    modOpt.czr_Input('pause-on-hover').visible( _isChecked( input() ) );
-
-                                    //React on change
-                                    input.bind( function( to ) {
-                                          modOpt.czr_Input('slider-speed').visible( _isChecked( to ) );
-                                          modOpt.czr_Input('pause-on-hover').visible( _isChecked( to ) );
-                                    });
-                              break;
+                              //DESIGN
                               case 'skin' :
                                     var _isCustom = function( val ) {
                                           return 'custom' == val;
@@ -15767,9 +15913,94 @@ $.extend( CZRSlideModuleMths, {
                                           modOpt.czr_Input('text-custom-color').visible( _isCustom( to ) );
                                     });
                               break;
+
+                              //CONTENT
+                              case 'fixed-content' :
+                                    var _modOptsDependants = [ 'fixed-title','fixed-subtitle','fixed-cta','fixed-link', 'fixed-custom-link'];
+
+                                    //MOD OPTS
+                                    _.each( _modOptsDependants, function( _inpt_id ) {
+                                          //Fire on init
+                                          modOpt.czr_Input( _inpt_id ).visible( module._isChecked( input() ) );
+                                    });
+
+                                    //React on change
+                                    input.bind( function( to ) {
+                                          _.each( _modOptsDependants, function( _inpt_id ) {
+                                                modOpt.czr_Input( _inpt_id ).visible( module._isChecked( to ) );
+                                          });
+                                    });
+                              break;
+                              case 'fixed-cta' :
+                                      //Fire on init
+                                      modOpt.czr_Input('fixed-link').visible(
+                                            ! _.isEmpty( input() ) &&
+                                            module._isChecked( modOpt.czr_Input('fixed-content')() )
+                                      );
+                                      modOpt.czr_Input('fixed-custom-link').visible(
+                                            ! _.isEmpty( input() ) &&
+                                            module._isChecked( modOpt.czr_Input('fixed-content')() )
+                                      );
+
+                                      //React on change
+                                      input.bind( function( to ) {
+                                            modOpt.czr_Input('fixed-link').visible(
+                                                  ! _.isEmpty( to ) &&
+                                                  module._isChecked( modOpt.czr_Input('fixed-content')() )
+                                            );
+                                            modOpt.czr_Input('fixed-custom-link').visible(
+                                                  ! _.isEmpty( to ) &&
+                                                  module._isChecked( modOpt.czr_Input('fixed-content')() )
+                                            );
+                                      });
+                                break;
+
+                                //the slide-link value is an object which has always an id (post id) + other properties like title
+                                case 'fixed-link' :
+                                      //Fire on init
+                                      modOpt.czr_Input('fixed-custom-link').visible( module._isCustomLink( input() ) && module._isChecked( modOpt.czr_Input('fixed-content')() ) );
+                                      //React on change
+                                      input.bind( function( to ) {
+                                            modOpt.czr_Input('fixed-custom-link').visible( module._isCustomLink( to ) && module._isChecked( modOpt.czr_Input('fixed-content')() ) );
+                                      });
+                                break;
+
+                              //EFFECTS AND PERFORMANCES
+                              case 'autoplay' :
+                                    //Fire on init
+                                    modOpt.czr_Input('slider-speed').visible( module._isChecked( input() ) );
+                                    modOpt.czr_Input('pause-on-hover').visible( module._isChecked( input() ) );
+
+                                    //React on change
+                                    input.bind( function( to ) {
+                                          modOpt.czr_Input('slider-speed').visible( module._isChecked( to ) );
+                                          modOpt.czr_Input('pause-on-hover').visible( module._isChecked( to ) );
+                                    });
+                              break;
+                              case 'parallax' :
+                                    //Fire on init
+                                    modOpt.czr_Input('parallax-speed').visible( module._isChecked( input() ) );
+
+                                    //React on change
+                                    input.bind( function( to ) {
+                                          modOpt.czr_Input('parallax-speed').visible( module._isChecked( to ) );
+                                    });
+                              break;
+
                         }
                   });
-            }
+            },
+      },//CZRSliderModOptCtor
+
+      //////////////////////////////////////////
+      /// MODULE HELPERS
+      //the slide-link value is an object which has always an id (post id) + other properties like title
+      _isCustomLink : function( input_val ) {
+            return _.isObject( input_val ) && '_custom_' === input_val.id;
+      },
+
+      _isChecked : function( v ) {
+            return 0 !== v && '0' !== v && false !== v && 'off' !== v;
       }
 });//extend
 })( wp.customize , jQuery, _ );//extends api.CZRDynModule

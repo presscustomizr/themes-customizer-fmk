@@ -84,6 +84,14 @@ $.extend( CZRInputMths , {
                 });
           });
 
+          //Visibility
+          input.enabled = new api.Value( true );
+          input.isReady.done( function() {
+                input.enabled.bind( function( enabled ) {
+                      input.container.toggleClass( 'disabled', ! enabled );
+                });
+          });
+
     },
 
 
@@ -127,46 +135,51 @@ $.extend( CZRInputMths , {
 
 
 
+    //@return void()
     //react to a single input change
     //update the collection of input
     //cb of input.callbacks.add
     inputReact : function( to, from, data ) {
-            var input = this,
-                _current_input_parent = input.input_parent(),
-                _new_model        = _.clone( _current_input_parent ),//initialize it to the current value
-                _isPreItemInput = input.is_preItemInput;
+          var input = this,
+              _current_input_parent = input.input_parent(),
+              _new_model        = _.clone( _current_input_parent ),//initialize it to the current value
+              _isPreItemInput = input.is_preItemInput;
 
-            //make sure the _new_model is an object and is not empty
-            _new_model =  ( ! _.isObject(_new_model) || _.isEmpty(_new_model) ) ? {} : _new_model;
-            //set the new val to the changed property
-            _new_model[input.id] = to;
+          //is this input currently enabled ?
+          if ( ! input.enabled() )
+            return;
 
-            //inform the input_parent : item or modOpt
-            input.input_parent.set( _new_model, {
-                  input_changed     : input.id,
-                  input_transport   : input.transport,
-                  not_preview_sent  : 'postMessage' === input.transport//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
-            } );
+          //make sure the _new_model is an object and is not empty
+          _new_model =  ( ! _.isObject(_new_model) || _.isEmpty(_new_model) ) ? {} : _new_model;
+          //set the new val to the changed property
+          _new_model[ input.id ] = to;
 
-            //Trigger and send specific events when changing a published input item
-            if ( ! _isPreItemInput ) {
-                  //inform the input_parent that an input has changed
-                  //=> useful to handle dependant reactions between different inputs
-                  input.input_parent.trigger( input.id + ':changed', to );
+          //inform the input_parent : item or modOpt
+          input.input_parent.set( _new_model, {
+                input_changed     : input.id,
+                input_transport   : input.transport,
+                not_preview_sent  : 'postMessage' === input.transport//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
+          } );
 
-                  //Each input instantiated in an item or a modOpt can have a specific transport set.
-                  //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
-                  //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
-                  //send input to the preview. On update only, not on creation.
-                  if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
-                        input.module.sendInputToPreview( {
-                              input_id        : input.id,
-                              input_parent_id : input.input_parent.id,
-                              to              : to,
-                              from            : from
-                        } );
-                  }
-            }
+          //Trigger and send specific events when changing a published input item
+          if ( ! _isPreItemInput ) {
+                //inform the input_parent that an input has changed
+                //=> useful to handle dependant reactions between different inputs
+                input.input_parent.trigger( input.id + ':changed', to );
+
+                //Each input instantiated in an item or a modOpt can have a specific transport set.
+                //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
+                //=> this is optional, if not set, then the transport will be inherited from the one of the module, which is inherited from the control.
+                //send input to the preview. On update only, not on creation.
+                if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
+                      input.module.sendInputToPreview( {
+                            input_id        : input.id,
+                            input_parent_id : input.input_parent.id,
+                            to              : to,
+                            from            : from
+                      } );
+                }
+          }
     },
 
 

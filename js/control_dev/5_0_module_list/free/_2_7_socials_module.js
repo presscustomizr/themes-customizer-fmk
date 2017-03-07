@@ -277,7 +277,7 @@ $.extend( CZRSocialModuleMths, {
                         socialList   = module.social_icons,
                         _model       = item(),
                         //check if we are in the pre Item case => if so, the id is empty
-                        is_preItem   = _.isEmpty(_model.id);
+                        is_preItem   = _.isEmpty( _model.id );
 
                     //=> add the select text in the pre Item case
                     if ( is_preItem ) {

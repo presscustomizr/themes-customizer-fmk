@@ -20,6 +20,15 @@
 //             taxonomy : '_none_' //<= won't load or search in taxonomies when requesting wp in ajax
 //       }
 // });
+//
+// input is an object structured this way
+// {
+//  id:"2838"
+//  object_type:"post"
+//  title:"The Importance of Water and Drinking Lots Of It"
+//  type_label:"Post"
+//  url:"http://customizr-dev.dev/?p=2838"
+// }
 var CZRInputMths = CZRInputMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRInputMths , {
@@ -47,7 +56,7 @@ $.extend( CZRInputMths , {
                           selector  : 'select[data-select-type]',
                           name      : 'set_input_value',
                           actions   : function( obj ){
-                                var $_changed_input   = $(obj.dom_event.currentTarget, obj.dom_el ),
+                                var $_changed_input   = $( obj.dom_event.currentTarget, obj.dom_el ),
                                     _raw_val          = $( $_changed_input, obj.dom_el ).select2( 'data' ),
                                     _val_candidate    = {},
                                     _default          = {
@@ -60,7 +69,7 @@ $.extend( CZRInputMths , {
 
                                 _raw_val = _.isArray( _raw_val ) ? _raw_val[0] : _raw_val;
                                 if ( ! _.isObject( _raw_val ) || _.isEmpty( _raw_val ) ) {
-                                    api.consoleLog( 'Content Picker Input : the picked value should be an object not empty.');
+                                    api.errorLog( 'Content Picker Input : the picked value should be an object not empty.');
                                     return;
                                 }
 
@@ -69,7 +78,7 @@ $.extend( CZRInputMths , {
                                 _.each( _default, function( val, k ){
                                       if ( '_custom_' !== _raw_val.id ) {
                                             if ( ! _.has( _raw_val, k ) || _.isEmpty( _raw_val[ k ] ) ) {
-                                                  api.consoleLog( 'content_picker : missing input param : ' + k );
+                                                  api.errorLog( 'content_picker : missing input param : ' + k );
                                                   return;
                                             }
                                       }
@@ -82,13 +91,36 @@ $.extend( CZRInputMths , {
               ];
 
               input.setupDOMListeners( _event_map , { dom_el : input.container }, input );
-              input.setupContentSelecter();
+              //setup when ready.
+              input.isReady.done( function() {
+                    input.setupContentSelecter();
+              });
+
       },
 
+
+      // input is an object structured this way
+      // {
+      //  id:"2838"
+      //  object_type:"post"
+      //  title:"The Importance of Water and Drinking Lots Of It"
+      //  type_label:"Post"
+      //  url:"http://customizr-dev.dev/?p=2838"
+      // }
       setupContentSelecter : function() {
               var input = this;
+              //set the previously selected value
+              if ( ! _.isEmpty( input() ) ) {
+                    var _attributes = {
+                          value : input().id || '',
+                          title : input().title || '',
+                          selected : "selected"
+                    };
+                    //input.container.find('select')
+                    input.container.find('select').append( $( '<option>', _attributes ) );
+              }
 
-              input.container.find('select').select2( {
+              input.container.find( 'select' ).select2( {
                     placeholder: {
                           id: '-1', // the value of the option
                           title: 'Select'
@@ -103,7 +135,7 @@ $.extend( CZRInputMths , {
                           debug: true,
                           data: function ( params ) {
                                 //for some reason I'm not getting at the moment the params.page returned when searching is different
-                                var page = params.page ? params.page - 1 : 0;
+                                var page = params.page ? params.page : 0;
                                 page = params.term ? params.page : page;
                                 return {
                                       action          : params.term ? "search-available-content-items-customizer" : "load-available-content-items-customizer",
@@ -129,8 +161,9 @@ $.extend( CZRInputMths , {
                                 if ( ! data.success )
                                   return { results: input.defaultContentPickerOption };
 
+
                                 var items   = data.data.items,
-                                    _results = _.clone( input.defaultContentPickerOption );
+                                    _results = [];
 
                                 _.each( items, function( item ) {
                                       _results.push({
@@ -144,25 +177,32 @@ $.extend( CZRInputMths , {
                                 return {
                                       results: _results,
                                       //The pagination param will trigger the infinite load
-                                      pagination: { more: data.data.items.length == 10 }
+                                      pagination: { more: data.data.items.length >= 10 }//<= the pagination boolean param can be tricky => here set to >= 10 because we query 10 + add a custom link item on the first query
                                 };
                           },
                     },//ajax
                     templateSelection: input.czrFormatContentSelected,
                     templateResult: input.czrFormatContentSelected,
-                    escapeMarkup: function (markup) { return markup; },
+                    escapeMarkup: function ( markup ) { return markup; },
              });//select2 setup
       },
 
-
-      czrFormatContentSelected: function (item) {
+      // item is structured this way :
+      // {
+      // id          : item.id,
+      // title       : item.title,
+      // type_label  : item.type_label,
+      // object_type : item.object,
+      // url         : item.url
+      // }
+      czrFormatContentSelected: function ( item ) {
               if ( item.loading ) return item.text;
               var markup = "<div class='content-picker-item clearfix'>" +
                 "<div class='content-item-bar'>" +
-                  "<span class='item-title'>" + item.title + "</span>";
+                  "<span class='czr-picker-item-title'>" + item.title + "</span>";
 
               if ( item.type_label ) {
-                markup += "<span class='item-type'>" + item.type_label + "</span>";
+                markup += "<span class='czr-picker-item-type'>" + item.type_label + "</span>";
               }
 
               markup += "</div></div>";
