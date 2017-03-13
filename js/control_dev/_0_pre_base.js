@@ -198,6 +198,8 @@ var czr_debug = {
                         .fail( function( error ) {
                               api.errorLog( 'Skope could not be instantiated : ' + error );
                               serverControlParams.isSkopOn = false;
+                        })
+                        .always( function() {
                               api.czr_isLoadingSkope( false );
                         });
 
