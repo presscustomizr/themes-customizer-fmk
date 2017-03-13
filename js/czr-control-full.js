@@ -15734,11 +15734,13 @@ $.extend( CZRSlideModuleMths, {
                                       //Fire on init
                                       item.czr_Input('slide-link').visible( ! _.isEmpty( input() ) );
                                       item.czr_Input('slide-custom-link').visible( ! _.isEmpty( input() ) && module._isCustomLink( item.czr_Input('slide-link')() ) );
+                                      item.czr_Input('slide-link-target').visible( ! _.isEmpty( input() ) );
 
                                       //React on change
                                       input.bind( function( to ) {
                                             item.czr_Input('slide-link').visible( ! _.isEmpty( to ) );
                                             item.czr_Input('slide-custom-link').visible( ! _.isEmpty( to ) && module._isCustomLink( item.czr_Input('slide-link')() ) );
+                                            item.czr_Input('slide-link-target').visible( ! _.isEmpty( to ) );
                                       });
                                 break;
 
@@ -15752,33 +15754,33 @@ $.extend( CZRSlideModuleMths, {
                                       });
                                 break;
 
-                                case 'slide-use-custom-skin' :
-                                      //Fire on init
-                                      item.czr_Input('slide-skin').visible( module._isChecked( input() ) );
-                                      item.czr_Input('slide-skin-color').visible( module._isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
-                                      item.czr_Input('slide-opacity').visible( module._isChecked( input() ) );
-                                      item.czr_Input('slide-text-color').visible( module._isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                // case 'slide-use-custom-skin' :
+                                //       //Fire on init
+                                //       item.czr_Input('slide-skin').visible( module._isChecked( input() ) );
+                                //       item.czr_Input('slide-skin-color').visible( module._isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                //       item.czr_Input('slide-opacity').visible( module._isChecked( input() ) );
+                                //       item.czr_Input('slide-text-color').visible( module._isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
 
-                                      //React on change
-                                      input.bind( function( to ) {
-                                            item.czr_Input('slide-skin').visible( module._isChecked( to ) );
-                                            item.czr_Input('slide-skin-color').visible( module._isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
-                                            item.czr_Input('slide-opacity').visible( module._isChecked( to ) );
-                                            item.czr_Input('slide-text-color').visible( module._isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
-                                      });
-                                break;
+                                //       //React on change
+                                //       input.bind( function( to ) {
+                                //             item.czr_Input('slide-skin').visible( module._isChecked( to ) );
+                                //             item.czr_Input('slide-skin-color').visible( module._isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                //             item.czr_Input('slide-opacity').visible( module._isChecked( to ) );
+                                //             item.czr_Input('slide-text-color').visible( module._isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                //       });
+                                // break;
 
-                                case 'slide-skin' :
-                                      //Fire on init
-                                      item.czr_Input('slide-skin-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
-                                      item.czr_Input('slide-text-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+                                // case 'slide-skin' :
+                                //       //Fire on init
+                                //       item.czr_Input('slide-skin-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+                                //       item.czr_Input('slide-text-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
 
-                                      //React on change
-                                      input.bind( function( to ) {
-                                            item.czr_Input('slide-skin-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
-                                            item.czr_Input('slide-text-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
-                                      });
-                                break;
+                                //       //React on change
+                                //       input.bind( function( to ) {
+                                //             item.czr_Input('slide-skin-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                //             item.czr_Input('slide-text-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                //       });
+                                // break;
                           }
                     });
               },
@@ -15916,7 +15918,10 @@ $.extend( CZRSlideModuleMths, {
             //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
             setModOptInputVisibilityDeps : function() {
                   var modOpt = this,
-                      module = modOpt.module;
+                      module = modOpt.module,
+                      _isFixedContentOn = function() {
+                            return module._isChecked( modOpt.czr_Input('fixed-content')() );
+                      };
 
                   modOpt.czr_Input.each( function( input ) {
                         switch( input.id ) {
@@ -15939,18 +15944,38 @@ $.extend( CZRSlideModuleMths, {
 
                               //CONTENT
                               case 'fixed-content' :
-                                    var _modOptsDependants = [ 'fixed-title','fixed-subtitle','fixed-cta','fixed-link', 'fixed-custom-link'];
+                                    var _modOptsDependants = [ 'fixed-title', 'fixed-subtitle', 'fixed-cta', 'fixed-link', 'fixed-custom-link' ],
+                                        _setVisibility = function( _depId, _inputVal ) {
+                                              var _bool_;
+                                              switch( _depId ) {
+                                                    case 'fixed-title' :
+                                                    case 'fixed-subtitle' :
+                                                    case 'fixed-cta' :
+                                                          _bool_ = module._isChecked( _inputVal );
+                                                    break;
+
+                                                    case 'fixed-link' :
+                                                          _bool_ = module._isChecked( _inputVal ) && ! _.isEmpty( modOpt.czr_Input('fixed-cta')() );
+                                                    break;
+
+                                                    case 'fixed-custom-link' :
+                                                          _bool_ = module._isChecked( _inputVal ) && ! _.isEmpty( modOpt.czr_Input('fixed-cta')() ) && module._isCustomLink( modOpt.czr_Input('fixed-link')() );
+                                                    break;
+                                              }
+
+                                              modOpt.czr_Input( _depId ).visible( _bool_ );
+                                        };
 
                                     //MOD OPTS
                                     _.each( _modOptsDependants, function( _inpt_id ) {
                                           //Fire on init
-                                          modOpt.czr_Input( _inpt_id ).visible( module._isChecked( input() ) );
+                                          _setVisibility( _inpt_id, input() );
                                     });
 
                                     //React on change
                                     input.bind( function( to ) {
                                           _.each( _modOptsDependants, function( _inpt_id ) {
-                                                modOpt.czr_Input( _inpt_id ).visible( module._isChecked( to ) );
+                                               _setVisibility( _inpt_id, to );
                                           });
                                     });
                               break;
@@ -15958,22 +15983,32 @@ $.extend( CZRSlideModuleMths, {
                                       //Fire on init
                                       modOpt.czr_Input('fixed-link').visible(
                                             ! _.isEmpty( input() ) &&
-                                            module._isChecked( modOpt.czr_Input('fixed-content')() )
+                                            _isFixedContentOn()
                                       );
                                       modOpt.czr_Input('fixed-custom-link').visible(
                                             ! _.isEmpty( input() ) &&
-                                            module._isChecked( modOpt.czr_Input('fixed-content')() )
+                                            module._isCustomLink( modOpt.czr_Input('fixed-link')() ) &&
+                                            _isFixedContentOn()
+                                      );
+                                      modOpt.czr_Input('fixed-link-target').visible(
+                                            ! _.isEmpty( input() ) &&
+                                            _isFixedContentOn()
                                       );
 
                                       //React on change
                                       input.bind( function( to ) {
                                             modOpt.czr_Input('fixed-link').visible(
                                                   ! _.isEmpty( to ) &&
-                                                  module._isChecked( modOpt.czr_Input('fixed-content')() )
+                                                  _isFixedContentOn()
                                             );
                                             modOpt.czr_Input('fixed-custom-link').visible(
                                                   ! _.isEmpty( to ) &&
-                                                  module._isChecked( modOpt.czr_Input('fixed-content')() )
+                                                  module._isCustomLink( modOpt.czr_Input('fixed-link')() ) &&
+                                                  _isFixedContentOn()
+                                            );
+                                            modOpt.czr_Input('fixed-link-target').visible(
+                                                  ! _.isEmpty( to ) &&
+                                                  _isFixedContentOn()
                                             );
                                       });
                                 break;
@@ -15981,10 +16016,10 @@ $.extend( CZRSlideModuleMths, {
                                 //the slide-link value is an object which has always an id (post id) + other properties like title
                                 case 'fixed-link' :
                                       //Fire on init
-                                      modOpt.czr_Input('fixed-custom-link').visible( module._isCustomLink( input() ) && module._isChecked( modOpt.czr_Input('fixed-content')() ) );
+                                      modOpt.czr_Input('fixed-custom-link').visible( module._isCustomLink( input() ) && _isFixedContentOn() );
                                       //React on change
                                       input.bind( function( to ) {
-                                            modOpt.czr_Input('fixed-custom-link').visible( module._isCustomLink( to ) && module._isChecked( modOpt.czr_Input('fixed-content')() ) );
+                                            modOpt.czr_Input('fixed-custom-link').visible( module._isCustomLink( to ) && _isFixedContentOn() );
                                       });
                                 break;
 

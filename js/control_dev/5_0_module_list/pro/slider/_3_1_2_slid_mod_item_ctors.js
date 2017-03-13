@@ -122,11 +122,13 @@ $.extend( CZRSlideModuleMths, {
                                       //Fire on init
                                       item.czr_Input('slide-link').visible( ! _.isEmpty( input() ) );
                                       item.czr_Input('slide-custom-link').visible( ! _.isEmpty( input() ) && module._isCustomLink( item.czr_Input('slide-link')() ) );
+                                      item.czr_Input('slide-link-target').visible( ! _.isEmpty( input() ) );
 
                                       //React on change
                                       input.bind( function( to ) {
                                             item.czr_Input('slide-link').visible( ! _.isEmpty( to ) );
                                             item.czr_Input('slide-custom-link').visible( ! _.isEmpty( to ) && module._isCustomLink( item.czr_Input('slide-link')() ) );
+                                            item.czr_Input('slide-link-target').visible( ! _.isEmpty( to ) );
                                       });
                                 break;
 
@@ -140,33 +142,33 @@ $.extend( CZRSlideModuleMths, {
                                       });
                                 break;
 
-                                case 'slide-use-custom-skin' :
-                                      //Fire on init
-                                      item.czr_Input('slide-skin').visible( module._isChecked( input() ) );
-                                      item.czr_Input('slide-skin-color').visible( module._isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
-                                      item.czr_Input('slide-opacity').visible( module._isChecked( input() ) );
-                                      item.czr_Input('slide-text-color').visible( module._isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                // case 'slide-use-custom-skin' :
+                                //       //Fire on init
+                                //       item.czr_Input('slide-skin').visible( module._isChecked( input() ) );
+                                //       item.czr_Input('slide-skin-color').visible( module._isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                //       item.czr_Input('slide-opacity').visible( module._isChecked( input() ) );
+                                //       item.czr_Input('slide-text-color').visible( module._isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
 
-                                      //React on change
-                                      input.bind( function( to ) {
-                                            item.czr_Input('slide-skin').visible( module._isChecked( to ) );
-                                            item.czr_Input('slide-skin-color').visible( module._isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
-                                            item.czr_Input('slide-opacity').visible( module._isChecked( to ) );
-                                            item.czr_Input('slide-text-color').visible( module._isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
-                                      });
-                                break;
+                                //       //React on change
+                                //       input.bind( function( to ) {
+                                //             item.czr_Input('slide-skin').visible( module._isChecked( to ) );
+                                //             item.czr_Input('slide-skin-color').visible( module._isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                //             item.czr_Input('slide-opacity').visible( module._isChecked( to ) );
+                                //             item.czr_Input('slide-text-color').visible( module._isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                //       });
+                                // break;
 
-                                case 'slide-skin' :
-                                      //Fire on init
-                                      item.czr_Input('slide-skin-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
-                                      item.czr_Input('slide-text-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+                                // case 'slide-skin' :
+                                //       //Fire on init
+                                //       item.czr_Input('slide-skin-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+                                //       item.czr_Input('slide-text-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
 
-                                      //React on change
-                                      input.bind( function( to ) {
-                                            item.czr_Input('slide-skin-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
-                                            item.czr_Input('slide-text-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
-                                      });
-                                break;
+                                //       //React on change
+                                //       input.bind( function( to ) {
+                                //             item.czr_Input('slide-skin-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                //             item.czr_Input('slide-text-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                //       });
+                                // break;
                           }
                     });
               },
