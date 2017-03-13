@@ -230,6 +230,8 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
                         .fail( function( error ) {
                               api.errorLog( 'Skope could not be instantiated : ' + error );
                               serverControlParams.isSkopOn = false;
+                        })
+                        .always( function() {
                               api.czr_isLoadingSkope( false );
                         });
 
@@ -9756,7 +9758,7 @@ $.extend( CZRModuleMths, {
             });
 
             /*-----------------------------------------------
-            //MODULE OPTIONS
+            * MODULE OPTIONS
             ------------------------------------------------*/
             //declares a default Mod options API model
             module.defaultAPImodOptModel = {
@@ -9773,7 +9775,7 @@ $.extend( CZRModuleMths, {
             module.modOptConstructor = api.CZRModOpt;
 
             /*-----------------------------------------------
-            //ITEMS
+            * ITEMS
             ------------------------------------------------*/
             module.itemCollection = new api.Value( [] );
 
@@ -9797,7 +9799,7 @@ $.extend( CZRModuleMths, {
 
 
             /*-----------------------------------------------
-            //SET THE DEFAULT INPUT CONSTRUCTOR AND INPUT OPTIONS
+            * SET THE DEFAULT INPUT CONSTRUCTOR AND INPUT OPTIONS
             ------------------------------------------------*/
             module.inputConstructor = api.CZRInput;//constructor for the items input
             if ( module.hasModOpt() ) {
@@ -9808,7 +9810,7 @@ $.extend( CZRModuleMths, {
 
 
             /*-----------------------------------------------
-            //FIRE ON isReady
+            * FIRE ON isReady
             ------------------------------------------------*/
             //module.ready(); => fired by children
             module.isReady.done( function() {
@@ -10715,7 +10717,7 @@ $.extend( CZRModuleMths, {
 
 
       /*-----------------------------------------------
-      // TABS NAVIGATION IN ITEMS AND MODOPT
+      * TABS NAVIGATION IN ITEMS AND MODOPT
       ------------------------------------------------*/
       //This method is fired on tab click
       //the @args is the classical DOM listener obj {model : model, dom_el : $_view_el, event : _event, dom_event : e ,refreshed : _refreshed }
@@ -15279,7 +15281,7 @@ $.extend( CZRSlideModuleMths, {
             this.sliderSkins = serverControlParams.slideModuleParams.sliderSkins;
 
             //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUTS
-            module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputCtor || {} );
+            module.inputConstructor = api.CZRInput.extend( module.CZRSliderItemInputCtor || {} );
             module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputCtor || {} );
 
             //SET THE CONTENT PICKER OPTIONS
@@ -15383,6 +15385,10 @@ $.extend( CZRSlideModuleMths, {
             module.bind( 'item-collection-sorted', _refreshItemsTitles );
             module.bind( 'item-removed', _refreshItemsTitles );
       },//initialize
+
+
+
+
 
       //Overrides the default method.
       // Fired on module.isReady.done()
@@ -15495,14 +15501,27 @@ $.extend( CZRSlideModuleMths, {
       },
 
 
+      //////////////////////////////////////////
+      /// MODULE HELPERS
+      //the slide-link value is an object which has always an id (post id) + other properties like title
+      _isCustomLink : function( input_val ) {
+            return _.isObject( input_val ) && '_custom_' === input_val.id;
+      },
 
+      _isChecked : function( v ) {
+            return 0 !== v && '0' !== v && false !== v && 'off' !== v;
+      }
+});//extend
+})( wp.customize , jQuery, _ );//extends api.CZRDynModule
 
-
+var CZRSlideModuleMths = CZRSlideModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRSlideModuleMths, {
 
       ///////////////////////////////////////////////////////////
-      /// CONSTRUCTORS
+      /// INPUT CONSTRUCTORS
       //////////////////////////////////////////
-      CZRSliderInputCtor : {
+      CZRSliderItemInputCtor : {
             ready : function() {
                   var input = this;
                   //update the item title on slide-title change
@@ -15589,12 +15608,13 @@ $.extend( CZRSlideModuleMths, {
             setupColorPicker : function() {
                   return this.module.slideModSetupColorPicker.call( this );
             },
-      },//CZRSliderModOptInputCtor
+      }//CZRSliderItemInputCtor
+});//extend
+})( wp.customize , jQuery, _ );//extends api.CZRDynModule
 
-
-
-
-
+var CZRSlideModuleMths = CZRSlideModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRSlideModuleMths, {
       CZRSliderItemCtor : {
               //overrides the parent ready
               ready : function() {
@@ -15864,10 +15884,13 @@ $.extend( CZRSlideModuleMths, {
                           });
                     }
               }
-      },//CZRSliderItemCtor
+      }//CZRSliderItemCtor
+});//extend
+})( wp.customize , jQuery, _ );//extends api.CZRDynModule
 
-
-
+var CZRSlideModuleMths = CZRSlideModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRSlideModuleMths, {
       CZRSliderModOptCtor : {
             ready: function() {
                   var modOpt = this,
@@ -15990,18 +16013,7 @@ $.extend( CZRSlideModuleMths, {
                         }
                   });
             },
-      },//CZRSliderModOptCtor
-
-      //////////////////////////////////////////
-      /// MODULE HELPERS
-      //the slide-link value is an object which has always an id (post id) + other properties like title
-      _isCustomLink : function( input_val ) {
-            return _.isObject( input_val ) && '_custom_' === input_val.id;
-      },
-
-      _isChecked : function( v ) {
-            return 0 !== v && '0' !== v && false !== v && 'off' !== v;
-      }
+      }//CZRSliderModOptCtor
 });//extend
 })( wp.customize , jQuery, _ );//extends api.CZRDynModule
 

@@ -63,7 +63,7 @@ $.extend( CZRModuleMths, {
             });
 
             /*-----------------------------------------------
-            //MODULE OPTIONS
+            * MODULE OPTIONS
             ------------------------------------------------*/
             //declares a default Mod options API model
             module.defaultAPImodOptModel = {
@@ -80,7 +80,7 @@ $.extend( CZRModuleMths, {
             module.modOptConstructor = api.CZRModOpt;
 
             /*-----------------------------------------------
-            //ITEMS
+            * ITEMS
             ------------------------------------------------*/
             module.itemCollection = new api.Value( [] );
 
@@ -104,7 +104,7 @@ $.extend( CZRModuleMths, {
 
 
             /*-----------------------------------------------
-            //SET THE DEFAULT INPUT CONSTRUCTOR AND INPUT OPTIONS
+            * SET THE DEFAULT INPUT CONSTRUCTOR AND INPUT OPTIONS
             ------------------------------------------------*/
             module.inputConstructor = api.CZRInput;//constructor for the items input
             if ( module.hasModOpt() ) {
@@ -115,7 +115,7 @@ $.extend( CZRModuleMths, {
 
 
             /*-----------------------------------------------
-            //FIRE ON isReady
+            * FIRE ON isReady
             ------------------------------------------------*/
             //module.ready(); => fired by children
             module.isReady.done( function() {

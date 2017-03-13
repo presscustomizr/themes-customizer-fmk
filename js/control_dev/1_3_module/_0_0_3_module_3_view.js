@@ -202,7 +202,7 @@ $.extend( CZRModuleMths, {
 
 
       /*-----------------------------------------------
-      // TABS NAVIGATION IN ITEMS AND MODOPT
+      * TABS NAVIGATION IN ITEMS AND MODOPT
       ------------------------------------------------*/
       //This method is fired on tab click
       //the @args is the classical DOM listener obj {model : model, dom_el : $_view_el, event : _event, dom_event : e ,refreshed : _refreshed }

@@ -311,7 +311,7 @@ $.extend( CZRSlideModuleMths, {
             this.sliderSkins = serverControlParams.slideModuleParams.sliderSkins;
 
             //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUTS
-            module.inputConstructor = api.CZRInput.extend( module.CZRSliderInputCtor || {} );
+            module.inputConstructor = api.CZRInput.extend( module.CZRSliderItemInputCtor || {} );
             module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputCtor || {} );
 
             //SET THE CONTENT PICKER OPTIONS
@@ -415,6 +415,10 @@ $.extend( CZRSlideModuleMths, {
             module.bind( 'item-collection-sorted', _refreshItemsTitles );
             module.bind( 'item-removed', _refreshItemsTitles );
       },//initialize
+
+
+
+
 
       //Overrides the default method.
       // Fired on module.isReady.done()
@@ -527,14 +531,27 @@ $.extend( CZRSlideModuleMths, {
       },
 
 
+      //////////////////////////////////////////
+      /// MODULE HELPERS
+      //the slide-link value is an object which has always an id (post id) + other properties like title
+      _isCustomLink : function( input_val ) {
+            return _.isObject( input_val ) && '_custom_' === input_val.id;
+      },
 
+      _isChecked : function( v ) {
+            return 0 !== v && '0' !== v && false !== v && 'off' !== v;
+      }
+});//extend
+})( wp.customize , jQuery, _ );//extends api.CZRDynModule
 
-
+var CZRSlideModuleMths = CZRSlideModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRSlideModuleMths, {
 
       ///////////////////////////////////////////////////////////
-      /// CONSTRUCTORS
+      /// INPUT CONSTRUCTORS
       //////////////////////////////////////////
-      CZRSliderInputCtor : {
+      CZRSliderItemInputCtor : {
             ready : function() {
                   var input = this;
                   //update the item title on slide-title change
@@ -621,12 +638,13 @@ $.extend( CZRSlideModuleMths, {
             setupColorPicker : function() {
                   return this.module.slideModSetupColorPicker.call( this );
             },
-      },//CZRSliderModOptInputCtor
+      }//CZRSliderItemInputCtor
+});//extend
+})( wp.customize , jQuery, _ );//extends api.CZRDynModule
 
-
-
-
-
+var CZRSlideModuleMths = CZRSlideModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRSlideModuleMths, {
       CZRSliderItemCtor : {
               //overrides the parent ready
               ready : function() {
@@ -896,10 +914,13 @@ $.extend( CZRSlideModuleMths, {
                           });
                     }
               }
-      },//CZRSliderItemCtor
+      }//CZRSliderItemCtor
+});//extend
+})( wp.customize , jQuery, _ );//extends api.CZRDynModule
 
-
-
+var CZRSlideModuleMths = CZRSlideModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRSlideModuleMths, {
       CZRSliderModOptCtor : {
             ready: function() {
                   var modOpt = this,
@@ -1022,18 +1043,7 @@ $.extend( CZRSlideModuleMths, {
                         }
                   });
             },
-      },//CZRSliderModOptCtor
-
-      //////////////////////////////////////////
-      /// MODULE HELPERS
-      //the slide-link value is an object which has always an id (post id) + other properties like title
-      _isCustomLink : function( input_val ) {
-            return _.isObject( input_val ) && '_custom_' === input_val.id;
-      },
-
-      _isChecked : function( v ) {
-            return 0 !== v && '0' !== v && false !== v && 'off' !== v;
-      }
+      }//CZRSliderModOptCtor
 });//extend
 })( wp.customize , jQuery, _ );//extends api.CZRDynModule
 

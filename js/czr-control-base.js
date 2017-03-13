@@ -230,6 +230,8 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
                         .fail( function( error ) {
                               api.errorLog( 'Skope could not be instantiated : ' + error );
                               serverControlParams.isSkopOn = false;
+                        })
+                        .always( function() {
                               api.czr_isLoadingSkope( false );
                         });
 
@@ -9756,7 +9758,7 @@ $.extend( CZRModuleMths, {
             });
 
             /*-----------------------------------------------
-            //MODULE OPTIONS
+            * MODULE OPTIONS
             ------------------------------------------------*/
             //declares a default Mod options API model
             module.defaultAPImodOptModel = {
@@ -9773,7 +9775,7 @@ $.extend( CZRModuleMths, {
             module.modOptConstructor = api.CZRModOpt;
 
             /*-----------------------------------------------
-            //ITEMS
+            * ITEMS
             ------------------------------------------------*/
             module.itemCollection = new api.Value( [] );
 
@@ -9797,7 +9799,7 @@ $.extend( CZRModuleMths, {
 
 
             /*-----------------------------------------------
-            //SET THE DEFAULT INPUT CONSTRUCTOR AND INPUT OPTIONS
+            * SET THE DEFAULT INPUT CONSTRUCTOR AND INPUT OPTIONS
             ------------------------------------------------*/
             module.inputConstructor = api.CZRInput;//constructor for the items input
             if ( module.hasModOpt() ) {
@@ -9808,7 +9810,7 @@ $.extend( CZRModuleMths, {
 
 
             /*-----------------------------------------------
-            //FIRE ON isReady
+            * FIRE ON isReady
             ------------------------------------------------*/
             //module.ready(); => fired by children
             module.isReady.done( function() {
@@ -10715,7 +10717,7 @@ $.extend( CZRModuleMths, {
 
 
       /*-----------------------------------------------
-      // TABS NAVIGATION IN ITEMS AND MODOPT
+      * TABS NAVIGATION IN ITEMS AND MODOPT
       ------------------------------------------------*/
       //This method is fired on tab click
       //the @args is the classical DOM listener obj {model : model, dom_el : $_view_el, event : _event, dom_event : e ,refreshed : _refreshed }
