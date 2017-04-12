@@ -63,6 +63,7 @@ $.extend( CZRSkopeSaveMths, {
                       opt_name : null
                 },
                 invalidSettings = [],
+                settingInvalidities = [],
                 modifiedWhileSaving = {},
                 invalidControls,
                 submit_dfd = $.Deferred();
