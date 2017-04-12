@@ -42,7 +42,13 @@ $.extend( CZRModOptMths , {
             api.czr_ModOptVisible = new api.Value( false );
 
             //MOD OPT VISIBLE REACT
-            api.czr_ModOptVisible.bind( function( visible ) {
+            // passing an optional args object allows us to expand the modopt panel and focus on a specific tab right after
+            //@args : {
+            //  module : module,//the current module for which the modOpt is being expanded
+            //  focus : 'section-topline-2'//the id of the tab we want to focus on
+            //}
+            api.czr_ModOptVisible.bind( function( visible, from, args ) {
+                  args = args || {};
                   if ( visible ) {
                         //first close all opened remove dialogs and opened items
                         modOpt.module.closeRemoveDialogs().closeAllItems();
@@ -53,6 +59,13 @@ $.extend( CZRModOptMths , {
                                     api.CZR_Helpers.setupInputCollectionFromDOM.call( modOpt ).toggleModPanelView( visible );
                               } catch(e) {
                                     api.consoleLog(e);
+                              }
+                              if ( args.module && args.focus ) {
+                                    _.delay( function() {
+                                          if ( _.isNull(  args.module.czr_ModOpt.container ) || ! args.module.czr_ModOpt.container.find('[data-tab-id="' + args.focus + '"] a').length )
+                                            return;
+                                          args.module.czr_ModOpt.container.find('[data-tab-id="' + args.focus + '"] a').trigger('click');
+                                    }, 200 );
                               }
                         });
 

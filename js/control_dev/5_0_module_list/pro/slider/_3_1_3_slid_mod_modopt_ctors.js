@@ -36,25 +36,25 @@ $.extend( CZRSlideModuleMths, {
                   modOpt.czr_Input.each( function( input ) {
                         switch( input.id ) {
                               //DESIGN
-                              case 'skin' :
-                                    var _isCustom = function( val ) {
-                                          return 'custom' == val;
-                                    };
+                              // case 'skin' :
+                              //       var _isCustom = function( val ) {
+                              //             return 'custom' == val;
+                              //       };
 
-                                    //Fire on init
-                                    modOpt.czr_Input('skin-custom-color').visible( _isCustom( input() ) );
-                                    modOpt.czr_Input('text-custom-color').visible( _isCustom( input() ) );
+                              //       //Fire on init
+                              //       modOpt.czr_Input('skin-custom-color').visible( _isCustom( input() ) );
+                              //       modOpt.czr_Input('text-custom-color').visible( _isCustom( input() ) );
 
-                                    //React on change
-                                    input.bind( function( to ) {
-                                          modOpt.czr_Input('skin-custom-color').visible( _isCustom( to ) );
-                                          modOpt.czr_Input('text-custom-color').visible( _isCustom( to ) );
-                                    });
-                              break;
+                              //       //React on change
+                              //       input.bind( function( to ) {
+                              //             modOpt.czr_Input('skin-custom-color').visible( _isCustom( to ) );
+                              //             modOpt.czr_Input('text-custom-color').visible( _isCustom( to ) );
+                              //       });
+                              // break;
 
                               //CONTENT
                               case 'fixed-content' :
-                                    var _modOptsDependants = [ 'fixed-title', 'fixed-subtitle', 'fixed-cta', 'fixed-link', 'fixed-custom-link' ],
+                                    var _modOptsDependants = [ 'fixed-title', 'fixed-subtitle', 'fixed-cta', 'fixed-link', 'fixed-link-target', 'fixed-custom-link', 'title-max-length', 'subtitle-max-length' ],
                                         _setVisibility = function( _depId, _inputVal ) {
                                               var _bool_;
                                               switch( _depId ) {
@@ -65,11 +65,17 @@ $.extend( CZRSlideModuleMths, {
                                                     break;
 
                                                     case 'fixed-link' :
+                                                    case 'fixed-link-target' :
                                                           _bool_ = module._isChecked( _inputVal ) && ! _.isEmpty( modOpt.czr_Input('fixed-cta')() );
                                                     break;
 
                                                     case 'fixed-custom-link' :
                                                           _bool_ = module._isChecked( _inputVal ) && ! _.isEmpty( modOpt.czr_Input('fixed-cta')() ) && module._isCustomLink( modOpt.czr_Input('fixed-link')() );
+                                                    break;
+
+                                                    case 'title-max-length' :
+                                                    case 'subtitle-max-length' :
+                                                          _bool_ =  ! module._isChecked( _inputVal );
                                                     break;
                                               }
 
@@ -152,6 +158,25 @@ $.extend( CZRSlideModuleMths, {
                                     //React on change
                                     input.bind( function( to ) {
                                           modOpt.czr_Input('parallax-speed').visible( module._isChecked( to ) );
+                                    });
+                              break;
+                              case 'post-metas' :
+                                    var _dts = [ 'display-cats', 'display-comments', 'display-auth-date' ],
+                                        _setVis = function( _depId, _inputVal ) {
+                                              modOpt.czr_Input( _depId ).visible( module._isChecked( _inputVal ) );
+                                        };
+
+                                    //MOD OPTS
+                                    _.each( _dts, function( _inpt_id ) {
+                                          //Fire on init
+                                          _setVis( _inpt_id, input() );
+                                    });
+
+                                    //React on change
+                                    input.bind( function( to ) {
+                                          _.each( _dts, function( _inpt_id ) {
+                                                _setVis( _inpt_id, to );
+                                          });
                                     });
                               break;
 

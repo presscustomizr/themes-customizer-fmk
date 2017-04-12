@@ -32,7 +32,7 @@ $.extend( CZRDynModuleMths, {
               $_pre_add_el.prepend( pre_add_template() );
 
               //say it
-              module.preItemEmbedded.resolve();
+              module.preItemEmbedded.resolve( $_pre_add_el );
       },
 
       //@return $ el of the pre Item view

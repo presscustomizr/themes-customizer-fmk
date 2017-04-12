@@ -17,6 +17,8 @@ $.extend( CZRDynModuleMths, {
                   itemPreAddEl : ''//is specific for each crud module
               } );
 
+              module.preItemsWrapper = '';//will store the pre items wrapper
+
               //EXTENDS THE DEFAULT MONO MODEL CONSTRUCTOR WITH NEW METHODS
               //=> like remove item
               //module.itemConstructor = api.CZRItem.extend( module.CZRItemDynamicMths || {} );
@@ -60,7 +62,8 @@ $.extend( CZRDynModuleMths, {
               //PRE MODEL EMBED PROMISE
               module.preItemEmbedded = $.Deferred();//was module.czr_preItem.create('item_content');
               //Add view rendered listeners
-              module.preItemEmbedded.done( function() {
+              module.preItemEmbedded.done( function( $preWrapper ) {
+                    module.preItemsWrapper = $preWrapper;
                     module.setupPreItemInputCollection();
               });
 

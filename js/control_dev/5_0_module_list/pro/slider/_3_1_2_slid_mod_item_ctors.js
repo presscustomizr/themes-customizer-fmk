@@ -6,7 +6,8 @@ $.extend( CZRSlideModuleMths, {
       CZRSliderItemCtor : {
               //overrides the parent ready
               ready : function() {
-                    var item = this;
+                    var item = this,
+                        module = item.module;
                     //wait for the input collection to be populated,
                     //and then set the input visibility dependencies
                     item.inputCollection.bind( function( col ) {
@@ -18,10 +19,65 @@ $.extend( CZRSlideModuleMths, {
 
                           //typically, hides the caption content input if user has selected a fixed content in the mod opts
                           item.setModOptDependantsVisibilities();
+
+                          //append a notice to the default slide about how to disable the metas in single post
+                          if ( item().is_default && item._isSinglePost() ) {
+                              item._printPostMetasNotice();
+                          }
+                    });
+
+                    item.viewState.bind( function( state ) {
+                          if ( 'expanded' == state ) {
+                                api.previewer.send( 'item_expanded', {
+                                      module_id : item.module.id,
+                                      module : { items : $.extend( true, {}, module().items ) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
+                                      item_id : item.id
+                                });
+                          }
                     });
 
                     //fire the parent
                     api.CZRItem.prototype.ready.call( item );
+              },
+
+
+              ////////////////////////////// SMALL HELPERS //////////////////
+              ///////////////////////////////////////////////////////////////////////////
+              //HELPER
+              //@return bool
+              _isSinglePost : function() {
+                    return api.czr_wpQueryInfos && api.czr_wpQueryInfos().conditional_tags && api.czr_wpQueryInfos().conditional_tags.is_single;
+              },
+
+              //@return void()
+              _printPostMetasNotice : function() {
+                    var item = this;
+                    //add a DOM listeners
+                    api.CZR_Helpers.setupDOMListeners(
+                          [     //toggle mod options
+                                {
+                                      trigger   : 'click keydown',
+                                      selector  : '.open-post-metas-option',
+                                      name      : 'toggle_mod_option',
+                                      //=> open the module option and focus on the caption content tab
+                                      actions   : function() {
+                                            //expand the modopt panel and focus on a specific tab right after
+                                            api.czr_ModOptVisible( true, { module : item.module, focus : 'section-topline-2' } );
+                                      }
+                                }
+                          ],//actions to execute
+                          { model : item(), dom_el : item.container },//model + dom scope
+                          item //instance where to look for the cb methods
+                    );
+
+                    var _html_ = [
+                        '<strong>',
+                        serverControlParams.i18n.mods.slider['You can display or hide the post metas in'],
+                        '<a href="javascript:void(0)" class="open-post-metas-option">' + serverControlParams.i18n.mods.slider['the general options'] + '</a>',
+                        '</strong>'
+                    ].join(' ') + '.';
+
+                    item.czr_Input('slide-title').container.prepend( $('<p/>', { html : _html_, class : 'czr-notice' } ) );
               },
 
 
@@ -32,7 +88,7 @@ $.extend( CZRSlideModuleMths, {
               setModOptDependantsVisibilities : function() {
                     var item = this,
                         module = item.module,
-                        _dependants = [ 'slide-title', 'slide-subtitle', 'slide-cta', 'slide-link', 'slide-custom-link' ],
+                        _dependants = [ 'slide-title', 'slide-subtitle', 'slide-cta', 'slide-link', 'slide-custom-link', 'slide-link-target' ],
                         modOptModel = module.czr_ModOpt();
 
                     _.each( _dependants, function( _inpt_id ) {
@@ -54,13 +110,8 @@ $.extend( CZRSlideModuleMths, {
                                             name      : 'toggle_mod_option',
                                             //=> open the module option and focus on the caption content tab
                                             actions   : function() {
-                                                  api.czr_ModOptVisible( ! api.czr_ModOptVisible() ).done( function() {
-                                                        setTimeout( function() {
-                                                              if ( _.isNull(  module.czr_ModOpt.container ) || ! module.czr_ModOpt.container.find('[data-tab-id="section-topline-2"] a').length )
-                                                                return;
-                                                              module.czr_ModOpt.container.find('[data-tab-id="section-topline-2"] a').trigger('click');
-                                                        }, 200 );
-                                                  });
+                                                  //expand the modopt panel and focus on a specific tab right after
+                                                  api.czr_ModOptVisible( true, { module : module, focus : 'section-topline-2' } );
                                             }
                                       }
                                 ],//actions to execute
@@ -70,8 +121,8 @@ $.extend( CZRSlideModuleMths, {
 
                           var _html_ = [
                               '<strong>',
-                              'The caption content is currently set in',
-                              '<a href="javascript:void(0)" class="open-mod-option">' + 'the general options' + '</a>',
+                              serverControlParams.i18n.mods.slider['The caption content is currently fixed and set in'],
+                              '<a href="javascript:void(0)" class="open-mod-option">' + serverControlParams.i18n.mods.slider['the general options'] + '</a>',
                               '</strong>'
                           ].join(' ') + '.';
 
@@ -176,16 +227,20 @@ $.extend( CZRSlideModuleMths, {
               //overrides the default parent method by a custom one
               //at this stage, the model passed in the obj is up to date
               writeItemViewTitle : function( model, data ) {
+
                     var item = this,
                         index = 1,
                         module  = item.module,
                         _model = model || item(),
                         _title,
-                        _src = 'not_set';
+                        _slideBg,
+                        _src = 'not_set',
+                        _areDataSet = ! _.isUndefined( data ) && _.isObject( data );
 
                     //When shall we update the item title ?
                     //=> when the slide title or the thumbnail have been updated
-                    if ( _.isObject( data ) && data.input_changed && ! _.contains( ['slide-title', 'slide-background' ], data.input_changed ) )
+                    //=> on module model initialized
+                    if ( _areDataSet && data.input_changed && ! _.contains( ['slide-title', 'slide-background' ], data.input_changed ) )
                       return;
 
                     //set title with index
@@ -203,30 +258,35 @@ $.extend( CZRSlideModuleMths, {
                     //if the slide title is set, use it
                     _title = _.isEmpty( _model['slide-title'] ) ? _title : _model['slide-title'];
                     _title = api.CZR_Helpers.truncate( _title, 15 );
+
+                    //make sure the slide bg id is a number
+                    _slideBg = ( _model['slide-background'] && _.isString( _model['slide-background'] ) ) ? parseInt( _model['slide-background'], 10 ) : _model['slide-background'];
+
                     // _title = [
                     //       '<div class="slide-thumb"></div>',
                     //       '<div class="slide-title">' + _title + '</div>',,
                     // ].join('');
 
                     var _getThumbSrc = function() {
-                          var dfd = $.Deferred();
-                          //try to set the default src
-                          if ( serverControlParams.slideModuleParams && serverControlParams.slideModuleParams.defaultThumb ) {
-                                _src = serverControlParams.slideModuleParams.defaultThumb;
-                          }
-                          if ( ! _.isNumber( _model['slide-background'] ) ) {
-                                dfd.resolve( _src );
-                          } else {
-                                wp.media.attachment( _model['slide-background'] ).fetch()
-                                      .always( function() {
-                                            var attachment = this;
-                                            if ( _.isObject( attachment ) && _.has( attachment, 'attributes' ) && _.has( attachment.attributes, 'sizes' ) ) {
-                                                  _src = this.get('sizes').thumbnail.url;
-                                                  dfd.resolve( _src );
-                                            }
-                                      });
-                          }
-                          return dfd.promise();
+                          return $.Deferred( function() {
+                                var dfd = this;
+                                //try to set the default src
+                                if ( serverControlParams.slideModuleParams && serverControlParams.slideModuleParams.defaultThumb ) {
+                                      _src = serverControlParams.slideModuleParams.defaultThumb;
+                                }
+                                if ( ! _.isNumber( _slideBg ) ) {
+                                      dfd.resolve( _src );
+                                } else {
+                                      wp.media.attachment( _slideBg ).fetch()
+                                            .always( function() {
+                                                  var attachment = this;
+                                                  if ( _.isObject( attachment ) && _.has( attachment, 'attributes' ) && _.has( attachment.attributes, 'sizes' ) ) {
+                                                        _src = this.get('sizes').thumbnail.url;
+                                                        dfd.resolve( _src );
+                                                  }
+                                            });
+                                }
+                          }).promise();
                     };
 
 
@@ -253,7 +313,8 @@ $.extend( CZRSlideModuleMths, {
                     //When shall we append the item thumb ?
                     //=>IF the slide-thumb element is not set
                     //=>OR in the case where data have been provided and the input_changed is 'slide-background'
-                    var _isBgChange = _.isObject( data ) && data.input_changed && 'slide-background' === data.input_changed;
+                    //=>OR if no data is provided ( we are in the initialize phase )
+                    var _isBgChange = _areDataSet && data.input_changed && 'slide-background' === data.input_changed;
 
                     if ( 0 === $slideThumbEl.length ) {
                           _getThumbSrc().done( function( src ) {
@@ -266,7 +327,7 @@ $.extend( CZRSlideModuleMths, {
                                       ));
                                 }
                           });
-                    } else if ( _isBgChange ) {
+                    } else if ( _isBgChange || ! _areDataSet ) {
                           _getThumbSrc().done( function( src ) {
                                 if ( 'not_set' != src ) {
                                       $slideThumbEl.html( '<img src="' + src + '" width="32" height="32" alt="' + _title + '" />' );

@@ -26,9 +26,9 @@ var czr_debug = {
                 };
 
             //if the array to print is not composed exclusively of strings, then let's stringify it
-            //else join()
+            //else join(' ')
             if ( ! _.isEmpty( _.filter( _toArr, function( it ) { return ! _.isString( it ); } ) ) ) {
-                  _toArr =  JSON.stringify( _toArr );
+                  _toArr =  JSON.stringify( _toArr.join(' ') );
             } else {
                   _toArr = _toArr.join(' ');
             }
@@ -44,7 +44,6 @@ var czr_debug = {
             //fix for IE, because console is only defined when in F12 debugging mode in IE
             if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
               return;
-
             console.log.apply( console, _prettyPrintLog( { consoleArguments : arguments } ) );
       };
 

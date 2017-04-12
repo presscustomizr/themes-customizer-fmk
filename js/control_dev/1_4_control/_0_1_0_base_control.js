@@ -21,7 +21,7 @@ $.extend( CZRBaseControlMths, {
                               if ( ! control.czr_Module( _mod_.id ) )
                                 return;
 
-                              control.czr_Module( _mod_.id ).sendModuleInputsToPreview();
+                              control.czr_Module( _mod_.id ).sendModuleInputsToPreview( { isPartialRefresh : true } );
                         });
                   }
             });

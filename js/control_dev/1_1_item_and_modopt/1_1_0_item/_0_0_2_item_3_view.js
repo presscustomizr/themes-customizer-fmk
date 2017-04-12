@@ -55,6 +55,12 @@ $.extend( CZRItemMths , {
                   item.viewState.callbacks.add( function( to, from ) {
                         //viewState can take 3 states : expanded, expanded_noscroll, closed
                         var _isExpanded = -1 !== to.indexOf( 'expanded' );
+
+                        //If this module has mod Opt, always close the opt pane on view state change
+                        if ( module.hasModOpt() && _isExpanded ) {
+                              api.czr_ModOptVisible( false );
+                        }
+
                         if ( _isExpanded ) {
                               //item already rendered ?
                               if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {

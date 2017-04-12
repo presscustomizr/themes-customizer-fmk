@@ -44,6 +44,8 @@ $.extend( CZRModuleMths, {
 
             //embed : define a container, store the embed state, fire the render method
             module.embedded = $.Deferred();
+            module.itemsWrapper = '';//will store the $ item container
+
             //if a module is embedded in a control, its container == the control container.
             //if the module is part of a sektion, its container will be set and resolve() later ( @see multi_module part )
             if ( ! module.isInSektion() ) {
@@ -363,6 +365,7 @@ $.extend( CZRModuleMths, {
       //  is_mod_opt :
       //  to :
       //  from :
+      //  isPartialRefresh : bool//<= let us know if it is a full wrapper refresh or a single input update ( true when fired from sendModuleInputsToPreview )
       //}
       sendInputToPreview : function( args ) {
             var module = this;
@@ -385,7 +388,8 @@ $.extend( CZRModuleMths, {
                   module        : { items : $.extend( true, {}, module().items ) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
                   input_parent_id : args.input_parent_id,//<= can be the mod opt or the item
                   input_id      : args.input_id,
-                  value         : args.to
+                  value         : args.to,
+                  isPartialRefresh : args.isPartialRefresh//<= let us know if it is a full wrapper refresh or a single input update ( true when fired from sendModuleInputsToPreview )
             });
 
             //add a hook here
@@ -394,11 +398,12 @@ $.extend( CZRModuleMths, {
 
 
       //@return void()
-      //Fired in base control initialize, only for module type controls
+      //Fired on partial refresh in base control initialize, only for module type controls
       //This method can be called when don't have input instances available
       //=> typically when reordering items, mod options and items are closed, therefore there's no input instances.
       //=> the input id are being retrieved from the input parent models : items and mod options.
-      sendModuleInputsToPreview : function() {
+      //@param args = { isPartialRefresh : bool }
+      sendModuleInputsToPreview : function( args ) {
             var module = this,
                 _sendInputData = function() {
                       var inputParent = this,//this is the input parent : item or modOpt
@@ -411,7 +416,8 @@ $.extend( CZRModuleMths, {
                                   input_id : inputId,
                                   input_parent_id : inputParent.id,
                                   to : inputVal,
-                                  from : null
+                                  from : null,
+                                  isPartialRefresh : args.isPartialRefresh
                             });
                       });
                 };

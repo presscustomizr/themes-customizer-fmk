@@ -5,6 +5,9 @@ var CZRSlideModuleMths = CZRSlideModuleMths || {};
 $.extend( CZRSlideModuleMths, {
       initialize: function( id, constructorOptions ) {
             var module = this;
+
+            module.initialConstrucOptions = $.extend( true, {}, constructorOptions );//detach from the original obj
+
             //run the parent initialize
             api.CZRDynModule.prototype.initialize.call( module, id, constructorOptions );
 
@@ -15,7 +18,7 @@ $.extend( CZRSlideModuleMths, {
                   modOptInputList : 'czr-module-slide-mod-opt-input-list'
             } );
 
-            this.sliderSkins = serverControlParams.slideModuleParams.sliderSkins;
+            this.sliderSkins = serverControlParams.slideModuleParams.sliderSkins;//light, dark
 
             //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUTS
             module.inputConstructor = api.CZRInput.extend( module.CZRSliderItemInputCtor || {} );
@@ -86,28 +89,79 @@ $.extend( CZRSlideModuleMths, {
             //     });
             // }
             module.isReady.then( function() {
+                  var _refreshModuleModel = function( query_data ) {
+                        var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                        //module.refreshItemCollection();
 
-                        //Refresh the module default item based on the query infos if the associated setting has no value yet
-                        api.czr_wpQueryInfos.bind( function( query_data ) {
-                              var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
-                              if ( ! api.has( _setId ) || ! _.isEmpty( api( _setId )() ) )
-                                return;
+                        //initialize
+                        module.initializeModuleModel( module.initialConstrucOptions, query_data )
+                              .done( function( newModuleValue ) {
+                                    module.set( newModuleValue, { silent : true } );
+                                    module.refreshItemCollection();
+                              })
+                              .always( function( newModuleValue ) {
 
-                              var initialConstrucOptions = $.extend( true, {}, constructorOptions );//detach from the original obj
+                              });
+                  };
 
-                              //module.refreshItemCollection();
+                  //Fired on module ready and skope ready
+                  //Fired on skope switch
+                  var _toggleModuleItemVisibility = function() {
+                        var $preItemBtn = $('.' + module.control.css_attr.open_pre_add_btn, module.container ),
+                            $preItemWrapper = $('.' + module.control.css_attr.pre_add_wrapper, module.container),
+                            _isLocal = 'local' == api.czr_skope( api.czr_activeSkopeId() )().skope;
 
-                              //initialize
-                              module.initializeModuleModel( initialConstrucOptions, query_data )
-                                    .done( function( newModuleValue ) {
-                                          module.set( newModuleValue, { silent : true } );
-                                          module.refreshItemCollection();
-                                    })
-                                    .always( function( newModuleValue ) {
+                        //HIDE THE ITEM CREATION WHEN NOT LOCAL
+                        $preItemBtn.toggle( _isLocal );
+                        $preItemWrapper.toggle( _isLocal );
+                        module.itemsWrapper.toggle( _isLocal );
 
-                                    });
-                        } );
+                        //DISPLAY A NOTICE WHEN NOT LOCAL
+                        if ( ! _isLocal ) {
+                              var _localSkopeId = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
+                              if ( ! module.control.container.find( '.slide-mod-skope-notice').length ) {
+                                    module.control.container.append( $( '<div/>', {
+                                              class: 'slide-mod-skope-notice',
+                                              html : [ serverControlParams.i18n.mods.slider['You can set the slider global options here ( click on the gear icon ). Switch to the local scope to build a slider'], ' : ', api.czr_skopeBase.buildSkopeLink( _localSkopeId ) ].join( ' ')
+                                        })
+                                    );
+                              } else {
+                                  module.control.container.find( '.slide-mod-skope-notice').show();
+                              }
+                        } else {
+                              if ( 1 == module.control.container.find( '.slide-mod-skope-notice').length )
+                                module.control.container.find( '.slide-mod-skope-notice').remove();
+                        }
 
+                  };
+
+                  //Refresh the module default item based on the query infos if the associated setting has no value yet
+                  api.czr_wpQueryInfos.bind( function( query_data ) {
+                        _refreshModuleModel( query_data );
+                  } );
+
+                  //On skope switch
+                  //1) refresh module model, set items to empty if not local
+                  //2) hide the item and pre-item container if not local
+                  // {
+                  //       current_skope_id    : to,
+                  //       previous_skope_id   : from,
+                  //       updated_setting_ids : _updatedSetIds || []
+                  // }
+                  api.bind( 'skope-switched-done', function( params ) {
+                        _refreshModuleModel( api.czr_wpQueryInfos() );
+                        _.delay( function() {
+                              _toggleModuleItemVisibility();
+                        }, 200 );
+
+                  });
+
+                  //On skope ready Hide items and pre-items if skope is not local
+                  api.czr_skopeReady.then( function() {
+                        _.delay( function() {
+                              _toggleModuleItemVisibility();
+                        }, 200 );
+                  });
             });
 
             //REFRESH ITEM TITLES
@@ -117,8 +171,10 @@ $.extend( CZRSlideModuleMths, {
                   });
             };
             //Always write the title on :
+            //- module model initialized => typically when the query data has been set and is used to set a default item
             //- item collection sorted
             //- on item removed
+            //module.bind( 'module-model-initialized', _refreshItemsTitles );
             module.bind( 'item-collection-sorted', _refreshItemsTitles );
             module.bind( 'item-removed', _refreshItemsTitles );
       },//initialize
@@ -140,37 +196,89 @@ $.extend( CZRSlideModuleMths, {
       //3) subtitle : no subtitle except for home page : the site tagline
       initializeModuleModel : function( constructorOptions, new_data ) {
             var module = this,
-                dfd = $.Deferred(),
-                _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                dfd = $.Deferred();
 
-            //Bail if the the associated setting is already set
-            if ( ! api.has( _setId ) || ! _.isEmpty( api( _setId )() ) )
-              return dfd.resolve( constructorOptions ).promise();
+            //Wait for the control to be registered when switching skope
+            api.control.when( module.control.id, function() {
+                  var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
 
-            //If the setting is not set, then we can set the default item based on the query data
-            // if ( ! _.isEmpty( constructorOptions.items ) )
-            //   return dfd.resolve( constructorOptions ).promise();
-            //Always get the query data from the freshest source
-            api.czr_wpQueryDataReady.then( function( data ) {
-                  var _query_data, _default;
-                  if ( _.isUndefined( new_data ) ) {
-                        _query_data = _.isObject( data ) ? data.query_data : {};
-                  } else {
-                        _query_data = _.isObject( new_data ) ? new_data.query_data : {};
+                  //bail if the setting id is not registered
+                  if ( ! api.has( _setId ) )
+                    return dfd.resolve( constructorOptions ).promise();
+
+                  // console.log('api.control.has( module.control.id ); ', api.control.has( module.control.id ) );
+                  // console.log('module.initialConstrucOptions', module.initialConstrucOptions );
+                  // console.log('api( _setId )()', _setId, api( _setId )());
+                  //Bail if the skope is not local
+                  //Make sure to reset the items to [] if the current item is_default
+                  // if ( api.czr_skope.has( api.czr_activeSkopeId() ) ) {
+                  //     console.log( 'SKOPE ?', api.czr_activeSkopeId(), api.czr_skope( api.czr_activeSkopeId() )().skope );
+                  //     console.log( api.czr_isSkopOn() );
+                  // }
+                  // console.log('ALORS ON RESOLVE OUI OU MERDE !!! : ', api.czr_isSkopOn() && api.czr_skope.has( api.czr_activeSkopeId() ) && 'local' !=  api.czr_skope( api.czr_activeSkopeId() )().skope );
+
+
+                  //WHEN SKOPE IS READY
+                  api.czr_skopeReady.then( function() {
+                        //IF NOT LOCAL SKOPE
+                            //Empties the items
+                            //+ return the current option
+
+
+                            //IF LOCAL
+                            //If inheriting from a parent, then let's set the default item
+                            //if setting is dirty in local skope, let's return the ctor options.
+
+                            var _isLocal = api.czr_skope.has( api.czr_activeSkopeId() ) && 'local' ==  api.czr_skope( api.czr_activeSkopeId() )().skope;
+                                _isLocalAndDirty = _isLocal &&
+                                ( api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( _setId ) || api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( _setId ) );
+
+                            //console.log('_isLocal', _isLocal, _isLocalAndDirty );
+
+                            if ( _isLocalAndDirty ) {
+                                  return dfd.resolve( constructorOptions ).promise();
+                            } else if ( ! _isLocal ) {
+                                  var _newCtorOptions = $.extend( true, {}, constructorOptions );
+                                  _newCtorOptions.items = [];
+                                  return dfd.resolve( _newCtorOptions ).promise();
+                            }
+
+
+                            //If the setting is not set, then we can set the default item based on the query data
+                            // if ( ! _.isEmpty( constructorOptions.items ) )
+                            //   return dfd.resolve( constructorOptions ).promise();
+                            //Always get the query data from the freshest source
+                            api.czr_wpQueryDataReady.then( function( data ) {
+                                  data = api.czr_wpQueryInfos() || data;//always get the latest query infos
+                                  var _query_data, _default;
+                                  if ( _.isUndefined( new_data ) ) {
+                                        _query_data = _.isObject( data ) ? data.query_data : {};
+                                  } else {
+                                        _query_data = _.isObject( new_data ) ? new_data.query_data : {};
+                                  }
+
+                                  _default = $.extend( true, {}, module.defaultItemModel );
+                                  constructorOptions.items = [
+                                        $.extend( _default, {
+                                              'id' : 'default_item_' + module.id,
+                                              'is_default' : true,
+                                              'slide-background' : ( ! _.isEmpty( _query_data.post_thumbnail_id ) ) ? _query_data.post_thumbnail_id : '',
+                                              'slide-title' : ! _.isEmpty( _query_data.post_title )? _query_data.post_title : '',
+                                              'slide-subtitle' : ! _.isEmpty( _query_data.subtitle ) ? _query_data.subtitle : ''
+                                        })
+                                  ];
+                                  dfd.resolve( constructorOptions );
+                            });
+                        });//api.control.when()
+                  });//api.czr_skopeReady()
+
+            //Make sure this is resolved, even when the control is not registered back for some reasons
+            _.delay( function() {
+                  if ( ! api.control.has( module.control.id ) ) {
+                        api.errorLog( 'Slide Module : initializeModuleModel, the control has not been registered after too long.');
+                        dfd.resolve( constructorOptions );
                   }
-
-                  _default = $.extend( true, {}, module.defaultItemModel );
-                  constructorOptions.items = [
-                        $.extend( _default, {
-                              'id' : 'default_item_' + module.id,
-                              'is_default' : true,
-                              'slide-background' : ( ! _.isEmpty( _query_data.post_thumbnail_id ) ) ? _query_data.post_thumbnail_id : '',
-                              'slide-title' : ! _.isEmpty( _query_data.post_title )? _query_data.post_title : '',
-                              'slide-subtitle' : ! _.isEmpty( _query_data.subtitle ) ? _query_data.subtitle : ''
-                        })
-                  ];
-                  dfd.resolve( constructorOptions );
-            });
+            }, 5000 );
             return dfd.promise();
       },
 
