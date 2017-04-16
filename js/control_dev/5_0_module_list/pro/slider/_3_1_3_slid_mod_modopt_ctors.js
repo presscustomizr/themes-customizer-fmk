@@ -12,12 +12,35 @@ $.extend( CZRSlideModuleMths, {
                   modOpt.inputCollection.bind( function( col ) {
                         if( _.isEmpty( col ) )
                           return;
-                        try {
-                              modOpt.setModOptInputVisibilityDeps();
-                        } catch( er ) {
+                        try { modOpt.setModOptInputVisibilityDeps(); } catch( er ) {
                               api.errorLog( 'setModOptInputVisibilityDeps : ' + er );
                         }
-                  });
+
+                        //MOD OPT REFRESH BTN
+                        //1) Set initial state
+                        modOpt.container.find('.refresh-button').prop( 'disabled', true );
+                        //2) listen to user actions
+                        //add DOM listeners
+                        api.CZR_Helpers.setupDOMListeners(
+                              [     //toggle mod options
+                                    {
+                                          trigger   : 'click keydown',
+                                          selector  : '.refresh-button',
+                                          actions   : function( ev ) {
+                                                var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                                                if ( api.has( _setId ) ) {
+                                                      api( _setId ).previewer.send( 'setting', [ _setId, api( _setId )() ] );
+                                                      _.delay( function() {
+                                                            modOpt.container.find('.refresh-button').prop( 'disabled', true );
+                                                      }, 250 );
+                                                }
+                                          }
+                                    }
+                              ],//actions to execute
+                              { model : modOpt(), dom_el : modOpt.container },//model + dom scope
+                              modOpt //instance where to look for the cb methods
+                        );//api.CZR_Helpers.setupDOMListeners()
+                  });//modOpt.inputCollection()
 
                   //fire the parent
                   api.CZRModOpt.prototype.ready.call( modOpt );

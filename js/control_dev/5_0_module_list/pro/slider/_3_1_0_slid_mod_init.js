@@ -122,7 +122,14 @@ $.extend( CZRSlideModuleMths, {
                               if ( ! module.control.container.find( '.slide-mod-skope-notice').length ) {
                                     module.control.container.append( $( '<div/>', {
                                               class: 'slide-mod-skope-notice',
-                                              html : [ serverControlParams.i18n.mods.slider['You can set the slider global options here ( click on the gear icon ). Switch to the local scope to build a slider'], ' : ', api.czr_skopeBase.buildSkopeLink( _localSkopeId ) ].join( ' ')
+                                              html : [
+                                                    serverControlParams.i18n.mods.slider['You can set the slider global options here by clicking on the gear icon : height, font size, effects...'],
+                                                    serverControlParams.i18n.mods.slider['Those options will be inherited by the more specific options scopes.'],
+                                                    '<br/>',
+                                                    serverControlParams.i18n.mods.slider['Switch to the local options scope to build a slider or set more specific options'],
+                                                    ':',
+                                                    api.czr_skopeBase.buildSkopeLink( _localSkopeId )
+                                              ].join( ' ' )
                                         })
                                     );
                               } else {
@@ -156,13 +163,36 @@ $.extend( CZRSlideModuleMths, {
 
                   });
 
-                  //On skope ready Hide items and pre-items if skope is not local
+                  //ACTIONS ON SKOPE READY
+                  //1) Hide items and pre-items if skope is not local
+                  //2) set the item and modopt refresh button state, and set their state according to the module changes
                   api.czr_skopeReady.then( function() {
+                        //ITEMS AND PRE ITEMS
                         _.delay( function() {
                               _toggleModuleItemVisibility();
                         }, 200 );
+
+                        //UPDATE REFRESH BUTTONS STATE ON MODULE CHANGES
+                        module.callbacks.add( function( to, from ) {
+                              module.czr_Item.each( function( _itm_ ){
+                                    if ( 'expanded' != _itm_.viewState() )
+                                      return;
+                                    if ( 1 == _itm_.container.find('.refresh-button').length ) {
+                                          _itm_.container.find('.refresh-button').prop( 'disabled', false );
+                                    }
+                              });
+                              if ( module.czr_ModOpt && module.czr_ModOpt.isReady ) {
+                                    module.czr_ModOpt.isReady.then( function() {
+                                          if ( api.czr_ModOptVisible() ) {
+                                                if ( 1 == module.czr_ModOpt.container.find('.refresh-button').length ) {
+                                                      module.czr_ModOpt.container.find('.refresh-button').prop( 'disabled', false );
+                                                }
+                                          }
+                                    });
+                              }
+                        });
                   });
-            });
+            });//module.isReady
 
             //REFRESH ITEM TITLES
             var _refreshItemsTitles = function() {
@@ -178,9 +208,6 @@ $.extend( CZRSlideModuleMths, {
             module.bind( 'item-collection-sorted', _refreshItemsTitles );
             module.bind( 'item-removed', _refreshItemsTitles );
       },//initialize
-
-
-
 
 
       //Overrides the default method.
@@ -215,8 +242,6 @@ $.extend( CZRSlideModuleMths, {
                   //     console.log( 'SKOPE ?', api.czr_activeSkopeId(), api.czr_skope( api.czr_activeSkopeId() )().skope );
                   //     console.log( api.czr_isSkopOn() );
                   // }
-                  // console.log('ALORS ON RESOLVE OUI OU MERDE !!! : ', api.czr_isSkopOn() && api.czr_skope.has( api.czr_activeSkopeId() ) && 'local' !=  api.czr_skope( api.czr_activeSkopeId() )().skope );
-
 
                   //WHEN SKOPE IS READY
                   api.czr_skopeReady.then( function() {
@@ -228,12 +253,8 @@ $.extend( CZRSlideModuleMths, {
                             //IF LOCAL
                             //If inheriting from a parent, then let's set the default item
                             //if setting is dirty in local skope, let's return the ctor options.
-
                             var _isLocal = api.czr_skope.has( api.czr_activeSkopeId() ) && 'local' ==  api.czr_skope( api.czr_activeSkopeId() )().skope;
-                                _isLocalAndDirty = _isLocal &&
-                                ( api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( _setId ) || api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( _setId ) );
-
-                            //console.log('_isLocal', _isLocal, _isLocalAndDirty );
+                                _isLocalAndDirty = _isLocal && module._isSettingDirty();
 
                             if ( _isLocalAndDirty ) {
                                   return dfd.resolve( constructorOptions ).promise();
@@ -355,6 +376,14 @@ $.extend( CZRSlideModuleMths, {
 
       _isChecked : function( v ) {
             return 0 !== v && '0' !== v && false !== v && 'off' !== v;
-      }
+      },
+
+      _isSettingDirty : function() {
+            if ( 'pending' == api.czr_skopeReady.state() )
+              return false;
+            var module = this,
+                _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+            return ( api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( _setId ) || api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( _setId ) );
+      },
 });//extend
 })( wp.customize , jQuery, _ );

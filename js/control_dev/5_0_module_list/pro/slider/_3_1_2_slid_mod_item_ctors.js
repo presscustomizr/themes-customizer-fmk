@@ -24,7 +24,43 @@ $.extend( CZRSlideModuleMths, {
                           if ( item().is_default && item._isSinglePost() ) {
                               item._printPostMetasNotice();
                           }
-                    });
+
+                          //ITEM REFRESH AND FOCUS BTN
+                          //1) Set initial state
+                          item.container.find('.refresh-button').prop( 'disabled', true );
+                          //2) listen to user actions
+                          //add DOM listeners
+                          api.CZR_Helpers.setupDOMListeners(
+                                [     //toggle mod options
+                                      {
+                                            trigger   : 'click keydown',
+                                            selector  : '.refresh-button',
+                                            actions   : function( ev ) {
+                                                  var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                                                  if ( api.has( _setId ) ) {
+                                                        api( _setId ).previewer.send( 'setting', [ _setId, api( _setId )() ] );
+                                                        _.delay( function() {
+                                                              item.container.find('.refresh-button').prop( 'disabled', true );
+                                                        }, 250 );
+                                                  }
+                                            }
+                                      },
+                                      {
+                                            trigger   : 'click keydown',
+                                            selector  : '.focus-button',
+                                            actions   : function( ev ) {
+                                                  api.previewer.send( 'slide_focus', {
+                                                        module_id : item.module.id,
+                                                        module : { items : $.extend( true, {}, module().items ) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
+                                                        item_id : item.id
+                                                  });
+                                            }
+                                      }
+                                ],//actions to execute
+                                { model : item(), dom_el : item.container },//model + dom scope
+                                item //instance where to look for the cb methods
+                          );//api.CZR_Helpers.setupDOMListeners()
+                    });//item.inputCollection.bind()
 
                     item.viewState.bind( function( state ) {
                           if ( 'expanded' == state ) {

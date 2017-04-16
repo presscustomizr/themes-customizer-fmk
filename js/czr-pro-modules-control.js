@@ -415,7 +415,14 @@ $.extend( CZRSlideModuleMths, {
                               if ( ! module.control.container.find( '.slide-mod-skope-notice').length ) {
                                     module.control.container.append( $( '<div/>', {
                                               class: 'slide-mod-skope-notice',
-                                              html : [ serverControlParams.i18n.mods.slider['You can set the slider global options here ( click on the gear icon ). Switch to the local scope to build a slider'], ' : ', api.czr_skopeBase.buildSkopeLink( _localSkopeId ) ].join( ' ')
+                                              html : [
+                                                    serverControlParams.i18n.mods.slider['You can set the slider global options here by clicking on the gear icon : height, font size, effects...'],
+                                                    serverControlParams.i18n.mods.slider['Those options will be inherited by the more specific options scopes.'],
+                                                    '<br/>',
+                                                    serverControlParams.i18n.mods.slider['Switch to the local options scope to build a slider or set more specific options'],
+                                                    ':',
+                                                    api.czr_skopeBase.buildSkopeLink( _localSkopeId )
+                                              ].join( ' ' )
                                         })
                                     );
                               } else {
@@ -449,13 +456,36 @@ $.extend( CZRSlideModuleMths, {
 
                   });
 
-                  //On skope ready Hide items and pre-items if skope is not local
+                  //ACTIONS ON SKOPE READY
+                  //1) Hide items and pre-items if skope is not local
+                  //2) set the item and modopt refresh button state, and set their state according to the module changes
                   api.czr_skopeReady.then( function() {
+                        //ITEMS AND PRE ITEMS
                         _.delay( function() {
                               _toggleModuleItemVisibility();
                         }, 200 );
+
+                        //UPDATE REFRESH BUTTONS STATE ON MODULE CHANGES
+                        module.callbacks.add( function( to, from ) {
+                              module.czr_Item.each( function( _itm_ ){
+                                    if ( 'expanded' != _itm_.viewState() )
+                                      return;
+                                    if ( 1 == _itm_.container.find('.refresh-button').length ) {
+                                          _itm_.container.find('.refresh-button').prop( 'disabled', false );
+                                    }
+                              });
+                              if ( module.czr_ModOpt && module.czr_ModOpt.isReady ) {
+                                    module.czr_ModOpt.isReady.then( function() {
+                                          if ( api.czr_ModOptVisible() ) {
+                                                if ( 1 == module.czr_ModOpt.container.find('.refresh-button').length ) {
+                                                      module.czr_ModOpt.container.find('.refresh-button').prop( 'disabled', false );
+                                                }
+                                          }
+                                    });
+                              }
+                        });
                   });
-            });
+            });//module.isReady
 
             //REFRESH ITEM TITLES
             var _refreshItemsTitles = function() {
@@ -471,9 +501,6 @@ $.extend( CZRSlideModuleMths, {
             module.bind( 'item-collection-sorted', _refreshItemsTitles );
             module.bind( 'item-removed', _refreshItemsTitles );
       },//initialize
-
-
-
 
 
       //Overrides the default method.
@@ -508,8 +535,6 @@ $.extend( CZRSlideModuleMths, {
                   //     console.log( 'SKOPE ?', api.czr_activeSkopeId(), api.czr_skope( api.czr_activeSkopeId() )().skope );
                   //     console.log( api.czr_isSkopOn() );
                   // }
-                  // console.log('ALORS ON RESOLVE OUI OU MERDE !!! : ', api.czr_isSkopOn() && api.czr_skope.has( api.czr_activeSkopeId() ) && 'local' !=  api.czr_skope( api.czr_activeSkopeId() )().skope );
-
 
                   //WHEN SKOPE IS READY
                   api.czr_skopeReady.then( function() {
@@ -521,12 +546,8 @@ $.extend( CZRSlideModuleMths, {
                             //IF LOCAL
                             //If inheriting from a parent, then let's set the default item
                             //if setting is dirty in local skope, let's return the ctor options.
-
                             var _isLocal = api.czr_skope.has( api.czr_activeSkopeId() ) && 'local' ==  api.czr_skope( api.czr_activeSkopeId() )().skope;
-                                _isLocalAndDirty = _isLocal &&
-                                ( api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( _setId ) || api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( _setId ) );
-
-                            //console.log('_isLocal', _isLocal, _isLocalAndDirty );
+                                _isLocalAndDirty = _isLocal && module._isSettingDirty();
 
                             if ( _isLocalAndDirty ) {
                                   return dfd.resolve( constructorOptions ).promise();
@@ -648,7 +669,15 @@ $.extend( CZRSlideModuleMths, {
 
       _isChecked : function( v ) {
             return 0 !== v && '0' !== v && false !== v && 'off' !== v;
-      }
+      },
+
+      _isSettingDirty : function() {
+            if ( 'pending' == api.czr_skopeReady.state() )
+              return false;
+            var module = this,
+                _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+            return ( api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( _setId ) || api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( _setId ) );
+      },
 });//extend
 })( wp.customize , jQuery, _ );//extends api.CZRDynModule
 
@@ -774,7 +803,43 @@ $.extend( CZRSlideModuleMths, {
                           if ( item().is_default && item._isSinglePost() ) {
                               item._printPostMetasNotice();
                           }
-                    });
+
+                          //ITEM REFRESH AND FOCUS BTN
+                          //1) Set initial state
+                          item.container.find('.refresh-button').prop( 'disabled', true );
+                          //2) listen to user actions
+                          //add DOM listeners
+                          api.CZR_Helpers.setupDOMListeners(
+                                [     //toggle mod options
+                                      {
+                                            trigger   : 'click keydown',
+                                            selector  : '.refresh-button',
+                                            actions   : function( ev ) {
+                                                  var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                                                  if ( api.has( _setId ) ) {
+                                                        api( _setId ).previewer.send( 'setting', [ _setId, api( _setId )() ] );
+                                                        _.delay( function() {
+                                                              item.container.find('.refresh-button').prop( 'disabled', true );
+                                                        }, 250 );
+                                                  }
+                                            }
+                                      },
+                                      {
+                                            trigger   : 'click keydown',
+                                            selector  : '.focus-button',
+                                            actions   : function( ev ) {
+                                                  api.previewer.send( 'slide_focus', {
+                                                        module_id : item.module.id,
+                                                        module : { items : $.extend( true, {}, module().items ) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
+                                                        item_id : item.id
+                                                  });
+                                            }
+                                      }
+                                ],//actions to execute
+                                { model : item(), dom_el : item.container },//model + dom scope
+                                item //instance where to look for the cb methods
+                          );//api.CZR_Helpers.setupDOMListeners()
+                    });//item.inputCollection.bind()
 
                     item.viewState.bind( function( state ) {
                           if ( 'expanded' == state ) {
@@ -1101,12 +1166,35 @@ $.extend( CZRSlideModuleMths, {
                   modOpt.inputCollection.bind( function( col ) {
                         if( _.isEmpty( col ) )
                           return;
-                        try {
-                              modOpt.setModOptInputVisibilityDeps();
-                        } catch( er ) {
+                        try { modOpt.setModOptInputVisibilityDeps(); } catch( er ) {
                               api.errorLog( 'setModOptInputVisibilityDeps : ' + er );
                         }
-                  });
+
+                        //MOD OPT REFRESH BTN
+                        //1) Set initial state
+                        modOpt.container.find('.refresh-button').prop( 'disabled', true );
+                        //2) listen to user actions
+                        //add DOM listeners
+                        api.CZR_Helpers.setupDOMListeners(
+                              [     //toggle mod options
+                                    {
+                                          trigger   : 'click keydown',
+                                          selector  : '.refresh-button',
+                                          actions   : function( ev ) {
+                                                var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                                                if ( api.has( _setId ) ) {
+                                                      api( _setId ).previewer.send( 'setting', [ _setId, api( _setId )() ] );
+                                                      _.delay( function() {
+                                                            modOpt.container.find('.refresh-button').prop( 'disabled', true );
+                                                      }, 250 );
+                                                }
+                                          }
+                                    }
+                              ],//actions to execute
+                              { model : modOpt(), dom_el : modOpt.container },//model + dom scope
+                              modOpt //instance where to look for the cb methods
+                        );//api.CZR_Helpers.setupDOMListeners()
+                  });//modOpt.inputCollection()
 
                   //fire the parent
                   api.CZRModOpt.prototype.ready.call( modOpt );

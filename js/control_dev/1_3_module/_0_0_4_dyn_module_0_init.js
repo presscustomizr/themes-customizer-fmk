@@ -110,41 +110,57 @@ $.extend( CZRDynModuleMths, {
 
       //Fired on user Dom action.
       //the item is manually added.
+      //@return a promise() for future sequential actions
       addItem : function(obj) {
               var module = this,
                   item = module.preItem(),
                   collapsePreItem = function() {
                         module.preItemExpanded.set(false);
                         module._resetPreItemInputs();
-                        module.toggleSuccessMessage('off');
-                  };
+                        //module.toggleSuccessMessage('off');
+                  },
+                  dfd = $.Deferred();
 
               if ( _.isEmpty(item) || ! _.isObject(item) ) {
-                throw new Error('addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
+                    api.errorLog( 'addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
+                    return dfd.resolve().promise();
               }
               //display a sucess message if item is successfully instantiated
-              collapsePreItem = _.debounce( collapsePreItem, 2000 );
+              collapsePreItem = _.debounce( collapsePreItem, 200 );
 
               //instantiates and fires ready
               module.instantiateItem( item, true ).ready(); //true == Added by user
 
-              module.czr_Item( item.id ).isReady.then( function() {
-                    module.toggleSuccessMessage('on');
-                    collapsePreItem();
+              //this iife job is to close the pre item and to maybe refresh the preview
+              //@return a promise(), then once done the item view is expanded to start editing it
+              ( function() {
+                    return $.Deferred( function() {
+                          var _dfd_ = this;
+                          module.czr_Item( item.id ).isReady.then( function() {
+                                //module.toggleSuccessMessage('on');
+                                collapsePreItem();
 
-                    module.trigger('item-added', item );
-                    //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
+                                module.trigger('item-added', item );
+                                //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
 
-                    //refresh the preview frame (only needed if transport is postMessage )
-                    //must be a dom event not triggered
-                    //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
-                    if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
-                      module.control.previewer.refresh();
-                    }
+                                //refresh the preview frame (only needed if transport is postMessage )
+                                //must be a dom event not triggered
+                                //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
+                                if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
+                                  module.control.previewer.refresh().done( function() {
+                                        _dfd_.resolve();
+                                  });
+                                } else {
+                                        _dfd_.resolve();
+                                }
+                          });
+                    }).promise();
+              })().done( function() {
+                      module.czr_Item( item.id ).viewState( 'expanded' );
+              }).always( function() {
+                      dfd.resolve();
               });
-
-
-
+              return dfd.promise();
       },
 
       _resetPreItemInputs : function() {

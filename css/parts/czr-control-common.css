@@ -655,3 +655,22 @@ span.czr-panel-subtitle {
     font-size: 12px;
     font-style: italic;
 }
+
+/* PRO BLOCK BEFORE SECTIONS AND PANELS TITLE */
+.pro-title-block {
+    background: #f0ad4e;
+    border: 1px solid #eea236;
+    padding: 0px 6px;
+    font-size: 0.7em;
+    display: inline-block;
+    margin-right: 3px;
+    bottom: 2px;
+    position: relative;
+    color: #fff;
+    webkit-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
