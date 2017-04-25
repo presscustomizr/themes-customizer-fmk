@@ -190,12 +190,31 @@ var czr_debug = {
 
                   api.trigger('czr-skope-started');
 
+                  //@return void()
+                  //This top note will be rendered 40s and self closed if not closed before by the user
+                  var _toggleTopFailureNote = function() {
+                        api.czr_skopeBase.toggleTopNote( true, {
+                              title : serverControlParams.i18n.skope['There was a problem when trying to load the customizer.'],
+                              message : [
+                                    serverControlParams.i18n.skope['Please refer to'],
+                                    '<a href="http://docs.presscustomizr.com/article/285-there-was-a-problem-when-trying-to-load-the-customizer" target="_blank">',
+                                    serverControlParams.i18n.skope['this documentation page'],
+                                    '</a>',
+                                    serverControlParams.i18n.skope['to understand how to fix the problem.']
+                              ].join(' '),
+                              selfCloseAfter : 40000
+                        });
+                  };
+
+
                   api.czr_skopeReady
                         .done( function() {
                               api.trigger('czr-skope-ready');
                         })
                         .fail( function( error ) {
                               api.errorLog( 'Skope could not be instantiated : ' + error );
+                              //This top note will be rendered 40s and self closed if not closed before by the user
+                              _toggleTopFailureNote();
                               serverControlParams.isSkopOn = false;
                         })
                         .always( function() {
@@ -206,28 +225,15 @@ var czr_debug = {
                   if ( 'rejected' != api.czr_skopeReady.state() ) {
                         //Make sure the loading icon panel is destroyed after a moment
                         //Typically if there was a problem in the WP js API and the skope could not be initialized
+                        //if the skopeReady state is still pending after 40 seconds, there's obviously a problem
                         setTimeout( function() {
                             if ( 'pending' == api.czr_skopeReady.state() )  {
-                                  //This top note will be rendered 20s and self closed if not closed before by the user
-                                  api.czr_skopeBase.toggleTopNote( true, {
-                                        title : serverControlParams.i18n.skope['There was a problem when trying to load the customizer.'],
-                                        message : [
-                                              serverControlParams.i18n.skope['Please open your'],
-                                              '<a href="http://docs.presscustomizr.com/article/272-inspect-your-webpages-in-your-browser-with-the-development-tools" target="_blank">',
-                                              serverControlParams.i18n.skope['browser debug tool'],
-                                              '</a>',
-                                              ',',
-                                              serverControlParams.i18n.skope['and report any error message (in red) printed in the javascript console in the'],
-                                              '<a href="https://wordpress.org/support/theme/hueman" target="_blank">',
-                                              serverControlParams.i18n.skope['Hueman theme forum'],
-                                              '</a>.'
-                                        ].join(' '),
-                                        selfCloseAfter : 40000
-                                  });
+                                  //This top note will be rendered 40s and self closed if not closed before by the user
+                                  _toggleTopFailureNote();
 
                                   api.czr_isLoadingSkope( false );
                             }
-                        }, 30000);
+                        }, 40000);
                   }
             }
 
@@ -387,7 +393,7 @@ var czr_debug = {
             } );
 
             $.extend( api.sectionConstructor, {
-                  'hu-customize-section-pro' : proSectionConstructor
+                  'czr-customize-section-pro' : proSectionConstructor
             });
       }
 })( wp.customize , jQuery, _);

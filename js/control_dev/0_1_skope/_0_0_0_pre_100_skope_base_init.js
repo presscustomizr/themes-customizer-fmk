@@ -216,7 +216,7 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 });
 
 
-                ///////////////////// SKOPE COLLECTIONS SYNCHRONISATION AND LISTNENERS /////////////////////
+                ///////////////////// SKOPE COLLECTIONS SYNCHRONISATION AND LISTENERS /////////////////////
                 //LISTEN TO SKOPE SYNC => UPDATE SKOPE COLLECTION ON START AND ON EACH REFRESH
                 //Will make sure server DB values are always synchronized with the instantiated skopes
                 //the sent data look like :
@@ -227,13 +227,18 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 //
                 //Bail if skope has not been properly instantiated 'rejected' == api.czr_skopeReady.state()
                 api.previewer.bind( 'czr-skopes-synced', function( data ) {
-                      if ( ! serverControlParams.isSkopOn || 'rejected' == api.czr_skopeReady.state() )
-                        return;
+                      if ( ! serverControlParams.isSkopOn || 'rejected' == api.czr_skopeReady.state() ) {
+                            return;
+                      }
                       //api.consoleLog('czr-skopes-ready DATA', data );
                       var preview = this,
                           previousSkopeCollection = api.czr_currentSkopesCollection();
                       //initialize skopes with the server sent data
+                      //if skope has not been initialized yet and the server sent wrong data, then reject the skope ready promise()
                       if ( ! _.has( data, 'czr_skopes') ) {
+                            if ( 'resolved' != api.czr_skopeReady.state() ) {
+                                  api.czr_skopeReady.reject();
+                            }
                             api.errorLog( "On 'czr-skopes-synced' : missing skopes in the server data" );
                             return;
                       }

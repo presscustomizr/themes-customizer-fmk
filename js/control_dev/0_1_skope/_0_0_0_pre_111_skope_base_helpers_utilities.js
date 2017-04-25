@@ -62,13 +62,21 @@ $.extend( CZRSkopeBaseMths, {
     getActiveSkopeId : function( _current_skope_collection ) {
           _current_skope_collection = _current_skope_collection || api.czr_currentSkopesCollection();
 
-          var _currentSkopeLevel = ( ! _.isEmpty( api.czr_activeSkopeId() ) && api.czr_skope.has( api.czr_activeSkopeId() ) ) ? api.czr_skope( api.czr_activeSkopeId() )().skope : serverControlParams.isLocalSkope ? 'local' : 'global',
-              _newSkopeCandidate = _.findWhere( _current_skope_collection, { skope : _currentSkopeLevel } );
+          var _currentSkopeLevel, _newSkopeCandidate, _skpId;
+          if ( ! _.isEmpty( api.czr_activeSkopeId() ) && api.czr_skope.has( api.czr_activeSkopeId() ) ) {
+                _currentSkopeLevel = api.czr_skope( api.czr_activeSkopeId() )().skope;
+          } else if ( serverControlParams.isLocalSkope ) {
+                _currentSkopeLevel = 'local';
+          } else {
+                _currentSkopeLevel = 'global';
+          }
+
+          _newSkopeCandidate = _.findWhere( _current_skope_collection, { skope : _currentSkopeLevel } );
 
           _skpId = ! _.isUndefined( _newSkopeCandidate ) ? _newSkopeCandidate.id : _.findWhere( _current_skope_collection, { skope : 'global' } ).id;
 
           if ( _.isUndefined( _skpId ) ) {
-            throw new Error( 'No default skope was found in getActiveSkopeId ', _current_skope_collection );
+                throw new Error( 'No default skope was found in getActiveSkopeId ', _current_skope_collection );
           }
 
           // _.each( _current_skope_collection, function( _skop ) {
