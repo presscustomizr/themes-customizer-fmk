@@ -368,4 +368,26 @@ var czr_debug = {
                   });
             });
       }
+
+
+      /*****************************************************************************
+      * ADD PRO BEFORE SPECIFIC SECTIONS AND PANELS
+      *****************************************************************************/
+      if ( ! serverControlParams.isPro && _.isFunction( api.Section ) ) {
+            proSectionConstructor = api.Section.extend( {
+                  active : true,
+                  // No events for this type of section.
+                  attachEvents: function () {},
+                  // Always make the section active.
+                  isContextuallyActive: function () {
+                    return this.active();
+                  },
+                  _toggleActive: function(){ return true; },
+
+            } );
+
+            $.extend( api.sectionConstructor, {
+                  'hu-customize-section-pro' : proSectionConstructor
+            });
+      }
 })( wp.customize , jQuery, _);

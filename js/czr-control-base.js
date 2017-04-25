@@ -359,6 +359,26 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
                   });
             });
       }
+
+
+      /*****************************************************************************
+      * ADD PRO BEFORE SPECIFIC SECTIONS AND PANELS
+      *****************************************************************************/
+      if ( ! serverControlParams.isPro && _.isFunction( api.Section ) ) {
+            proSectionConstructor = api.Section.extend( {
+                  active : true,
+                  attachEvents: function () {},
+                  isContextuallyActive: function () {
+                    return this.active();
+                  },
+                  _toggleActive: function(){ return true; },
+
+            } );
+
+            $.extend( api.sectionConstructor, {
+                  'hu-customize-section-pro' : proSectionConstructor
+            });
+      }
 })( wp.customize , jQuery, _);
 
 
