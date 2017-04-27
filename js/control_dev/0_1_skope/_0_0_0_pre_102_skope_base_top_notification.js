@@ -29,10 +29,10 @@ $.extend( CZRSkopeBaseMths, {
                             api.CZR_Helpers.setupDOMListeners(
                                   [ {
                                         trigger   : 'click keydown',
-                                        selector  : '.czr-top-note-close',
-                                        name      : 'close-top-note',
+                                        selector  : '.czr-preview-note-close',
                                         actions   : function() {
-                                              _destroy().done( function() {
+                                              _hideAndDestroy().done( function() {
+                                                    api.czr_topNoteVisible( false );
                                                     if ( _.isFunction( noteParams.actions ) ) {
                                                           noteParams.actions();
                                                     }
@@ -44,11 +44,11 @@ $.extend( CZRSkopeBaseMths, {
                             );
                       });
                 },
-                _destroy = function() {
+                _hideAndDestroy = function() {
                       var dfd = $.Deferred();
                       $('body').removeClass('czr-top-note-open');
                       if ( self.welcomeNote.length ) {
-                            //display
+                            //remove Dom element after slide up
                             _.delay( function() {
                                   self.welcomeNote.remove();
                                   dfd.resolve();
@@ -64,12 +64,14 @@ $.extend( CZRSkopeBaseMths, {
             if ( visible ) {
                   _renderAndSetup();
             } else {
-                  _destroy();
+                  _hideAndDestroy().done( function() {
+                        api.czr_topNoteVisible( false );//should be already false
+                  });
             }
 
             //Always auto-collapse the notification
             _.delay( function() {
-                        _destroy();
+                        api.czr_topNoteVisible( false );
                   },
                   noteParams.selfCloseAfter || 20000
             );

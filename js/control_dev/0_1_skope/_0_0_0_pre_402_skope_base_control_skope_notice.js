@@ -45,13 +45,15 @@ $.extend( CZRSkopeBaseMths, {
               _isSkoped = function( setId ) {
                     return setId && self.isSettingSkopeEligible( setId );
               },//filter only eligible ctrlIds
+
               _generateControlNotice = function( setId, _localSkopeId ) {
                     var _currentSkopeId         = api.czr_activeSkopeId(),
                         _inheritedFromSkopeId   = self.getInheritedSkopeId( setId, _currentSkopeId ),
                         _overridedBySkopeId     = self.getAppliedPrioritySkopeId( setId, _currentSkopeId ),
                         _html = [],
                         _isCustomized,
-                        _hasDBVal;
+                        _hasDBVal,
+                        _ctxTitle;
 
                     //////////////////////
                     /// CASE 0 : not skoped
@@ -69,6 +71,10 @@ $.extend( CZRSkopeBaseMths, {
                           _isCustomized = ! _.isUndefined( api.czr_skope( _currentSkopeId ).dirtyValues()[setId] );
                           _hasDBVal     = ! _.isUndefined( api.czr_skope( _currentSkopeId ).dbValues()[setId] );
 
+                          _ctxTitle = api.czr_skope( _inheritedFromSkopeId )().ctx_title;
+
+                          _ctxTitle = ( _.isString( _ctxTitle ) ? _ctxTitle : '' ).toLowerCase();
+
                           if ( _isCustomized ) {
                                 if ( 'global' == api.czr_skope( _inheritedFromSkopeId )().skope ) {
                                       _html.push( [
@@ -77,7 +83,7 @@ $.extend( CZRSkopeBaseMths, {
                                 } else {
                                     _html.push( [
                                           serverControlParams.i18n.skope['Customized. Will be applied to'],
-                                          '<strong>' + api.czr_skope( _inheritedFromSkopeId )().ctx_title + '</strong>',
+                                          '<strong>' + _ctxTitle + '</strong>',
                                           serverControlParams.i18n.skope['once published.']
                                     ].join(' ') );
                                 }
@@ -90,7 +96,7 @@ $.extend( CZRSkopeBaseMths, {
                                       } else {
                                             _html.push( [
                                                   serverControlParams.i18n.skope['Customized and applied to'],
-                                                  '<strong>' + api.czr_skope( _inheritedFromSkopeId )().ctx_title + '.' + '</strong>'
+                                                  '<strong>' + _ctxTitle + '.' + '</strong>'
                                             ].join(' ') );
                                       }
                                 } else {
@@ -106,12 +112,17 @@ $.extend( CZRSkopeBaseMths, {
                           //is the setId customized in the current skope ?
                           _isCustomized = ! _.isUndefined( api.czr_skope( _inheritedFromSkopeId ).dirtyValues()[setId] );
                           _hasDBVal     = ! _.isUndefined( api.czr_skope( _inheritedFromSkopeId ).dbValues()[setId] );
+
+                          _ctxTitle = api.czr_skope( _currentSkopeId )().ctx_title;
+
+                          _ctxTitle = ( _.isString( _ctxTitle ) ? _ctxTitle : '' ).toLowerCase();
+
                           if ( ! _isCustomized && ! _hasDBVal ) {
                                 _html.push(
                                       [
                                             serverControlParams.i18n.skope['Default website value.'],
                                             serverControlParams.i18n.skope['You can customize this specifically for'],
-                                            '<strong>' + api.czr_skope( _currentSkopeId )().ctx_title + '.' + '</strong>'
+                                            '<strong>' + _ctxTitle + '.' + '</strong>'
                                       ].join(' ')
                                 );
                           } else {
@@ -120,7 +131,7 @@ $.extend( CZRSkopeBaseMths, {
                                             serverControlParams.i18n.skope['Currently inherited from'],
                                             self.buildSkopeLink( _inheritedFromSkopeId ) + '.',
                                             serverControlParams.i18n.skope['You can customize this specifically for'],
-                                            '<strong>' + api.czr_skope( _currentSkopeId )().ctx_title + '.' + '</strong>'
+                                            '<strong>' + _ctxTitle + '.' + '</strong>'
                                       ].join(' ')
                                 );
                           }
@@ -134,9 +145,13 @@ $.extend( CZRSkopeBaseMths, {
                           //_hasDBVal = ! _.isUndefined( api.czr_skope( _overridedBySkopeId ).dbValues()[setId] );
                           _isCustomized = ! _.isUndefined( api.czr_skope( _overridedBySkopeId ).dirtyValues()[setId] );
 
+                          _ctxTitle = api.czr_skope( _localSkopeId )().ctx_title;
+
+                          _ctxTitle = ( _.isString( _ctxTitle ) ? _ctxTitle : '' ).toLowerCase();
+
                           _html.push( [
                                 ! _isCustomized ? serverControlParams.i18n.skope['The value currently applied to'] : serverControlParams.i18n.skope['The value that will be applied to'],
-                                '<strong>' + api.czr_skope( _localSkopeId )().ctx_title + '</strong>',
+                                '<strong>' + _ctxTitle + '</strong>',
                                 ! _isCustomized ? serverControlParams.i18n.skope['is set in'] : serverControlParams.i18n.skope['is customized in'],
                                 self.buildSkopeLink( _overridedBySkopeId ),
                                 serverControlParams.i18n.skope['which has a higher priority than the current option scope'],

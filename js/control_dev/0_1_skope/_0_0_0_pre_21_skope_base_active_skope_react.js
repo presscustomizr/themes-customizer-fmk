@@ -221,6 +221,6 @@ $.extend( CZRSkopeBaseMths, {
                             api.state( 'switching-skope' ).isBound = true;
                       }
           });
-    }
+    }//_writeCurrentSkopeTitle
 });//$.extend
 })( wp.customize , jQuery, _ );

@@ -683,6 +683,25 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                             return;
                       }
 
+                      //@return void()
+                      // => refresh skope notice below the skope switcher title
+                      // => refresh bottom skope infos in the preview
+                      var _refreshSkopeInfosNotices = function() {
+                            //WRITE THE CURRENT SKOPE TITLE
+                            self._writeCurrentSkopeTitle();
+
+                            //REFRESH PREVIEW BOTTOM INFOS
+                            //the default behaviour is to display the bottom infos block in the preview
+                            //and to refresh its content
+                            if ( api.czr_bottomInfosVisible() ) {
+                                  self.renderBottomInfosTmpl();//<= will build a new bottom skope message infos in the preview based on the new active skopes
+                            } else {
+                                  //Display + build and render the skope infos
+                                  api.czr_bottomInfosVisible( true );
+                            }
+                      };
+
+
                       //Always wait for the initial collection to be populated
                       api.czr_initialSkopeCollectionPopulated.then( function() {
                             var refreshActiveSkope = _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) );
@@ -696,8 +715,8 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                                           if ( 'resolved' != api.czr_skopeReady.state() ) {
                                                                 api.czr_skopeReady.resolve( self.getActiveSkopeId() );
                                                           }
-                                                          //write the current skope title
-                                                          self._writeCurrentSkopeTitle();
+                                                          //REFRESH SKOPE INFOS IN TITLE AND PREVIEW FRAME
+                                                          _refreshSkopeInfosNotices();
                                                     })
                                                     .fail( function() {
                                                           throw new Error( 'Error when trying to set the active skope after skope synced.' );
@@ -710,8 +729,8 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                             _newLoc  =_.findWhere( data.czr_skopes, { skope : 'local' } ).opt_name;
 
                                         if ( _newLoc !== _prevLoc && 'resolved' == api.czr_skopeReady.state() ) {
-                                              //write the current skope title
-                                              self._writeCurrentSkopeTitle();
+                                              //REFRESH SKOPE INFOS IN TITLE AND PREVIEW FRAME
+                                              _refreshSkopeInfosNotices();
                                         }
                                   }
                             });
@@ -793,46 +812,13 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 });
 
 
-                ///////////////////// TOP NOTE BLOCK /////////////////////
-                api.czr_topNoteVisible = new api.Value( false );
-                api.czr_skopeReady.then( function() {
-                      api.czr_topNoteVisible.bind( function( visible ) {
-                              var noteParams = {},
-                                  _defaultParams = {
-                                        title : '',
-                                        message : '',
-                                        actions : '',
-                                        selfCloseAfter : 20000
-                                  };
-                              //noteParams is an object :
-                              //{
-                              // title : '',
-                              // message : '',
-                              // actions : fn(),
-                              // selfCloseAfter : 20000 in ms
-                              //}
-                              noteParams = $.extend( _defaultParams , serverControlParams.topNoteParams );
 
-                              //SPECIFIC AJAX ACTION FOR THE WELCOME NOTE
-                              noteParams.actions = function() {
-                                    var _query = $.extend(
-                                          api.previewer.query(),
-                                          { nonce:  api.previewer.nonce.save }
-                                    );
-                                    wp.ajax.post( 'czr_dismiss_top_note' , _query )
-                                          .always( function () {})
-                                          .fail( function ( response ) { api.consoleLog( 'czr_dismiss_top_note failed', _query, response ); })
-                                          .done( function( response ) {});
-                              };
+                ///////////////////// SETUP PREVIEW NOTE AND INFOS BLOCKS /////////////////////
+                /// 1) defines observable value to control the block view visibilities
+                /// 2) listen to those values state to render / destroy the views
+                /// 3) setup DOM listeners inside the views to react on user actions : close block + write an ajax option for example
+                self._setupPreviewNotificationsBlocks();//top note and bottom skope infos
 
-                              self.toggleTopNote( visible, noteParams );
-                      });
-
-                      //Toggle the top note on initialization
-                      _.delay( function() {
-                            api.czr_topNoteVisible( ! _.isEmpty( serverControlParams.isTopNoteOn ) || 1 == serverControlParams.isTopNoteOn );
-                      }, 2000 );
-                });
 
 
                 ///////////////////// SKOPE SWITCHER EVENT MAP /////////////////
@@ -897,6 +883,21 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
           },//initialize
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           /*****************************************************************************
           * EMBED WRAPPER
           *****************************************************************************/
@@ -909,7 +910,7 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher', html:'<div class="czr-skopes-wrapper"></div>'}) );
                 $('body').addClass('czr-skop-on');
                 var _eventMap = [
-                    //skope reset : do reset
+                    //skope switch
                     {
                           trigger   : 'click keydown',
                           selector  : '.czr-skope-switch',
@@ -925,6 +926,13 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
           },
 
 
+
+
+
+
+
+
+
           /*****************************************************************************
           * API DIRTYNESS REACTIONS
           *****************************************************************************/
@@ -933,6 +941,13 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 $('body').toggleClass('czr-api-dirty', is_dirty );
                 api.state( 'saved')( ! is_dirty );
           },
+
+
+
+
+
+
+
 
 
           /*****************************************************************************
@@ -965,6 +980,15 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 var canSave = ! saving() && ( ! activated() || ! saved() ) && 'publish' !== changesetStatus;
                 saveBtn.prop( 'disabled', ! canSave );
           },
+
+
+
+
+
+
+
+
+
 
 
           //cb of 'skope-switched-done' event => fired when the api.czr_activeSkopeId().done() <=> refresh is done()
@@ -1025,6 +1049,16 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                 });
                           };
 
+                          //REFRESH PREVIEW BOTTOM INFOS
+                          //on skope switched done, the default behaviour is to display the bottom infos block in the preview
+                          //and to refresh its content
+                          if ( api.czr_bottomInfosVisible() ) {
+                                self.renderBottomInfosTmpl();//<= will build a new bottom skope message infos in the preview based on the new active skopes
+                          } else {
+                                //Display + build and render the skope infos
+                                api.czr_bottomInfosVisible( true );
+                          }
+
                           //Setup control dialogs after a delay on skope switched.
                           //=> the delay is needed for controls that have been re-rendered.
                           _.delay( function() {
@@ -1040,6 +1074,115 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 api.czr_skopeReady.then( function() {
                       _doWhenSkopeReady();
                 });
+          },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          //@return void()
+          _setupPreviewNotificationsBlocks : function() {
+                var self = this;
+                ///////////////////// TOP NOTE BLOCK /////////////////////
+                api.czr_topNoteVisible = new api.Value( false );
+                api.czr_skopeReady.then( function() {
+                      api.czr_topNoteVisible.bind( function( visible ) {
+                              var noteParams = {},
+                                  _defaultParams = {
+                                        title : '',
+                                        message : '',
+                                        actions : '',
+                                        selfCloseAfter : 20000
+                                  };
+                              //noteParams is an object :
+                              //{
+                              // title : '',
+                              // message : '',
+                              // actions : fn(),
+                              // selfCloseAfter : 20000 in ms
+                              //}
+                              noteParams = $.extend( _defaultParams , serverControlParams.topNoteParams );
+
+                              //SPECIFIC AJAX ACTION FOR THE WELCOME NOTE
+                              noteParams.actions = function() {
+                                    var _query = $.extend(
+                                          api.previewer.query(),
+                                          { nonce:  api.previewer.nonce.save }
+                                    );
+                                    wp.ajax.post( 'czr_dismiss_top_note' , _query )
+                                          .always( function () {})
+                                          .fail( function ( response ) { api.consoleLog( 'czr_dismiss_top_note failed', _query, response ); })
+                                          .done( function( response ) {});
+                              };
+
+                              self.toggleTopNote( visible, noteParams );
+                      });
+
+                      //Toggle the top note on initialization
+                      _.delay( function() {
+                            api.czr_topNoteVisible( ! _.isEmpty( serverControlParams.isTopNoteOn ) || 1 == serverControlParams.isTopNoteOn );
+                      }, 2000 );
+                });
+
+
+
+                ///////////////////// BOTTOM INFOS BLOCK /////////////////////
+                api.czr_bottomInfosVisible = new api.Value( false );
+                api.czr_skopeReady.then( function() {
+                      //Listen to changes
+                      api.czr_bottomInfosVisible.bind( function( visible ) {
+                              var noteParams = {},
+                                  _defaultParams = {
+                                        title : '',
+                                        message : '',
+                                        actions : '',
+                                        selfCloseAfter : 20000
+                                  };
+                              //noteParams is an object :
+                              //{
+                              // title : '',
+                              // message : '',
+                              // actions : fn(),
+                              // selfCloseAfter : 20000 in ms
+                              //}
+                              noteParams = $.extend( _defaultParams , {} );
+
+                              return self.toggleBottomInfos( visible, noteParams );//returns a promise()
+                      }, { deferred : true } );
+
+                      //never set to true if 'show-skope-infos' is unchecked
+                      var _skopeInfosSetId = api.CZR_Helpers.build_setId( 'show-skope-infos' );
+                      api.when( _skopeInfosSetId, function( _set_ ){
+                            api.czr_bottomInfosVisible.validate = function( value ) {
+                                  var _v = _set_(),
+                                      _isChecked = 0 !== _v && '0' !== _v && false !== _v && 'off' !== _v;
+
+                                  return _isChecked ? value : false;
+                            };
+
+                            //Listen to skope infos setting in admin section
+                            _set_.bind( function( visible ) {
+                                  api.czr_bottomInfosVisible( 0 !== visible && '0' !== visible && false !== visible && 'off' !== visible );
+                            });
+                      });
+
+
+
+                      //Toggle the top note on initialization
+                      _.delay( function() {
+                            api.czr_bottomInfosVisible( true );
+                      }, 2000 );
+                });//api.czr_skopeReady.then()
           }
 
 
@@ -1253,10 +1396,10 @@ $.extend( CZRSkopeBaseMths, {
                             api.CZR_Helpers.setupDOMListeners(
                                   [ {
                                         trigger   : 'click keydown',
-                                        selector  : '.czr-top-note-close',
-                                        name      : 'close-top-note',
+                                        selector  : '.czr-preview-note-close',
                                         actions   : function() {
-                                              _destroy().done( function() {
+                                              _hideAndDestroy().done( function() {
+                                                    api.czr_topNoteVisible( false );
                                                     if ( _.isFunction( noteParams.actions ) ) {
                                                           noteParams.actions();
                                                     }
@@ -1268,11 +1411,11 @@ $.extend( CZRSkopeBaseMths, {
                             );
                       });
                 },
-                _destroy = function() {
+                _hideAndDestroy = function() {
                       var dfd = $.Deferred();
                       $('body').removeClass('czr-top-note-open');
                       if ( self.welcomeNote.length ) {
-                            //display
+                            //remove Dom element after slide up
                             _.delay( function() {
                                   self.welcomeNote.remove();
                                   dfd.resolve();
@@ -1288,12 +1431,14 @@ $.extend( CZRSkopeBaseMths, {
             if ( visible ) {
                   _renderAndSetup();
             } else {
-                  _destroy();
+                  _hideAndDestroy().done( function() {
+                        api.czr_topNoteVisible( false );//should be already false
+                  });
             }
 
             //Always auto-collapse the notification
             _.delay( function() {
-                        _destroy();
+                        api.czr_topNoteVisible( false );
                   },
                   noteParams.selfCloseAfter || 20000
             );
@@ -1836,6 +1981,269 @@ $.extend( CZRSkopeBaseMths, {
     }
 });//$.extend()
 })( wp.customize , jQuery, _ );
+var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
+(function ( api, $, _ ) {
+$.extend( CZRSkopeBaseMths, {
+
+      //can be call directly, but the recommend way is to use api.czr_bottomInfosVisible, fired on skope base initialize, for which the following method is a callback
+      //noteParams is an object :
+      //{
+      // title : '',
+      // message : '',
+      // actions : fn()
+      //}
+      toggleBottomInfos : function( visible, noteParams ) {
+            noteParams = _.isObject( noteParams ) ? noteParams : {};
+            var self = this,
+                dfd = $.Deferred(),
+                _defaultParams = {
+                      title : '',
+                      message : '',
+                      actions : '',
+                      selfCloseAfter : 20000
+                },
+                _skopeInfosSetId = api.CZR_Helpers.build_setId('show-skope-infos'),
+                _renderAndSetup = function() {
+                      var _dfd = $.Deferred();
+                      //Render and setup DOM listeners
+                      $.when( self.renderBottomInfosTmpl( noteParams ) )
+                            .done( function( $_el ) {
+                                  self.bottomInfosContainer = $_el;
+                                  //Reveal and resolve
+                                  _.delay( function() {
+                                        $('body').addClass('czr-bottom-infos-open');
+                                        _dfd.resolve();
+                                  }, 200 );
+
+                                  //setup DOM listeners
+                                  api.CZR_Helpers.setupDOMListeners(
+                                        [
+                                              {
+                                                    trigger   : 'click keydown',
+                                                    selector  : '.czr-preview-note-close',
+                                                    actions   : function() {
+                                                          _hideAndDestroy().done( function() {
+                                                                api.czr_bottomInfosVisible( false );
+                                                                if ( _.isFunction( noteParams.actions ) ) {
+                                                                      noteParams.actions();
+                                                                }
+                                                          });
+                                                    }
+                                              },
+                                              //skope switch
+                                              {
+                                                    trigger   : 'click keydown',
+                                                    selector  : '.czr-skope-switch',
+                                                    actions   : function( params ) {
+                                                          var _skopeIdToSwithTo = $( params.dom_event.currentTarget, params.dom_el ).attr('data-skope-id');
+                                                          if ( ! _.isEmpty( _skopeIdToSwithTo ) && api.czr_skope.has( _skopeIdToSwithTo ) )
+                                                            api.czr_activeSkopeId( _skopeIdToSwithTo );
+                                                    }
+                                              },
+                                              {
+                                                    trigger   : 'click keydown',
+                                                    selector  : '.czr-disable-bottom-infos',
+                                                    actions   : function( params ) {
+                                                          if ( api.control.has( _skopeInfosSetId ) ) {
+                                                                api.control( _skopeInfosSetId ).focus();
+                                                          }
+                                                    }
+                                              }
+                                        ] ,
+                                        { dom_el : self.bottomInfosContainer },
+                                        self
+                                  );
+                            })
+                            .fail( function() {
+                                  _dfd.resolve();
+                            });
+                      return _dfd.promise();
+                },
+                _hideAndDestroy = function() {
+                      return $.Deferred( function() {
+                            var _dfd_ = this;
+                            $('body').removeClass('czr-bottom-infos-open');
+                            if ( self.bottomInfosContainer.length ) {
+                                  //remove and reset
+                                  _.delay( function() {
+                                        self.bottomInfosContainer.remove();
+                                        self.bottomInfosContainer = false;
+                                        _dfd_.resolve();
+                                  }, 300 );
+                            } else {
+                                _dfd_.resolve();
+                            }
+                      });
+                };
+
+
+            noteParams = $.extend( _defaultParams , noteParams);
+
+            if ( visible ) {
+                  _renderAndSetup().always( function() {
+                        dfd.resolve();
+                  });
+            } else {
+                  _hideAndDestroy().done( function() {
+                        api.czr_bottomInfosVisible( false );//should be already false
+                        dfd.resolve();
+                  });
+            }
+
+            //Always auto-collapse the infos block
+            // _.delay( function() {
+            //             api.czr_bottomInfosVisible( false );
+            //       },
+            //       noteParams.selfCloseAfter || 20000
+            // );
+            return dfd.promise();
+      },
+
+
+      //@param = { note_title  : '', note_message : '' }
+      renderBottomInfosTmpl : function( params ) {
+            params = params || {};
+            var self = this,
+                _tmpl = '',
+                _skope_id = api.czr_activeSkopeId();
+
+            //Don't go further if the current skope is not registered yet
+            if ( ! api.czr_skope.has( _skope_id ) || ! _.isObject( api.czr_skope( _skope_id )() ) )
+              return false;
+
+            var _skope_title = api.czr_skope( _skope_id )().long_title,
+                _ctxTitle = api.czr_skope( _skope_id )().ctx_title;
+
+            _skope_title = _.isString( _skope_title ) ? _skope_title : '';
+            _ctxTitle = _.isString( _ctxTitle ) ? _ctxTitle : '';
+
+            var _title = params.title || ['Customizing', _ctxTitle.toLowerCase() ].join(' '),
+                _message = params.message || self._getSkopeInfosMessage( _skope_id ),
+                _renderTmpl = function() {
+                      return $.Deferred( function() {
+                            var dfd = this;
+                            try {
+                                  _tmpl =  wp.template( 'czr-bottom-infos' )( { title : _title } );
+                                  $('#customize-preview').after( $( _tmpl ) );
+                                  dfd.resolve();
+                            } catch( er ) {
+                                  api.errorLog( 'Error when parsing the the bottom infos template : ' + er );
+                                  dfd.reject( er );
+                            }
+                      });
+                };
+
+            //on initial rendering, print the template
+            if ( _.isUndefined( this.bottomInfosContainer ) || 1 != this.bottomInfosContainer.length ) {
+                  _renderTmpl().done( function() {
+                        $('.czr-note-message', '#czr-bottom-infos').html( _message );
+                  });
+            } else {
+                  $('.czr-note-content', self.bottomInfosContainer ).fadeOut({
+                        duration : 'fast',
+                        complete : function() {
+                              $( 'h2', self.bottomInfosContainer ).html( [ '&middot;', _title, '&middot;' ].join(' ') );
+                              $('.czr-note-message', self.bottomInfosContainer ).html( _message );
+                              $(this).fadeIn('fast');
+                        }
+                  });
+
+            }
+            return ( this.bottomInfosContainer && 1 == this.bottomInfosContainer.length ) ? this.bottomInfosContainer : $( '#czr-bottom-infos' );
+      },
+
+
+      //@return html string
+      //a skope is described by the following properties :
+      // color:"rgba(39, 59, 88, 0.28)"
+      // ctx_title:"Home"
+      // dyn_type:"skope_meta"
+      // id:"local_home"
+      // is_forced:false
+      // is_winner:true
+      // level:"home"
+      // long_title:"Options for home"
+      // obj_id:"home"
+      // opt_name:"hueman_czr_home"
+      // skope:"local"
+      // title:"Options for home"
+      _getSkopeInfosMessage : function( skope_id ) {
+            skope_id = skope_id || api.czr_activeSkopeId();
+            var _localSkopeId = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
+
+            //Paranoid but, always bail if :
+            //1) the current skope id is not registered,
+            //2) the skope is not an object
+            //3) the local skope is undefined
+            if ( ! api.czr_skope.has( skope_id ) || ! _.isObject( api.czr_skope( skope_id )() ) || _.isUndefined( _localSkopeId ) )
+              return '';
+
+            var self = this,
+                _skpLevel = api.czr_skope( skope_id )().skope,
+                _inheritedFrom = self.getInheritedSkopeTitles(),
+                _overrides = self.getOverridenSkopeTitles(),
+                _localCtxTitle = api.czr_skope( _localSkopeId )().ctx_title,//<= the context title is always the one of the local skope
+                current_title = api.czr_skope( skope_id )().long_title,//ex : Options for home
+                _html;
+
+            switch( _skpLevel ) {
+                    case 'global' :
+                          _html = [
+                                serverControlParams.i18n.skope['The customizations made site wide are inherited by all other levels of customization.'],
+                                '<br/>',
+                                serverControlParams.i18n.skope['The current context'],
+                                ['(', _localCtxTitle, ')'].join(' '),
+                                serverControlParams.i18n.skope['can be customized more specifically at the following level'] + '(s)',
+                                ':',
+                                _overrides + '.'
+                          ].join(' ');
+                    break;
+                    case 'group' :
+                          _html = [
+                                serverControlParams.i18n.skope['The current customizations will be applied to'],
+                                api.czr_skope( skope_id )().ctx_title.toLowerCase() + '.',
+                                '<br/>',
+                                serverControlParams.i18n.skope['The options not customized at this level will inherit their value from'],
+                                _inheritedFrom,
+                                '.<br/>',
+                                serverControlParams.i18n.skope['The current context'],
+                                ['(', _localCtxTitle, ')'].join(' '),
+                                serverControlParams.i18n.skope['can be customized more specifically at the following level'],
+                                ':',
+                                _overrides + '.'
+                          ].join(' ');
+                    break;
+                    case 'local' :
+                          _html = [
+                                serverControlParams.i18n.skope['The current context'],
+                                ['(', _localCtxTitle, ')'].join(' '),
+                                serverControlParams.i18n.skope['can be customized with a specific set of options.'],
+                                '<br/>',
+                                serverControlParams.i18n.skope['The options not customized at this level will inherit their value from'],
+                                _inheritedFrom + '.'
+                          ].join(' ');
+                    break;
+            }
+
+            return $.trim( [
+                  '<span class="czr-skope-bottom-infos">',
+                    _html,
+                    '</span>'
+            ].join(' ') );
+
+            // return $.trim( [
+            //       '<span class="czr-skope-bottom-infos">',
+            //         serverControlParams.i18n.skope['In this context :'],
+            //         _.isEmpty( _inheritedFrom ) ? ' ' : serverControlParams.i18n.skope['inherits from'],
+            //         _inheritedFrom,
+            //         _.isEmpty( _inheritedFrom ) ? '' : _.isEmpty( _overrides ) ? '.' : [',' , serverControlParams.i18n.skope['and'] ].join(' '),
+            //         _.isEmpty( _overrides ) ? ' ' : serverControlParams.i18n.skope['overridden by'],
+            //         _overrides,
+            //         _.isEmpty( _overrides ) ? '</span>' : '.</span>'
+            // ].join(' ') );
+      }
+});//$.extend()
+})( wp.customize , jQuery, _);
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
@@ -3105,7 +3513,7 @@ $.extend( CZRSkopeBaseMths, {
                             api.state( 'switching-skope' ).isBound = true;
                       }
           });
-    }
+    }//_writeCurrentSkopeTitle
 });//$.extend
 })( wp.customize , jQuery, _ );
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
@@ -4223,13 +4631,15 @@ $.extend( CZRSkopeBaseMths, {
               _isSkoped = function( setId ) {
                     return setId && self.isSettingSkopeEligible( setId );
               },//filter only eligible ctrlIds
+
               _generateControlNotice = function( setId, _localSkopeId ) {
                     var _currentSkopeId         = api.czr_activeSkopeId(),
                         _inheritedFromSkopeId   = self.getInheritedSkopeId( setId, _currentSkopeId ),
                         _overridedBySkopeId     = self.getAppliedPrioritySkopeId( setId, _currentSkopeId ),
                         _html = [],
                         _isCustomized,
-                        _hasDBVal;
+                        _hasDBVal,
+                        _ctxTitle;
 
                     //////////////////////
                     /// CASE 0 : not skoped
@@ -4247,6 +4657,10 @@ $.extend( CZRSkopeBaseMths, {
                           _isCustomized = ! _.isUndefined( api.czr_skope( _currentSkopeId ).dirtyValues()[setId] );
                           _hasDBVal     = ! _.isUndefined( api.czr_skope( _currentSkopeId ).dbValues()[setId] );
 
+                          _ctxTitle = api.czr_skope( _inheritedFromSkopeId )().ctx_title;
+
+                          _ctxTitle = ( _.isString( _ctxTitle ) ? _ctxTitle : '' ).toLowerCase();
+
                           if ( _isCustomized ) {
                                 if ( 'global' == api.czr_skope( _inheritedFromSkopeId )().skope ) {
                                       _html.push( [
@@ -4255,7 +4669,7 @@ $.extend( CZRSkopeBaseMths, {
                                 } else {
                                     _html.push( [
                                           serverControlParams.i18n.skope['Customized. Will be applied to'],
-                                          '<strong>' + api.czr_skope( _inheritedFromSkopeId )().ctx_title + '</strong>',
+                                          '<strong>' + _ctxTitle + '</strong>',
                                           serverControlParams.i18n.skope['once published.']
                                     ].join(' ') );
                                 }
@@ -4268,7 +4682,7 @@ $.extend( CZRSkopeBaseMths, {
                                       } else {
                                             _html.push( [
                                                   serverControlParams.i18n.skope['Customized and applied to'],
-                                                  '<strong>' + api.czr_skope( _inheritedFromSkopeId )().ctx_title + '.' + '</strong>'
+                                                  '<strong>' + _ctxTitle + '.' + '</strong>'
                                             ].join(' ') );
                                       }
                                 } else {
@@ -4284,12 +4698,17 @@ $.extend( CZRSkopeBaseMths, {
                           //is the setId customized in the current skope ?
                           _isCustomized = ! _.isUndefined( api.czr_skope( _inheritedFromSkopeId ).dirtyValues()[setId] );
                           _hasDBVal     = ! _.isUndefined( api.czr_skope( _inheritedFromSkopeId ).dbValues()[setId] );
+
+                          _ctxTitle = api.czr_skope( _currentSkopeId )().ctx_title;
+
+                          _ctxTitle = ( _.isString( _ctxTitle ) ? _ctxTitle : '' ).toLowerCase();
+
                           if ( ! _isCustomized && ! _hasDBVal ) {
                                 _html.push(
                                       [
                                             serverControlParams.i18n.skope['Default website value.'],
                                             serverControlParams.i18n.skope['You can customize this specifically for'],
-                                            '<strong>' + api.czr_skope( _currentSkopeId )().ctx_title + '.' + '</strong>'
+                                            '<strong>' + _ctxTitle + '.' + '</strong>'
                                       ].join(' ')
                                 );
                           } else {
@@ -4298,7 +4717,7 @@ $.extend( CZRSkopeBaseMths, {
                                             serverControlParams.i18n.skope['Currently inherited from'],
                                             self.buildSkopeLink( _inheritedFromSkopeId ) + '.',
                                             serverControlParams.i18n.skope['You can customize this specifically for'],
-                                            '<strong>' + api.czr_skope( _currentSkopeId )().ctx_title + '.' + '</strong>'
+                                            '<strong>' + _ctxTitle + '.' + '</strong>'
                                       ].join(' ')
                                 );
                           }
@@ -4312,9 +4731,13 @@ $.extend( CZRSkopeBaseMths, {
                           //_hasDBVal = ! _.isUndefined( api.czr_skope( _overridedBySkopeId ).dbValues()[setId] );
                           _isCustomized = ! _.isUndefined( api.czr_skope( _overridedBySkopeId ).dirtyValues()[setId] );
 
+                          _ctxTitle = api.czr_skope( _localSkopeId )().ctx_title;
+
+                          _ctxTitle = ( _.isString( _ctxTitle ) ? _ctxTitle : '' ).toLowerCase();
+
                           _html.push( [
                                 ! _isCustomized ? serverControlParams.i18n.skope['The value currently applied to'] : serverControlParams.i18n.skope['The value that will be applied to'],
-                                '<strong>' + api.czr_skope( _localSkopeId )().ctx_title + '</strong>',
+                                '<strong>' + _ctxTitle + '</strong>',
                                 ! _isCustomized ? serverControlParams.i18n.skope['is set in'] : serverControlParams.i18n.skope['is customized in'],
                                 self.buildSkopeLink( _overridedBySkopeId ),
                                 serverControlParams.i18n.skope['which has a higher priority than the current option scope'],

@@ -253,6 +253,25 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                             return;
                       }
 
+                      //@return void()
+                      // => refresh skope notice below the skope switcher title
+                      // => refresh bottom skope infos in the preview
+                      var _refreshSkopeInfosNotices = function() {
+                            //WRITE THE CURRENT SKOPE TITLE
+                            self._writeCurrentSkopeTitle();
+
+                            //REFRESH PREVIEW BOTTOM INFOS
+                            //the default behaviour is to display the bottom infos block in the preview
+                            //and to refresh its content
+                            if ( api.czr_bottomInfosVisible() ) {
+                                  self.renderBottomInfosTmpl();//<= will build a new bottom skope message infos in the preview based on the new active skopes
+                            } else {
+                                  //Display + build and render the skope infos
+                                  api.czr_bottomInfosVisible( true );
+                            }
+                      };
+
+
                       //Always wait for the initial collection to be populated
                       api.czr_initialSkopeCollectionPopulated.then( function() {
                             var refreshActiveSkope = _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) );
@@ -266,8 +285,8 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                                           if ( 'resolved' != api.czr_skopeReady.state() ) {
                                                                 api.czr_skopeReady.resolve( self.getActiveSkopeId() );
                                                           }
-                                                          //write the current skope title
-                                                          self._writeCurrentSkopeTitle();
+                                                          //REFRESH SKOPE INFOS IN TITLE AND PREVIEW FRAME
+                                                          _refreshSkopeInfosNotices();
                                                     })
                                                     .fail( function() {
                                                           throw new Error( 'Error when trying to set the active skope after skope synced.' );
@@ -280,8 +299,8 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                             _newLoc  =_.findWhere( data.czr_skopes, { skope : 'local' } ).opt_name;
 
                                         if ( _newLoc !== _prevLoc && 'resolved' == api.czr_skopeReady.state() ) {
-                                              //write the current skope title
-                                              self._writeCurrentSkopeTitle();
+                                              //REFRESH SKOPE INFOS IN TITLE AND PREVIEW FRAME
+                                              _refreshSkopeInfosNotices();
                                         }
                                   }
                             });
@@ -363,46 +382,13 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 });
 
 
-                ///////////////////// TOP NOTE BLOCK /////////////////////
-                api.czr_topNoteVisible = new api.Value( false );
-                api.czr_skopeReady.then( function() {
-                      api.czr_topNoteVisible.bind( function( visible ) {
-                              var noteParams = {},
-                                  _defaultParams = {
-                                        title : '',
-                                        message : '',
-                                        actions : '',
-                                        selfCloseAfter : 20000
-                                  };
-                              //noteParams is an object :
-                              //{
-                              // title : '',
-                              // message : '',
-                              // actions : fn(),
-                              // selfCloseAfter : 20000 in ms
-                              //}
-                              noteParams = $.extend( _defaultParams , serverControlParams.topNoteParams );
 
-                              //SPECIFIC AJAX ACTION FOR THE WELCOME NOTE
-                              noteParams.actions = function() {
-                                    var _query = $.extend(
-                                          api.previewer.query(),
-                                          { nonce:  api.previewer.nonce.save }
-                                    );
-                                    wp.ajax.post( 'czr_dismiss_top_note' , _query )
-                                          .always( function () {})
-                                          .fail( function ( response ) { api.consoleLog( 'czr_dismiss_top_note failed', _query, response ); })
-                                          .done( function( response ) {});
-                              };
+                ///////////////////// SETUP PREVIEW NOTE AND INFOS BLOCKS /////////////////////
+                /// 1) defines observable value to control the block view visibilities
+                /// 2) listen to those values state to render / destroy the views
+                /// 3) setup DOM listeners inside the views to react on user actions : close block + write an ajax option for example
+                self._setupPreviewNotificationsBlocks();//top note and bottom skope infos
 
-                              self.toggleTopNote( visible, noteParams );
-                      });
-
-                      //Toggle the top note on initialization
-                      _.delay( function() {
-                            api.czr_topNoteVisible( ! _.isEmpty( serverControlParams.isTopNoteOn ) || 1 == serverControlParams.isTopNoteOn );
-                      }, 2000 );
-                });
 
 
                 ///////////////////// SKOPE SWITCHER EVENT MAP /////////////////
@@ -467,6 +453,21 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
           },//initialize
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           /*****************************************************************************
           * EMBED WRAPPER
           *****************************************************************************/
@@ -479,7 +480,7 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher', html:'<div class="czr-skopes-wrapper"></div>'}) );
                 $('body').addClass('czr-skop-on');
                 var _eventMap = [
-                    //skope reset : do reset
+                    //skope switch
                     {
                           trigger   : 'click keydown',
                           selector  : '.czr-skope-switch',
@@ -495,6 +496,13 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
           },
 
 
+
+
+
+
+
+
+
           /*****************************************************************************
           * API DIRTYNESS REACTIONS
           *****************************************************************************/
@@ -503,6 +511,13 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 $('body').toggleClass('czr-api-dirty', is_dirty );
                 api.state( 'saved')( ! is_dirty );
           },
+
+
+
+
+
+
+
 
 
           /*****************************************************************************
@@ -535,6 +550,15 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 var canSave = ! saving() && ( ! activated() || ! saved() ) && 'publish' !== changesetStatus;
                 saveBtn.prop( 'disabled', ! canSave );
           },
+
+
+
+
+
+
+
+
+
 
 
           //cb of 'skope-switched-done' event => fired when the api.czr_activeSkopeId().done() <=> refresh is done()
@@ -595,6 +619,16 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                 });
                           };
 
+                          //REFRESH PREVIEW BOTTOM INFOS
+                          //on skope switched done, the default behaviour is to display the bottom infos block in the preview
+                          //and to refresh its content
+                          if ( api.czr_bottomInfosVisible() ) {
+                                self.renderBottomInfosTmpl();//<= will build a new bottom skope message infos in the preview based on the new active skopes
+                          } else {
+                                //Display + build and render the skope infos
+                                api.czr_bottomInfosVisible( true );
+                          }
+
                           //Setup control dialogs after a delay on skope switched.
                           //=> the delay is needed for controls that have been re-rendered.
                           _.delay( function() {
@@ -610,6 +644,115 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 api.czr_skopeReady.then( function() {
                       _doWhenSkopeReady();
                 });
+          },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          //@return void()
+          _setupPreviewNotificationsBlocks : function() {
+                var self = this;
+                ///////////////////// TOP NOTE BLOCK /////////////////////
+                api.czr_topNoteVisible = new api.Value( false );
+                api.czr_skopeReady.then( function() {
+                      api.czr_topNoteVisible.bind( function( visible ) {
+                              var noteParams = {},
+                                  _defaultParams = {
+                                        title : '',
+                                        message : '',
+                                        actions : '',
+                                        selfCloseAfter : 20000
+                                  };
+                              //noteParams is an object :
+                              //{
+                              // title : '',
+                              // message : '',
+                              // actions : fn(),
+                              // selfCloseAfter : 20000 in ms
+                              //}
+                              noteParams = $.extend( _defaultParams , serverControlParams.topNoteParams );
+
+                              //SPECIFIC AJAX ACTION FOR THE WELCOME NOTE
+                              noteParams.actions = function() {
+                                    var _query = $.extend(
+                                          api.previewer.query(),
+                                          { nonce:  api.previewer.nonce.save }
+                                    );
+                                    wp.ajax.post( 'czr_dismiss_top_note' , _query )
+                                          .always( function () {})
+                                          .fail( function ( response ) { api.consoleLog( 'czr_dismiss_top_note failed', _query, response ); })
+                                          .done( function( response ) {});
+                              };
+
+                              self.toggleTopNote( visible, noteParams );
+                      });
+
+                      //Toggle the top note on initialization
+                      _.delay( function() {
+                            api.czr_topNoteVisible( ! _.isEmpty( serverControlParams.isTopNoteOn ) || 1 == serverControlParams.isTopNoteOn );
+                      }, 2000 );
+                });
+
+
+
+                ///////////////////// BOTTOM INFOS BLOCK /////////////////////
+                api.czr_bottomInfosVisible = new api.Value( false );
+                api.czr_skopeReady.then( function() {
+                      //Listen to changes
+                      api.czr_bottomInfosVisible.bind( function( visible ) {
+                              var noteParams = {},
+                                  _defaultParams = {
+                                        title : '',
+                                        message : '',
+                                        actions : '',
+                                        selfCloseAfter : 20000
+                                  };
+                              //noteParams is an object :
+                              //{
+                              // title : '',
+                              // message : '',
+                              // actions : fn(),
+                              // selfCloseAfter : 20000 in ms
+                              //}
+                              noteParams = $.extend( _defaultParams , {} );
+
+                              return self.toggleBottomInfos( visible, noteParams );//returns a promise()
+                      }, { deferred : true } );
+
+                      //never set to true if 'show-skope-infos' is unchecked
+                      var _skopeInfosSetId = api.CZR_Helpers.build_setId( 'show-skope-infos' );
+                      api.when( _skopeInfosSetId, function( _set_ ){
+                            api.czr_bottomInfosVisible.validate = function( value ) {
+                                  var _v = _set_(),
+                                      _isChecked = 0 !== _v && '0' !== _v && false !== _v && 'off' !== _v;
+
+                                  return _isChecked ? value : false;
+                            };
+
+                            //Listen to skope infos setting in admin section
+                            _set_.bind( function( visible ) {
+                                  api.czr_bottomInfosVisible( 0 !== visible && '0' !== visible && false !== visible && 'off' !== visible );
+                            });
+                      });
+
+
+
+                      //Toggle the top note on initialization
+                      _.delay( function() {
+                            api.czr_bottomInfosVisible( true );
+                      }, 2000 );
+                });//api.czr_skopeReady.then()
           }
 
 
