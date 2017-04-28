@@ -123,10 +123,10 @@ $.extend( CZRSlideModuleMths, {
                                     module.control.container.append( $( '<div/>', {
                                               class: 'slide-mod-skope-notice',
                                               html : [
-                                                    serverControlParams.i18n.mods.slider['You can set the slider global options here by clicking on the gear icon : height, font size, effects...'],
-                                                    serverControlParams.i18n.mods.slider['Those options will be inherited by the more specific options scopes.'],
-                                                    '<br/>',
-                                                    serverControlParams.i18n.mods.slider['Switch to the local options scope to build a slider or set more specific options'],
+                                                    serverControlParams.i18n.mods.slider['You can set the global options of the slider here by clicking on the gear icon : height, font size, effects...'],
+                                                    serverControlParams.i18n.mods.slider['Those settings will be inherited by the more specific options levels.'],
+                                                    '<br/><br/>',
+                                                    serverControlParams.i18n.mods.slider['Switch to the most specific level of options to start building a slider'],
                                                     ':',
                                                     api.czr_skopeBase.buildSkopeLink( _localSkopeId )
                                               ].join( ' ' )

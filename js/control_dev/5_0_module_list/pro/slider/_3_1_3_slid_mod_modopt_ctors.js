@@ -27,13 +27,18 @@ $.extend( CZRSlideModuleMths, {
                                           trigger   : 'click keydown',
                                           selector  : '.refresh-button',
                                           actions   : function( ev ) {
-                                                var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
-                                                if ( api.has( _setId ) ) {
-                                                      api( _setId ).previewer.send( 'setting', [ _setId, api( _setId )() ] );
+                                                // var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                                                // if ( api.has( _setId ) ) {
+                                                //       api( _setId ).previewer.send( 'setting', [ _setId, api( _setId )() ] );
+                                                //       _.delay( function() {
+                                                //             modOpt.container.find('.refresh-button').prop( 'disabled', true );
+                                                //       }, 250 );
+                                                // }
+                                                api.previewer.refresh().done( function() {
                                                       _.delay( function() {
                                                             modOpt.container.find('.refresh-button').prop( 'disabled', true );
                                                       }, 250 );
-                                                }
+                                                });
                                           }
                                     }
                               ],//actions to execute

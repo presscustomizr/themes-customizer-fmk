@@ -486,7 +486,7 @@ body.czr-skop-loading #customize-preview {
   transition: all 0.3s ease-in-out;
   visibility: hidden;
 }
-.czr-preview-notification a, .czr-preview-notification h2 {color: #fff; margin: 0.5em 0;}
+.czr-preview-notification a, .czr-preview-notification h2 {color: #fff; margin: 1em 0;}
 
 .czr-preview-notification .czr-preview-note-close {
   position: absolute;
@@ -687,5 +687,3 @@ body.czr-resetting-skope #czr-skope-pane .czr-spinner-wrapper {
     -o-transition: background .3s ease-in-out!important;
     transition: background .3s ease-in-out!important;
 }
-
-

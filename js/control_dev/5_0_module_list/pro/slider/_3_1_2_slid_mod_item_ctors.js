@@ -28,6 +28,7 @@ $.extend( CZRSlideModuleMths, {
                           //ITEM REFRESH AND FOCUS BTN
                           //1) Set initial state
                           item.container.find('.refresh-button').prop( 'disabled', true );
+
                           //2) listen to user actions
                           //add DOM listeners
                           api.CZR_Helpers.setupDOMListeners(
@@ -36,13 +37,18 @@ $.extend( CZRSlideModuleMths, {
                                             trigger   : 'click keydown',
                                             selector  : '.refresh-button',
                                             actions   : function( ev ) {
-                                                  var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
-                                                  if ( api.has( _setId ) ) {
-                                                        api( _setId ).previewer.send( 'setting', [ _setId, api( _setId )() ] );
+                                                  //var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                                                  // if ( api.has( _setId ) ) {
+                                                  //       api( _setId ).previewer.send( 'setting', [ _setId, api( _setId )() ] );
+                                                  //       _.delay( function() {
+                                                  //             item.container.find('.refresh-button').prop( 'disabled', true );
+                                                  //       }, 250 );
+                                                  // }
+                                                  api.previewer.refresh().done( function() {
                                                         _.delay( function() {
                                                               item.container.find('.refresh-button').prop( 'disabled', true );
                                                         }, 250 );
-                                                  }
+                                                  });
                                             }
                                       },
                                       {
@@ -108,7 +114,7 @@ $.extend( CZRSlideModuleMths, {
 
                     var _html_ = [
                         '<strong>',
-                        serverControlParams.i18n.mods.slider['You can display or hide the post metas in'],
+                        serverControlParams.i18n.mods.slider['You can display or hide the post metas ( categories, author, date ) in'],
                         '<a href="javascript:void(0)" class="open-post-metas-option">' + serverControlParams.i18n.mods.slider['the general options'] + '</a>',
                         '</strong>'
                     ].join(' ') + '.';
@@ -205,17 +211,29 @@ $.extend( CZRSlideModuleMths, {
                                 //       });
                                 // break;
 
-                                case 'slide-cta' :
+                                case 'slide-link-title' :
                                       //Fire on init
-                                      item.czr_Input('slide-link').visible( ! _.isEmpty( input() ) );
-                                      item.czr_Input('slide-custom-link').visible( ! _.isEmpty( input() ) && module._isCustomLink( item.czr_Input('slide-link')() ) );
-                                      item.czr_Input('slide-link-target').visible( ! _.isEmpty( input() ) );
+                                      item.czr_Input('slide-link').visible( module._isChecked( input() ) || ! _.isEmpty( item.czr_Input('slide-cta')() ) );
+                                      item.czr_Input('slide-link-target').visible( module._isChecked( input() ) || ! _.isEmpty( item.czr_Input('slide-cta')() ) );
 
                                       //React on change
                                       input.bind( function( to ) {
-                                            item.czr_Input('slide-link').visible( ! _.isEmpty( to ) );
+                                            item.czr_Input('slide-link').visible( module._isChecked( to ) || ! _.isEmpty( item.czr_Input('slide-cta')() ) );
+                                            item.czr_Input('slide-link-target').visible( module._isChecked( to ) || ! _.isEmpty( item.czr_Input('slide-cta')() ) );
+                                      });
+                                break;
+
+                                case 'slide-cta' :
+                                      //Fire on init
+                                      item.czr_Input('slide-link').visible( ! _.isEmpty( input() ) || module._isChecked( item.czr_Input('slide-link-title')() ) );
+                                      item.czr_Input('slide-custom-link').visible( ! _.isEmpty( input() ) && module._isCustomLink( item.czr_Input('slide-link')() ) );
+                                      item.czr_Input('slide-link-target').visible( ! _.isEmpty( input() ) || module._isChecked( item.czr_Input('slide-link-title')() ) );
+
+                                      //React on change
+                                      input.bind( function( to ) {
+                                            item.czr_Input('slide-link').visible( ! _.isEmpty( to ) || module._isChecked( item.czr_Input('slide-link-title')() ) );
                                             item.czr_Input('slide-custom-link').visible( ! _.isEmpty( to ) && module._isCustomLink( item.czr_Input('slide-link')() ) );
-                                            item.czr_Input('slide-link-target').visible( ! _.isEmpty( to ) );
+                                            item.czr_Input('slide-link-target').visible( ! _.isEmpty( to ) || module._isChecked( item.czr_Input('slide-link-title')() ) );
                                       });
                                 break;
 

@@ -745,6 +745,13 @@ section .czr-sub-set:first-child {
   padding: 3%;
   background: rgba(116, 210, 116, 0.42);
   float: left;
+  font-size: 12px;
+  line-height: 1.5em;
+}
+/* Underline skope switch text in control notices and in the main skope switcher title */
+.slide-mod-skope-notice .czr-skope-switch {
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .modopts-top-buttons {
@@ -759,13 +766,13 @@ section .czr-sub-set:first-child {
   float: left;
   padding: 1% 0;
 }
+.item-bottom-btn {
+
+}
 .item-bottom-btn, .modopt-top-btn {
-  width: 47%;
-  margin-right: 2%;
-  padding: 1% 0;
   opacity: 1;
   color: #fff;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   border-width: 1px;
   -webkit-appearance: none;
@@ -782,13 +789,18 @@ section .czr-sub-set:first-child {
   opacity: 1;
 }
 .item-bottom-btn {
-  background: #ababab;
+  background: #868686;
+  width: 47%;
+  margin-right: 2%;
+  padding: 1% 0;
 }
 .modopt-top-btn {
   background: rgba(171, 171, 171, 0.5);
+  width: 170px;
+  padding: 2px 0;
 }
 .item-bottom-btn:hover {
-  background: #848484;
+  background: #5d5d5d;
 }
 .modopt-top-btn:hover {
   background:rgba(41, 41, 41, 0.53);
@@ -803,8 +815,9 @@ section .czr-sub-set:first-child {
     background: inherit;
 }
 
-/* Underline skope switch text in control notices and in the main skope switcher title */
-.slide-mod-skope-notice .czr-skope-switch {
-  cursor: pointer;
-  text-decoration: underline;
+
+/* NOTICES */
+.czr-notice {
+    font-size: 12px;
+    font-weight: normal;
 }
