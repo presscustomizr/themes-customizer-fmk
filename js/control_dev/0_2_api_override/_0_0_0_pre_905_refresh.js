@@ -17,20 +17,22 @@
                   return dfd.resolve().promise();
             }
 
+            //if too early, then let's fall back on core
             if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
                   api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.previewer._new_refresh() method.');
-            }
+                  //Fire the core one
+                  coreRefresh.apply( previewer );
+                  return dfd.resolve().promise();
 
-            //if too early, then let's fall back on core
-            if ( ! _.has( api, 'czr_activeSkopeId') ) {
-                  if ( 'resolved' != api.czr_skopeReady.state() ) {
-                        api.czr_skopeReady.done( function() {
-                              _new_refresh.apply( api.previewer, params );
-                        });
-                        //Fire the core one
-                        coreRefresh.apply( previewer );
-                        return dfd.resolve().promise();
-                  }
+                  //PREVIOUS CODE
+                  // if ( 'resolved' != api.czr_skopeReady.state() ) {
+                  //       api.czr_skopeReady.done( function() {
+                  //             _new_refresh.apply( api.previewer, params );
+                  //       });
+                  //       //Fire the core one
+                  //       coreRefresh.apply( previewer );
+                  //       return dfd.resolve().promise();
+                  // }
             }
 
             // Display loading indicator
@@ -148,6 +150,9 @@
 
             return dfd.promise();
       };//_new_refresh()
+
+
+
 
       //'czr-skope-started' is fired after the skopeBase has been initialized.
       //the api is 'ready' at this point

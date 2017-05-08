@@ -131,18 +131,24 @@ $.extend( CZRSkopeBaseMths, {
                             throw new Error( 'Fail to process silent updates in _debouncedProcessSilentUpdates');
                       })
                       .done( function( _updatedSetIds ) {
+                            api.previewer.refresh()
+                                  .always( function() {
+                                        dfd.resolve( _updatedSetIds );
+                                        api.state( 'switching-skope' )( false );
+                                  });
+
                             //on first skope reaction ( initialization phase ) , when from is still undefined : no need to refresh if the target skope is global
                             //=> improve speed performance on init
-                            if ( _.isUndefined( from ) && api.czr_skope.has( to ) && 'global' == api.czr_skope( to )().skope ) {
-                                  dfd.resolve( _updatedSetIds );
-                                  api.state( 'switching-skope' )( false );
-                            } else {
-                                  api.previewer.refresh()
-                                        .always( function() {
-                                              dfd.resolve( _updatedSetIds );
-                                              api.state( 'switching-skope' )( false );
-                                        });
-                            }
+                            // if ( _.isUndefined( from ) && api.czr_skope.has( to ) && 'global' == api.czr_skope( to )().skope ) {
+                            //       dfd.resolve( _updatedSetIds );
+                            //       api.state( 'switching-skope' )( false );
+                            // } else {
+                            //       api.previewer.refresh()
+                            //             .always( function() {
+                            //                   dfd.resolve( _updatedSetIds );
+                            //                   api.state( 'switching-skope' )( false );
+                            //             });
+                            // }
                       });
           };
 
