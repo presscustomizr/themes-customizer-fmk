@@ -26,6 +26,13 @@
                   name : 'Slider',
                   has_mod_opt : true
             },
+            czr_related_posts_module : {
+                  mthds : CZRRelatedPostsModMths,
+                  crud : false,
+                  multi_item : false,
+                  name : 'Related Posts',
+                  has_mod_opt : false
+            },
             czr_text_module : {
                   mthds : CZRTextModuleMths,
                   crud : false,
