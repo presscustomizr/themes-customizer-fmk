@@ -1471,9 +1471,9 @@ $.extend( CZRRelatedPostsModMths, {
                       _model = input_parent();
 
                   switch( input.id ) {
-                        case 'cell_height' :
-                              _selectOptions = serverControlParams.relatedPostsModuleParams.relPostsCellHeight;
-                        break;
+                        // case 'cell_height' :
+                        //       _selectOptions = serverControlParams.relatedPostsModuleParams.relPostsCellHeight;
+                        // break;
                         case 'order_by' :
                               _selectOptions = serverControlParams.relatedPostsModuleParams.relPostsOrderBy;
                         break;
