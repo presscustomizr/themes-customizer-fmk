@@ -343,7 +343,7 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
       * ADD PRO BEFORE SPECIFIC SECTIONS AND PANELS
       *****************************************************************************/
       if ( serverControlParams.isPro ) {
-            _.each( [ 'tc_font_customizer_settings', 'header_image_sec', 'content_blog_sec', 'static_front_page' ], function( _secId ) {
+            _.each( [ 'tc_font_customizer_settings', 'header_image_sec', 'content_blog_sec', 'static_front_page', 'content_single_sec' ], function( _secId ) {
                   _.delay( function() {
                       api.section.when( _secId, function( _sec_ ) {
                             if ( 1 >= _sec_.headContainer.length ) {
@@ -11684,7 +11684,7 @@ $.extend( CZRSlideModuleMths, {
                   modOpt.czr_Input.each( function( input ) {
                         switch( input.id ) {
                               case 'fixed-content' :
-                                    var _modOptsDependants = [ 'fixed-title', 'fixed-subtitle', 'fixed-cta', 'fixed-link', 'fixed-link-target', 'fixed-custom-link', 'title-max-length', 'subtitle-max-length' ],
+                                    var _modOptsDependants = [ 'fixed-title', 'fixed-subtitle', 'fixed-cta', 'fixed-link', 'fixed-link-target', 'fixed-custom-link' ],
                                         _setVisibility = function( _depId, _inputVal ) {
                                               var _bool_;
                                               switch( _depId ) {
@@ -11701,11 +11701,6 @@ $.extend( CZRSlideModuleMths, {
 
                                                     case 'fixed-custom-link' :
                                                           _bool_ = module._isChecked( _inputVal ) && ! _.isEmpty( modOpt.czr_Input('fixed-cta')() ) && module._isCustomLink( modOpt.czr_Input('fixed-link')() );
-                                                    break;
-
-                                                    case 'title-max-length' :
-                                                    case 'subtitle-max-length' :
-                                                          _bool_ =  ! module._isChecked( _inputVal );
                                                     break;
                                               }
 

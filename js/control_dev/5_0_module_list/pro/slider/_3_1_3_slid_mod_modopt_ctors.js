@@ -82,7 +82,7 @@ $.extend( CZRSlideModuleMths, {
 
                               //CONTENT
                               case 'fixed-content' :
-                                    var _modOptsDependants = [ 'fixed-title', 'fixed-subtitle', 'fixed-cta', 'fixed-link', 'fixed-link-target', 'fixed-custom-link', 'title-max-length', 'subtitle-max-length' ],
+                                    var _modOptsDependants = [ 'fixed-title', 'fixed-subtitle', 'fixed-cta', 'fixed-link', 'fixed-link-target', 'fixed-custom-link' ],
                                         _setVisibility = function( _depId, _inputVal ) {
                                               var _bool_;
                                               switch( _depId ) {
@@ -99,11 +99,6 @@ $.extend( CZRSlideModuleMths, {
 
                                                     case 'fixed-custom-link' :
                                                           _bool_ = module._isChecked( _inputVal ) && ! _.isEmpty( modOpt.czr_Input('fixed-cta')() ) && module._isCustomLink( modOpt.czr_Input('fixed-link')() );
-                                                    break;
-
-                                                    case 'title-max-length' :
-                                                    case 'subtitle-max-length' :
-                                                          _bool_ =  ! module._isChecked( _inputVal );
                                                     break;
                                               }
 
