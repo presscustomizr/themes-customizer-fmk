@@ -38,7 +38,11 @@
 
             /* CHECKBOXES */
             api.czrSetupCheckbox = function( controlId, refresh ) {
-                  $('input[type=checkbox]', api.control(controlId).container ).each( function() {
+                  var _ctrl = api.control( controlId );
+                  $('input[type=checkbox]', _ctrl.container ).each( function() {
+                        //Exclude font customizer
+                        if ( 'tc_font_customizer_settings' == _ctrl.params.section )
+                          return;
                         //first fix the checked / unchecked status
                         if ( 0 === $(this).val() || '0' == $(this).val() || 'off' == $(this).val() || _.isEmpty($(this).val() ) ) {
                               $(this).prop('checked', false);
@@ -81,8 +85,13 @@
             /* NUMBER INPUT */
             api.czrSetupStepper = function( controlId, refresh ) {
                   //Exclude no-selecter-js
-                  $('input[type="number"]', api.control(controlId).container ).each( function() {
-                        $(this).stepper();
+                  var _ctrl = api.control( controlId );
+                  $('input[type="number"]', _ctrl.container ).each( function() {
+                        //Exclude font customizer steppers
+                        //the font customizer plugin has its own way to instantiate the stepper, with custom attributes previously set to the input like step, min, etc...
+                        if ( 'tc_font_customizer_settings' != _ctrl.params.section ) {
+                            $(this).stepper();
+                        }
                   });
             };//api.czrSetupStepper()
 

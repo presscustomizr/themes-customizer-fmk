@@ -104,6 +104,38 @@ var czr_debug = {
             });
       }
 
+
+      /*****************************************************************************
+      * OBSERVE UBIQUE CONTROL'S PANELS EXPANSION
+      *****************************************************************************/
+      if ( 'function' === typeof api.Panel ) {
+            //move section back and forth in declared ubique panels
+            api.section.bind( 'add', function( _sec ) {
+                  if ( _sec.params.ubq_panel && _sec.params.ubq_panel.panel ) {
+                        //save original state
+                        _sec.params.original_priority = _sec.params.priority;
+                        _sec.params.original_panel  = _sec.params.panel;
+
+                        api.panel.when( _sec.params.ubq_panel.panel, function( _panel_instance ) {
+                                _panel_instance.expanded.bind( function( expanded ) {
+                                      if ( expanded ) {
+                                            if ( _sec.params.ubq_panel.priority ) {
+                                                  _sec.priority( _sec.params.ubq_panel.priority );
+                                            }
+                                            _sec.panel( _sec.params.ubq_panel.panel );
+                                      }
+                                      else {
+                                            _sec.priority( _sec.params.original_priority );
+                                            _sec.panel( _sec.params.original_panel );
+                                      }
+                                });
+
+                        } );
+                  }
+            });
+      }
+
+
       /*****************************************************************************
       * CLOSE THE MOD OPTION PANEL ( if exists ) ON : section change, panel change, skope switch
       *****************************************************************************/
