@@ -1,9 +1,10 @@
-var czr_debug = {
-      log: function(o) {debug.queue.push(['log', arguments, debug.stack.slice(0)]); if (window.console && typeof window.console.log == 'function') {window.console.log(o);}},
-      error: function(o) {debug.queue.push(['error', arguments, debug.stack.slice(0)]); if (window.console && typeof window.console.error == 'function') {window.console.error(o);}},
-      queue: [],
-      stack: []
-};
+//NOT USED YET
+// var czr_debug = {
+//       log: function(o) {debug.queue.push(['log', arguments, debug.stack.slice(0)]); if (window.console && typeof window.console.log == 'function') {window.console.log(o);}},
+//       error: function(o) {debug.queue.push(['error', arguments, debug.stack.slice(0)]); if (window.console && typeof window.console.error == 'function') {window.console.error(o);}},
+//       queue: [],
+//       stack: []
+// };
 
 //var api = api || wp.customize, $ = $ || jQuery;
 ( function ( api, $, _ ) {
@@ -63,8 +64,28 @@ var czr_debug = {
             return serverControlParams.isChangeSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
       };
 
+})( wp.customize , jQuery, _);
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+( function ( api, $, _ ) {
       /*****************************************************************************
       * DEFINE SOME USEFUL OBSERVABLE VALUES
       *****************************************************************************/
@@ -183,6 +204,27 @@ var czr_debug = {
             });
       });
 
+
+})( wp.customize , jQuery, _);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+( function ( api, $, _ ) {
       //SET THE ACTIVE STATE OF THE THEMES SECTION BASED ON WHAT THE SERVER SENT
       api.bind('ready', function() {
             var _do = function() {
@@ -203,6 +245,26 @@ var czr_debug = {
       });
 
 
+
+})( wp.customize , jQuery, _);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+( function ( api, $, _ ) {
       /*****************************************************************************
       * FIRE SKOPE ON READY
       *****************************************************************************/
@@ -373,7 +435,26 @@ var czr_debug = {
             }
       };//toggleSkopeLoadPane
 
+})( wp.customize , jQuery, _);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+( function ( api, $, _ ) {
       /*****************************************************************************
       * REACT TO PREVIEW DEVICE SWITCH => send device to preview
       *****************************************************************************/
@@ -384,7 +465,25 @@ var czr_debug = {
                 });
           }
       });
+})( wp.customize , jQuery, _);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+( function ( api, $, _ ) {
       /*****************************************************************************
       * ADD PRO BEFORE SPECIFIC SECTIONS AND PANELS
       *****************************************************************************/
