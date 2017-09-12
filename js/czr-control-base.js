@@ -11655,6 +11655,1426 @@ $.extend( CZRDynModuleMths, {
               return this;
       }
 });//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );//BASE CONTROL CLASS
+//extends api.Control
+//define a set of methods, mostly helpers, to extend the base WP control class
+//this will become our base constructor for main complex controls
+//EARLY SETUP
+
+var CZRBaseControlMths = CZRBaseControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRBaseControlMths, {
+      initialize: function( id, options ) {
+            var control = this;
+            //add a shortcut to the css properties declared in the php controls
+            control.css_attr = _.has( serverControlParams , 'css_attr') ? serverControlParams.css_attr : {};
+            api.Control.prototype.initialize.call( control, id, options );
+
+            //When a partial refresh is done we need to send back all postMessage input to the preview
+            //=> makes sure that all post message inputs not yet saved in db are properly applied
+            control.bind( 'czr-partial-refresh-done', function() {
+                  if ( _.has( control, 'czr_moduleCollection' ) ) {
+                        _.each( control.czr_moduleCollection(), function( _mod_ ) {
+                              if ( ! control.czr_Module( _mod_.id ) )
+                                return;
+
+                              control.czr_Module( _mod_.id ).sendModuleInputsToPreview( { isPartialRefresh : true } );
+                        });
+                  }
+            });
+      },
+
+      //@return void()
+      refreshPreview : function( obj ) {
+            this.previewer.refresh();
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+//BASE CONTROL CLASS
+//extends api.CZRBaseControl
+//define a set of methods, mostly helpers, to extend the base WP control class
+//this will become our base constructor for main complex controls
+//EARLY SETUP
+var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRBaseModuleControlMths, {
+      initialize: function( id, options ) {
+              var control = this;
+
+              control.czr_Module = new api.Values();
+
+              //czr_collection stores the module collection
+              control.czr_moduleCollection = new api.Value();
+              control.czr_moduleCollection.set([]);
+
+              //let's store the state of the initial module collection
+              control.moduleCollectionReady = $.Deferred();
+              //and listen to changes when it's ready
+              control.moduleCollectionReady.done( function( obj ) {
+                    if ( ! control.isMultiModuleControl( options.params ) ) {
+                      //api.consoleLog('MODULE COLLECTION READY IN CONTROL : ', control.id , obj.id, control.isModuleRegistered( obj.id ) );
+                    }
+                    //if the module is not registered yet for a single module control
+                    //=> push it to the collection now, before listening to the module collection changes
+                    // if (  ! control.isModuleRegistered( module.id ) ) {
+                    //     control.updateModulesCollection( { module : constructorOptions } );
+                    // }
+
+                    //LISTEN TO MODULE COLLECTION
+                    control.czr_moduleCollection.callbacks.add( function() { return control.moduleCollectionReact.apply( control, arguments ); } );
+
+                    //control.removeModule( _mod );
+              } );
+
+              //FOR MULTI MODULE CONTROL : Stores the module instance of the synchronized sektion
+              if ( control.isMultiModuleControl( options.params ) ) {
+                    control.syncSektionModule = new api.Value();
+              }
+
+              api.CZRBaseControl.prototype.initialize.call( control, id, options );
+
+              //FOR TEST PURPOSES
+              // api(this.id).bind( function( to, from) {
+              //     api.consoleLog( 'SETTING ', control.id, ' HAS CHANGED : ', to, from );
+              // });
+
+              //close any open item and dialog boxes on section expansion
+              api.section( control.section() ).expanded.bind(function(to) {
+                    control.czr_Module.each( function( _mod ){
+                          _mod.closeAllItems().closeRemoveDialogs();
+                          if ( _.has( _mod, 'preItem' ) ) {
+                                _mod.preItemExpanded(false);
+                          }
+                    });
+              });
+
+      },
+
+
+
+
+      //////////////////////////////////
+      ///READY = CONTROL INSTANTIATED AND DOM ELEMENT EMBEDDED ON THE PAGE
+      ///FIRED BEFORE API READY
+      //////////////////////////////////
+      ready : function() {
+              var control = this;
+              if ( control.isMultiModuleControl() ) {
+                    //POPULATE THE SAVED MODULE COLLECTION WHEN THE SYNCHRONIZED SEKTIONS SETTING HAS PROVIDED ITS INSTANCE
+                    control.syncSektionModule.bind( function( sektion_module_instance, from) {
+                          if ( 'resolved' == control.moduleCollectionReady.state() )
+                            return;
+                          control.registerModulesOnInit( sektion_module_instance );
+                          //the module collection is ready
+                          control.moduleCollectionReady.resolve();
+                    });
+              } else {
+                    var single_module = {};
+                    //inits the collection with the saved module => there's only one module to instantiate in this case.
+                    //populates the collection with the saved module
+                    _.each( control.getSavedModules() , function( _mod, _key ) {
+                          //stores it
+                          single_module = _mod;
+
+                          //adds it to the collection
+                          //=> it will be fired ready usually when the control section is expanded
+                          try { control.instantiateModule( _mod, {} ); } catch( er ) {
+                                api.errorLog( 'Failed to instantiate module ' + _mod.id + ' ' + er );
+                                return;
+                          }
+
+                          //adds the module name to the control container element
+                          control.container.attr('data-module', _mod.id );
+                    });
+                    //the module collection is ready
+                    control.moduleCollectionReady.resolve( single_module );
+              }
+
+
+              //LISTEN TO MODULE CANDIDATES ADDED BY USERS
+              control.bind( 'user-module-candidate', function( _module ) {
+                    var module;
+                    //instanciate + fire ready()
+                    //=> the module will be added in the collection on isReady.done()
+                    try {
+                          module = control.instantiateModule( _module, {} ); //module, constructor
+                    } catch( er ) {
+                          api.errorLog( 'Failed to instantiate module ' + _module.id + ' ' + er );
+                          return;
+                    }
+                    //If everything went fine, fires ready
+                    module.ready( _module.is_added_by_user );
+              });
+      },
+
+
+
+
+
+
+
+
+
+      //////////////////////////////////
+      /// VARIOUS HELPERS
+      //////////////////////////////////
+      ///
+      //@return the default API model {} needed to instantiate a module
+      //Depending on the module context, control or sektion, the default model has to hold different properties
+      getDefaultModuleApiModel : function() {
+              //Modules share the common model either they are in a sektion or in a control
+              var commonAPIModel = {
+                    id : '',//module.id,
+                    module_type : '',//module.module_type,
+                    modOpt : {},//the module modOpt property, typically high level properties that area applied to all items of the module
+                    items   : [],//$.extend( true, {}, module.items ),
+                    crud : false,
+                    multi_item : false,
+                    sortable : false,//<= a module can be multi-item but not necessarily sortable
+                    control : {},//control,
+              };
+
+              //if embedded in a control, amend the common model with the section id
+              if ( ! this.isMultiModuleControl() ) {
+                  return $.extend( commonAPIModel, {
+                      section : ''//id of the control section
+                  } );
+              } else {
+                  return $.extend( commonAPIModel, {
+                      column_id : '',//a string like col_7
+                      sektion : {},// => the sektion instance
+                      sektion_id : '',
+                      is_added_by_user : false,
+                      dirty : false
+                  } );
+              }
+      },
+
+      //@return the default DB model {} that will be used when the setting will send the ajax save request
+      //Depending on the module context, control or sektion, the default DB model has to hold different properties
+      getDefaultModuleDBModel : function() {
+              var commonDBModel = {
+                    items   : [],//$.extend( true, {}, module.items ),
+              };
+
+              //if embedded in a sektion, we need more the item(s) collection
+              if ( this.isMultiModuleControl() ) {
+                  return $.extend( commonDBModel, {
+                      id : '',
+                      module_type : '',
+                      column_id : '',
+                      sektion_id : '',
+                      dirty : false
+                  } );
+              } else {
+                  return commonDBModel;
+              }
+      },
+
+
+      //@return bool
+      isMultiModuleControl : function( params ) {
+              return 'czr_multi_module' == ( params || this.params ).type;
+      },
+
+
+      //@return the control instance of the synchronized collection of modules
+      getSyncCollectionControl : function() {
+            var control = this;
+            if ( _.isUndefined( control.params.syncCollection ) ) {
+                throw new Error( 'Control ' + control.id + ' has no synchronized sektion control defined.');
+            }
+            return api.control( api.CZR_Helpers.build_setId( control.params.syncCollection ) );
+      },
+
+
+      //@return the collection [] of saved module(s) to instantiate
+      //This method does not make sure that the module model is ready for API.
+      //=> it just returns an array of saved module candidates to instantiate.
+      //
+      //Before instantiation, we will make sure that all required property are defined for the modules with the method control.prepareModuleForAPI()
+      // control     : control,
+      // crud        : bool
+      // id          : '',
+      // items       : [], module.items,
+      // modOpt       : {}
+      // module_type : module.module_type,
+      // multi_item  : bool
+      // section     : module.section,
+      // is_added_by_user : is_added_by_user || false
+      getSavedModules : function() {
+              var control = this,
+                  _savedModulesCandidates = [],
+                  _module_type = control.params.module_type,
+                  _raw_saved_module_val = [],
+                  _saved_items = [],
+                  _saved_modOpt = {};
+
+              //In the case of multi module control synchronized with a sektion
+              // => the saved modules is a collection saved in the setting
+              //For a module embedded in a regular control, we need to hard code the single module collection
+              // => in this case, the corresponding setting will store the collection of item(s)
+              if ( control.isMultiModuleControl() ) {
+                  _savedModulesCandidates = $.extend( true, [], api( control.id )() );//deep clone
+              } else {
+                  //What is the current server saved value for this setting?
+                  //in a normal case, it should be an array of saved properties
+                  //But it might not be if coming from a previous option system.
+                  //=> let's normalize it.
+                  //First let's perform a quick check on the current saved db val.
+                  //If the module is not multi-item, the saved value should be an object or empty if not set yet
+                  if ( api.CZR_Helpers.isMultiItemModule( _module_type ) && ! _.isEmpty( api( control.id )() ) && ! _.isObject( api( control.id )() ) ) {
+                      api.consoleLog('Module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
+                  }
+
+                  //SPLIT ITEMS [] and MODOPT {}
+                  //In database, items and modOpt are saved in the same option array.
+                  //If the module has modOpt ( the slider module for example ), the modOpt are described by an object which is always unshifted at the beginning of the setting value.
+
+                  //the raw DB setting value is an array :  modOpt {} + the saved items :
+                  ////META IS THE FIRST ARRAY ELEMENT: A modOpt has no unique id and has the property is_modOpt set to true
+                  //[
+                  //  is_mod_opt : true //<= inform us that this is not an item but a modOpt
+                  //],
+                  ////THEN COME THE ITEMS
+                  //[
+                  //  id : "czr_slide_module_0"
+                  //     slide-background : 21,
+                  //     ....
+                  //   ],
+                  //   [
+                  // id : "czr_slide_module_1"
+                  //     slide-background : 21,
+                  //     ....
+                  //   ]
+                  //  [...]
+
+                  //POPULATE THE ITEMS [] and the MODOPT {} FROM THE RAW DB SAVED SETTING VAL
+                  _raw_saved_module_val = _.isArray( api( control.id )() ) ? api( control.id )() : [ api( control.id )() ];
+
+                  _.each( _raw_saved_module_val, function( item_or_mod_opt_candidate , key ) {
+                        if ( api.CZR_Helpers.hasModuleModOpt( _module_type ) && 0*0 === key ) {
+                              // a saved module mod_opt object should not have an id
+                              if ( _.has( item_or_mod_opt_candidate, 'id') ) {
+                                    api.consoleLog( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no mod_opt defined while it should.' );
+                              } else {
+                                    _saved_modOpt = item_or_mod_opt_candidate;
+                              }
+                        }
+                        if ( _.has( item_or_mod_opt_candidate, 'id') && ! _.has( item_or_mod_opt_candidate, 'is_mod_opt' ) ) {
+                              _saved_items.push( item_or_mod_opt_candidate );
+                        }
+                  });
+
+
+                  //for now this is a collection with one module
+                  _savedModulesCandidates.push(
+                        {
+                              id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
+                              module_type : control.params.module_type,
+                              section : control.section(),
+                              modOpt : $.extend( true, {} , _saved_modOpt ),//disconnect with a deep cloning
+                              items : $.extend( true, [] , _saved_items )//disconnect with a deep cloning
+                        }
+                  );
+              }
+              return _savedModulesCandidates;
+      },
+
+
+      //this helper allows to check if a module has been registered in the collection
+      //no matter if it's not instantiated yet
+      isModuleRegistered : function( id_candidate ) {
+            var control = this;
+            return ! _.isUndefined( _.findWhere( control.czr_moduleCollection(), { id : id_candidate}) );
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+//BASE CONTROL CLASS
+//extends api.CZRBaseControl
+//define a set of methods, mostly helpers, to extend the base WP control class
+//this will become our base constructor for main complex controls
+//EARLY SETUP
+var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRBaseModuleControlMths, {
+      //@param : module {}
+      //@param : constructor string
+      instantiateModule : function( module, constructor ) {
+              if ( ! _.has( module,'id') ) {
+                throw new Error('CZRModule::instantiateModule() : a module has no id and could not be added in the collection of : ' + this.id +'. Aborted.' );
+              }
+              var control = this;
+              //is a constructor provided ?
+              //if not try to look in the module object if we an find one
+              if ( _.isUndefined(constructor) || _.isEmpty(constructor) ) {
+                  constructor = control.getModuleConstructor( module );
+              }
+              //on init, the module collection is populated with module already having an id
+              //For now, let's check if the id is empty and is not already part of the collection.
+              //@todo : improve this.
+              if ( ! _.isEmpty( module.id ) && control.czr_Module.has( module.id ) ) {
+                    throw new Error('The module id already exists in the collection in control : ' + control.id );
+              }
+
+              var module_api_ready = control.prepareModuleForAPI( module );
+
+              //instanciate the module with the default constructor
+              control.czr_Module.add( module_api_ready.id, new constructor( module_api_ready.id, module_api_ready ) );
+
+              if ( ! control.czr_Module.has( module_api_ready.id ) ) {
+                  throw new Error('instantiateModule() : instantiation failed for module id ' + module_api_ready.id + ' in control ' + control.id  );
+              }
+              //return the module instance for chaining
+              return control.czr_Module(module_api_ready.id);
+      },
+
+
+
+      //@return a module constructor object
+      getModuleConstructor : function( module ) {
+              var control = this,
+                  parentConstructor = {},
+                  constructor = {};
+
+              if ( ! _.has( module, 'module_type' ) ) {
+                  throw new Error('CZRModule::getModuleConstructor : no module type found for module ' + module.id );
+              }
+              if ( ! _.has( api.czrModuleMap, module.module_type ) ) {
+                  throw new Error('Module type ' + module.module_type + ' is not listed in the module map api.czrModuleMap.' );
+              }
+
+              var _mthds = api.czrModuleMap[ module.module_type ].mthds,
+                  _is_crud = api.czrModuleMap[ module.module_type ].crud,
+                  _base_constructor = _is_crud ? api.CZRDynModule : api.CZRModule;
+
+              //in the general case of multi_module / sektion control, we need to extend the module constructors
+              if ( ! _.isEmpty( module.sektion_id ) ) {
+                  parentConstructor = _base_constructor.extend( _mthds );
+                  constructor = parentConstructor.extend( control.getMultiModuleExtender( parentConstructor ) );
+              } else {
+                //in the particular case of a module embedded in a control, the constructor is ready to be fired.
+                  constructor = _base_constructor.extend( _mthds );
+              }
+
+              if ( _.isUndefined(constructor) || _.isEmpty(constructor) || ! constructor ) {
+                  throw new Error('CZRModule::getModuleConstructor : no constructor found for module type : ' + module.module_type +'.' );
+              }
+              return constructor;
+      },
+
+
+
+
+
+      //@return an API ready module object
+      //To be instantiated in the API, the module model must have all the required properties defined in the defaultAPIModel properly set
+      prepareModuleForAPI : function( module_candidate ) {
+            if ( ! _.isObject( module_candidate ) ) {
+                throw new Error('prepareModuleForAPI : a module must be an object to be instantiated.');
+            }
+
+            var control = this,
+                api_ready_module = {};
+
+            _.each( control.getDefaultModuleApiModel() , function( _value, _key ) {
+                  var _candidate_val = module_candidate[_key];
+                  switch( _key ) {
+                        //PROPERTIES COMMON TO ALL MODULES IN ALL CONTEXTS
+                        case 'id' :
+                              if ( _.isEmpty( _candidate_val ) ) {
+                                    api_ready_module[_key] = control.generateModuleId( module_candidate.module_type );
+                              } else {
+                                    api_ready_module[_key] = _candidate_val;
+                              }
+                        break;
+                        case 'module_type' :
+                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module type must a string not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case 'items' :
+                              if ( ! _.isArray( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : a module item list must be an array');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case 'modOpt' :
+                              if ( ! _.isObject( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : a module modOpt property must be an object');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case 'crud' :
+                              //get the value from the czrModuleMap
+                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
+                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "crud" must be a boolean');
+                              }
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        case 'multi_item' :
+                              //get the value from the czrModuleMap
+                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "multi_item" must be a boolean');
+                              }
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        //if the sortable property is not set, then check if crud or multi-item
+                        case 'sortable' :
+                              //get the value from the czrModuleMap
+                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].sortable || api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "sortable" must be a boolean');
+                              }
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        case  'control' :
+                              api_ready_module[_key] = control;//this
+                        break;
+
+
+
+                        //PROPERTIES FOR MODULE EMBEDDED IN A CONTROL
+                        case  'section' :
+                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module section must be a string not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+
+
+
+                        //PROPERTIES FOR MODULE EMBEDDED IN A SEKTION
+                        case  'column_id' :
+                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module column id must a string not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case  'sektion' :
+                              if ( ! _.isObject( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module sektion must be an object not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case  'sektion_id' :
+                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module sektion id must be a string not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case 'is_added_by_user' :
+                              if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "is_added_by_user" must be a boolean');
+                              }
+                            api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        case 'dirty' :
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                  }//switch
+            });
+            return api_ready_module;
+      },
+
+
+      //recursive
+      generateModuleId : function( module_type, key, i ) {
+              //prevent a potential infinite loop
+              i = i || 1;
+              if ( i > 100 ) {
+                    throw new Error('Infinite loop when generating of a module id.');
+              }
+              var control = this;
+              key = key || control._getNextModuleKeyInCollection();
+              var id_candidate = module_type + '_' + key;
+
+              //do we have a module collection value ?
+              if ( ! _.has(control, 'czr_moduleCollection') || ! _.isArray( control.czr_moduleCollection() ) ) {
+                    throw new Error('The module collection does not exist or is not properly set in control : ' + control.id );
+              }
+
+              //make sure the module is not already instantiated
+              if ( control.isModuleRegistered( id_candidate ) ) {
+                key++; i++;
+                return control.generateModuleId( module_type, key, i );
+              }
+
+              return id_candidate;
+      },
+
+
+      //helper : return an int
+      //=> the next available id of the module collection
+      _getNextModuleKeyInCollection : function() {
+              var control = this,
+                _max_mod_key = {},
+                _next_key = 0;
+
+              //get the initial key
+              //=> if we already have a collection, extract all keys, select the max and increment it.
+              //else, key is 0
+              if ( ! _.isEmpty( control.czr_moduleCollection() ) ) {
+                  _max_mod_key = _.max( control.czr_moduleCollection(), function( _mod ) {
+                      return parseInt( _mod.id.replace(/[^\/\d]/g,''), 10 );
+                  });
+                  _next_key = parseInt( _max_mod_key.id.replace(/[^\/\d]/g,''), 10 ) + 1;
+              }
+              return _next_key;
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+//BASE CONTROL CLASS
+//extends api.CZRBaseControl
+//define a set of methods, mostly helpers, to extend the base WP control class
+//this will become our base constructor for main complex controls
+//EARLY SETUP
+var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRBaseModuleControlMths, {
+      //Multi Module method
+      //fired when the main sektion module has synchronised its if with the module-collection control
+      registerModulesOnInit : function( sektion_module_instance ) {
+              var control = this,
+                  _orphan_mods = [];
+
+              _.each( control.getSavedModules() , function( _mod, _key ) {
+                      //a module previously embedded in a deleted sektion must not be registered
+                      if ( ! sektion_module_instance.czr_Item.has( _mod.sektion_id ) ) {
+                            api.errorLog( 'Warning Module ' + _mod.id + ' is orphan : it has no sektion to be embedded to. It Must be removed.');
+                            _orphan_mods.push(_mod);
+                            return;
+                      }
+                      //@todo handle the case of a module embedded in a previously deleted column
+                      //=> register it in the first column of the sektion ?
+
+                      var _sektion = sektion_module_instance.czr_Item( _mod.sektion_id );
+
+                      if ( _.isUndefined( _sektion ) ) {
+                            throw new Error( 'sektion instance missing. Impossible to instantiate module : ' + _mod.id );
+                      }
+
+                      //add the sektion instance before update the api collection
+                      $.extend( _mod, {sektion : _sektion} );
+
+                      //push it to the collection of the module-collection control
+                      //=> the instantiation will take place later, on column instantiation
+                      control.updateModulesCollection( {module : _mod } );
+              });
+
+              //REMOVE ORPHAN MODULES ON INIT
+              //But only when the module collectionn has been resolved
+              control.moduleCollectionReady.then( function() {
+                    //if there are some orphans mods, the module-collection setting must be updated now.
+                    if ( ! _.isEmpty( _orphan_mods ) ) {
+                        control.moduleCollectionReact( control.czr_moduleCollection(), [], { orphans_module_removal : _orphan_mods } );
+                    }
+              });
+      },
+
+
+
+      //@return void()
+      //@param obj can be { collection : []}, or { module : {} }
+      //Can be called :
+      //1) for multimodule control, in register modules on init, when the main sektion module has synchronised with the module-collection control
+      //2) for all modules, in module.isReady.done() if the module is not registered in the collection yet.
+      //3) for all modules on moduleReact ( module.callbacks )
+      //
+      //=> sets the setting value via the module collection !
+      updateModulesCollection : function( obj ) {
+              var control = this,
+                  _current_collection = control.czr_moduleCollection(),
+                  _new_collection = $.extend( true, [], _current_collection);
+
+              //if a collection is provided in the passed obj then simply refresh the collection
+              //=> typically used when reordering the collection module with sortable or when a module is removed
+              if ( _.has( obj, 'collection' ) ) {
+                    //reset the collection
+                    control.czr_moduleCollection.set( obj.collection, obj.data || {} );
+                    return;
+              }
+
+              if ( ! _.has(obj, 'module') ) {
+                throw new Error('updateModulesCollection, no module provided ' + control.id + '. Aborting');
+              }
+
+              //normalizes the module for the API
+              var module_api_ready = control.prepareModuleForAPI( _.clone( obj.module ) );
+
+              //the module already exist in the collection
+              if ( _.findWhere( _new_collection, { id : module_api_ready.id } ) ) {
+                    _.each( _current_collection , function( _elt, _ind ) {
+                          if ( _elt.id != module_api_ready.id )
+                            return;
+
+                          //set the new val to the changed property
+                          _new_collection[_ind] = module_api_ready;
+                    });
+              }
+              //the module has to be added
+              else {
+                    _new_collection.push( module_api_ready );
+              }
+
+              //WHAT ARE THE PARAMS WE WANT TO PASS TO THE NEXT ACTIONS
+              var _params = {};
+              //if a data property has been passed,
+              //amend the data property with the changed module
+              if ( _.has( obj, 'data') ) {
+                  _params = $.extend( true, {}, obj.data );
+                  $.extend( _params, { module : module_api_ready } );
+              }
+              //Inform the collection
+              control.czr_moduleCollection.set( _new_collection, _params );
+      },
+
+
+
+
+
+
+      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      //cb of control.czr_moduleCollection.callbacks
+      //@data is an optional object. { silent : true }
+      moduleCollectionReact : function( to, from, data ) {
+            var control = this,
+                is_module_added = _.size(to) > _.size(from),
+                is_module_removed = _.size(from) > _.size(to),
+                is_module_update = _.size(from) == _.size(to);
+                is_collection_sorted = false;
+
+            //MODULE REMOVED
+            //Remove the module instance if needed
+            if ( is_module_removed ) {
+                  //find the module to remove
+                  var _to_remove = _.filter( from, function( _mod ){
+                      return _.isUndefined( _.findWhere( to, { id : _mod.id } ) );
+                  });
+                  _to_remove = _to_remove[0];
+                  control.czr_Module.remove( _to_remove.id );
+            }
+
+            //is there a passed module param ?
+            //if so prepare it for DB
+            //if a module is provided, we also want to pass its id to the preview => can be used to target specific selectors in a partial refresh scenario
+            if ( _.isObject( data  ) && _.has( data, 'module' ) ) {
+                  data.module_id = data.module.id;
+                  data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
+            }
+
+            //Inform the the setting
+            //If we are in a single module control (not a sektion, multimodule)
+            //AND that the module is being added to the collection for the first time,
+            //We don't want to say it to the setting, because it might alter the setting dirtyness for nothing on init.
+            if ( ! control.isMultiModuleControl() && is_module_added ) {
+                  return;
+            }
+            else {
+                  //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
+                  //if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
+                  api( this.id )
+                        .set( control.filterModuleCollectionBeforeAjax( to ), data );
+                        //.done( function( to, from, o ) {});
+            }
+      },
+      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+      //an overridable method to act on the collection just before it is ajaxed
+      //@return the collection array
+      filterModuleCollectionBeforeAjax : function( collection ) {
+              var control = this,
+                  _filtered_collection = $.extend( true, [], collection ),
+                  _to_return;
+
+              _.each( collection , function( _mod, _key ) {
+                    var db_ready_mod = $.extend( true, {}, _mod );
+                    _filtered_collection[_key] = control.prepareModuleForDB( db_ready_mod );
+              });
+
+              //we don't want to save the same things if we the modules are embedded in a control or in a sektion
+              //=> in a sektion : we save the collection of modules
+              //=> in a control : we save
+              //1) the collection of item(s)
+              //2) the modOpt
+              if ( control.isMultiModuleControl() ) {
+                    return _filtered_collection;
+              } else {
+                    //at this point we should be in the case of a single module collection, typically use to populate a regular setting
+                    if ( _.size( collection ) > 1 ) {
+                      throw new Error('There should not be several modules in the collection of control : ' + control.id );
+                    }
+                    if ( ! _.isArray( collection ) || _.isEmpty( collection ) || ! _.has( collection[0], 'items' ) ) {
+                      throw new Error('The setting value could not be populated in control : ' + control.id );
+                    }
+                    var module_id = collection[0].id;
+
+                    if ( ! control.czr_Module.has( module_id ) ) {
+                       throw new Error('The single module control (' + control.id + ') has no module registered with the id ' + module_id  );
+                    }
+                    var module_instance = control.czr_Module( module_id );
+                    if ( ! _.isArray( module_instance().items ) ) {
+                      throw new Error('The module ' + module_id + ' should be an array in control : ' + control.id );
+                    }
+
+                    //items
+                    _to_return = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
+
+                    //Add the modOpt if any
+                    return module_instance.hasModOpt() ? _.union( [ module_instance().modOpt ] , _to_return ) : _to_return;
+              }
+      },
+
+
+
+
+      //fired before adding a module to the collection of DB candidates
+      //the module must have the control.getDefaultModuleDBModel structure :
+      prepareModuleForDB : function ( module_db_candidate ) {
+            if ( ! _.isObject( module_db_candidate ) ) {
+                throw new Error('MultiModule Control::prepareModuleForDB : a module must be an object. Aborting.');
+            }
+            var control = this,
+                db_ready_module = {};
+
+            _.each( control.getDefaultModuleDBModel() , function( _value, _key ) {
+                  if ( ! _.has( module_db_candidate, _key ) ) {
+                      throw new Error('MultiModule Control::prepareModuleForDB : a module is missing the property : ' + _key + ' . Aborting.');
+                  }
+
+                  var _candidate_val = module_db_candidate[ _key ];
+                  switch( _key ) {
+                        //PROPERTIES COMMON TO ALL MODULES IN ALL CONTEXTS
+                        case 'items' :
+                          if ( ! _.isArray( _candidate_val )  ) {
+                              throw new Error('prepareModuleForDB : a module item list must be an array');
+                          }
+                          db_ready_module[ _key ] = _candidate_val;
+                        break;
+
+
+
+                        //PROPERTIES FOR MODULE EMBEDDED IN A SEKTION
+                        case 'id' :
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                              throw new Error('prepareModuleForDB : a module id must a string not empty');
+                          }
+                          db_ready_module[ _key ] = _candidate_val;
+                        break;
+                        case 'module_type' :
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                              throw new Error('prepareModuleForDB : a module type must a string not empty');
+                          }
+                          db_ready_module[ _key ] = _candidate_val;
+                        break;
+                        case  'column_id' :
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                              throw new Error('prepareModuleForDB : a module column id must a string not empty');
+                          }
+                          db_ready_module[ _key ] = _candidate_val;
+                        break;
+                        case  'sektion_id' :
+                          if ( ! _.isObject( module_db_candidate.sektion ) || ! _.has( module_db_candidate.sektion, 'id' ) ) {
+                              throw new Error('prepareModuleForDB : a module sektion must be an object with an id.');
+                          }
+                          //in the API, the sektion property hold by the module is an instance
+                          //let's use only the id for the DB
+                          db_ready_module[ _key ] = module_db_candidate.sektion.id;
+                        break;
+                        case 'dirty' :
+                          if ( control.czr_Module.has( module_db_candidate.id ) )
+                              db_ready_module[ _key ] = control.czr_Module( module_db_candidate.id ).isDirty();
+                          else
+                              db_ready_module[ _key ] = _candidate_val;
+                          if ( ! _.isBoolean( db_ready_module[ _key ] ) ) {
+                              throw new Error('prepareModuleForDB : a module dirty state must be a boolean.');
+                          }
+                        break;
+                  }//switch
+            });
+            return db_ready_module;
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+//extends api.CZRBaseModuleControl
+var CZRMultiModuleControlMths = CZRMultiModuleControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRMultiModuleControlMths, {
+      initialize: function( id, options ) {
+              var control = this;
+
+              //listen to the module-collection setting changes
+              //=> synchronize the columns in the sektion setting
+              api.consoleLog('IN MULTI MODULE INITIALIZE ? ', options );
+              api(id).callbacks.add( function() { return control.syncColumn.apply( control, arguments ); } );
+
+              //when the synchronized sektion module sends its instance, check the consistency with the module-collection setting
+              //=> each modules of the module-collection setting should be present in a column of the synchronized sektion
+              // control.syncSektionModule().bind( function( sektion_module_instance ) {
+              //     sektion_module_instance.czr_columnCollection.each( function( _col ) {
+              //           api.consoleLog('_col.modules', _col.modules);
+              //     });
+              // });
+
+              api.CZRBaseModuleControl.prototype.initialize.call( control, id, options );
+      },
+
+
+      ready : function() {
+            var control = this;
+            api.consoleLog('MODULE-COLLECTION CONTROL READY', this.id );
+            api.CZRBaseModuleControl.prototype.ready.apply( control, arguments);
+      },
+
+      //cb of : api(control.id).callbacks.
+      syncColumn : function( to, from, data ) {
+            api.consoleLog('IN SYNC COLUMN', to, from, data );
+            if ( ! _.isUndefined(data) && data.silent )
+              return;
+            api.consoleLog('IN SYNXXX', api.control('hu_theme_options[module-collection]').syncSektionModule()(), this.syncSektionModule()(), this.id );
+
+            //ORPHANS MODULE REMOVED ON INIT, VOID()
+            //=> there's no column to synchronize
+            if ( _.has( data, 'orphans_module_removal' ) )
+              return;
+
+            //always get the control instance from the api
+            //=> because the control on which this callback is binded can be re instantiated, typically on skope switch
+            var control = api.control( this.id );
+            //MODULE ADDED
+            //determine if a module has been added
+            var added_mod = _.filter( to, function( _mod, _key ){
+                return ! _.findWhere( from, { id : _mod.id } );
+            } );
+            if ( ! _.isEmpty( added_mod ) ) {
+                  api.consoleLog('ADDED MODULE?', added_mod );
+                  _.each( added_mod, function( _mod ) {
+                          control.syncSektionModule().czr_Column( _mod.column_id ).updateColumnModuleCollection( { module : _mod } );
+                  });
+            }
+
+            //MODULE REMOVED
+            var removed_mod = _.filter( from, function( _mod, _key ){
+                return ! _.findWhere( to, { id : _mod.id } );
+            } );
+            if ( ! _.isEmpty( removed_mod ) ) {
+                  _.each( removed_mod, function( _mod ) {
+                          control.syncSektionModule().czr_Column( _mod.column_id ).removeModuleFromColumnCollection( _mod );
+                  });
+            }
+
+            //MODULE HAS BEEN MOVED TO ANOTHER COLUMN
+            if ( _.size(from) == _.size(to) && _.has( data, 'module') && _.has( data, 'source_column') && _.has( data, 'target_column') ) {
+                    $.when( control.syncSektionModule().moveModuleFromTo( data.module, data.source_column, data.target_column ) ).done( function() {
+                          control.syncSektionModule().control.trigger('module-moved', { module : data.module, source_column: data.source_column, target_column :data.target_column });
+                    } );
+            }
+            control.trigger( 'columns-synchronized', to );
+      },
+
+
+      ////////////////////////////////////////////
+      /// REMOVE MODULE
+      ///////////////////////////////////////////
+      //@param module = obj => the module model
+      removeModule : function( module ) {
+            var control = this;
+            //remove module from DOM if it's been embedded
+            if ( control.czr_Module.has( module.id ) && 'resolved' == control.czr_Module( module.id ).embedded.state() )
+                control.czr_Module( module.id ).container.remove();
+
+            //remove module from API
+            control.removeModuleFromCollection( module );
+      },
+
+
+      removeModuleFromCollection : function( module ) {
+            var control = this,
+                _current_collection = control.czr_moduleCollection(),
+                _new_collection = $.extend( true, [], _current_collection);
+
+            _new_collection = _.filter( _new_collection, function( _mod ) {
+                  return _mod.id != module.id;
+            } );
+            control.czr_moduleCollection.set( _new_collection );
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+//extends api.CZRBaseModuleControl
+var CZRMultiModuleControlMths = CZRMultiModuleControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRMultiModuleControlMths, {
+      //adapt modules for them to be used in a multimodule control, synchronized with a sektions control.
+      //@todo. => create equivalent extender when they are used in controls.
+      getMultiModuleExtender : function( parentConstructor ) {
+            var control = this;
+            $.extend( control.CZRModuleExtended, {
+                  initialize: function( id, constructorOptions ) {
+                        var module = this;
+                        //run the parent initialize
+                        parentConstructor.prototype.initialize.call( module, id, constructorOptions );
+
+                        api.consoleLog('MODULE INSTANTIATED : ', module.id );
+
+                        //extend the module with new template Selectors
+                        $.extend( module, {
+                              singleModuleWrapper : 'czr-single-module-wrapper',
+                              sektionModuleTitle : 'czr-module-sektion-title-part',
+                              ruModuleEl : 'czr-ru-module-sektion-content'
+                        } );
+
+                        //ADD A MODULE STATE OBSERVER
+                        //czr_ModuleState stores the current expansion status of a given module
+                        //can take 2 values : expanded, closed
+                        module.czr_ModuleState = new api.Value( false );
+
+                        //SETUP MODULE VIEW WHEN MODULE READY
+                        module.isReady.done( function() {
+                              module.setupModuleView();
+                        });
+
+                        //ADD A MODULE TITLE ELEMENT EMBEDDED STATE
+                        module.moduleTitleEmbedded = $.Deferred();
+
+                        //ADD A MODULE COLUMN STATE OBSERVER
+                        module.modColumn = new api.Value();
+                        module.modColumn.set( constructorOptions.column_id );
+
+                        //React to a module column change. Typically fired when moving a module from one column to another.
+                        module.modColumn.bind( function( to, from ) {
+                              api.consoleLog('MODULE ' + module.id + ' HAS BEEN MOVED TO COLUMN', to, module() );
+                              var _current_model = module(),
+                                  _new_model = $.extend( true, {}, _current_model );
+
+                              _new_model.column_id = to;
+
+                              //When the module value changes, here's what happens :
+                              //IN THE MODULE COLLECTION CONTROL / SETTING
+                              //1) the module reacts and inform the control.czr_moduleCollection()
+                              //2) the control.czr_moduleCollection() reacts and inform the 'module-collection' setting
+                              //3) the module-collection setting react and inform the relevant column.columnModuleCollection() instance with the syncColumn() method
+                              //
+                              //IN THE SEKTIONS CONTROL / SETTING
+                              //4) the column.columnModuleCollection() instance reacts and inform the column() instance
+                              //5) the column() instance reacts and inform the sektion module.czr_columnCollection() instance
+                              //6) the module.czr_columnCollection() instance reacts and inform the relevant sektion() instance
+                              //7) the sektion() instance reacts and inform the itemCollection() (=> a sektion() is actually an item )
+                              //8) the itemCollection() reacts and inform its module() instance
+                              //9) the module() instance reacts and inform the moduleCollection() instance
+                              //10) the control.czr_moduleCollection() instance reacts and inform the 'sektions' setting
+                              module.set( _new_model, { target_column : to, source_column : from } );
+                              //var updatedModuleCollection = $.extend( true, [], module.control.czr_moduleCollection() );
+                              //api(module.control.id).set( module.control.filterModuleCollectionBeforeAjax( updatedModuleCollection ) );
+                        } );
+                  },
+
+                  //////////////////////////////////
+                  ///READY
+                  //////////////////////////////////
+                  //when a module is embedded in a sektion, we need to render it before ready is done
+                  //=> this allows us to override the container element declared in the parent initialize
+                  //when ready done => the module items are embedded (without their content)
+                  ready : function( is_added_by_user ) {
+                          var module = this;
+                           api.consoleLog('MODULE READY IN EXTENDED MODULE CLASS : ', module.id );
+                          $.when( module.renderModuleWrapper( is_added_by_user ) ).done( function( $_module_container ) {
+                                if ( _.isUndefined($_module_container) || false === $_module_container.length ) {
+                                    throw new Error( 'Module container has not been embedded for module :' + module.id );
+                                }
+                                module.container = $_module_container;
+                                module.embedded.resolve();
+                          } );
+                          //run the parent initialize
+                          parentConstructor.prototype.ready.call( module );
+                          //module.isReady.resolve();
+                  }
+
+            });
+            return control.CZRModuleExtended;
+      },
+
+
+      //this object holds the various methods allowing a module to be rendered in a multimodule control
+      CZRModuleExtended  : {
+            //fired in ready.
+            //=> before isReady.done().
+            renderModuleWrapper : function( is_added_by_user ) {
+                    //=> an array of objects
+                    var module = this;
+
+                    //has this module view already been rendered?
+                    if ( 'resolved' == module.embedded.state() )
+                      return module.container;
+
+                    //do we have view template script?
+                    if ( 0 === $( '#tmpl-' + module.singleModuleWrapper ).length ) {
+                      throw new Error('No template for module ' + module.id + '. The template script id should be : #tmpl-' + module.singleModuleWrapper );
+                    }
+
+                    var module_wrapper_tmpl = wp.template( module.singleModuleWrapper ),
+                        tmpl_data = {
+                            id : module.id,
+                            type : module.module_type
+                        },
+                        $_module_el = $(  module_wrapper_tmpl( tmpl_data ) );
+
+                    //append the module wrapper to the column
+                    //if added by user, search for the module candidate element, render after and delete the element
+                    if ( is_added_by_user ) {
+                        $.when( $( '.czr-module-collection-wrapper' , module._getColumn().container ).find( '.czr-module-candidate').after( $_module_el ) ).
+                          done( function() {
+                            $( '.czr-module-collection-wrapper' , module._getColumn().container ).find( '.czr-module-candidate').remove();
+                          });
+                    } else {
+                        $( '.czr-module-collection-wrapper' , module._getColumn().container).append( $_module_el );
+                    }
+
+
+                    // //then append the ru module template
+                    // var mod_content_wrapper_tmpl = wp.template( module.ruModuleEl ),
+                    //     $_mod_content_wrapper = $(  mod_content_wrapper_tmpl( tmpl_data ) );
+
+                    // $( '.czr-mod-content', $_module_el).append( $_mod_content_wrapper );
+
+                    return $_module_el;
+            },
+
+
+
+
+
+            setupModuleView : function() {
+                    var module = this;
+
+                    module.view_event_map = [
+                            //toggles remove view alert
+                            {
+                              trigger   : 'click keydown',
+                              selector  : [ '.czr-remove-mod', '.' + module.control.css_attr.cancel_alert_btn ].join(','),
+                              name      : 'toggle_remove_alert',
+                              actions   : ['toggleModuleRemoveAlert']
+                            },
+                            //removes module and destroys its view
+                            {
+                              trigger   : 'click keydown',
+                              selector  : '.' + module.control.css_attr.remove_view_btn,
+                              name      : 'remove_module',
+                              actions   : ['removeModule']
+                            },
+                            //edit view
+                            {
+                              trigger   : 'click keydown',
+                              selector  : '.czr-edit-mod',
+                              name      : 'edit_module',
+                              actions   : ['setModuleViewVisibility', 'sendEditModule']
+                            },
+                            {
+                              trigger   : 'click keydown',
+                              selector  : '.czr-module-back',
+                              name      : 'back_to_column',
+                              actions   : ['setModuleViewVisibility']
+                            },
+                            {
+                              trigger   : 'mouseenter',
+                              selector  : '.czr-mod-header',
+                              name      : 'hovering_module',
+                              actions   : function( obj ) {
+                                    module.control.previewer.send( 'start_hovering_module', {
+                                          id : module.id
+                                    });
+                              }
+                            },
+                            {
+                              trigger   : 'mouseleave',
+                              selector  : '.czr-mod-header',
+                              name      : 'hovering_module',
+                              actions   : function( obj ) {
+                                  module.control.previewer.send( 'stop_hovering_module', {
+                                        id : module.id
+                                  });
+                              }
+                            }
+                    ];
+
+                    //defer actions on module view embedded
+                    module.embedded.done( function() {
+                          //add a listener on view state change
+                          module.czr_ModuleState.callbacks.add( function() { return module.setupModuleViewStateListeners.apply(module, arguments ); } );
+
+                          //setup DOM listener
+                          api.CZR_Helpers.setupDOMListeners(
+                                module.view_event_map,//actions to execute
+                                { module : { id : module.id } , dom_el:module.container },//model + dom scope
+                                module //instance where to look for the cb methods
+                          );//listeners for the view wrapper
+                    });
+            },
+
+            //fired on click
+            setModuleViewVisibility : function( obj, is_added_by_user ) {
+                  var module = this;
+
+                  module.czr_ModuleState( ! module.czr_ModuleState() );
+
+                  //always close the module panel
+                  api.czrModulePanelState.set(false);
+                  //always close the sektion settings panel
+                  api.czrSekSettingsPanelState.set(false);
+
+                  //close all sektions but the one from which the button has been clicked
+                  module.control.syncSektionModule().closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
+
+                  // if ( is_added_by_user ) {
+                  //   item.viewState.set( 'expanded_noscroll' );
+                  // } else {
+                  //   module.closeAllItems( item.id );
+                  //   if ( _.has(module, 'preItem') ) {
+                  //     module.preItemExpanded.set( false );
+                  //   }
+                  //   }
+                  //   item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
+                  // }
+            },
+
+            //fired on click
+            sendEditModule : function( obj ) {
+                  var module = this;
+                  module.control.previewer.send( 'edit_module', {
+                        id : module.id
+                  });
+            },
+
+            //cb of module.czr_ModuleState.callbacks
+            //On first module expansion, render the module item(s) content
+            setupModuleViewStateListeners : function( expanded ) {
+                  var module = this;
+                  //setup an api value for the current opened module.
+                  api.czr_isModuleExpanded = api.czr_isModuleExpanded || new api.Value();
+
+                  if ( expanded )
+                    api.czr_isModuleExpanded( module );
+                  else
+                    api.czr_isModuleExpanded( false );
+
+                  //expand / collapse
+                  $.when( module.toggleModuleViewExpansion( expanded ) ).done( function() {
+                        if ( expanded ) {
+                              //render the module title
+                              module.renderModuleTitle();
+
+                              //populates the saved items collection
+                              module.populateSavedItemCollection();
+
+                              //render the item(s)
+                              //on first rendering, use the regular method.
+                              //for further re-rendering, when the embedded state is resolved()
+                              // => 1) re-render each item
+                              // => 2) re-instantiate each input
+                              // module.czr_Item.each ( function( item ) {
+                              //       if ( ! item.module.isMultiItem() )
+                              //           item.viewState.set('expanded');
+                              //       if ( 'resolved' == item.embedded.state() ) {
+                              //           $.when( item.renderItemWrapper() ).done( function( $_item_container ) {
+                              //               item.container = $_item_container;
+
+                              //               $.when( item.renderItemContent() ).done( function() {
+                              //                   api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
+                              //               });
+
+                              //               if ( ! item.module.isMultiItem() )
+                              //                   item.viewState.set('expanded');
+                              //           });
+
+                              //       }
+                              //       else {
+                              //           item.mayBeRenderItemWrapper();
+                              //       }
+                              // } );
+                        }
+                        else {
+                              module.czr_Item.each ( function( item ) {
+                                    item.viewState.set('closed');
+                                    item._destroyView( 0 );
+                                    //api.CZR_Helpers.removeInputCollection.call( item );
+                                    module.czr_Item.remove( item.id );
+                              } );
+                        }
+                  });
+            },
+
+
+            renderModuleTitle : function() {
+                  var module = this;
+                  if( 'resolved' == module.moduleTitleEmbedded.state() )
+                    return;
+
+                  //render the module title
+                  //do we have view template script?
+                  if ( 0 === $( '#tmpl-' + module.sektionModuleTitle ).length ) {
+                    throw new Error('No sektion title Module Part template for module ' + module.id + '. The template script id should be : #tmpl-' + module.sektionModuleTitle );
+                  }
+                  //append the title when in a sektion and resolve the embedded state
+                  $.when( $( module.container ).find('.czr-mod-content').prepend(
+                        $( wp.template( module.sektionModuleTitle )( { id : module.id } ) )
+                  ) ).done( function() {
+                        module.moduleTitleEmbedded.resolve();
+                  });
+            },
+
+
+            //fired in setupModuleViewStateListeners()
+            toggleModuleViewExpansion : function( expanded, duration ) {
+                  var module = this;
+
+                  //slide Toggle and toggle the 'open' class
+                  $( '.czr-mod-content' , module.container ).slideToggle( {
+                      duration : duration || 200,
+                      done : function() {
+                            var $_overlay = module.container.closest( '.wp-full-overlay' ),
+                                $_backBtn = module.container.find( '.czr-module-back' ),
+                                $_modTitle = module.container.find('.czr-module-title');
+
+                            module.container.toggleClass('open' , expanded );
+                            $_overlay.toggleClass('czr-module-open', expanded );
+                            $_modTitle.attr( 'tabindex', expanded ? '-1' : '0' );
+                            $_backBtn.attr( 'tabindex', expanded ? '0' : '-1' );
+
+                            if( expanded ) {
+                                $_backBtn.focus();
+                            } else {
+                                $_modTitle.focus();
+                            }
+
+                            //close all alerts
+                            //module.closeRemoveDialogs();
+
+                            //toggle the icon activate class depending on the status
+                            //switch icon
+                            //var $_edit_icon = $(this).siblings().find('.' + module.control.css_attr.edit_view_btn );
+
+                            // $_edit_icon.toggleClass('active' , expanded );
+                            // if ( expanded )
+                            //   $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.i18n.close );
+                            // else
+                            //   $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.i18n.edit );
+
+                            //scroll to the currently expanded view
+                            if ( expanded )
+                              module._adjustScrollExpandedBlock( module.container );
+                      }//done callback
+                    } );
+            },
+
+
+
+
+
+
+
+
+
+            toggleModuleRemoveAlert : function( obj ) {
+                    var module = this,
+                        control = this.control,
+                        $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, module.container ).first(),
+                        $_clicked = obj.dom_event,
+                        $_column_container = control.syncSektionModule().czr_Column( module.column_id ).container;
+
+                    //first close all open  views
+                    //module.closeAllItems();
+
+                    //close the main sektion pre_item view
+                    if ( _.has(module, 'preItem') ) {
+                        control.syncSektionModule().preItemExpanded.set( false );
+                    }
+
+                    //then close any other open remove alert in the column containuer
+                    $('.' + module.control.css_attr.remove_alert_wrapper, $_column_container ).not($_alert_el).each( function() {
+                          if ( $(this).hasClass('open') ) {
+                                $(this).slideToggle( {
+                                      duration : 200,
+                                      done : function() {
+                                            $(this).toggleClass('open' , false );
+                                            //deactivate the icons
+                                            $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass('active' , false );
+                                      }
+                                } );
+                          }
+                    });
+
+                    //print the html
+                    //do we have an html template and a control container?
+                    if ( ! wp.template( module.AlertPart )  || ! module.container ) {
+                        throw new Error( 'No removal alert template available for module :' + module.id );
+                    }
+
+                    $_alert_el.html( wp.template( module.AlertPart )( { title : ( module().title || module.id ) } ) );
+
+                    //toggle it
+                    $_alert_el.slideToggle( {
+                          duration : 200,
+                          done : function() {
+                                var _is_open = ! $(this).hasClass('open') && $(this).is(':visible');
+                                $(this).toggleClass('open' , _is_open );
+                                //set the active class of the clicked icon
+                                $( obj.dom_el ).find('.' + module.control.css_attr.display_alert_btn).toggleClass( 'active', _is_open );
+                                //adjust scrolling to display the entire dialog block
+                                if ( _is_open )
+                                  module._adjustScrollExpandedBlock( module.container );
+                          }
+                    } );
+            },
+
+
+
+
+            //@param module = obj => the module model
+            //Fired on click
+            removeModule : function( obj ) {
+                  this.control.removeModule( obj.module );
+            },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            _getColumn : function() {
+                    var module = this;
+                    return module.control.syncSektionModule().czr_Column( module.modColumn() );
+            },
+
+            _getSektion : function() {
+
+            }
+      }
+});//$.extend//CZRBaseControlMths
 })( wp.customize , jQuery, _ );
 //extends api.CZRDynModule
 var CZRSocialModuleMths = CZRSocialModuleMths || {};
@@ -13190,1427 +14610,8 @@ $.extend( CZRBodyBgModuleMths, {
                   name : 'Slider'
             }
       });
-})( wp.customize, jQuery, _ );//BASE CONTROL CLASS
-//extends api.Control
-//define a set of methods, mostly helpers, to extend the base WP control class
-//this will become our base constructor for main complex controls
-//EARLY SETUP
-
-var CZRBaseControlMths = CZRBaseControlMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRBaseControlMths, {
-      initialize: function( id, options ) {
-            var control = this;
-            //add a shortcut to the css properties declared in the php controls
-            control.css_attr = _.has( serverControlParams , 'css_attr') ? serverControlParams.css_attr : {};
-            api.Control.prototype.initialize.call( control, id, options );
-
-            //When a partial refresh is done we need to send back all postMessage input to the preview
-            //=> makes sure that all post message inputs not yet saved in db are properly applied
-            control.bind( 'czr-partial-refresh-done', function() {
-                  if ( _.has( control, 'czr_moduleCollection' ) ) {
-                        _.each( control.czr_moduleCollection(), function( _mod_ ) {
-                              if ( ! control.czr_Module( _mod_.id ) )
-                                return;
-
-                              control.czr_Module( _mod_.id ).sendModuleInputsToPreview( { isPartialRefresh : true } );
-                        });
-                  }
-            });
-      },
-
-      //@return void()
-      refreshPreview : function( obj ) {
-            this.previewer.refresh();
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
-//BASE CONTROL CLASS
-//extends api.CZRBaseControl
-//define a set of methods, mostly helpers, to extend the base WP control class
-//this will become our base constructor for main complex controls
-//EARLY SETUP
-var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRBaseModuleControlMths, {
-      initialize: function( id, options ) {
-              var control = this;
-
-              control.czr_Module = new api.Values();
-
-              //czr_collection stores the module collection
-              control.czr_moduleCollection = new api.Value();
-              control.czr_moduleCollection.set([]);
-
-              //let's store the state of the initial module collection
-              control.moduleCollectionReady = $.Deferred();
-              //and listen to changes when it's ready
-              control.moduleCollectionReady.done( function( obj ) {
-                    if ( ! control.isMultiModuleControl( options.params ) ) {
-                      //api.consoleLog('MODULE COLLECTION READY IN CONTROL : ', control.id , obj.id, control.isModuleRegistered( obj.id ) );
-                    }
-                    //if the module is not registered yet for a single module control
-                    //=> push it to the collection now, before listening to the module collection changes
-                    // if (  ! control.isModuleRegistered( module.id ) ) {
-                    //     control.updateModulesCollection( { module : constructorOptions } );
-                    // }
-
-                    //LISTEN TO MODULE COLLECTION
-                    control.czr_moduleCollection.callbacks.add( function() { return control.moduleCollectionReact.apply( control, arguments ); } );
-
-                    //control.removeModule( _mod );
-              } );
-
-              //FOR MULTI MODULE CONTROL : Stores the module instance of the synchronized sektion
-              if ( control.isMultiModuleControl( options.params ) ) {
-                    control.syncSektionModule = new api.Value();
-              }
-
-              api.CZRBaseControl.prototype.initialize.call( control, id, options );
-
-              //FOR TEST PURPOSES
-              // api(this.id).bind( function( to, from) {
-              //     api.consoleLog( 'SETTING ', control.id, ' HAS CHANGED : ', to, from );
-              // });
-
-              //close any open item and dialog boxes on section expansion
-              api.section( control.section() ).expanded.bind(function(to) {
-                    control.czr_Module.each( function( _mod ){
-                          _mod.closeAllItems().closeRemoveDialogs();
-                          if ( _.has( _mod, 'preItem' ) ) {
-                                _mod.preItemExpanded(false);
-                          }
-                    });
-              });
-
-      },
-
-
-
-
-      //////////////////////////////////
-      ///READY = CONTROL INSTANTIATED AND DOM ELEMENT EMBEDDED ON THE PAGE
-      ///FIRED BEFORE API READY
-      //////////////////////////////////
-      ready : function() {
-              var control = this;
-              if ( control.isMultiModuleControl() ) {
-                    //POPULATE THE SAVED MODULE COLLECTION WHEN THE SYNCHRONIZED SEKTIONS SETTING HAS PROVIDED ITS INSTANCE
-                    control.syncSektionModule.bind( function( sektion_module_instance, from) {
-                          if ( 'resolved' == control.moduleCollectionReady.state() )
-                            return;
-                          control.registerModulesOnInit( sektion_module_instance );
-                          //the module collection is ready
-                          control.moduleCollectionReady.resolve();
-                    });
-              } else {
-                    var single_module = {};
-                    //inits the collection with the saved module => there's only one module to instantiate in this case.
-                    //populates the collection with the saved module
-                    _.each( control.getSavedModules() , function( _mod, _key ) {
-                          //stores it
-                          single_module = _mod;
-
-                          //adds it to the collection
-                          //=> it will be fired ready usually when the control section is expanded
-                          try { control.instantiateModule( _mod, {} ); } catch( er ) {
-                                api.errorLog( 'Failed to instantiate module ' + _mod.id + ' ' + er );
-                                return;
-                          }
-
-                          //adds the module name to the control container element
-                          control.container.attr('data-module', _mod.id );
-                    });
-                    //the module collection is ready
-                    control.moduleCollectionReady.resolve( single_module );
-              }
-
-
-              //LISTEN TO MODULE CANDIDATES ADDED BY USERS
-              control.bind( 'user-module-candidate', function( _module ) {
-                    var module;
-                    //instanciate + fire ready()
-                    //=> the module will be added in the collection on isReady.done()
-                    try {
-                          module = control.instantiateModule( _module, {} ); //module, constructor
-                    } catch( er ) {
-                          api.errorLog( 'Failed to instantiate module ' + _module.id + ' ' + er );
-                          return;
-                    }
-                    //If everything went fine, fires ready
-                    module.ready( _module.is_added_by_user );
-              });
-      },
-
-
-
-
-
-
-
-
-
-      //////////////////////////////////
-      /// VARIOUS HELPERS
-      //////////////////////////////////
-      ///
-      //@return the default API model {} needed to instantiate a module
-      //Depending on the module context, control or sektion, the default model has to hold different properties
-      getDefaultModuleApiModel : function() {
-              //Modules share the common model either they are in a sektion or in a control
-              var commonAPIModel = {
-                    id : '',//module.id,
-                    module_type : '',//module.module_type,
-                    modOpt : {},//the module modOpt property, typically high level properties that area applied to all items of the module
-                    items   : [],//$.extend( true, {}, module.items ),
-                    crud : false,
-                    multi_item : false,
-                    sortable : false,//<= a module can be multi-item but not necessarily sortable
-                    control : {},//control,
-              };
-
-              //if embedded in a control, amend the common model with the section id
-              if ( ! this.isMultiModuleControl() ) {
-                  return $.extend( commonAPIModel, {
-                      section : ''//id of the control section
-                  } );
-              } else {
-                  return $.extend( commonAPIModel, {
-                      column_id : '',//a string like col_7
-                      sektion : {},// => the sektion instance
-                      sektion_id : '',
-                      is_added_by_user : false,
-                      dirty : false
-                  } );
-              }
-      },
-
-      //@return the default DB model {} that will be used when the setting will send the ajax save request
-      //Depending on the module context, control or sektion, the default DB model has to hold different properties
-      getDefaultModuleDBModel : function() {
-              var commonDBModel = {
-                    items   : [],//$.extend( true, {}, module.items ),
-              };
-
-              //if embedded in a sektion, we need more the item(s) collection
-              if ( this.isMultiModuleControl() ) {
-                  return $.extend( commonDBModel, {
-                      id : '',
-                      module_type : '',
-                      column_id : '',
-                      sektion_id : '',
-                      dirty : false
-                  } );
-              } else {
-                  return commonDBModel;
-              }
-      },
-
-
-      //@return bool
-      isMultiModuleControl : function( params ) {
-              return 'czr_multi_module' == ( params || this.params ).type;
-      },
-
-
-      //@return the control instance of the synchronized collection of modules
-      getSyncCollectionControl : function() {
-            var control = this;
-            if ( _.isUndefined( control.params.syncCollection ) ) {
-                throw new Error( 'Control ' + control.id + ' has no synchronized sektion control defined.');
-            }
-            return api.control( api.CZR_Helpers.build_setId( control.params.syncCollection ) );
-      },
-
-
-      //@return the collection [] of saved module(s) to instantiate
-      //This method does not make sure that the module model is ready for API.
-      //=> it just returns an array of saved module candidates to instantiate.
-      //
-      //Before instantiation, we will make sure that all required property are defined for the modules with the method control.prepareModuleForAPI()
-      // control     : control,
-      // crud        : bool
-      // id          : '',
-      // items       : [], module.items,
-      // modOpt       : {}
-      // module_type : module.module_type,
-      // multi_item  : bool
-      // section     : module.section,
-      // is_added_by_user : is_added_by_user || false
-      getSavedModules : function() {
-              var control = this,
-                  _savedModulesCandidates = [],
-                  _module_type = control.params.module_type,
-                  _raw_saved_module_val = [],
-                  _saved_items = [],
-                  _saved_modOpt = {};
-
-              //In the case of multi module control synchronized with a sektion
-              // => the saved modules is a collection saved in the setting
-              //For a module embedded in a regular control, we need to hard code the single module collection
-              // => in this case, the corresponding setting will store the collection of item(s)
-              if ( control.isMultiModuleControl() ) {
-                  _savedModulesCandidates = $.extend( true, [], api( control.id )() );//deep clone
-              } else {
-                  //What is the current server saved value for this setting?
-                  //in a normal case, it should be an array of saved properties
-                  //But it might not be if coming from a previous option system.
-                  //=> let's normalize it.
-                  //First let's perform a quick check on the current saved db val.
-                  //If the module is not multi-item, the saved value should be an object or empty if not set yet
-                  if ( api.CZR_Helpers.isMultiItemModule( _module_type ) && ! _.isEmpty( api( control.id )() ) && ! _.isObject( api( control.id )() ) ) {
-                      api.consoleLog('Module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
-                  }
-
-                  //SPLIT ITEMS [] and MODOPT {}
-                  //In database, items and modOpt are saved in the same option array.
-                  //If the module has modOpt ( the slider module for example ), the modOpt are described by an object which is always unshifted at the beginning of the setting value.
-
-                  //the raw DB setting value is an array :  modOpt {} + the saved items :
-                  ////META IS THE FIRST ARRAY ELEMENT: A modOpt has no unique id and has the property is_modOpt set to true
-                  //[
-                  //  is_mod_opt : true //<= inform us that this is not an item but a modOpt
-                  //],
-                  ////THEN COME THE ITEMS
-                  //[
-                  //  id : "czr_slide_module_0"
-                  //     slide-background : 21,
-                  //     ....
-                  //   ],
-                  //   [
-                  // id : "czr_slide_module_1"
-                  //     slide-background : 21,
-                  //     ....
-                  //   ]
-                  //  [...]
-
-                  //POPULATE THE ITEMS [] and the MODOPT {} FROM THE RAW DB SAVED SETTING VAL
-                  _raw_saved_module_val = _.isArray( api( control.id )() ) ? api( control.id )() : [ api( control.id )() ];
-
-                  _.each( _raw_saved_module_val, function( item_or_mod_opt_candidate , key ) {
-                        if ( api.CZR_Helpers.hasModuleModOpt( _module_type ) && 0*0 === key ) {
-                              // a saved module mod_opt object should not have an id
-                              if ( _.has( item_or_mod_opt_candidate, 'id') ) {
-                                    api.consoleLog( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no mod_opt defined while it should.' );
-                              } else {
-                                    _saved_modOpt = item_or_mod_opt_candidate;
-                              }
-                        }
-                        if ( _.has( item_or_mod_opt_candidate, 'id') && ! _.has( item_or_mod_opt_candidate, 'is_mod_opt' ) ) {
-                              _saved_items.push( item_or_mod_opt_candidate );
-                        }
-                  });
-
-
-                  //for now this is a collection with one module
-                  _savedModulesCandidates.push(
-                        {
-                              id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
-                              module_type : control.params.module_type,
-                              section : control.section(),
-                              modOpt : $.extend( true, {} , _saved_modOpt ),//disconnect with a deep cloning
-                              items : $.extend( true, [] , _saved_items )//disconnect with a deep cloning
-                        }
-                  );
-              }
-              return _savedModulesCandidates;
-      },
-
-
-      //this helper allows to check if a module has been registered in the collection
-      //no matter if it's not instantiated yet
-      isModuleRegistered : function( id_candidate ) {
-            var control = this;
-            return ! _.isUndefined( _.findWhere( control.czr_moduleCollection(), { id : id_candidate}) );
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
-//BASE CONTROL CLASS
-//extends api.CZRBaseControl
-//define a set of methods, mostly helpers, to extend the base WP control class
-//this will become our base constructor for main complex controls
-//EARLY SETUP
-var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRBaseModuleControlMths, {
-      //@param : module {}
-      //@param : constructor string
-      instantiateModule : function( module, constructor ) {
-              if ( ! _.has( module,'id') ) {
-                throw new Error('CZRModule::instantiateModule() : a module has no id and could not be added in the collection of : ' + this.id +'. Aborted.' );
-              }
-              var control = this;
-              //is a constructor provided ?
-              //if not try to look in the module object if we an find one
-              if ( _.isUndefined(constructor) || _.isEmpty(constructor) ) {
-                  constructor = control.getModuleConstructor( module );
-              }
-              //on init, the module collection is populated with module already having an id
-              //For now, let's check if the id is empty and is not already part of the collection.
-              //@todo : improve this.
-              if ( ! _.isEmpty( module.id ) && control.czr_Module.has( module.id ) ) {
-                    throw new Error('The module id already exists in the collection in control : ' + control.id );
-              }
-
-              var module_api_ready = control.prepareModuleForAPI( module );
-
-              //instanciate the module with the default constructor
-              control.czr_Module.add( module_api_ready.id, new constructor( module_api_ready.id, module_api_ready ) );
-
-              if ( ! control.czr_Module.has( module_api_ready.id ) ) {
-                  throw new Error('instantiateModule() : instantiation failed for module id ' + module_api_ready.id + ' in control ' + control.id  );
-              }
-              //return the module instance for chaining
-              return control.czr_Module(module_api_ready.id);
-      },
-
-
-
-      //@return a module constructor object
-      getModuleConstructor : function( module ) {
-              var control = this,
-                  parentConstructor = {},
-                  constructor = {};
-
-              if ( ! _.has( module, 'module_type' ) ) {
-                  throw new Error('CZRModule::getModuleConstructor : no module type found for module ' + module.id );
-              }
-              if ( ! _.has( api.czrModuleMap, module.module_type ) ) {
-                  throw new Error('Module type ' + module.module_type + ' is not listed in the module map api.czrModuleMap.' );
-              }
-
-              var _mthds = api.czrModuleMap[ module.module_type ].mthds,
-                  _is_crud = api.czrModuleMap[ module.module_type ].crud,
-                  _base_constructor = _is_crud ? api.CZRDynModule : api.CZRModule;
-
-              //in the general case of multi_module / sektion control, we need to extend the module constructors
-              if ( ! _.isEmpty( module.sektion_id ) ) {
-                  parentConstructor = _base_constructor.extend( _mthds );
-                  constructor = parentConstructor.extend( control.getMultiModuleExtender( parentConstructor ) );
-              } else {
-                //in the particular case of a module embedded in a control, the constructor is ready to be fired.
-                  constructor = _base_constructor.extend( _mthds );
-              }
-
-              if ( _.isUndefined(constructor) || _.isEmpty(constructor) || ! constructor ) {
-                  throw new Error('CZRModule::getModuleConstructor : no constructor found for module type : ' + module.module_type +'.' );
-              }
-              return constructor;
-      },
-
-
-
-
-
-      //@return an API ready module object
-      //To be instantiated in the API, the module model must have all the required properties defined in the defaultAPIModel properly set
-      prepareModuleForAPI : function( module_candidate ) {
-            if ( ! _.isObject( module_candidate ) ) {
-                throw new Error('prepareModuleForAPI : a module must be an object to be instantiated.');
-            }
-
-            var control = this,
-                api_ready_module = {};
-
-            _.each( control.getDefaultModuleApiModel() , function( _value, _key ) {
-                  var _candidate_val = module_candidate[_key];
-                  switch( _key ) {
-                        //PROPERTIES COMMON TO ALL MODULES IN ALL CONTEXTS
-                        case 'id' :
-                              if ( _.isEmpty( _candidate_val ) ) {
-                                    api_ready_module[_key] = control.generateModuleId( module_candidate.module_type );
-                              } else {
-                                    api_ready_module[_key] = _candidate_val;
-                              }
-                        break;
-                        case 'module_type' :
-                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module type must a string not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case 'items' :
-                              if ( ! _.isArray( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : a module item list must be an array');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case 'modOpt' :
-                              if ( ! _.isObject( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : a module modOpt property must be an object');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case 'crud' :
-                              //get the value from the czrModuleMap
-                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
-                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : the module param "crud" must be a boolean');
-                              }
-                              api_ready_module[_key] = _candidate_val || false;
-                        break;
-                        case 'multi_item' :
-                              //get the value from the czrModuleMap
-                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
-                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : the module param "multi_item" must be a boolean');
-                              }
-                              api_ready_module[_key] = _candidate_val || false;
-                        break;
-                        //if the sortable property is not set, then check if crud or multi-item
-                        case 'sortable' :
-                              //get the value from the czrModuleMap
-                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].sortable || api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
-                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : the module param "sortable" must be a boolean');
-                              }
-                              api_ready_module[_key] = _candidate_val || false;
-                        break;
-                        case  'control' :
-                              api_ready_module[_key] = control;//this
-                        break;
-
-
-
-                        //PROPERTIES FOR MODULE EMBEDDED IN A CONTROL
-                        case  'section' :
-                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module section must be a string not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-
-
-
-                        //PROPERTIES FOR MODULE EMBEDDED IN A SEKTION
-                        case  'column_id' :
-                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module column id must a string not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case  'sektion' :
-                              if ( ! _.isObject( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module sektion must be an object not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case  'sektion_id' :
-                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module sektion id must be a string not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case 'is_added_by_user' :
-                              if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : the module param "is_added_by_user" must be a boolean');
-                              }
-                            api_ready_module[_key] = _candidate_val || false;
-                        break;
-                        case 'dirty' :
-                              api_ready_module[_key] = _candidate_val || false;
-                        break;
-                  }//switch
-            });
-            return api_ready_module;
-      },
-
-
-      //recursive
-      generateModuleId : function( module_type, key, i ) {
-              //prevent a potential infinite loop
-              i = i || 1;
-              if ( i > 100 ) {
-                    throw new Error('Infinite loop when generating of a module id.');
-              }
-              var control = this;
-              key = key || control._getNextModuleKeyInCollection();
-              var id_candidate = module_type + '_' + key;
-
-              //do we have a module collection value ?
-              if ( ! _.has(control, 'czr_moduleCollection') || ! _.isArray( control.czr_moduleCollection() ) ) {
-                    throw new Error('The module collection does not exist or is not properly set in control : ' + control.id );
-              }
-
-              //make sure the module is not already instantiated
-              if ( control.isModuleRegistered( id_candidate ) ) {
-                key++; i++;
-                return control.generateModuleId( module_type, key, i );
-              }
-
-              return id_candidate;
-      },
-
-
-      //helper : return an int
-      //=> the next available id of the module collection
-      _getNextModuleKeyInCollection : function() {
-              var control = this,
-                _max_mod_key = {},
-                _next_key = 0;
-
-              //get the initial key
-              //=> if we already have a collection, extract all keys, select the max and increment it.
-              //else, key is 0
-              if ( ! _.isEmpty( control.czr_moduleCollection() ) ) {
-                  _max_mod_key = _.max( control.czr_moduleCollection(), function( _mod ) {
-                      return parseInt( _mod.id.replace(/[^\/\d]/g,''), 10 );
-                  });
-                  _next_key = parseInt( _max_mod_key.id.replace(/[^\/\d]/g,''), 10 ) + 1;
-              }
-              return _next_key;
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
-//BASE CONTROL CLASS
-//extends api.CZRBaseControl
-//define a set of methods, mostly helpers, to extend the base WP control class
-//this will become our base constructor for main complex controls
-//EARLY SETUP
-var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRBaseModuleControlMths, {
-      //Multi Module method
-      //fired when the main sektion module has synchronised its if with the module-collection control
-      registerModulesOnInit : function( sektion_module_instance ) {
-              var control = this,
-                  _orphan_mods = [];
-
-              _.each( control.getSavedModules() , function( _mod, _key ) {
-                      //a module previously embedded in a deleted sektion must not be registered
-                      if ( ! sektion_module_instance.czr_Item.has( _mod.sektion_id ) ) {
-                            api.errorLog( 'Warning Module ' + _mod.id + ' is orphan : it has no sektion to be embedded to. It Must be removed.');
-                            _orphan_mods.push(_mod);
-                            return;
-                      }
-                      //@todo handle the case of a module embedded in a previously deleted column
-                      //=> register it in the first column of the sektion ?
-
-                      var _sektion = sektion_module_instance.czr_Item( _mod.sektion_id );
-
-                      if ( _.isUndefined( _sektion ) ) {
-                            throw new Error( 'sektion instance missing. Impossible to instantiate module : ' + _mod.id );
-                      }
-
-                      //add the sektion instance before update the api collection
-                      $.extend( _mod, {sektion : _sektion} );
-
-                      //push it to the collection of the module-collection control
-                      //=> the instantiation will take place later, on column instantiation
-                      control.updateModulesCollection( {module : _mod } );
-              });
-
-              //REMOVE ORPHAN MODULES ON INIT
-              //But only when the module collectionn has been resolved
-              control.moduleCollectionReady.then( function() {
-                    //if there are some orphans mods, the module-collection setting must be updated now.
-                    if ( ! _.isEmpty( _orphan_mods ) ) {
-                        control.moduleCollectionReact( control.czr_moduleCollection(), [], { orphans_module_removal : _orphan_mods } );
-                    }
-              });
-      },
-
-
-
-      //@return void()
-      //@param obj can be { collection : []}, or { module : {} }
-      //Can be called :
-      //1) for multimodule control, in register modules on init, when the main sektion module has synchronised with the module-collection control
-      //2) for all modules, in module.isReady.done() if the module is not registered in the collection yet.
-      //3) for all modules on moduleReact ( module.callbacks )
-      //
-      //=> sets the setting value via the module collection !
-      updateModulesCollection : function( obj ) {
-              var control = this,
-                  _current_collection = control.czr_moduleCollection(),
-                  _new_collection = $.extend( true, [], _current_collection);
-
-              //if a collection is provided in the passed obj then simply refresh the collection
-              //=> typically used when reordering the collection module with sortable or when a module is removed
-              if ( _.has( obj, 'collection' ) ) {
-                    //reset the collection
-                    control.czr_moduleCollection.set( obj.collection, obj.data || {} );
-                    return;
-              }
-
-              if ( ! _.has(obj, 'module') ) {
-                throw new Error('updateModulesCollection, no module provided ' + control.id + '. Aborting');
-              }
-
-              //normalizes the module for the API
-              var module_api_ready = control.prepareModuleForAPI( _.clone( obj.module ) );
-
-              //the module already exist in the collection
-              if ( _.findWhere( _new_collection, { id : module_api_ready.id } ) ) {
-                    _.each( _current_collection , function( _elt, _ind ) {
-                          if ( _elt.id != module_api_ready.id )
-                            return;
-
-                          //set the new val to the changed property
-                          _new_collection[_ind] = module_api_ready;
-                    });
-              }
-              //the module has to be added
-              else {
-                    _new_collection.push( module_api_ready );
-              }
-
-              //WHAT ARE THE PARAMS WE WANT TO PASS TO THE NEXT ACTIONS
-              var _params = {};
-              //if a data property has been passed,
-              //amend the data property with the changed module
-              if ( _.has( obj, 'data') ) {
-                  _params = $.extend( true, {}, obj.data );
-                  $.extend( _params, { module : module_api_ready } );
-              }
-              //Inform the collection
-              control.czr_moduleCollection.set( _new_collection, _params );
-      },
-
-
-
-
-
-
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-      ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-      //cb of control.czr_moduleCollection.callbacks
-      //@data is an optional object. { silent : true }
-      moduleCollectionReact : function( to, from, data ) {
-            var control = this,
-                is_module_added = _.size(to) > _.size(from),
-                is_module_removed = _.size(from) > _.size(to),
-                is_module_update = _.size(from) == _.size(to);
-                is_collection_sorted = false;
-
-            //MODULE REMOVED
-            //Remove the module instance if needed
-            if ( is_module_removed ) {
-                  //find the module to remove
-                  var _to_remove = _.filter( from, function( _mod ){
-                      return _.isUndefined( _.findWhere( to, { id : _mod.id } ) );
-                  });
-                  _to_remove = _to_remove[0];
-                  control.czr_Module.remove( _to_remove.id );
-            }
-
-            //is there a passed module param ?
-            //if so prepare it for DB
-            //if a module is provided, we also want to pass its id to the preview => can be used to target specific selectors in a partial refresh scenario
-            if ( _.isObject( data  ) && _.has( data, 'module' ) ) {
-                  data.module_id = data.module.id;
-                  data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
-            }
-
-            //Inform the the setting
-            //If we are in a single module control (not a sektion, multimodule)
-            //AND that the module is being added to the collection for the first time,
-            //We don't want to say it to the setting, because it might alter the setting dirtyness for nothing on init.
-            if ( ! control.isMultiModuleControl() && is_module_added ) {
-                  return;
-            }
-            else {
-                  //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
-                  //if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
-                  api( this.id )
-                        .set( control.filterModuleCollectionBeforeAjax( to ), data );
-                        //.done( function( to, from, o ) {});
-            }
-      },
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-      ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-      //an overridable method to act on the collection just before it is ajaxed
-      //@return the collection array
-      filterModuleCollectionBeforeAjax : function( collection ) {
-              var control = this,
-                  _filtered_collection = $.extend( true, [], collection ),
-                  _to_return;
-
-              _.each( collection , function( _mod, _key ) {
-                    var db_ready_mod = $.extend( true, {}, _mod );
-                    _filtered_collection[_key] = control.prepareModuleForDB( db_ready_mod );
-              });
-
-              //we don't want to save the same things if we the modules are embedded in a control or in a sektion
-              //=> in a sektion : we save the collection of modules
-              //=> in a control : we save
-              //1) the collection of item(s)
-              //2) the modOpt
-              if ( control.isMultiModuleControl() ) {
-                    return _filtered_collection;
-              } else {
-                    //at this point we should be in the case of a single module collection, typically use to populate a regular setting
-                    if ( _.size( collection ) > 1 ) {
-                      throw new Error('There should not be several modules in the collection of control : ' + control.id );
-                    }
-                    if ( ! _.isArray( collection ) || _.isEmpty( collection ) || ! _.has( collection[0], 'items' ) ) {
-                      throw new Error('The setting value could not be populated in control : ' + control.id );
-                    }
-                    var module_id = collection[0].id;
-
-                    if ( ! control.czr_Module.has( module_id ) ) {
-                       throw new Error('The single module control (' + control.id + ') has no module registered with the id ' + module_id  );
-                    }
-                    var module_instance = control.czr_Module( module_id );
-                    if ( ! _.isArray( module_instance().items ) ) {
-                      throw new Error('The module ' + module_id + ' should be an array in control : ' + control.id );
-                    }
-
-                    //items
-                    _to_return = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
-
-                    //Add the modOpt if any
-                    return module_instance.hasModOpt() ? _.union( [ module_instance().modOpt ] , _to_return ) : _to_return;
-              }
-      },
-
-
-
-
-      //fired before adding a module to the collection of DB candidates
-      //the module must have the control.getDefaultModuleDBModel structure :
-      prepareModuleForDB : function ( module_db_candidate ) {
-            if ( ! _.isObject( module_db_candidate ) ) {
-                throw new Error('MultiModule Control::prepareModuleForDB : a module must be an object. Aborting.');
-            }
-            var control = this,
-                db_ready_module = {};
-
-            _.each( control.getDefaultModuleDBModel() , function( _value, _key ) {
-                  if ( ! _.has( module_db_candidate, _key ) ) {
-                      throw new Error('MultiModule Control::prepareModuleForDB : a module is missing the property : ' + _key + ' . Aborting.');
-                  }
-
-                  var _candidate_val = module_db_candidate[ _key ];
-                  switch( _key ) {
-                        //PROPERTIES COMMON TO ALL MODULES IN ALL CONTEXTS
-                        case 'items' :
-                          if ( ! _.isArray( _candidate_val )  ) {
-                              throw new Error('prepareModuleForDB : a module item list must be an array');
-                          }
-                          db_ready_module[ _key ] = _candidate_val;
-                        break;
-
-
-
-                        //PROPERTIES FOR MODULE EMBEDDED IN A SEKTION
-                        case 'id' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareModuleForDB : a module id must a string not empty');
-                          }
-                          db_ready_module[ _key ] = _candidate_val;
-                        break;
-                        case 'module_type' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareModuleForDB : a module type must a string not empty');
-                          }
-                          db_ready_module[ _key ] = _candidate_val;
-                        break;
-                        case  'column_id' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareModuleForDB : a module column id must a string not empty');
-                          }
-                          db_ready_module[ _key ] = _candidate_val;
-                        break;
-                        case  'sektion_id' :
-                          if ( ! _.isObject( module_db_candidate.sektion ) || ! _.has( module_db_candidate.sektion, 'id' ) ) {
-                              throw new Error('prepareModuleForDB : a module sektion must be an object with an id.');
-                          }
-                          //in the API, the sektion property hold by the module is an instance
-                          //let's use only the id for the DB
-                          db_ready_module[ _key ] = module_db_candidate.sektion.id;
-                        break;
-                        case 'dirty' :
-                          if ( control.czr_Module.has( module_db_candidate.id ) )
-                              db_ready_module[ _key ] = control.czr_Module( module_db_candidate.id ).isDirty();
-                          else
-                              db_ready_module[ _key ] = _candidate_val;
-                          if ( ! _.isBoolean( db_ready_module[ _key ] ) ) {
-                              throw new Error('prepareModuleForDB : a module dirty state must be a boolean.');
-                          }
-                        break;
-                  }//switch
-            });
-            return db_ready_module;
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
-//extends api.CZRBaseModuleControl
-var CZRMultiModuleControlMths = CZRMultiModuleControlMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRMultiModuleControlMths, {
-      initialize: function( id, options ) {
-              var control = this;
-
-              //listen to the module-collection setting changes
-              //=> synchronize the columns in the sektion setting
-              api.consoleLog('IN MULTI MODULE INITIALIZE ? ', options );
-              api(id).callbacks.add( function() { return control.syncColumn.apply( control, arguments ); } );
-
-              //when the synchronized sektion module sends its instance, check the consistency with the module-collection setting
-              //=> each modules of the module-collection setting should be present in a column of the synchronized sektion
-              // control.syncSektionModule().bind( function( sektion_module_instance ) {
-              //     sektion_module_instance.czr_columnCollection.each( function( _col ) {
-              //           api.consoleLog('_col.modules', _col.modules);
-              //     });
-              // });
-
-              api.CZRBaseModuleControl.prototype.initialize.call( control, id, options );
-      },
-
-
-      ready : function() {
-            var control = this;
-            api.consoleLog('MODULE-COLLECTION CONTROL READY', this.id );
-            api.CZRBaseModuleControl.prototype.ready.apply( control, arguments);
-      },
-
-      //cb of : api(control.id).callbacks.
-      syncColumn : function( to, from, data ) {
-            api.consoleLog('IN SYNC COLUMN', to, from, data );
-            if ( ! _.isUndefined(data) && data.silent )
-              return;
-            api.consoleLog('IN SYNXXX', api.control('hu_theme_options[module-collection]').syncSektionModule()(), this.syncSektionModule()(), this.id );
-
-            //ORPHANS MODULE REMOVED ON INIT, VOID()
-            //=> there's no column to synchronize
-            if ( _.has( data, 'orphans_module_removal' ) )
-              return;
-
-            //always get the control instance from the api
-            //=> because the control on which this callback is binded can be re instantiated, typically on skope switch
-            var control = api.control( this.id );
-            //MODULE ADDED
-            //determine if a module has been added
-            var added_mod = _.filter( to, function( _mod, _key ){
-                return ! _.findWhere( from, { id : _mod.id } );
-            } );
-            if ( ! _.isEmpty( added_mod ) ) {
-                  api.consoleLog('ADDED MODULE?', added_mod );
-                  _.each( added_mod, function( _mod ) {
-                          control.syncSektionModule().czr_Column( _mod.column_id ).updateColumnModuleCollection( { module : _mod } );
-                  });
-            }
-
-            //MODULE REMOVED
-            var removed_mod = _.filter( from, function( _mod, _key ){
-                return ! _.findWhere( to, { id : _mod.id } );
-            } );
-            if ( ! _.isEmpty( removed_mod ) ) {
-                  _.each( removed_mod, function( _mod ) {
-                          control.syncSektionModule().czr_Column( _mod.column_id ).removeModuleFromColumnCollection( _mod );
-                  });
-            }
-
-            //MODULE HAS BEEN MOVED TO ANOTHER COLUMN
-            if ( _.size(from) == _.size(to) && _.has( data, 'module') && _.has( data, 'source_column') && _.has( data, 'target_column') ) {
-                    $.when( control.syncSektionModule().moveModuleFromTo( data.module, data.source_column, data.target_column ) ).done( function() {
-                          control.syncSektionModule().control.trigger('module-moved', { module : data.module, source_column: data.source_column, target_column :data.target_column });
-                    } );
-            }
-            control.trigger( 'columns-synchronized', to );
-      },
-
-
-      ////////////////////////////////////////////
-      /// REMOVE MODULE
-      ///////////////////////////////////////////
-      //@param module = obj => the module model
-      removeModule : function( module ) {
-            var control = this;
-            //remove module from DOM if it's been embedded
-            if ( control.czr_Module.has( module.id ) && 'resolved' == control.czr_Module( module.id ).embedded.state() )
-                control.czr_Module( module.id ).container.remove();
-
-            //remove module from API
-            control.removeModuleFromCollection( module );
-      },
-
-
-      removeModuleFromCollection : function( module ) {
-            var control = this,
-                _current_collection = control.czr_moduleCollection(),
-                _new_collection = $.extend( true, [], _current_collection);
-
-            _new_collection = _.filter( _new_collection, function( _mod ) {
-                  return _mod.id != module.id;
-            } );
-            control.czr_moduleCollection.set( _new_collection );
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
-//extends api.CZRBaseModuleControl
-var CZRMultiModuleControlMths = CZRMultiModuleControlMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRMultiModuleControlMths, {
-      //adapt modules for them to be used in a multimodule control, synchronized with a sektions control.
-      //@todo. => create equivalent extender when they are used in controls.
-      getMultiModuleExtender : function( parentConstructor ) {
-            var control = this;
-            $.extend( control.CZRModuleExtended, {
-                  initialize: function( id, constructorOptions ) {
-                        var module = this;
-                        //run the parent initialize
-                        parentConstructor.prototype.initialize.call( module, id, constructorOptions );
-
-                        api.consoleLog('MODULE INSTANTIATED : ', module.id );
-
-                        //extend the module with new template Selectors
-                        $.extend( module, {
-                              singleModuleWrapper : 'czr-single-module-wrapper',
-                              sektionModuleTitle : 'czr-module-sektion-title-part',
-                              ruModuleEl : 'czr-ru-module-sektion-content'
-                        } );
-
-                        //ADD A MODULE STATE OBSERVER
-                        //czr_ModuleState stores the current expansion status of a given module
-                        //can take 2 values : expanded, closed
-                        module.czr_ModuleState = new api.Value( false );
-
-                        //SETUP MODULE VIEW WHEN MODULE READY
-                        module.isReady.done( function() {
-                              module.setupModuleView();
-                        });
-
-                        //ADD A MODULE TITLE ELEMENT EMBEDDED STATE
-                        module.moduleTitleEmbedded = $.Deferred();
-
-                        //ADD A MODULE COLUMN STATE OBSERVER
-                        module.modColumn = new api.Value();
-                        module.modColumn.set( constructorOptions.column_id );
-
-                        //React to a module column change. Typically fired when moving a module from one column to another.
-                        module.modColumn.bind( function( to, from ) {
-                              api.consoleLog('MODULE ' + module.id + ' HAS BEEN MOVED TO COLUMN', to, module() );
-                              var _current_model = module(),
-                                  _new_model = $.extend( true, {}, _current_model );
-
-                              _new_model.column_id = to;
-
-                              //When the module value changes, here's what happens :
-                              //IN THE MODULE COLLECTION CONTROL / SETTING
-                              //1) the module reacts and inform the control.czr_moduleCollection()
-                              //2) the control.czr_moduleCollection() reacts and inform the 'module-collection' setting
-                              //3) the module-collection setting react and inform the relevant column.columnModuleCollection() instance with the syncColumn() method
-                              //
-                              //IN THE SEKTIONS CONTROL / SETTING
-                              //4) the column.columnModuleCollection() instance reacts and inform the column() instance
-                              //5) the column() instance reacts and inform the sektion module.czr_columnCollection() instance
-                              //6) the module.czr_columnCollection() instance reacts and inform the relevant sektion() instance
-                              //7) the sektion() instance reacts and inform the itemCollection() (=> a sektion() is actually an item )
-                              //8) the itemCollection() reacts and inform its module() instance
-                              //9) the module() instance reacts and inform the moduleCollection() instance
-                              //10) the control.czr_moduleCollection() instance reacts and inform the 'sektions' setting
-                              module.set( _new_model, { target_column : to, source_column : from } );
-                              //var updatedModuleCollection = $.extend( true, [], module.control.czr_moduleCollection() );
-                              //api(module.control.id).set( module.control.filterModuleCollectionBeforeAjax( updatedModuleCollection ) );
-                        } );
-                  },
-
-                  //////////////////////////////////
-                  ///READY
-                  //////////////////////////////////
-                  //when a module is embedded in a sektion, we need to render it before ready is done
-                  //=> this allows us to override the container element declared in the parent initialize
-                  //when ready done => the module items are embedded (without their content)
-                  ready : function( is_added_by_user ) {
-                          var module = this;
-                           api.consoleLog('MODULE READY IN EXTENDED MODULE CLASS : ', module.id );
-                          $.when( module.renderModuleWrapper( is_added_by_user ) ).done( function( $_module_container ) {
-                                if ( _.isUndefined($_module_container) || false === $_module_container.length ) {
-                                    throw new Error( 'Module container has not been embedded for module :' + module.id );
-                                }
-                                module.container = $_module_container;
-                                module.embedded.resolve();
-                          } );
-                          //run the parent initialize
-                          parentConstructor.prototype.ready.call( module );
-                          //module.isReady.resolve();
-                  }
-
-            });
-            return control.CZRModuleExtended;
-      },
-
-
-      //this object holds the various methods allowing a module to be rendered in a multimodule control
-      CZRModuleExtended  : {
-            //fired in ready.
-            //=> before isReady.done().
-            renderModuleWrapper : function( is_added_by_user ) {
-                    //=> an array of objects
-                    var module = this;
-
-                    //has this module view already been rendered?
-                    if ( 'resolved' == module.embedded.state() )
-                      return module.container;
-
-                    //do we have view template script?
-                    if ( 0 === $( '#tmpl-' + module.singleModuleWrapper ).length ) {
-                      throw new Error('No template for module ' + module.id + '. The template script id should be : #tmpl-' + module.singleModuleWrapper );
-                    }
-
-                    var module_wrapper_tmpl = wp.template( module.singleModuleWrapper ),
-                        tmpl_data = {
-                            id : module.id,
-                            type : module.module_type
-                        },
-                        $_module_el = $(  module_wrapper_tmpl( tmpl_data ) );
-
-                    //append the module wrapper to the column
-                    //if added by user, search for the module candidate element, render after and delete the element
-                    if ( is_added_by_user ) {
-                        $.when( $( '.czr-module-collection-wrapper' , module._getColumn().container ).find( '.czr-module-candidate').after( $_module_el ) ).
-                          done( function() {
-                            $( '.czr-module-collection-wrapper' , module._getColumn().container ).find( '.czr-module-candidate').remove();
-                          });
-                    } else {
-                        $( '.czr-module-collection-wrapper' , module._getColumn().container).append( $_module_el );
-                    }
-
-
-                    // //then append the ru module template
-                    // var mod_content_wrapper_tmpl = wp.template( module.ruModuleEl ),
-                    //     $_mod_content_wrapper = $(  mod_content_wrapper_tmpl( tmpl_data ) );
-
-                    // $( '.czr-mod-content', $_module_el).append( $_mod_content_wrapper );
-
-                    return $_module_el;
-            },
-
-
-
-
-
-            setupModuleView : function() {
-                    var module = this;
-
-                    module.view_event_map = [
-                            //toggles remove view alert
-                            {
-                              trigger   : 'click keydown',
-                              selector  : [ '.czr-remove-mod', '.' + module.control.css_attr.cancel_alert_btn ].join(','),
-                              name      : 'toggle_remove_alert',
-                              actions   : ['toggleModuleRemoveAlert']
-                            },
-                            //removes module and destroys its view
-                            {
-                              trigger   : 'click keydown',
-                              selector  : '.' + module.control.css_attr.remove_view_btn,
-                              name      : 'remove_module',
-                              actions   : ['removeModule']
-                            },
-                            //edit view
-                            {
-                              trigger   : 'click keydown',
-                              selector  : '.czr-edit-mod',
-                              name      : 'edit_module',
-                              actions   : ['setModuleViewVisibility', 'sendEditModule']
-                            },
-                            {
-                              trigger   : 'click keydown',
-                              selector  : '.czr-module-back',
-                              name      : 'back_to_column',
-                              actions   : ['setModuleViewVisibility']
-                            },
-                            {
-                              trigger   : 'mouseenter',
-                              selector  : '.czr-mod-header',
-                              name      : 'hovering_module',
-                              actions   : function( obj ) {
-                                    module.control.previewer.send( 'start_hovering_module', {
-                                          id : module.id
-                                    });
-                              }
-                            },
-                            {
-                              trigger   : 'mouseleave',
-                              selector  : '.czr-mod-header',
-                              name      : 'hovering_module',
-                              actions   : function( obj ) {
-                                  module.control.previewer.send( 'stop_hovering_module', {
-                                        id : module.id
-                                  });
-                              }
-                            }
-                    ];
-
-                    //defer actions on module view embedded
-                    module.embedded.done( function() {
-                          //add a listener on view state change
-                          module.czr_ModuleState.callbacks.add( function() { return module.setupModuleViewStateListeners.apply(module, arguments ); } );
-
-                          //setup DOM listener
-                          api.CZR_Helpers.setupDOMListeners(
-                                module.view_event_map,//actions to execute
-                                { module : { id : module.id } , dom_el:module.container },//model + dom scope
-                                module //instance where to look for the cb methods
-                          );//listeners for the view wrapper
-                    });
-            },
-
-            //fired on click
-            setModuleViewVisibility : function( obj, is_added_by_user ) {
-                  var module = this;
-
-                  module.czr_ModuleState( ! module.czr_ModuleState() );
-
-                  //always close the module panel
-                  api.czrModulePanelState.set(false);
-                  //always close the sektion settings panel
-                  api.czrSekSettingsPanelState.set(false);
-
-                  //close all sektions but the one from which the button has been clicked
-                  module.control.syncSektionModule().closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
-
-                  // if ( is_added_by_user ) {
-                  //   item.viewState.set( 'expanded_noscroll' );
-                  // } else {
-                  //   module.closeAllItems( item.id );
-                  //   if ( _.has(module, 'preItem') ) {
-                  //     module.preItemExpanded.set( false );
-                  //   }
-                  //   }
-                  //   item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
-                  // }
-            },
-
-            //fired on click
-            sendEditModule : function( obj ) {
-                  var module = this;
-                  module.control.previewer.send( 'edit_module', {
-                        id : module.id
-                  });
-            },
-
-            //cb of module.czr_ModuleState.callbacks
-            //On first module expansion, render the module item(s) content
-            setupModuleViewStateListeners : function( expanded ) {
-                  var module = this;
-                  //setup an api value for the current opened module.
-                  api.czr_isModuleExpanded = api.czr_isModuleExpanded || new api.Value();
-
-                  if ( expanded )
-                    api.czr_isModuleExpanded( module );
-                  else
-                    api.czr_isModuleExpanded( false );
-
-                  //expand / collapse
-                  $.when( module.toggleModuleViewExpansion( expanded ) ).done( function() {
-                        if ( expanded ) {
-                              //render the module title
-                              module.renderModuleTitle();
-
-                              //populates the saved items collection
-                              module.populateSavedItemCollection();
-
-                              //render the item(s)
-                              //on first rendering, use the regular method.
-                              //for further re-rendering, when the embedded state is resolved()
-                              // => 1) re-render each item
-                              // => 2) re-instantiate each input
-                              // module.czr_Item.each ( function( item ) {
-                              //       if ( ! item.module.isMultiItem() )
-                              //           item.viewState.set('expanded');
-                              //       if ( 'resolved' == item.embedded.state() ) {
-                              //           $.when( item.renderItemWrapper() ).done( function( $_item_container ) {
-                              //               item.container = $_item_container;
-
-                              //               $.when( item.renderItemContent() ).done( function() {
-                              //                   api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
-                              //               });
-
-                              //               if ( ! item.module.isMultiItem() )
-                              //                   item.viewState.set('expanded');
-                              //           });
-
-                              //       }
-                              //       else {
-                              //           item.mayBeRenderItemWrapper();
-                              //       }
-                              // } );
-                        }
-                        else {
-                              module.czr_Item.each ( function( item ) {
-                                    item.viewState.set('closed');
-                                    item._destroyView( 0 );
-                                    //api.CZR_Helpers.removeInputCollection.call( item );
-                                    module.czr_Item.remove( item.id );
-                              } );
-                        }
-                  });
-            },
-
-
-            renderModuleTitle : function() {
-                  var module = this;
-                  if( 'resolved' == module.moduleTitleEmbedded.state() )
-                    return;
-
-                  //render the module title
-                  //do we have view template script?
-                  if ( 0 === $( '#tmpl-' + module.sektionModuleTitle ).length ) {
-                    throw new Error('No sektion title Module Part template for module ' + module.id + '. The template script id should be : #tmpl-' + module.sektionModuleTitle );
-                  }
-                  //append the title when in a sektion and resolve the embedded state
-                  $.when( $( module.container ).find('.czr-mod-content').prepend(
-                        $( wp.template( module.sektionModuleTitle )( { id : module.id } ) )
-                  ) ).done( function() {
-                        module.moduleTitleEmbedded.resolve();
-                  });
-            },
-
-
-            //fired in setupModuleViewStateListeners()
-            toggleModuleViewExpansion : function( expanded, duration ) {
-                  var module = this;
-
-                  //slide Toggle and toggle the 'open' class
-                  $( '.czr-mod-content' , module.container ).slideToggle( {
-                      duration : duration || 200,
-                      done : function() {
-                            var $_overlay = module.container.closest( '.wp-full-overlay' ),
-                                $_backBtn = module.container.find( '.czr-module-back' ),
-                                $_modTitle = module.container.find('.czr-module-title');
-
-                            module.container.toggleClass('open' , expanded );
-                            $_overlay.toggleClass('czr-module-open', expanded );
-                            $_modTitle.attr( 'tabindex', expanded ? '-1' : '0' );
-                            $_backBtn.attr( 'tabindex', expanded ? '0' : '-1' );
-
-                            if( expanded ) {
-                                $_backBtn.focus();
-                            } else {
-                                $_modTitle.focus();
-                            }
-
-                            //close all alerts
-                            //module.closeRemoveDialogs();
-
-                            //toggle the icon activate class depending on the status
-                            //switch icon
-                            //var $_edit_icon = $(this).siblings().find('.' + module.control.css_attr.edit_view_btn );
-
-                            // $_edit_icon.toggleClass('active' , expanded );
-                            // if ( expanded )
-                            //   $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.i18n.close );
-                            // else
-                            //   $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.i18n.edit );
-
-                            //scroll to the currently expanded view
-                            if ( expanded )
-                              module._adjustScrollExpandedBlock( module.container );
-                      }//done callback
-                    } );
-            },
-
-
-
-
-
-
-
-
-
-            toggleModuleRemoveAlert : function( obj ) {
-                    var module = this,
-                        control = this.control,
-                        $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, module.container ).first(),
-                        $_clicked = obj.dom_event,
-                        $_column_container = control.syncSektionModule().czr_Column( module.column_id ).container;
-
-                    //first close all open  views
-                    //module.closeAllItems();
-
-                    //close the main sektion pre_item view
-                    if ( _.has(module, 'preItem') ) {
-                        control.syncSektionModule().preItemExpanded.set( false );
-                    }
-
-                    //then close any other open remove alert in the column containuer
-                    $('.' + module.control.css_attr.remove_alert_wrapper, $_column_container ).not($_alert_el).each( function() {
-                          if ( $(this).hasClass('open') ) {
-                                $(this).slideToggle( {
-                                      duration : 200,
-                                      done : function() {
-                                            $(this).toggleClass('open' , false );
-                                            //deactivate the icons
-                                            $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass('active' , false );
-                                      }
-                                } );
-                          }
-                    });
-
-                    //print the html
-                    //do we have an html template and a control container?
-                    if ( ! wp.template( module.AlertPart )  || ! module.container ) {
-                        throw new Error( 'No removal alert template available for module :' + module.id );
-                    }
-
-                    $_alert_el.html( wp.template( module.AlertPart )( { title : ( module().title || module.id ) } ) );
-
-                    //toggle it
-                    $_alert_el.slideToggle( {
-                          duration : 200,
-                          done : function() {
-                                var _is_open = ! $(this).hasClass('open') && $(this).is(':visible');
-                                $(this).toggleClass('open' , _is_open );
-                                //set the active class of the clicked icon
-                                $( obj.dom_el ).find('.' + module.control.css_attr.display_alert_btn).toggleClass( 'active', _is_open );
-                                //adjust scrolling to display the entire dialog block
-                                if ( _is_open )
-                                  module._adjustScrollExpandedBlock( module.container );
-                          }
-                    } );
-            },
-
-
-
-
-            //@param module = obj => the module model
-            //Fired on click
-            removeModule : function( obj ) {
-                  this.control.removeModule( obj.module );
-            },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            _getColumn : function() {
-                    var module = this;
-                    return module.control.syncSektionModule().czr_Column( module.modColumn() );
-            },
-
-            _getSektion : function() {
-
-            }
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
+})( wp.customize, jQuery, _ );
+//named czr_multiple_picker in the php setting map
 var CZRMultiplePickerMths = CZRMultiplePickerMths || {};
 /* Multiple Picker */
 /**
@@ -14643,6 +14644,7 @@ $.extend( CZRMultiplePickerMths , {
       }
 });//$.extend
 })( wp.customize , jQuery, _ );
+//named czr_cropped_image in the php setting map
 var CZRCroppedImageMths = CZRCroppedImageMths || {};
 
 (function (api, $, _) {
@@ -14753,6 +14755,7 @@ var CZRCroppedImageMths = CZRCroppedImageMths || {};
       });//extend
 })( wp.customize, jQuery, _);
 
+//named czr_upload in the php setting map
 var CZRUploadMths = CZRUploadMths || {};
 ( function ( api, $, _ ) {
 /**
@@ -14814,6 +14817,7 @@ $.extend( CZRUploadMths, {
       }
 });//extend
 })( wp.customize , jQuery, _ );
+//named czr_layouts in the php setting map
 var CZRLayoutSelectMths = CZRLayoutSelectMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRLayoutSelectMths , {
