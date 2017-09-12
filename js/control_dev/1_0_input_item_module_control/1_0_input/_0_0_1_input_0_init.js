@@ -40,7 +40,7 @@ $.extend( CZRInputMths , {
 
           //Try to find a match with the provided constructor type
           //=> fire the relevant callback with the provided input_options
-          //input.type_map is d
+          //input.type_map is declared in extend_api_base
           if ( api.czrInputMap && _.has( api.czrInputMap, input.type ) ) {
                 var _meth = api.czrInputMap[ input.type ];
                 if ( _.isFunction( input[_meth]) ) {
