@@ -20,7 +20,7 @@ $.extend( CZRBaseModuleControlMths, {
               control.moduleCollectionReady = $.Deferred();
               //and listen to changes when it's ready
               control.moduleCollectionReady.done( function( obj ) {
-                    if ( ! control.isMultiModuleControl( options.params ) ) {
+                    if ( ! control.isMultiModuleControl( options ) ) {
                       //api.consoleLog('MODULE COLLECTION READY IN CONTROL : ', control.id , obj.id, control.isModuleRegistered( obj.id ) );
                     }
                     //if the module is not registered yet for a single module control
@@ -36,7 +36,7 @@ $.extend( CZRBaseModuleControlMths, {
               } );
 
               //FOR MULTI MODULE CONTROL : Stores the module instance of the synchronized sektion
-              if ( control.isMultiModuleControl( options.params ) ) {
+              if ( control.isMultiModuleControl( options ) ) {
                     control.syncSektionModule = new api.Value();
               }
 
@@ -182,8 +182,18 @@ $.extend( CZRBaseModuleControlMths, {
 
 
       //@return bool
-      isMultiModuleControl : function( params ) {
-              return 'czr_multi_module' == ( params || this.params ).type;
+      //@param options is optional.
+      //Passed when first invoked in the constructor.
+      //Once the control is instantiated, we can access the options from the instance
+      isMultiModuleControl : function( options ) {
+              var _type, control = this;
+              //since WP v4.9, the control options are not wrapper in the params property but passed directly instead.
+              if ( _.isUndefined( options ) ){
+                  _type = _.has( control, 'params') ? control.params.type : control.type;
+              } else {
+                  _type = _.has( options, 'params') ? options.params.type : options.type;
+              }
+              return 'czr_multi_module' == _type;
       },
 
 
