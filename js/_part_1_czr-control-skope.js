@@ -1,4 +1,1063 @@
 
+( function ( api, $, _ ) {
+      /*****************************************************************************
+      * A SKOPE AWARE PREVIEWER QUERY
+      *****************************************************************************/
+      api.bind('ready', function() {
+            if ( ! serverControlParams.isSkopOn )
+              return;
+
+            /**
+            * Build the query to send along with the Preview request.
+            *
+            * @return {object}
+            */
+            var _coreQuery = api.previewer.query;
+
+
+            //@todo : turn those arguments into an object ?
+            //the dyn_type can also be set to 'wp_default_type' when saving a skope excluded setting
+            //@queryVars = {
+            //    skope_id : string,
+            //    action : string,
+            //    the_dirties : {},
+            //    dyn_type : string,
+            //    opt_name : string
+            // }
+            api.previewer.query =  function( queryVars ) {
+                  //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
+                  //=> that's why we check it here again before doing anything else
+                  if ( ! serverControlParams.isSkopOn ) {
+                        return _coreQuery.apply( this );
+                  }
+
+                  //IS SKOP ON
+                  //falls back to WP core treatment if skope is not on or if the requested skope is not registered
+                  if ( ! _.has( api, 'czr_skope') ) {
+                        api.consoleLog('QUERY : SKOPE IS NOT FULLY READY YEY. FALLING BACK ON CORE QUERY');
+                        return _coreQuery.apply( this );
+                  }
+
+                  //HAS THE FIRST SKOPE COLLECTION BEEN POPULATED ?
+                  if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() ) {
+                        api.consoleLog('QUERY : INITIAL SKOPE COLLECTION NOT POPULATED YET. FALLING BACK ON CORE QUERY');
+                        return _coreQuery.apply( this );
+                  }
+
+                  //the previewer is now skope aware
+                  if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
+                        api.czr_isPreviewerSkopeAware.resolve();
+                        //return _coreQuery.apply( this );
+                  }
+
+                  //Skope is fully ready but the query is accessed from core (widgets) or a plugin
+                  //=> fallback on the core method
+                  if ( ! _.isObject( queryVars ) && 'resolved' == api.czr_initialSkopeCollectionPopulated.state() && 'resolved' == api.czr_initialSkopeCollectionPopulated.state() ) {
+                        return _coreQuery.apply( this );
+                  }
+
+                  //IS THE SKOPE ID PROVIDED ?
+                  //When navigating in the preview, the skope_id might not be provided.
+                  //In this case, falls back on the activeSkope() or the global skope
+                  //skope_id = skope_id || api.czr_activeSkopeId() || api.czr_skopeBase.getGlobalSkopeId();
+                  if ( _.isUndefined( queryVars.skope_id ) || ! _.isString( queryVars.skope_id ) ) {
+                        queryVars.skope_id = api.czr_activeSkopeId() || api.czr_skopeBase.getGlobalSkopeId();
+                  }
+
+                  var globalCustomized = {},
+                      skopeCustomized = {},
+                      _defaults = {
+                            skope_id : null,
+                            action : null,
+                            the_dirties : {},
+                            dyn_type : null,
+                            opt_name : null
+                      },
+                      _to_return;
+
+                  queryVars = $.extend( _defaults, queryVars );
+
+                  //ARE THE DIRTIES WELL FORMED OR NOT EMPTY ?
+                  if ( ! _.isObject( queryVars.the_dirties ) ) {
+                        api.consoleLog('QUERY PARAMS : ', queryVars );
+                        throw new Error( 'QUERY DIRTIES MUST BE AN OBJECT. Requested action : ' + queryVars.action );
+                  }
+
+                  ///TO CHANGE ?
+                  if ( 'pending' != api.czr_isPreviewerSkopeAware.state() && _.isNull( queryVars.skope_id ) ) {
+                        api.consoleLog('QUERY PARAMS : ', queryVars );
+                        //api.consoleLog( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY.' );
+                        throw new Error( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY. Requested action : ' + queryVars.action );
+                        //return _coreQuery.apply( this );
+                  }
+
+                  //IS THE REQUESTED ACTION AUTHORIZED ?
+                  if ( ! _.contains( [ null, 'refresh', 'save', 'reset', 'changeset_update' ], queryVars.action ) ) {
+                        api.consoleLog('QUERY PARAMS : ', queryVars );
+                        throw new Error( 'A REQUESTED QUERY HAS NO AUTHORIZED ACTION. Requested action : ' + queryVars.action );
+                  }
+
+                  //@return an object of customized values for each of the current skopes :
+                  //{
+                  //  'skope_id_1' = { ... },
+                  //  'skope_id_2' = { ... }
+                  //}
+                  var _getSkopesCustomized = function() {
+                        //if the initial skope collection has been populated, let's populate the skopeCustomized
+                        if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
+                          return {};
+                        var _skpCust = {};
+                        //Loop current skopes collection
+                        //Exclude the global skope
+                        _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                              if ( 'global' == _skp.skope )
+                                return;
+                              _skpCust[_skp.id] = api.czr_skopeBase.getSkopeDirties( _skp.id );
+                        } );
+                        return _skpCust;
+                  };
+
+
+
+                  ///BUILD THE DIRTIES
+                  //There are cases ( _forceSidebarDirtyRefresh ) when the dirties can be passed as param
+                  //In this cases, we use them and assign them to the relevant customized object
+                  //Since 4.7 and the changeset introduction, the boolean param 'excludeCustomizedSaved' can be passed to the query
+                  if ( _.isNull( queryVars.the_dirties ) || _.isEmpty( queryVars.the_dirties ) ) {
+                        globalCustomized = api.dirtyValues( { unsaved:  queryVars.excludeCustomizedSaved || false } );
+                        skopeCustomized = _getSkopesCustomized();
+                  } else {
+                        if ( 'global' == api.czr_skopeBase.getActiveSkopeName() )
+                          globalCustomized = queryVars.the_dirties;
+                        else
+                          skopeCustomized[ api.czr_activeSkopeId() ] = queryVars.the_dirties;
+                  }
+
+
+                  ///HANDLE THE VARIOUS CASES : REFRESH, SAVE, RESET
+                  //on first load OR if the current skope is the customized one, build the globalCustomized the regular way : typically a refresh after setting change
+                  //otherwise, get the dirties from the requested skope instance : typically a save action on several skopes
+                  switch( queryVars.action ) {
+                        case null :
+                        case 'refresh' :
+                              //INHERITANCE : FILTER THE DIRTIES
+                              //when refreshing the preview, we need to apply the skope inheritance to the customized values
+                              //apply the inheritance
+                              // var _inheritanceReadyCustomized = {};
+                              // _.each( skopeCustomized, function( _custValues, _skopId ) {
+                              //       _inheritanceReadyCustomized[_skopId] =  api.czr_skopeBase.applyDirtyCustomizedInheritance( _custValues, _skopId );
+                              // } );
+                              // skopeCustomized = _inheritanceReadyCustomized;
+
+                              //globalCustomized = api.czr_skopeBase.applyDirtyCustomizedInheritance( globalCustomized, api.czr_skopeBase.getGlobalSkopeId() );
+                        break;
+
+                        case 'changeset_update' :
+                              if ( _.isUndefined( queryVars.opt_name ) ) {
+                                    throw new Error('Missing opt_name param in the changeset_update query for skope : ' + queryVars.skope_id );
+                              }
+                        break;
+
+
+                        case 'save' :
+                              // if ( _.isEmpty( queryVars.the_dirties ) ) {
+                              //       throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A NOT EMPTY DIRTY OBJECT TO SUBMIT' );
+                              // }
+                              //Set the Dyn type
+                              //the dyn type might be passed as a param to the query in some cases
+                              //typically to save skope excluded settings. In this case the dyn_type is set to false, to fall back on the default wp one : theme_mod or option
+                              if ( _.isNull( queryVars.dyn_type ) )
+                                    queryVars.dyn_type = api.czr_skope( queryVars.skope_id )().dyn_type;//post_meta, term_meta, user_meta, trans, option
+                              if ( _.isNull( queryVars.dyn_type ) || _.isUndefined( queryVars.dyn_type ) ) {
+                                    throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A VALID DYN TYPE.' + queryVars.skope_id );
+                              }
+                              //Set the dirties  || api.czr_skopeBase.getSkopeDirties(skope_id) ?
+                              //globalCustomized = queryVars.the_dirties; //was : api.czr_skope( skope_id ).dirtyValues();
+                        break;
+
+                        case 'reset' :
+                              //no specific treatment for reset
+                              if ( _.isNull( queryVars.dyn_type ) )
+                                    queryVars.dyn_type = api.czr_skope( queryVars.skope_id )().dyn_type;//post_meta, term_meta, user_meta, trans, option
+                              if ( _.isNull( queryVars.dyn_type ) || _.isUndefined( queryVars.dyn_type ) ) {
+                                    throw new Error( 'QUERY : A RESET QUERY MUST HAVE A VALID DYN TYPE.' + queryVars.skope_id );
+                              }
+                        break;
+                  }
+
+
+                  //BUILD THE CURRENT SKOPES ARRAY
+                  var _current_skopes = {};
+                  _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                        _current_skopes[_skp.skope] = { id : _skp.id, opt_name : _skp.opt_name };
+                  });
+
+
+                  //Before 4.7 and the changeset introduction, the queryVars were :
+                  //{
+                  //  wp_customize: 'on',
+                  //  theme:      api.settings.theme.stylesheet,
+                  //  customized: JSON.stringify( globalCustomized ),
+                  //  nonce:      this.nonce.preview
+                  //}
+
+                  //Since 4.7 the queryVars are :
+                  //{
+                  //  wp_customize: 'on',
+                  //  customize_theme: api.settings.theme.stylesheet,
+                  //  customized : JSON.stringify( api.dirtyValues( { unsaved: options && options.excludeCustomizedSaved } ) );
+                  //  nonce: this.nonce.preview,
+                  //  customize_changeset_uuid: api.settings.changeset.uuid
+                  //}
+
+                  //common properties
+                  _to_return = {
+                        wp_customize: 'on',
+                        //theme is added after, because the property name has been changed to customize_theme in 4.7
+                        //always make sure that the customized values is not empty, otherwise nothing will be posted since 4.7.
+                        //@see api.PreviewFrame::run()
+                        customized:      '{}' == JSON.stringify( globalCustomized ) ? '{\"__not_customized__\"}' : JSON.stringify( globalCustomized ),
+                        skopeCustomized:  JSON.stringify( skopeCustomized ),
+                        nonce:            this.nonce.preview,
+                        skope:            api.czr_skope( queryVars.skope_id )().skope,
+                        level_id:          api.czr_skope( queryVars.skope_id )().level,
+                        skope_id:         queryVars.skope_id,
+                        dyn_type:         queryVars.dyn_type,
+                        opt_name:         ! _.isNull( queryVars.opt_name ) ? queryVars.opt_name : api.czr_skope( queryVars.skope_id )().opt_name,
+                        obj_id:           api.czr_skope( queryVars.skope_id )().obj_id,
+                        current_skopes:   JSON.stringify( _current_skopes ) || {},
+                        channel:          this.channel(),
+                        revisionIndex:    api._latestRevision
+                  };
+
+                  //since 4.7
+                  if ( api.czr_isChangeSetOn() ) {
+                        _to_return = $.extend( _to_return , {
+                              customize_theme: api.settings.theme.stylesheet,
+                              customize_changeset_uuid: api.settings.changeset.uuid
+                        });
+                  }
+                  //before 4.7
+                  else {
+                        _to_return = $.extend( _to_return , {
+                              theme: api.settings.theme.stylesheet
+                        });
+                  }
+                  // api.consoleLog('DIRTY VALUES TO SUBMIT ? ', globalCustomized, api.czr_skopeBase.getSkopeDirties(skope_id) );
+                  return _to_return;
+
+            };//api.previewer.query
+      });//api.bind('ready')
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      api.bind( 'czr-skope-started', function() {
+            //OVERRIDES WP
+            api.previewer.save = function( args ) {
+                  return api.czr_skopeSave.save();
+            };
+      });//api.bind('ready')
+})( wp.customize , jQuery, _ );
+(function (api, $, _) {
+      if ( ! serverControlParams.isSkopOn )
+        return;
+
+      /*****************************************************************************
+      * SYNCHRONIZER AUGMENTED
+      *****************************************************************************/
+      // var _original_element_initialize = api.Element.prototype.initialize;
+      // api.Element.prototype.initialize = function( element, options  ) {
+      //         //call the original constructor
+      //         _original_element_initialize .apply( this, [element, options ] );
+      //         api.consoleLog('IN OVERRIDEN INITIALIZE ELEMENT ?');
+      //         // if ( this.element.is('select') ) {
+      //         //     api.consoleLog('element, options', element, options);
+      //         // }
+      // };
+
+      // //CHECKBOX WITH ICHECK
+      api.Element.synchronizer.checkbox.update = function( to ) {
+            this.element.prop( 'checked', to );
+            this.element.iCheck('update');
+      };
+
+      var _original = api.Element.synchronizer.val.update;
+      api.Element.synchronizer.val.update = function(to) {
+            var self = this,
+                _modifySynchronizer = function() {
+                      //SELECT CASE
+                      if ( self.element.is('select') ) {
+                            //SELECT2 OR SELECTER
+                            //select2.val() documented https://select2.github.io/announcements-4.0.html
+                            self.element.val(to).trigger('change');
+                      } else if ( self.element.hasClass('wp-color-picker') ) {
+                            //COLOR PICKER CASE
+                            self.element.val(to).trigger('change');
+                      }
+                      else {
+                            //falls back to the parent behaviour
+                            self.element.val( to );
+                      }
+                };
+            //if skope on,
+            //wait for skope to be fully loaded to alter this
+            if ( serverControlParams.isSkopOn ) {
+                  if ( 'resolved' != api.czr_skopeReady.state() ) {
+                        return _original.call( self, to );
+                  } else {
+                        api.czr_skopeReady.then( function () {
+                              _modifySynchronizer();
+                        });
+                  }
+            } else {
+                  _modifySynchronizer();
+            }
+      };
+
+      api.Element.synchronizer.val.refresh = function() {
+            var syncApiInstance = this;
+            //SELECT CASE
+            //Avoid null values because not taken into account by the api.value.set() method
+            //=> keep the same var type empty if the setting val is reset by user
+            if ( this.element.is('select') && _.isNull( this.element.val() ) ) {
+                  if ( _.isArray( syncApiInstance() ) )
+                    return [];
+                  else if ( _.isObject( syncApiInstance() ) )
+                    return {};
+                  else
+                    return '';
+            } else {
+                  //falls back to the parent behaviour
+                  return  this.element.val();
+            }
+      };
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      var coreRefresh = api.Previewer.prototype.refresh;
+      var _new_refresh = function( params ) {
+            params = _.extend({
+                        waitSkopeSynced : true,
+                        the_dirties : {}
+                  },
+                  params
+            );
+
+            var previewer = this, dfd = $.Deferred();
+
+            //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
+            //=> that's why we check it here again before doing anything else
+            if ( ! serverControlParams.isSkopOn ) {
+                  return dfd.resolve().promise();
+            }
+
+            //if too early, then let's fall back on core
+            if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
+                  api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.previewer._new_refresh() method.');
+                  //Fire the core one
+                  coreRefresh.apply( previewer );
+                  return dfd.resolve().promise();
+
+                  //PREVIOUS CODE
+                  // if ( 'resolved' != api.czr_skopeReady.state() ) {
+                  //       api.czr_skopeReady.done( function() {
+                  //             _new_refresh.apply( api.previewer, params );
+                  //       });
+                  //       //Fire the core one
+                  //       coreRefresh.apply( previewer );
+                  //       return dfd.resolve().promise();
+                  // }
+            }
+
+            // Display loading indicator
+            previewer.send( 'loading-initiated' );
+
+            previewer.abort();
+
+            var query_params = api.czr_getSkopeQueryParams({
+                      skope_id : api.czr_activeSkopeId(),
+                      action : 'refresh',
+                      the_dirties : params.the_dirties || {}
+                });
+
+            previewer.loading = new api.PreviewFrame({
+                  url:        previewer.url(),
+                  previewUrl: previewer.previewUrl(),
+                  query:      previewer.query( query_params ) || {},
+                  container:  previewer.container,
+                  signature:  'WP_CUSTOMIZER_SIGNATURE'//will be deprecated in 4.7
+            });
+
+
+            previewer.settingsModifiedWhileLoading = {};
+            onSettingChange = function( setting ) {
+                  previewer.settingsModifiedWhileLoading[ setting.id ] = true;
+            };
+            api.bind( 'change', onSettingChange );
+
+            previewer.loading.always( function() {
+                  api.unbind( 'change', onSettingChange );
+            } );
+
+            //Needed before WP 4.7
+            if ( ! api.czr_isChangeSetOn() ) {
+                  previewer._previousPreview = previewer._previousPreview || previewer.preview;
+            }
+
+            previewer.loading.done( function( readyData ) {
+                  var loadingFrame = this, onceSynced;
+
+                  previewer.preview = loadingFrame;
+                  previewer.targetWindow( loadingFrame.targetWindow() );
+                  previewer.channel( loadingFrame.channel() );
+                  onceSynced = function( skopesServerData ) {
+                        loadingFrame.unbind( 'synced', onceSynced );
+                        loadingFrame.unbind( 'czr-skopes-synced', onceSynced );
+
+                        if ( previewer._previousPreview ) {
+                              previewer._previousPreview.destroy();
+                        } //before WP 4.7
+                        else {
+                            if ( previewer.preview )
+                              previewer.preview.destroy();
+                        }
+
+                        previewer._previousPreview = previewer.preview;
+                        previewer.deferred.active.resolve();
+                        delete previewer.loading;
+
+                        //Before WP 4.7
+                        // if ( ! api.czr_isChangeSetOn() ) {
+                        //     previewer.targetWindow( this.targetWindow() );
+                        //     previewer.channel( this.channel() );
+                        // }
+
+                        api.trigger( 'pre_refresh_done', { previewer : previewer, skopesServerData : skopesServerData || {} } );
+                        dfd.resolve( { previewer : previewer, skopesServerData : skopesServerData || {} } );
+                  };
+
+                  //Before WP 4.7 !!
+                  if ( ! api.czr_isChangeSetOn() ) {
+                      previewer.send( 'sync', {
+                            scroll:   previewer.scroll,
+                            settings: api.get()
+                      });
+                  }
+
+                  if ( params.waitSkopeSynced ) {
+                        loadingFrame.bind( 'czr-skopes-synced', onceSynced );
+                  } else {
+                        //default WP behaviour before and after 4.7
+                        loadingFrame.bind( 'synced', onceSynced );
+                  }
+
+
+                  // This event will be received directly by the previewer in normal navigation; this is only needed for seamless refresh.
+                  previewer.trigger( 'ready', readyData );
+            });
+
+            // Note : the location param has been removed in WP 4.7
+            previewer.loading.fail( function( reason, location ) {
+                  api.consoleLog('LOADING FAILED : ' , arguments );
+                  previewer.send( 'loading-failed' );
+                  //Before WP 4.7 !!
+                  if ( ! api.czr_isChangeSetOn() ) {
+                      if ( 'redirect' === reason && location ) {
+                            previewer.previewUrl( location );
+                      }
+                  }
+
+                  if ( 'logged out' === reason ) {
+                        if ( previewer.preview ) {
+                              previewer.preview.destroy();
+                              delete previewer.preview;
+                        }
+
+                        previewer.login().done( previewer.refresh );
+                  }
+
+                  if ( 'cheatin' === reason ) {
+                        previewer.cheatin();
+                  }
+                  dfd.reject( reason );
+            });
+
+            return dfd.promise();
+      };//_new_refresh()
+
+
+
+
+      //'czr-skope-started' is fired after the skopeBase has been initialized.
+      //the api is 'ready' at this point
+      api.bind( 'czr-skope-started' , function() {
+            //post process after refresh
+            //@param param = { previewer : previewer, skopesServerData : skopesServerData || {} }
+            // api.bind( 'pre_refresh_done', function( params ) {
+            // });
+            czr_override_refresh_for_skope();
+            //OVERRIDES CORE
+            api.Previewer.prototype.refresh = _new_refresh;
+      });
+
+      //since 4.7 (when changeset has been introduced ), the core query takes parameter
+      //Typically an object looking like { excludeCustomizedSaved: true }
+      api.czr_getSkopeQueryParams = function( params ) {
+            if ( ! api.czr_isChangeSetOn() )
+              return params;
+            params = ! _.isObject(params) ? {} : params;
+            var _action = params.action || 'refresh';
+            switch( _action ) {
+                  case 'refresh' :
+                      params = $.extend( params, { excludeCustomizedSaved: true } );
+                  break;
+            }
+            return params;
+      };
+
+
+      //fired on 'czr-skope-started', after the skopeBase has been initialized
+      czr_override_refresh_for_skope = function() {
+            if ( ! serverControlParams.isSkopOn )
+              return;
+
+
+            /**
+            * Refresh the preview.
+            */
+            //The purpose of this refresh method is to pass additional params to the query()
+            //=> we want to know the skope, and the action
+            //=> here the action is always refresh.
+            //=> this way we are able to better identify what to do in the api.previewer.query method
+            //
+            //@params can hold an obj looking like :
+            //{
+            //  waitSkopeSynced : true,
+            //  the_dirties : {}
+            //}
+            //
+            //When waitSkopeSynced is set to true, the refresh will wait for the 'czr_skopes_synced' event to be synced
+            //if not, it waits for the default 'synced' wp event to be resolved
+            //api.previewer._new_refresh = _new_refresh;
+
+            // Debounce to prevent hammering server and then wait for any pending update requests.
+            // Overrides the WP api.previewer.refresh method
+            // We may need to pass force dirties here
+            api.previewer.refresh = function( _params_ ) {
+                  var dfd = $.Deferred();
+                  var _refresh_ = function( params ) {
+                        var refreshOnceProcessingComplete,
+                            isProcessingComplete = function() {
+                              return 0 === api.state( 'processing' ).get();
+                            },
+                            resolveRefresh = function() {
+                                  _new_refresh.call( api.previewer, params ).done( function( refresh_data ) {
+                                        dfd.resolve( refresh_data );
+                                  });
+                            };
+                        if ( isProcessingComplete() ) {
+                              resolveRefresh();
+                        } else {
+                              refreshOnceProcessingComplete = function() {
+                                    if ( isProcessingComplete() ) {
+                                          resolveRefresh();
+                                          api.state( 'processing' ).unbind( refreshOnceProcessingComplete );
+                                    }
+                              };
+                              api.state( 'processing' ).bind( refreshOnceProcessingComplete );
+                        }
+                  };
+                  _refresh_ = _.debounce( _refresh_, api.previewer.refreshBuffer );
+                  _refresh_( _params_ );
+                  return dfd.promise();
+            };
+      };//czr_override_refresh_for_skope
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      if ( ! serverControlParams.isSkopOn )
+        return;
+
+      /**
+       * Get the dirty setting values.
+       * Overrides the default method introduced in 4.7
+       * !! This method only returns the dirties of the global skope !!
+       *
+       * @param {object} [options] Options.
+       * @param {boolean} [options.unsaved=false] Whether only values not saved yet into a changeset will be returned (differential changes).
+       * @returns {object} Dirty setting values.
+       */
+      api.dirtyValues = function dirtyValues( options ) {
+            return api.czr_skopeBase.getSkopeDirties( api.czr_skopeBase.getGlobalSkopeId(), options );
+      };
+
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      if ( ! serverControlParams.isSkopOn || ! api.czr_isChangeSetOn() )
+        return;
+
+      //WP Changeset is requested for an update with an ajax query in the following situation :
+      //1) before unloading the window
+      //2) when focus removed from window.
+      //3) on schedule : every 60 000 ms. ( api.settings.timeouts.changesetAutoSave )
+      //
+      //
+      //But the update will only takes place if the current api.dirtyValues() are not empty. That's the problem we address with this override.
+      //The function api.dirtyValues() only returns :
+      //1) the dirty settings of the global skope
+      //2) AND that have not been saved during the latest saved revision ( api._lastSavedRevision )
+      //
+      //
+      //So we need to find a way to fire a changeset update for all the other skopes
+      //The proposed solution here is to base the changeset update decision not on the emptyness of the dirtyValues but on the api._latestRevision index.
+      //
+      //
+      //How does the saved and revision index works.
+      //api._lastSavedRevision is set when the changeset update request is done() with the following code :
+      //api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
+      //
+      //api._latestRevision is incremented +1 each time a setting change occurs in the api. Not matter in which skope this change has been done.
+      //
+      //Therefore, as soon as we detect that api._latestRevision > api._lastSavedRevision, then we can authorize a changeset update.
+      //The changeset update request will pass the usual skope query parameters, including the current skope dirtyness.
+      //=> this will allow an ajax update of the changeset post metas for the modified skopes.
+      //
+      //
+      //IMPORTANT :
+      //If the 0 === api._lastSavedRevision is empty and that we are not customizing the global skope,
+      //it means that the changeset post ID will not be set yet
+      //=> But the skope meta changeset need a post ID ! when doing the ajax request server side
+      //so the original method has to be fired with a dummy change,
+      //this will pass the write the _.isEmpty( submittedChanges ) test in api.requestChangesetUpdate() and create a post ID
+
+
+      //Backup the original method
+      var _original_requestChangesetUpdate = api.requestChangesetUpdate;
+
+      /**
+       * Request updates to the changeset.
+       * Always calls the original method when the first promise (the skope changeset save) has been executed.
+       * Returns the $ promise with the set of data from the original method
+       *
+       * @param {object} [changes] Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
+       *                           If not provided, then the changes will still be obtained from unsaved dirty settings.
+       * @returns {jQuery.Promise}
+       */
+      api.requestChangesetUpdate = function( changes ) {
+            var self = this,
+                dfd = $.Deferred(),
+                data,
+                _skopesToUpdate = [],
+                _promises = [],
+                _global_skope_changes = changes || {},
+                failedPromises = [],
+                _all_skopes_data_ = [],
+                _recursiveCallDeferred = $.Deferred();
+                // _original = function( changes ) {
+                //     _original_requestChangesetUpdate(changes).then( function( data ) {
+                //         dfd.resolve( data );
+                //     });
+                // };
+
+            //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
+            //=> that's why we check it here again before doing anything else
+            if ( ! serverControlParams.isSkopOn ) {
+                  return _original_requestChangesetUpdate();
+            }
+
+
+            //MAKES SURE THAT A CHANGESET POST ID EXISTS
+            //=> add a dummy_change to global if if ( 0 === api._lastSavedRevision || _.isEmpty( api.state( 'changesetStatus' )() ) )
+            //
+            //and that we are not customizing the global skope,
+            //it means that the changeset post ID will not be set yet, so let's fire the original
+            //The core WP method will only create a new changeset post if there is something to save
+            //=> that's the purpose of this dummy_change
+            if ( 0 === api._lastSavedRevision || _.isEmpty( api.state( 'changesetStatus' )() ) ) {
+                  _global_skope_changes = _.extend( _global_skope_changes, {
+                        blogname : { dummy_change : 'dummy_change' }
+                  } );
+            }
+
+            //POPULATE THE SKOPE CHANGESET UPDATES PROMISES
+            //Loop current skopes collection
+            //Exclude the global skope
+            _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                  if ( 'global' == _skp.skope )
+                    return;
+                  _skopesToUpdate.push( _skp.id );
+            } );
+
+            var _mayBeresolve = function( _index ) {
+                  if ( ! _.isUndefined( _skopesToUpdate[ _index + 1 ] ) || _promises.length != _skopesToUpdate.length )
+                    return;
+
+                  if ( _.isEmpty( failedPromises ) ) {
+                        _recursiveCallDeferred.resolve( _all_skopes_data_ );
+                  } else {
+                        var _buildResponse = function() {
+                                  var _failedResponse = [];
+                                  _.each( failedPromises, function( _r ) {
+                                        _failedResponse.push( api.czr_skopeBase.buildServerResponse( _r ) );
+                                  } );
+                                  return $.trim( _failedResponse.join( ' | ') );
+                        };
+                        _recursiveCallDeferred.reject( _buildResponse() );
+                  }
+                  return true;
+            };
+
+
+            // recursive pushes for not global skopes
+            var recursiveCall = function( _index ) {
+                  //on first push run, set the api state to processing.
+                  // Make sure that publishing a changeset waits for all changeset update requests to complete.
+                  if ( _.isUndefined( _index ) || ( ( 0 * 0 ) == _index ) ) {
+                      api.state( 'processing' ).set( 1 );
+                  }
+
+                  _index = _index || 0;
+                  if ( _.isUndefined( _skopesToUpdate[_index] ) ) {
+                        api.consoleLog( 'Undefined Skope in changeset recursive call ', _index, _skopesToUpdate, _skopesToUpdate[_index] );
+                        return _recursiveCallDeferred.resolve( _all_skopes_data_ ).promise();
+                  }
+
+                  //_promises.push( self.getSubmitPromise( _skopesToUpdate[ _index ] ) );
+                  api._requestSkopeChangetsetUpdate( changes, _skopesToUpdate[_index] )
+                        .always( function() { _promises.push( _index ); } )
+                        .fail( function( response ) {
+                              failedPromises.push( response );
+                              api.consoleLog('CHANGESET UPDATE RECURSIVE FAIL FOR SKOPE : ', _skopesToUpdate[_index] );
+                              if (  ! _mayBeresolve( _index ) )
+                                recursiveCall( _index + 1 );
+                        } )
+                        .done( function( _skope_data_ ) {
+                              _all_skopes_data_.push( _skope_data_ );
+                              if (  ! _mayBeresolve( _index ) )
+                                recursiveCall( _index + 1 );
+                        } );
+
+                  return _recursiveCallDeferred.promise();
+            };
+
+
+
+
+            //RESOLVE WITH THE WP GLOBAL CHANGESET PROMISE WHEN ALL SKOPE PROMISES ARE DONE
+            //PROBLEM TO SOLVE : in the core original changeset method, the api._lastSavedRevision property is incremented when global dirties are saved
+            //=> between the core changeset update and before the skope changeset update, we need to reset the api._lastSavedRevision to its previous value
+            //=> otherwise some dirties might not be taken into account in the skope.
+            //=> This can happen typically for a setting dirty both in global and other skope(s)
+            var _lastSavedRevisionBefore = api._lastSavedRevision;
+            _original_requestChangesetUpdate( _global_skope_changes )
+                  .fail( function( r ) {
+                        api.consoleLog( 'WP requestChangesetUpdateFail', r, api.czr_skopeBase.buildServerResponse(r) );
+
+                        // Ensure that all settings updated subsequently will be included in the next changeset update request.
+                        api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
+                        //api.state( 'changesetStatus' ).set( _data_.changeset_status );
+                        // Make sure that publishing a changeset waits for all changeset update requests to complete.
+                        api.state( 'processing' ).set( 0 );
+
+                        dfd.reject( r );
+                        r = api.czr_skopeBase.buildServerResponse(r);
+                        api.czr_serverNotification( { message: r, status : 'error' } );
+                  })
+                  .done( function( wp_original_response ) {
+                        // $.when.apply( null, _promises ).then( function() {
+                        //       dfd.resolve( wp_original_response );
+                        // });
+                        //Restore the _lastSavedRevision index to its previous state to not miss any setting that could have been updated by WP for global.
+
+                        //Bail if attempting to update the skope changesets before the initial collection has been populated
+                        if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
+                          dfd.resolve( wp_original_response );
+
+                        api._lastSavedRevision = _lastSavedRevisionBefore;
+                        recursiveCall()
+                              .always( function() {
+                                    // Ensure that all settings updated subsequently will be included in the next changeset update request.
+                                    api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
+
+                                    //api.state( 'changesetStatus' ).set( _data_.changeset_status );
+                                    // Make sure that publishing a changeset waits for all changeset update requests to complete.
+                                    api.state( 'processing' ).set( 0 );
+                              })
+                              .fail( function( r ) {
+                                    dfd.reject( r );
+                                    api.consoleLog( 'CHANGESET UPDATE RECURSIVE PUSH FAIL', r , _all_skopes_data_ );
+                                    api.trigger( 'changeset-error', r );
+                                    api.czr_serverNotification( { message: r, status : 'error' } );
+                              } )
+                              .done( function() {
+                                    dfd.resolve( wp_original_response );
+                              });
+                  });
+
+            return dfd.promise();
+      };
+
+
+
+      //@update the changeset meta for a given skope
+      api._requestSkopeChangetsetUpdate = function( changes, skope_id ) {
+            if ( _.isUndefined( skope_id ) || ! api.czr_skope.has( skope_id ) ) {
+                  throw new Error( 'In api._requestSkopeChangetsetUpdate() : a valid and registered skope_id must be provided' );
+            }
+
+            var deferred = new $.Deferred(),
+                request,
+                submittedChanges = {},
+                data;
+
+            //if no skope has been provided, then let's use the active one
+            skope_id = skope_id || api.czr_activeSkopeId();
+
+            if ( changes ) {
+                  _.extend( submittedChanges, changes );
+            }
+
+
+            //Ensure all revised settings (changes pending save) are also included, but not if marked for deletion in changes.
+            _.each( api.czr_skopeBase.getSkopeDirties( skope_id ) , function( dirtyValue, settingId ) {
+                  if ( ! changes || null !== changes[ settingId ] ) {
+                        submittedChanges[ settingId ] = _.extend(
+                              {},
+                              submittedChanges[ settingId ] || {},
+                              { value: dirtyValue }
+                        );
+                  }
+            } );
+
+            // Short-circuit when there are no pending changes.
+            if ( _.isEmpty( submittedChanges ) ) {
+                  deferred.resolve( {} );
+                  return deferred.promise();
+            }
+
+            if ( api._latestRevision <= api._lastSavedRevision ) {
+                  deferred.resolve( {} );
+                  return deferred.promise();
+            }
+
+            // Allow plugins to attach additional params to the settings.
+            api.trigger( 'skope-changeset-save', submittedChanges );
+
+            var queryVars = {
+                  skope_id : skope_id,
+                  action : 'changeset_update',
+                  opt_name : api.czr_skope( skope_id ).opt_name
+            };
+
+            //BUILD THE QUERY
+            data = api.previewer.query( _.extend( queryVars, { excludeCustomizedSaved: true } ) );
+            delete data.customized; // Being sent in customize_changeset_data instead.
+            _.extend( data, {
+                  nonce: api.settings.nonce.save,
+                  customize_changeset_data: JSON.stringify( submittedChanges )
+            } );
+
+            // var _dumby_request = function( _data ) {
+            //     var dfd = $.Deferred();
+            //     setTimeout( function() {
+            //         dfd.resolve( _data );
+            //     }, 5000 );
+            //     return dfd.promise();
+            // };
+
+            ////////////////////// FIRE THE REQUEST //////////////////////
+            //request = _dumby_request( data );
+            wp.ajax.post( 'customize_skope_changeset_save', data )
+                  .done( function requestChangesetUpdateDone( _data_ ) {
+                        //api.consoleLog('SKOPE CHANGETSET DONE FOR SKOPE ' + _data_.skope_id , _data_ );
+                        deferred.resolve( _data_ );
+                        //api.trigger( 'changeset-saved', _data_ );
+                  } )
+                  .fail( function requestChangesetUpdateFail( _data_ ) {
+                        api.consoleLog('SKOPE CHANGESET FAIL FOR SKOPE ' + _data_.skope_id, _data_ );
+                        deferred.reject( _data_ );
+                        //api.trigger( 'changeset-error', _data_ );
+                  } )
+                  .always( function( _data_ ) {
+                        if ( _data_.setting_validities ) {
+                              api._handleSettingValidities( {
+                                    settingValidities: _data_.setting_validities
+                              } );
+                        }
+                  } );
+
+            return deferred.promise();
+      };
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      /*****************************************************************************
+      * FIRE SKOPE ON READY
+      *****************************************************************************/
+      //this promise will be resolved when
+      //1) the initial skopes collection has been populated
+      //2) the initial skope has been switched to
+      api.czr_skopeReady = $.Deferred();
+      api.bind( 'ready' , function() {
+            if ( serverControlParams.isSkopOn ) {
+                  api.czr_isLoadingSkope  = new api.Value( false );
+                  api.czr_isLoadingSkope.bind( function( loading ) {
+                        toggleSkopeLoadPane( loading );
+                  });
+                  api.czr_skopeBase   = new api.CZR_skopeBase();
+                  api.czr_skopeSave   = new api.CZR_skopeSave();
+                  api.czr_skopeReset  = new api.CZR_skopeReset();
+
+                  api.trigger('czr-skope-started');
+
+                  //@return void()
+                  //This top note will be rendered 40s and self closed if not closed before by the user
+                  var _toggleTopFailureNote = function() {
+                        api.czr_skopeBase.toggleTopNote( true, {
+                              title : serverControlParams.i18n.skope['There was a problem when trying to load the customizer.'],
+                              message : [
+                                    serverControlParams.i18n.skope['Please refer to'],
+                                    '<a href="http://docs.presscustomizr.com/article/285-there-was-a-problem-when-trying-to-load-the-customizer" target="_blank">',
+                                    serverControlParams.i18n.skope['this documentation page'],
+                                    '</a>',
+                                    serverControlParams.i18n.skope['to understand how to fix the problem.']
+                              ].join(' '),
+                              selfCloseAfter : 40000
+                        });
+                  };
+
+
+                  api.czr_skopeReady
+                        .done( function() {
+                              api.trigger('czr-skope-ready');
+                        })
+                        .fail( function( error ) {
+                              api.errorLog( 'Skope could not be instantiated : ' + error );
+                              //This top note will be rendered 40s and self closed if not closed before by the user
+                              _toggleTopFailureNote();
+                              serverControlParams.isSkopOn = false;
+                        })
+                        .always( function() {
+                              api.czr_isLoadingSkope( false );
+                        });
+
+                  //If skope was properly instantiated but there's another problem occuring after, display a self closing top notification after 30 s
+                  if ( 'rejected' != api.czr_skopeReady.state() ) {
+                        //Make sure the loading icon panel is destroyed after a moment
+                        //Typically if there was a problem in the WP js API and the skope could not be initialized
+                        //if the skopeReady state is still pending after 40 seconds, there's obviously a problem
+                        setTimeout( function() {
+                            if ( 'pending' == api.czr_skopeReady.state() )  {
+                                  //This top note will be rendered 40s and self closed if not closed before by the user
+                                  _toggleTopFailureNote();
+
+                                  api.czr_isLoadingSkope( false );
+                            }
+                        }, 40000);
+                  }
+            }
+
+            //let's set a lower autosave interval ( default is 60000 ms )
+            if ( serverControlParams.isChangeSetOn ) {
+                  api.settings.timeouts.changesetAutoSave = 10000;
+            }
+      } );
+
+      //INCLUDE THE REVISION COUNT IF WP < 4.7
+      if ( ! _.has( api, '_latestRevision') ) {
+            /**
+             * Current change count.
+             */
+            api._latestRevision = 0;
+
+            /**
+             * Latest revisions associated with the updated setting.
+             */
+            api._latestSettingRevisions = {};
+
+            /*
+             * Keep track of the revision associated with each updated setting so that
+             * requestChangesetUpdate knows which dirty settings to include. Also, once
+             * ready is triggered and all initial settings have been added, increment
+             * revision for each newly-created initially-dirty setting so that it will
+             * also be included in changeset update requests.
+             */
+            api.bind( 'change', function incrementChangedSettingRevision( setting ) {
+                  api._latestRevision += 1;
+                  api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+            } );
+            api.bind( 'ready', function() {
+                  api.bind( 'add', function incrementCreatedSettingRevision( setting ) {
+                        if ( setting._dirty ) {
+                              api._latestRevision += 1;
+                              api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+                        }
+                  } );
+            } );
+      }
+
+      //@fired before skopeReady
+      var toggleSkopeLoadPane = function( loading ) {
+            loading = _.isUndefined( loading ) ? true : loading;
+            var self = this, $skopeLoadingPanel,
+                _render = function() {
+                      var dfd = $.Deferred();
+                      try {
+                            _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
+                      } catch( er ) {
+                            api.errorLog( 'In toggleSkopeLoadPane : error when parsing the the reset skope template : ' + er );
+                            dfd.resolve( false );
+                      }
+                      $.when( $('#customize-preview').after( $( _tmpl ) ) )
+                            .always( function() {
+                                  dfd.resolve( $( '#czr-skope-pane' ) );
+                            });
+
+                      return dfd.promise();
+                },
+                _destroy = function() {
+                      _.delay( function() {
+                            $.when( $('body').removeClass('czr-skope-pane-open') ).done( function() {
+                                  _.delay( function() {
+                                        $.when( $('body').removeClass('czr-skop-loading') ).done( function() {
+                                              if ( false !== $( '#czr-skope-pane' ).length ) {
+                                                    setTimeout( function() {
+                                                          $( '#czr-skope-pane' ).remove();
+                                                    }, 400 );
+                                              }
+                                        });
+                                  }, 200);
+                            });
+                      }, 50);
+                };
+
+            //display load pane if skope is not yet ready and loading is true
+            if ( 'pending' == api.czr_skopeReady.state() && loading ) {
+                  $('body').addClass('czr-skop-loading');
+                  _render()
+                        .done( function( $_el ) {
+                              $skopeLoadingPanel = $_el;
+                        })
+                        .then( function() {
+                              if ( ! $skopeLoadingPanel.length )
+                                return;
+
+                              _.delay( function() {
+                                    //set height
+                                    var _height = $('#customize-preview').height();
+                                    $skopeLoadingPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
+                                    //display
+                                    $('body').addClass('czr-skope-pane-open');
+                              }, 50 );
+                        });
+            }
+
+            api.czr_skopeReady.done( function() {
+                  _destroy();
+            });
+            //if a destroy is requested, typically when the loading delay exceeds 15 seconds
+            if ( ! loading ) {
+                  _destroy();
+            }
+      };//toggleSkopeLoadPane
+
+})( wp.customize , jQuery, _);
 
   //WHAT IS A SKOPE ?
   //A skope is an object describing a set of options for a given customization context
@@ -6230,3 +7289,23 @@ $.extend( CZRSkopeMths, {
       }
 });//$.extend(
 })( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+
+      //SKOPE
+      $.extend( CZRSkopeBaseMths, api.Events );
+      $.extend( CZRSkopeMths, api.Events );
+      $.extend( CZRSkopeMths, api.CZR_Helpers );
+      api.CZR_skopeBase             = api.Class.extend( CZRSkopeBaseMths );
+      api.CZR_skopeSave             = api.Class.extend( CZRSkopeSaveMths );
+      api.CZR_skopeReset            = api.Class.extend( CZRSkopeResetMths );
+      api.CZR_skope                 = api.Value.extend( CZRSkopeMths ); //=> used as constructor when creating the collection of skopes
+
+      //Skope related :
+      //=> Special case for the header image
+      //Capture objects before they are overridden by WP.
+      //=> needed when regenerating the header_image control.
+      if ( _.has(api, 'HeaderTool') ) {
+            api.czr_HeaderTool = $.extend(  true, {}, api.HeaderTool );
+      }
+
+})( wp.customize, jQuery, _ );

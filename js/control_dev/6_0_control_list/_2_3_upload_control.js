@@ -1,4 +1,5 @@
 
+//named czr_upload in the php setting map
 var CZRUploadMths = CZRUploadMths || {};
 ( function ( api, $, _ ) {
 /**

@@ -33,6 +33,67 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
 !function(a){"use strict";"function"==typeof define&&define.amd?define(["jquery"],a):"object"==typeof exports?module.exports=a(require("jquery")):a(jQuery)}(function(a){"use strict";function b(){var a=document.createElement("input");return a.setAttribute("type","range"),"text"!==a.type}function c(a,b){var c=Array.prototype.slice.call(arguments,2);return setTimeout(function(){return a.apply(null,c)},b)}function d(a,b){return b=b||100,function(){if(!a.debouncing){var c=Array.prototype.slice.apply(arguments);a.lastReturnVal=a.apply(window,c),a.debouncing=!0}return clearTimeout(a.debounceTimeout),a.debounceTimeout=setTimeout(function(){a.debouncing=!1},b),a.lastReturnVal}}function e(a){return a&&(0===a.offsetWidth||0===a.offsetHeight||a.open===!1)}function f(a){for(var b=[],c=a.parentNode;e(c);)b.push(c),c=c.parentNode;return b}function g(a,b){function c(a){"undefined"!=typeof a.open&&(a.open=!a.open)}var d=f(a),e=d.length,g=[],h=a[b];if(e){for(var i=0;i<e;i++)g[i]=d[i].style.cssText,d[i].style.setProperty?d[i].style.setProperty("display","block","important"):d[i].style.cssText+=";display: block !important",d[i].style.height="0",d[i].style.overflow="hidden",d[i].style.visibility="hidden",c(d[i]);h=a[b];for(var j=0;j<e;j++)d[j].style.cssText=g[j],c(d[j])}return h}function h(a,b){var c=parseFloat(a);return Number.isNaN(c)?b:c}function i(a){return a.charAt(0).toUpperCase()+a.substr(1)}function j(b,e){if(this.$window=a(window),this.$document=a(document),this.$element=a(b),this.options=a.extend({},n,e),this.polyfill=this.options.polyfill,this.orientation=this.$element[0].getAttribute("data-orientation")||this.options.orientation,this.onInit=this.options.onInit,this.onSlide=this.options.onSlide,this.onSlideEnd=this.options.onSlideEnd,this.DIMENSION=o.orientation[this.orientation].dimension,this.DIRECTION=o.orientation[this.orientation].direction,this.DIRECTION_STYLE=o.orientation[this.orientation].directionStyle,this.COORDINATE=o.orientation[this.orientation].coordinate,this.polyfill&&m)return!1;this.identifier="js-"+k+"-"+l++,this.startEvent=this.options.startEvent.join("."+this.identifier+" ")+"."+this.identifier,this.moveEvent=this.options.moveEvent.join("."+this.identifier+" ")+"."+this.identifier,this.endEvent=this.options.endEvent.join("."+this.identifier+" ")+"."+this.identifier,this.toFixed=(this.step+"").replace(".","").length-1,this.$fill=a('<div class="'+this.options.fillClass+'" />'),this.$handle=a('<div class="'+this.options.handleClass+'" />'),this.$range=a('<div class="'+this.options.rangeClass+" "+this.options[this.orientation+"Class"]+'" id="'+this.identifier+'" />').insertAfter(this.$element).prepend(this.$fill,this.$handle),this.$element.css({position:"absolute",width:"1px",height:"1px",overflow:"hidden",opacity:"0"}),this.handleDown=a.proxy(this.handleDown,this),this.handleMove=a.proxy(this.handleMove,this),this.handleEnd=a.proxy(this.handleEnd,this),this.init();var f=this;this.$window.on("resize."+this.identifier,d(function(){c(function(){f.update(!1,!1)},300)},20)),this.$document.on(this.startEvent,"#"+this.identifier+":not(."+this.options.disabledClass+")",this.handleDown),this.$element.on("change."+this.identifier,function(a,b){if(!b||b.origin!==f.identifier){var c=a.target.value,d=f.getPositionFromValue(c);f.setPosition(d)}})}Number.isNaN=Number.isNaN||function(a){return"number"==typeof a&&a!==a};var k="rangeslider",l=0,m=b(),n={polyfill:!0,orientation:"horizontal",rangeClass:"rangeslider",disabledClass:"rangeslider--disabled",activeClass:"rangeslider--active",horizontalClass:"rangeslider--horizontal",verticalClass:"rangeslider--vertical",fillClass:"rangeslider__fill",handleClass:"rangeslider__handle",startEvent:["mousedown","touchstart","pointerdown"],moveEvent:["mousemove","touchmove","pointermove"],endEvent:["mouseup","touchend","pointerup"]},o={orientation:{horizontal:{dimension:"width",direction:"left",directionStyle:"left",coordinate:"x"},vertical:{dimension:"height",direction:"top",directionStyle:"bottom",coordinate:"y"}}};return j.prototype.init=function(){this.update(!0,!1),this.onInit&&"function"==typeof this.onInit&&this.onInit()},j.prototype.update=function(a,b){a=a||!1,a&&(this.min=h(this.$element[0].getAttribute("min"),0),this.max=h(this.$element[0].getAttribute("max"),100),this.value=h(this.$element[0].value,Math.round(this.min+(this.max-this.min)/2)),this.step=h(this.$element[0].getAttribute("step"),1)),this.handleDimension=g(this.$handle[0],"offset"+i(this.DIMENSION)),this.rangeDimension=g(this.$range[0],"offset"+i(this.DIMENSION)),this.maxHandlePos=this.rangeDimension-this.handleDimension,this.grabPos=this.handleDimension/2,this.position=this.getPositionFromValue(this.value),this.$element[0].disabled?this.$range.addClass(this.options.disabledClass):this.$range.removeClass(this.options.disabledClass),this.setPosition(this.position,b)},j.prototype.handleDown=function(a){if(a.preventDefault(),this.$document.on(this.moveEvent,this.handleMove),this.$document.on(this.endEvent,this.handleEnd),this.$range.addClass(this.options.activeClass),!((" "+a.target.className+" ").replace(/[\n\t]/g," ").indexOf(this.options.handleClass)>-1)){var b=this.getRelativePosition(a),c=this.$range[0].getBoundingClientRect()[this.DIRECTION],d=this.getPositionFromNode(this.$handle[0])-c,e="vertical"===this.orientation?this.maxHandlePos-(b-this.grabPos):b-this.grabPos;this.setPosition(e),b>=d&&b<d+this.handleDimension&&(this.grabPos=b-d)}},j.prototype.handleMove=function(a){a.preventDefault();var b=this.getRelativePosition(a),c="vertical"===this.orientation?this.maxHandlePos-(b-this.grabPos):b-this.grabPos;this.setPosition(c)},j.prototype.handleEnd=function(a){a.preventDefault(),this.$document.off(this.moveEvent,this.handleMove),this.$document.off(this.endEvent,this.handleEnd),this.$range.removeClass(this.options.activeClass),this.$element.trigger("change",{origin:this.identifier}),this.onSlideEnd&&"function"==typeof this.onSlideEnd&&this.onSlideEnd(this.position,this.value)},j.prototype.cap=function(a,b,c){return a<b?b:a>c?c:a},j.prototype.setPosition=function(a,b){var c,d;void 0===b&&(b=!0),c=this.getValueFromPosition(this.cap(a,0,this.maxHandlePos)),d=this.getPositionFromValue(c),this.$fill[0].style[this.DIMENSION]=d+this.grabPos+"px",this.$handle[0].style[this.DIRECTION_STYLE]=d+"px",this.setValue(c),this.position=d,this.value=c,b&&this.onSlide&&"function"==typeof this.onSlide&&this.onSlide(d,c)},j.prototype.getPositionFromNode=function(a){for(var b=0;null!==a;)b+=a.offsetLeft,a=a.offsetParent;return b},j.prototype.getRelativePosition=function(a){var b=i(this.COORDINATE),c=this.$range[0].getBoundingClientRect()[this.DIRECTION],d=0;return"undefined"!=typeof a.originalEvent["client"+b]?d=a.originalEvent["client"+b]:a.originalEvent.touches&&a.originalEvent.touches[0]&&"undefined"!=typeof a.originalEvent.touches[0]["client"+b]?d=a.originalEvent.touches[0]["client"+b]:a.currentPoint&&"undefined"!=typeof a.currentPoint[this.COORDINATE]&&(d=a.currentPoint[this.COORDINATE]),d-c},j.prototype.getPositionFromValue=function(a){var b,c;return b=(a-this.min)/(this.max-this.min),c=Number.isNaN(b)?0:b*this.maxHandlePos},j.prototype.getValueFromPosition=function(a){var b,c;return b=a/(this.maxHandlePos||1),c=this.step*Math.round(b*(this.max-this.min)/this.step)+this.min,Number(c.toFixed(this.toFixed))},j.prototype.setValue=function(a){a===this.value&&""!==this.$element[0].value||this.$element.val(a).trigger("input",{origin:this.identifier})},j.prototype.destroy=function(){this.$document.off("."+this.identifier),this.$window.off("."+this.identifier),this.$element.off("."+this.identifier).removeAttr("style").removeData("plugin_"+k),this.$range&&this.$range.length&&this.$range[0].parentNode.removeChild(this.$range[0])},a.fn[k]=function(b){var c=Array.prototype.slice.call(arguments,1);return this.each(function(){var d=a(this),e=d.data("plugin_"+k);e||d.data("plugin_"+k,e=new j(this,b)),"string"==typeof b&&e[b].apply(e,c)})},"rangeslider.js is available in jQuery context e.g $(selector).rangeslider(options);"});
 ( function ( api, $, _ ) {
       /*****************************************************************************
+      * REACT TO PREVIEW DEVICE SWITCH => send device to preview
+      *****************************************************************************/
+      api.bind( 'ready' , function() {
+          if ( api.previewedDevice ) {
+                api.previewedDevice.bind( function( device ) {
+                      api.previewer.send( 'previewed-device', device );
+                });
+          }
+      });
+})( wp.customize , jQuery, _);//NOT USED YET
+( function ( api, $, _ ) {
+      var _prettyPrintLog = function( args ) {
+            var _defaults = {
+                  bgCol : '#5ed1f5',
+                  textCol : '#000',
+                  consoleArguments : []
+            };
+            args = _.extend( _defaults, args );
+
+            var _toArr = Array.from( args.consoleArguments ),
+                _truncate = function( string ){
+                      if ( ! _.isString( string ) )
+                        return '';
+                      return string.length > 150 ? string.substr( 0, 149 ) : string;
+                };
+            if ( ! _.isEmpty( _.filter( _toArr, function( it ) { return ! _.isString( it ); } ) ) ) {
+                  _toArr =  JSON.stringify( _toArr.join(' ') );
+            } else {
+                  _toArr = _toArr.join(' ');
+            }
+            return [
+                  '%c ' + _truncate( _toArr ),
+                  [ 'background:' + args.bgCol, 'color:' + args.textCol, 'display: block;' ].join(';')
+            ];
+      };
+      api.consoleLog = function() {
+            if ( ! serverControlParams.isDevMode )
+              return;
+            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
+              return;
+            console.log.apply( console, _prettyPrintLog( { consoleArguments : arguments } ) );
+      };
+
+      api.errorLog = function() {
+            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
+              return;
+
+            console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : arguments } ) );
+      };
+
+      api.czr_isSkopOn = function() {
+            return serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
+      };
+
+      api.czr_isChangeSetOn = function() {
+            return serverControlParams.isChangeSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
+      };
+
+})( wp.customize , jQuery, _);
+( function ( api, $, _ ) {
+      /*****************************************************************************
       * A "CONTEXT AWARE" SET METHD
       *****************************************************************************/
       /**
@@ -605,7 +666,3825 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
               api.control( ctrlId ).trigger( 'czr-partial-refresh-done' );
         });
   });//api.bind('ready')
+})( wp.customize , jQuery, _ );var CZRInputMths = CZRInputMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRInputMths , {
+    initialize: function( name, options ) {
+          if ( _.isUndefined( options.input_parent ) || _.isEmpty(options.input_parent) ) {
+            throw new Error('No input_parent assigned to input ' + options.id + '. Aborting');
+          }
+          if ( _.isUndefined(options.module ) ) {
+            throw new Error('No module assigned to input ' + options.id + '. Aborting');
+          }
+
+          api.Value.prototype.initialize.call( this, null, options );
+
+          var input = this;
+          $.extend( input, options || {} );
+          input.isReady = $.Deferred();
+          if ( ! _.isUndefined(options.input_value) ) {
+                input.set( options.input_value );
+          }
+          if ( api.czrInputMap && _.has( api.czrInputMap, input.type ) ) {
+                var _meth = api.czrInputMap[ input.type ];
+                if ( _.isFunction( input[_meth]) ) {
+                      input[_meth]( options.input_options || null );
+                }
+          } else {
+                api.consoleLog('Warning an input : ' + input.id + ' has no corresponding method defined in api.czrInputMap.');
+          }
+
+          var trigger_map = {
+                text : 'keyup',
+                textarea : 'keyup',
+                password : 'keyup',
+                color : 'colorpickerchange',
+                range : 'input propertychange'
+          };
+          input.input_event_map = [
+                  {
+                    trigger   : $.trim( ['change', trigger_map[input.type] || '' ].join(' ') ),//was 'propertychange change click keyup input',//colorpickerchange is a custom colorpicker event @see method setupColorPicker => otherwise we don't
+                    selector  : 'input[data-type], select[data-type], textarea[data-type]',
+                    name      : 'set_input_value',
+                    actions   : function( obj ) {
+                        if ( ! _.has( input.input_parent, 'syncElements') || ! _.has( input.input_parent.syncElements, input.id ) ) {
+                            throw new Error('WARNING : THE INPUT ' + input.id + ' HAS NO SYNCED ELEMENT.');
+                        }
+                    }//was 'updateInput'
+                  }
+          ];
+          input.visible = new api.Value( true );
+          input.isReady.done( function() {
+                input.visible.bind( function( visible ) {
+                      if ( visible )
+                        input.container.stop( true, true ).slideDown( 200 );
+                      else
+                        input.container.stop( true, true ).slideUp( 200 );
+                });
+          });
+          input.enabled = new api.Value( true );
+          input.isReady.done( function() {
+                input.enabled.bind( function( enabled ) {
+                      input.container.toggleClass( 'disabled', ! enabled );
+                });
+          });
+
+    },
+    ready : function() {
+            var input = this;
+            input.setupDOMListeners( input.input_event_map , { dom_el : input.container }, input );
+            input.callbacks.add( function() { return input.inputReact.apply( input, arguments ); } );
+            $.when( input.setupSynchronizer() ).done( function() {
+                  input.isReady.resolve( input );
+            } );
+
+    },
+    setupSynchronizer: function() {
+          var input       = this,
+              input_parent        = input.input_parent,
+              $_input_el  = input.container.find('[data-type]'),
+              is_textarea = input.container.find('[data-type]').is('textarea');
+          if ( is_textarea ) {
+            throw new Error('TO DO : THE TEXTAREA INPUT ARE NOT READY IN THE SYNCHRONIZER!');
+          }
+
+          var syncElement = new api.Element( $_input_el );
+          input_parent.syncElements = input_parent.syncElements || {};
+          input_parent.syncElements[input.id] = syncElement;//adds the input syncElement to the collection
+          syncElement.sync( input );//sync with the input instance
+          syncElement.set( input() );
+    },
+    inputReact : function( to, from, data ) {
+          var input = this,
+              _current_input_parent = input.input_parent(),
+              _new_model        = _.clone( _current_input_parent ),//initialize it to the current value
+              _isPreItemInput = input.is_preItemInput;
+          if ( ! input.enabled() )
+            return;
+          _new_model =  ( ! _.isObject(_new_model) || _.isEmpty(_new_model) ) ? {} : _new_model;
+          _new_model[ input.id ] = to;
+          input.input_parent.set( _new_model, {
+                input_changed     : input.id,
+                input_transport   : input.transport,
+                not_preview_sent  : 'postMessage' === input.transport//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
+          } );
+          if ( ! _isPreItemInput ) {
+                input.input_parent.trigger( input.id + ':changed', to );
+                if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
+                      input.module.sendInputToPreview( {
+                            input_id        : input.id,
+                            input_parent_id : input.input_parent.id,
+                            to              : to,
+                            from            : from
+                      } );
+                }
+          }
+    },
+
+
+    /*-----------------------------------------
+    SOME DEFAULT CALLBACKS
+    ------------------------------------------*/
+    setupColorPicker : function() {
+        var input  = this;
+
+        input.container.find('input').iris( {
+            palettes: true,
+            hide:false,
+            change : function( e, o ) {
+                  $(this).val( o.color.toString() ).trigger('colorpickerchange').trigger('change');
+            }
+        });
+    },
+
+    setupSelect : function() {
+        var input = this;
+        $('select', input.container ).not('.no-selecter-js')
+              .each( function() {
+                    $(this).selecter({
+                    });
+        });
+    },
+
+    setupIcheck : function( obj ) {
+            var input      = this;
+
+            $( 'input[type=checkbox]', input.container ).each( function(e) {
+                  if ( 0 !== $(this).closest('div[class^="icheckbox"]').length )
+                    return;
+
+                  $(this).iCheck({
+                        checkboxClass: 'icheckbox_flat-grey',
+                        checkedClass: 'checked',
+                        radioClass: 'iradio_flat-grey',
+                  })
+                  .on( 'ifChanged', function(e){
+                        $(this).val( false === $(this).is(':checked') ? 0 : 1 );
+                        $(e.currentTarget).trigger('change');
+                  });
+            });
+    },
+
+    setupStepper : function( obj ) {
+          var input      = this;
+          $('input[type="number"]',input.container ).each( function( e ) {
+                $(this).stepper();
+          });
+    },
+    setupRangeSlider : function( options ) {
+              var input = this,
+                  $handle,
+                  _updateHandle = function(el, val) {
+                        el.textContent = val + "%";
+                  };
+
+              $( input.container ).find('input').rangeslider( {
+                    polyfill: false,
+                    rangeClass: 'rangeslider',
+                    disabledClass: 'rangeslider--disabled',
+                    horizontalClass: 'rangeslider--horizontal',
+                    verticalClass: 'rangeslider--vertical',
+                    fillClass: 'rangeslider__fill',
+                    handleClass: 'rangeslider__handle',
+                    onInit: function() {
+                          $handle = $('.rangeslider__handle', this.$range);
+                          $('.rangeslider__handle', this.$range);
+                          _updateHandle( $handle[0], this.value );
+                    },
+              } ).on('input', function() {
+                    _updateHandle( $handle[0], this.value );
+              });
+        }
+});//$.extend
+})( wp.customize , jQuery, _ );var CZRInputMths = CZRInputMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRInputMths , {
+    setupImageUploader : function() {
+          var input        = this,
+              _model       = input();
+          input.attachment   = {};
+          if ( ! input.container )
+            return this;
+
+          this.tmplRendered = $.Deferred();
+          this.setupContentRendering( _model, {} );
+          this.tmplRendered.done( function(){
+            input.czrImgUploaderBinding();
+          });
+  },
+
+  setupContentRendering : function( to, from) {
+        var input = this, _attachment;
+        if ( ( input.attachment.id != to ) && from !== to ) {
+              if ( ! to ) {
+                    input.attachment = {};
+                    input.renderImageUploaderTemplate();
+              }
+              _attachment = wp.media.attachment( to );
+              if ( _.isObject( _attachment ) && _.has( _attachment, 'attributes' ) && _.has( _attachment.attributes, 'sizes' ) ) {
+                    input.attachment       = _attachment.attributes;
+                    input.renderImageUploaderTemplate();
+              } else {
+                    wp.media.attachment( to ).fetch().done( function() {
+                          input.attachment       = this.attributes;
+                          input.renderImageUploaderTemplate();
+                    });
+              }
+        }//Standard reaction, the image has been updated by the user or init
+        else if (  ! input.attachment.id || input.attachment.id === to ) {
+              input.renderImageUploaderTemplate();
+        }
+  },
+
+  czrImgUploaderBinding : function() {
+        var input = this;
+        _.bindAll( input, 'czrImgUploadRemoveFile', 'czrImgUploadOpenFrame', 'czrImgUploadSelect');
+        input.container.on( 'click keydown', '.upload-button', input.czrImgUploadOpenFrame );
+        input.container.on( 'click keydown', '.thumbnail-image img', input.czrImgUploadOpenFrame );
+        input.container.on( 'click keydown', '.remove-button', input.czrImgUploadRemoveFile );
+
+        input.bind( input.id + ':changed', function( to, from ){
+              input.tmplRendered = $.Deferred();
+              input.setupContentRendering(to,from);
+        });
+  },
+  /**
+  * Open the media modal.
+  */
+  czrImgUploadOpenFrame: function( event ) {
+        if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
+          return;
+        }
+
+        event.preventDefault();
+
+        if ( ! this.frame ) {
+          this.czrImgUploadInitFrame();
+        }
+
+        this.frame.open();
+  },
+
+  /**
+  * Create a media modal select frame, and store it so the instance can be reused when needed.
+  */
+  czrImgUploadInitFrame: function() {
+        var input = this,
+            button_labels = this.getUploaderLabels();
+
+        input.frame = wp.media({
+                button: {
+                      text: button_labels.frame_button
+                },
+                states: [
+                       new wp.media.controller.Library({
+                              title:     button_labels.frame_title,
+                              library:   wp.media.query({ type: 'image' }),
+                              multiple:  false,
+                              date:      false
+                       })
+                ]
+        });
+        input.frame.on( 'select', input.czrImgUploadSelect );
+  },
+
+  /**
+  * Called when the "Remove" link is clicked. Empties the setting.
+  *
+  * @param {object} event jQuery Event object
+  */
+  czrImgUploadRemoveFile: function( event ) {
+        var input = this;
+
+        if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
+          return;
+        }
+        event.preventDefault();
+        input.attachment = {};
+        input.set('');
+  },
+
+
+  /**
+  * Callback handler for when an attachment is selected in the media modal.
+  * Gets the selected image information, and sets it within the input.
+  */
+  czrImgUploadSelect: function() {
+        var node,
+            input = this,
+            attachment   = input.frame.state().get( 'selection' ).first().toJSON(),  // Get the attachment from the modal frame.
+            mejsSettings = window._wpmejsSettings || {};
+        input.attachment = attachment;
+        input.set(attachment.id);
+  },
+  renderImageUploaderTemplate: function() {
+        var input  = this;
+        if ( 0 === $( '#tmpl-czr-input-img-uploader-view-content' ).length )
+          return;
+
+        var view_template = wp.template('czr-input-img-uploader-view-content');
+        if ( ! view_template  || ! input.container )
+         return;
+
+        var $_view_el    = input.container.find('.' + input.module.control.css_attr.img_upload_container );
+
+        if ( ! $_view_el.length )
+          return;
+
+        var _template_params = {
+          button_labels : input.getUploaderLabels(),
+          settings      : input.id,
+          attachment    : input.attachment,
+          canUpload     : true
+        };
+
+        $_view_el.html( view_template( _template_params) );
+
+        input.tmplRendered.resolve();
+        input.container.trigger( input.id + ':content_rendered' );
+
+        return true;
+  },
+
+  getUploaderLabels : function() {
+        var _ts = serverControlParams.i18n,
+            _map = {
+            'select'      : _ts.select_image,
+            'change'      : _ts.change_image,
+            'remove'      : _ts.remove_image,
+            'default'     : _ts.default_image,
+            'placeholder' : _ts.placeholder_image,
+            'frame_title' : _ts.frame_title_image,
+            'frame_button': _ts.frame_button_image
+        };
+        _.each( _map, function( ts_string, key ) {
+              if ( _.isUndefined( ts_string ) ) {
+                    var input = this;
+                    api.errorLog( 'A translated string is missing ( ' + key + ' ) for the image uploader input in module : ' + input.module.id );
+                    return '';
+              }
+        });
+
+        return _map;
+  }
+});//$.extend
+})( wp.customize , jQuery, _ );/* Fix caching, select2 default one seems to not correctly work, or it doesn't what I think it should */
+var CZRInputMths = CZRInputMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRInputMths , {
+      setupContentPicker: function( wpObjectTypes ) {
+              var input  = this,
+              _event_map = [];
+
+              /* Dummy for the prototype purpose */
+              $.extend( {
+                    post : '',
+                    taxonomy : ''
+              }, _.isObject( wpObjectTypes ) ? wpObjectTypes : {} );
+
+              input.wpObjectTypes = wpObjectTypes;
+
+              /* Methodize this or use a template */
+              input.container.find('.czr-input').append('<select data-select-type="content-picker-select" class="js-example-basic-simple"></select>');
+              _event_map = [
+                    {
+                          trigger   : 'change',
+                          selector  : 'select[data-select-type]',
+                          name      : 'set_input_value',
+                          actions   : function( obj ){
+                                var $_changed_input   = $( obj.dom_event.currentTarget, obj.dom_el ),
+                                    _raw_val          = $( $_changed_input, obj.dom_el ).select2( 'data' ),
+                                    _val_candidate    = {},
+                                    _default          = {
+                                          id          : '',
+                                          type_label  : '',
+                                          title       : '',
+                                          object_type : '',
+                                          url         : ''
+                                    };
+
+                                _raw_val = _.isArray( _raw_val ) ? _raw_val[0] : _raw_val;
+                                if ( ! _.isObject( _raw_val ) || _.isEmpty( _raw_val ) ) {
+                                    api.errorLog( 'Content Picker Input : the picked value should be an object not empty.');
+                                    return;
+                                }
+                                _.each( _default, function( val, k ){
+                                      if ( '_custom_' !== _raw_val.id ) {
+                                            if ( ! _.has( _raw_val, k ) || _.isEmpty( _raw_val[ k ] ) ) {
+                                                  api.errorLog( 'content_picker : missing input param : ' + k );
+                                                  return;
+                                            }
+                                      }
+                                      _val_candidate[ k ] = _raw_val[ k ];
+                                } );
+                                input.set( _val_candidate );
+                          }
+                    }
+              ];
+
+              input.setupDOMListeners( _event_map , { dom_el : input.container }, input );
+              input.isReady.done( function() {
+                    input.setupContentSelecter();
+              });
+
+      },
+      setupContentSelecter : function() {
+              var input = this;
+              if ( ! _.isEmpty( input() ) ) {
+                    var _attributes = {
+                          value : input().id || '',
+                          title : input().title || '',
+                          selected : "selected"
+                    };
+                    input.container.find('select').append( $( '<option>', _attributes ) );
+              }
+
+              input.container.find( 'select' ).select2( {
+                    placeholder: {
+                          id: '-1', // the value of the option
+                          title: 'Select'
+                    },
+                    data : input.setupSelectedContents(),
+                    ajax: {
+                          url: serverControlParams.AjaxUrl,
+                          type: 'POST',
+                          dataType: 'json',
+                          delay: 250,
+                          debug: true,
+                          data: function ( params ) {
+                                var page = params.page ? params.page : 0;
+                                page = params.term ? params.page : page;
+                                return {
+                                      action          : params.term ? "search-available-content-items-customizer" : "load-available-content-items-customizer",
+                                      search          : params.term,
+                                      wp_customize    : 'on',
+                                      page            : page,
+                                      wp_object_types : JSON.stringify( input.wpObjectTypes ),
+                                      CZRCpNonce      : serverControlParams.CZRCpNonce
+                                };
+                          },
+                          /* transport: function (params, success, failure) {
+                            var $request = $.ajax(params);
+
+                            $request.then(success);
+                            $request.fail(failure);
+
+                            return $request;
+                          },*/
+                          processResults: function ( data, params ) {
+                                input.defaultContentPickerOption = input.defaultContentPickerOption || [];
+
+                                if ( ! data.success )
+                                  return { results: input.defaultContentPickerOption };
+
+
+                                var items   = data.data.items,
+                                    _results = [];
+
+                                _.each( items, function( item ) {
+                                      _results.push({
+                                            id          : item.id,
+                                            title       : item.title,
+                                            type_label  : item.type_label,
+                                            object_type : item.object,
+                                            url         : item.url
+                                      });
+                                });
+                                return {
+                                      results: _results,
+                                      pagination: { more: data.data.items.length >= 10 }//<= the pagination boolean param can be tricky => here set to >= 10 because we query 10 + add a custom link item on the first query
+                                };
+                          },
+                    },//ajax
+                    templateSelection: input.czrFormatContentSelected,
+                    templateResult: input.czrFormatContentSelected,
+                    escapeMarkup: function ( markup ) { return markup; },
+             });//select2 setup
+      },
+      czrFormatContentSelected: function ( item ) {
+              if ( item.loading ) return item.text;
+              var markup = "<div class='content-picker-item clearfix'>" +
+                "<div class='content-item-bar'>" +
+                  "<span class='czr-picker-item-title'>" + item.title + "</span>";
+
+              if ( item.type_label ) {
+                markup += "<span class='czr-picker-item-type'>" + item.type_label + "</span>";
+              }
+
+              markup += "</div></div>";
+
+              return markup;
+      },
+
+      setupSelectedContents : function() {
+            var input = this,
+               _model = input();
+
+            return _model;
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );var CZRInputMths = CZRInputMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRInputMths , {
+      setupTextEditor : function() {
+            var input        = this,
+                _model       = input();
+            if ( ! input.container ) {
+                throw new Error( 'The input container is not set for WP text editor in module.' + input.module.id );
+            }
+
+            if ( ! input.czrRenderInputTextEditorTemplate() )
+              return;
+
+            input.editor       = tinyMCE( 'czr-customize-content_editor' );
+            input.textarea     = $( '#czr-customize-content_editor' );
+            input.editorPane   = $( '#czr-customize-content_editor-pane' );
+            input.dragbar      = $( '#czr-customize-content_editor-dragbar' );
+            input.editorFrame  = $( '#czr-customize-content_editor_ifr' );
+            input.mceTools     = $( '#wp-czr-customize-content_editor-tools' );
+            input.mceToolbar   = input.editorPane.find( '.mce-toolbar-grp' );
+            input.mceStatusbar = input.editorPane.find( '.mce-statusbar' );
+
+            input.preview      = $( '#customize-preview' );
+            input.collapse     = $( '.collapse-sidebar' );
+
+            input.textpreview  = input.container.find('textarea');
+            input.toggleButton = input.container.find('button.text_editor-button');
+            input.editorExpanded   = new api.Value( false );
+            input.czrUpdateTextPreview();
+            input.czrSetToggleButtonText( input.editorExpanded() );
+
+            input.czrTextEditorBinding();
+
+            input.czrResizeEditorOnUserRequest();
+      },
+
+      czrTextEditorBinding : function() {
+              var input = this,
+                  editor = input.editor,
+                  textarea = input.textarea,
+                  toggleButton = input.toggleButton,
+                  editorExpanded = input.editorExpanded,
+                  editorPane   = input.editorPane;
+
+
+              input.bind( input.id + ':changed', input.czrUpdateTextPreview );
+
+              _.bindAll( input, 'czrOnVisualEditorChange', 'czrOnTextEditorChange', 'czrResizeEditorOnWindowResize' );
+
+              toggleButton.on( 'click', function() {
+                    input.editorExpanded.set( ! input.editorExpanded() );
+                    if ( input.editorExpanded() ) {
+                      editor.focus();
+                    }
+              });
+              input.module.czr_ModuleState.bind(
+                function( state ) {
+                  if ( 'expanded' != state )
+                    input.editorExpanded.set( false );
+              });
+
+              input.editorExpanded.bind( function (expanded) {
+
+                    api.consoleLog('in input.editorExpanded', expanded, input() );
+                    /*
+                    * Ensure only the latest input is bound
+                    */
+                    if ( editor.locker && editor.locker !== input ) {
+                        editor.locker.editorExpanded.set(false);
+                        editor.locker = null;
+                    }if ( ! editor.locker || editor.locker === input ) {
+                        $(document.body).toggleClass('czr-customize-content_editor-pane-open', expanded);
+                        editor.locker = input;
+                    }
+                    input.czrSetToggleButtonText( expanded );
+
+                    if ( expanded ) {
+                        editor.setContent( wp.editor.autop( input() ) );
+                        editor.on( 'input change keyup', input.czrOnVisualEditorChange );
+                        textarea.on( 'input', input.czrOnTextEditorChange );
+                        input.czrResizeEditor( window.innerHeight - editorPane.height() );
+                        $( window ).on('resize', input.czrResizeEditorOnWindowResize );
+
+                    } else {
+                        editor.off( 'input change keyup', input.czrOnVisualEditorChange );
+                        textarea.off( 'input', input.czrOnTextEditorChange );
+                        $( window ).off('resize', input.czrResizeEditorOnWindowResize );
+                        input.czrResizeReset();
+                    }
+              } );
+      },
+
+      czrOnVisualEditorChange : function() {
+              var input = this,
+                  editor = input.editor,
+                  value;
+
+              value = wp.editor.removep( editor.getContent() );
+              input.set(value);
+      },
+
+      czrOnTextEditorChange : function() {
+              var input = this,
+                  textarea = input.textarea,
+                  value;
+
+              value = textarea.val();
+              input.set(value);
+      },
+      czrUpdateTextPreview: function() {
+              var input   = this,
+                  input_model = input(),
+                  value;
+              value = input_model.replace(/(<([^>]+)>)/ig,"");
+              if ( value.length > 30 )
+                value = value.substring(0, 34) + '...';
+
+              input.textpreview.val( value );
+      },
+      czrRenderInputTextEditorTemplate: function() {
+              var input  = this;
+              if ( 0 === $( '#tmpl-czr-input-text_editor-view-content' ).length ) {
+                  throw new Error('Missing js template for text editor input in module : ' + input.module.id );
+              }
+
+              var view_template = wp.template('czr-input-text_editor-view-content'),
+                      $_view_el = input.container.find('input');
+              if ( ! view_template  || ! input.container )
+                return;
+
+              api.consoleLog('Model injected in text editor tmpl : ', input() );
+
+              $_view_el.after( view_template( input() ) );
+
+              return true;
+      },
+      czrIsEditorExpanded : function() {
+              return $( document.body ).hasClass('czr-customize-content_editor-pane-open');
+      },
+      czrResizeReset  : function() {
+              var input = this,
+                  preview = input.preview,
+                  collapse = input.collapse,
+                  sectionContent = input.container.closest('ul.accordion-section-content');
+
+              sectionContent.css( 'padding-bottom', '' );
+              preview.css( 'bottom', '' );
+              collapse.css( 'bottom', '' );
+      },
+      czrResizeEditor : function( position ) {
+              var windowHeight = window.innerHeight,
+                  windowWidth = window.innerWidth,
+                  minScroll = 40,
+                  maxScroll = 1,
+                  mobileWidth = 782,
+                  collapseMinSpacing = 56,
+                  collapseBottomOutsideEditor = 8,
+                  collapseBottomInsideEditor = 4,
+                  args = {},
+                  input = this,
+                  sectionContent = input.container.closest('ul.accordion-section-content'),
+                  mceTools = input.mceTools,
+                  mceToolbar = input.mceToolbar,
+                  mceStatusbar = input.mceStatusbar,
+                  preview      = input.preview,
+                  collapse     = input.collapse,
+                  editorPane   = input.editorPane,
+                  editorFrame  = input.editorFrame;
+
+              if ( ! input.editorExpanded() ) {
+                return;
+              }
+
+              if ( ! _.isNaN( position ) ) {
+                resizeHeight = windowHeight - position;
+              }
+
+              args.height = resizeHeight;
+              args.components = mceTools.outerHeight() + mceToolbar.outerHeight() + mceStatusbar.outerHeight();
+
+              if ( resizeHeight < minScroll ) {
+                args.height = minScroll;
+              }
+
+              if ( resizeHeight > windowHeight - maxScroll ) {
+                args.height = windowHeight - maxScroll;
+              }
+
+              if ( windowHeight < editorPane.outerHeight() ) {
+                args.height = windowHeight;
+              }
+
+              preview.css( 'bottom', args.height );
+              editorPane.css( 'height', args.height );
+              editorFrame.css( 'height', args.height - args.components );
+              collapse.css( 'bottom', args.height + collapseBottomOutsideEditor );
+
+              if ( collapseMinSpacing > windowHeight - args.height ) {
+                collapse.css( 'bottom', mceStatusbar.outerHeight() + collapseBottomInsideEditor );
+              }
+
+              if ( windowWidth <= mobileWidth ) {
+                sectionContent.css( 'padding-bottom', args.height );
+              } else {
+                sectionContent.css( 'padding-bottom', '' );
+              }
+      },
+      czrResizeEditorOnWindowResize : function() {
+              var input = this,
+                  resizeDelay = 50,
+                  editorPane   = input.editorPane;
+
+              if ( ! input.editorExpanded() ) {
+                return;
+              }
+
+              _.delay( function() {
+                input.czrResizeEditor( window.innerHeight - editorPane.height() );
+              }, resizeDelay );
+
+      },
+      czrResizeEditorOnUserRequest : function() {
+              var input = this,
+                  dragbar = input.dragbar,
+                  editorFrame = input.editorFrame;
+
+              dragbar.on( 'mousedown', function() {
+                if ( ! input.editorExpanded() )
+                  return;
+
+                $( document ).on( 'mousemove.czr-customize-content_editor', function( event ) {
+                    event.preventDefault();
+                    $( document.body ).addClass( 'czr-customize-content_editor-pane-resize' );
+                    editorFrame.css( 'pointer-events', 'none' );
+                    input.czrResizeEditor( event.pageY );
+                  } );
+                } );
+
+              dragbar.on( 'mouseup', function() {
+                if ( ! input.editorExpanded() )
+                  return;
+
+                $( document ).off( 'mousemove.czr-customize-content_editor' );
+                $( document.body ).removeClass( 'czr-customize-content_editor-pane-resize' );
+                editorFrame.css( 'pointer-events', '' );
+              } );
+
+      },
+      czrSetToggleButtonText : function( $_expanded ) {
+              var input = this;
+
+              input.toggleButton.text( serverControlParams.i18n.mods.textEditor[ ! $_expanded ? 'Edit' : 'Close Editor' ] );
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//extends api.Value
+
+var CZRItemMths = CZRItemMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRItemMths , {
+      initialize: function( id, options ) {
+            if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
+              throw new Error('No module assigned to item ' + id + '. Aborting');
+            }
+
+            var item = this;
+            api.Value.prototype.initialize.call( item, null, options );
+            item.isReady = $.Deferred();
+            item.embedded = $.Deferred();
+            item.container = null;//will store the item $ dom element
+            item.contentContainer = null;//will store the item content $ dom element
+            item.inputCollection = new api.Value({});
+            item.viewState = new api.Value( 'closed' );
+            item.removeDialogVisible = new api.Value( false );
+            $.extend( item, options || {} );
+            item.defaultItemModel = _.clone( options.defaultItemModel ) || { id : '', title : '' };
+            var _initial_model = $.extend( item.defaultItemModel, options.initial_item_model );
+            item.set( _initial_model );
+            item.userEventMap = new api.Value( [
+                  {
+                        trigger   : 'click keydown',
+                        selector  : [ '.' + item.module.control.css_attr.display_alert_btn, '.' + item.module.control.css_attr.cancel_alert_btn ].join(','),
+                        name      : 'toggle_remove_alert',
+                        actions   : function() {
+                              var _isVisible = this.removeDialogVisible();
+                              this.module.closeRemoveDialogs();
+                              this.removeDialogVisible( ! _isVisible );
+                        }
+                  },
+                  {
+                        trigger   : 'click keydown',
+                        selector  : '.' + item.module.control.css_attr.remove_view_btn,
+                        name      : 'remove_item',
+                        actions   : ['removeItem']
+                  },
+                  {
+                        trigger   : 'click keydown',
+                        selector  : [ '.' + item.module.control.css_attr.edit_view_btn, '.' + item.module.control.css_attr.item_title ].join(','),
+                        name      : 'edit_view',
+                        actions   : [ 'setViewVisibility' ]
+                  },
+                  {
+                        trigger   : 'click keydown',
+                        selector  : '.tabs nav li',
+                        name      : 'tab_nav',
+                        actions   : function( args ) {
+                              this.module.toggleTabVisibility.call( this, args );
+                        }
+                  }
+            ]);
+            item.isReady.done( function() {
+                  item.module.updateItemsCollection( { item : item() } );
+                  item.callbacks.add( function() { return item.itemReact.apply(item, arguments ); } );
+                  item.bind( 'contentRendered', function() {
+                        if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) ) {
+                              try {
+                                    api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
+                                    item.module.setupTabNav.call( item );
+                              } catch( er ) {
+                                    api.errorLog( 'In item.isReady.done : ' + er );
+                              }
+                        }
+                  });
+                  item.bind( 'contentRemoved', function() {
+                        if ( _.has(item, 'czr_Input') )
+                          api.CZR_Helpers.removeInputCollection.call( item );
+                  });
+                  item.mayBeRenderItemWrapper();
+                  item.embedded.done( function() {
+                        item.itemWrapperViewSetup( _initial_model );
+                  });
+            });//item.isReady.done()
+
+      },//initialize
+      ready : function() {
+            this.isReady.resolve();
+      },
+      itemReact : function( to, from, data ) {
+            var item = this,
+                module = item.module;
+
+            data = data || {};
+            module.updateItemsCollection( { item : to, data : data } ).done( function() {
+                  item.writeItemViewTitle( to, data );
+            });
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//extends api.CZRBaseControl
+
+var CZRItemMths = CZRItemMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRItemMths , {
+      _sendItem : function( to, from ) {
+            var item = this,
+                module = item.module,
+                _changed_props = [];
+            _.each( from, function( _val, _key ) {
+                  if ( _val != to[_key] )
+                    _changed_props.push(_key);
+            });
+
+            _.each( _changed_props, function( _prop ) {
+                  module.control.previewer.send( 'sub_setting', {
+                        set_id : module.control.id,
+                        id : to.id,
+                        changed_prop : _prop,
+                        value : to[_prop]
+                  });
+                  module.trigger('item_sent', { item : to , dom_el: item.container, changed_prop : _prop } );
+            });
+      },
+      removeItem : function() {
+              var item = this,
+                  module = this.module,
+                  _new_collection = _.clone( module.itemCollection() );
+              module.trigger('pre_item_dom_remove', item() );
+              item._destroyView();
+              _new_collection = _.without( _new_collection, _.findWhere( _new_collection, {id: item.id }) );
+              module.itemCollection.set( _new_collection );
+              module.trigger('pre_item_api_remove', item() );
+
+              var _item_ = $.extend( true, {}, item() );
+              module.czr_Item.remove( item.id );
+              module.trigger( 'item-removed', _item_ );
+      },
+      getModel : function(id) {
+              return this();
+      }
+
+});//$.extend
 })( wp.customize , jQuery, _ );
+var CZRItemMths = CZRItemMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRItemMths , {
+      mayBeRenderItemWrapper : function() {
+            var item = this;
+
+            if ( 'pending' != item.embedded.state() )
+              return;
+
+            $.when( item.renderItemWrapper() ).done( function( $_container ) {
+                  item.container = $_container;
+                  if ( _.isUndefined(item.container) || ! item.container.length ) {
+                      throw new Error( 'In mayBeRenderItemWrapper the Item view has not been rendered : ' + item.id );
+                  } else {
+                      item.embedded.resolve();
+                  }
+            });
+      },
+      itemWrapperViewSetup : function( item_model ) {
+            var item = this,
+                module = this.module;
+
+            item_model = item() || item.initial_item_model;//could not be set yet
+            item.writeItemViewTitle();
+            var _updateItemContentDeferred = function( $_content, to, from ) {
+                  if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
+                      item.trigger( 'contentRendered' );
+                      item.contentContainer = $_content;
+                      item.toggleItemExpansion( to, from );
+                  }
+                  else {
+                      throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
+                  }
+            };
+
+            if ( item.module.isMultiItem() ) {
+                  item.viewState.callbacks.add( function( to, from ) {
+                        var _isExpanded = -1 !== to.indexOf( 'expanded' );
+                        if ( module.hasModOpt() && _isExpanded ) {
+                              api.czr_ModOptVisible( false );
+                        }
+
+                        if ( _isExpanded ) {
+                              if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
+                                    item.toggleItemExpansion(to, from );
+                              } else {
+                                    $.when( item.renderItemContent( item() || item.initial_item_model ) ).done( function( $_item_content ) {
+                                          _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
+                                          _updateItemContentDeferred( $_item_content, to, from );
+                                    });
+                              }
+                        } else {
+                              item.toggleItemExpansion( to, from ).done( function() {
+                                    if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
+                                          item.trigger( 'beforeContenRemoved' );
+                                          $( '.' + module.control.css_attr.item_content, item.container ).children().each( function() {
+                                                $(this).remove();
+                                          });
+                                          $( '.' + module.control.css_attr.item_content, item.container ).html('');
+                                          item.contentContainer = null;
+                                          item.trigger( 'contentRemoved' );
+                                    }
+                              });
+                        }
+                  });
+            } else {
+                  item.viewState.callbacks.add( function( to, from ) {
+                        item.toggleItemExpansion.apply(item, arguments );
+                  });
+                  $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
+                        _updateItemContentDeferred( $_item_content, true );
+                  });
+            }
+            api.CZR_Helpers.setupDOMListeners(
+                  item.userEventMap(),//actions to execute
+                  { model:item_model, dom_el:item.container },//model + dom scope
+                  item //instance where to look for the cb methods
+            );
+            item.removeDialogVisible.bind( function( visible ) {
+                  var module = item.module,
+                      $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, item.container ).first();
+                  if ( visible )
+                    module.closeAllItems();
+                  if ( visible && module.hasModOpt() ) {
+                        api.czr_ModOptVisible( false );
+                  }
+                  if ( visible && _.has( module, 'preItem' ) ) {
+                        module.preItemExpanded(false);
+                  }
+                  $('.' + module.control.css_attr.remove_alert_wrapper, item.container ).not( $_alert_el ).each( function() {
+                        if ( $(this).hasClass( 'open' ) ) {
+                              $(this).slideToggle( {
+                                    duration : 200,
+                                    done : function() {
+                                          $(this).toggleClass('open' , false );
+                                          $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass( 'active' , false );
+                                    }
+                              } );
+                        }
+                  });
+                  if ( visible ) {
+                        if ( ! wp.template( module.AlertPart )  || ! item.container ) {
+                              api.consoleLog( 'No removal alert template available for items in module :' + module.id );
+                              return;
+                        }
+
+                        $_alert_el.html( wp.template( module.AlertPart )( { title : ( item().title || item.id ) } ) );
+                  }
+                  var _slideComplete = function( visible ) {
+                        $_alert_el.toggleClass( 'open' , visible );
+                        item.container.find('.' + module.control.css_attr.display_alert_btn ).toggleClass( 'active', visible );
+                        if ( visible )
+                          module._adjustScrollExpandedBlock( item.container );
+                  };
+                  if ( visible )
+                    $_alert_el.stop( true, true ).slideDown( 200, function() { _slideComplete( visible ); } );
+                  else
+                    $_alert_el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
+            });//item.removeDialogVisible.bind()
+      },//itemWrapperViewSetup
+      renderItemWrapper : function( item_model ) {
+            var item = this,
+                module = item.module;
+
+            item_model = item_model || item();
+            $_view_el = $('<li>', { class : module.control.css_attr.single_item, 'data-id' : item_model.id,  id : item_model.id } );
+            module.itemsWrapper.append( $_view_el );
+            if ( module.isMultiItem() ) {
+                  var _template_selector = module.getTemplateEl( 'rudItemPart', item_model );
+                  if ( 0 === $( '#tmpl-' + _template_selector ).length ) {
+                      throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateEl( 'rudItemPart', item_model ) );
+                  }
+                  $_view_el.append( $( wp.template( _template_selector )( item_model ) ) );
+            }
+            $_view_el.append( $( '<div/>', { class: module.control.css_attr.item_content } ) );
+
+            return $_view_el;
+      },
+      renderItemContent : function( item_model ) {
+              var item = this,
+                  module = this.module;
+
+              item_model = item_model || item();
+              if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) ).length ) {
+                  throw new Error('No item content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) );
+              }
+
+              var  item_content_template = wp.template( module.getTemplateEl( 'itemInputList', item_model ) );
+              if ( ! item_content_template )
+                return this;
+              $( item_content_template( item_model )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
+
+              return $( $( item_content_template( item_model )), item.container );
+      },
+      writeItemViewTitle : function( item_model ) {
+            var item = this,
+                module = item.module,
+                _model = item_model || item(),
+                _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
+
+            _title = api.CZR_Helpers.truncate( _title, 20 );
+            $( '.' + module.control.css_attr.item_title , item.container ).text( _title );
+            api.CZR_Helpers.doActions('after_writeViewTitle', item.container , _model, item );
+      },
+      setViewVisibility : function( obj, is_added_by_user ) {
+              var item = this,
+                  module = this.module;
+              if ( is_added_by_user ) {
+                    item.viewState.set( 'expanded_noscroll' );
+              } else {
+                    module.closeAllItems( item.id );
+                    if ( _.has(module, 'preItem') ) {
+                      module.preItemExpanded.set(false);
+                    }
+                    item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
+              }
+      },
+
+
+      _getViewState : function() {
+              return -1 == this.viewState().indexOf('expanded') ? 'closed' : 'expanded';
+      },
+      toggleItemExpansion : function( status, from, duration ) {
+            var visible = 'closed' != status,
+                item = this,
+                module = this.module,
+                $el = $( '.' + module.control.css_attr.item_content , item.container ).first(),
+                dfd = $.Deferred(),
+                _slideComplete = function( visible ) {
+                      item.container.toggleClass( 'open' , visible );
+                      if ( visible )
+                        module.closeRemoveDialogs();
+                      var $_edit_icon = $el.siblings().find('.' + module.control.css_attr.edit_view_btn );
+
+                      $_edit_icon.toggleClass('active' , visible );
+                      if ( visible )
+                        $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.i18n.close );
+                      else
+                        $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.i18n.edit );
+                      if ( 'expanded' == status )
+                        module._adjustScrollExpandedBlock( item.container );
+
+                      dfd.resolve();
+                };
+
+            if ( visible )
+              $el.stop( true, true ).slideDown( duration || 200, function() { _slideComplete( visible ); } );
+            else
+              $el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
+
+            return dfd.promise();
+      },
+      _destroyView : function ( duration ) {
+              this.container.fadeOut( {
+                  duration : duration ||400,
+                  done : function() {
+                    $(this).remove();
+                  }
+              });
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//extends api.Value
+
+var CZRModOptMths = CZRModOptMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRModOptMths , {
+      initialize: function( options ) {
+            if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
+              throw new Error('No module assigned to modOpt.');
+            }
+
+            var modOpt = this;
+            api.Value.prototype.initialize.call( modOpt, null, options );
+            modOpt.isReady = $.Deferred();
+            modOpt.container = null;//will store the modOpt $ dom element
+            modOpt.inputCollection = new api.Value({});
+            $.extend( modOpt, options || {} );
+            modOpt.defaultModOptModel = _.clone( options.defaultModOptModel ) || { is_mod_opt : true };
+            var _initial_model = $.extend( modOpt.defaultModOptModel, options.initial_modOpt_model );
+            var ctrl = modOpt.module.control;
+            modOpt.set( _initial_model );
+            api.czr_ModOptVisible = new api.Value( false );
+            api.czr_ModOptVisible.bind( function( visible, from, args ) {
+                  args = args || {};
+                  if ( visible ) {
+                        modOpt.module.closeRemoveDialogs().closeAllItems();
+
+                        modOpt.modOptWrapperViewSetup( _initial_model ).done( function( $_container ) {
+                              modOpt.container = $_container;
+                              try {
+                                    api.CZR_Helpers.setupInputCollectionFromDOM.call( modOpt ).toggleModPanelView( visible );
+                              } catch(e) {
+                                    api.consoleLog(e);
+                              }
+                              if ( args.module && args.focus ) {
+                                    _.delay( function() {
+                                          if ( _.isNull(  args.module.czr_ModOpt.container ) || ! args.module.czr_ModOpt.container.find('[data-tab-id="' + args.focus + '"] a').length )
+                                            return;
+                                          args.module.czr_ModOpt.container.find('[data-tab-id="' + args.focus + '"] a').trigger('click');
+                                    }, 200 );
+                              }
+                        });
+
+                  } else {
+                        modOpt.toggleModPanelView( visible ).done( function() {
+                              if ( false !== modOpt.container.length ) {
+                                    $.when( modOpt.container.remove() ).done( function() {
+                                          api.CZR_Helpers.removeInputCollection.call( modOpt );
+                                    });
+                              } else {
+                                    api.CZR_Helpers.removeInputCollection.call( modOpt );
+                              }
+                              modOpt.container = null;
+                        });
+                  }
+            } );
+            modOpt.isReady.done( function() {
+                  if( ! $( '.' + ctrl.css_attr.edit_modopt_icon, ctrl.container ).length ) {
+                        $.when( ctrl.container
+                              .find('.customize-control-title').first()//was.find('.customize-control-title')
+                              .append( $( '<span/>', {
+                                    class : [ ctrl.css_attr.edit_modopt_icon, 'fa fa-cog' ].join(' '),
+                                    title : serverControlParams.i18n['Settings']
+                              } ) ) )
+                        .done( function(){
+                              $( '.' + ctrl.css_attr.edit_modopt_icon, ctrl.container ).fadeIn( 400 );
+                        });
+                  }
+                  api.CZR_Helpers.setupDOMListeners(
+                        [
+                              {
+                                    trigger   : 'click keydown',
+                                    selector  : '.' + ctrl.css_attr.edit_modopt_icon,
+                                    name      : 'toggle_mod_option',
+                                    actions   : function() {
+                                          api.czr_ModOptVisible( ! api.czr_ModOptVisible() );
+                                    }
+                              }
+                        ],//actions to execute
+                        { dom_el: ctrl.container },//dom scope
+                        modOpt //instance where to look for the cb methods
+                  );
+            });//modOpt.isReady.done()
+
+      },//initialize
+      ready : function() {
+            this.isReady.resolve();
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//extends api.CZRBaseControl
+
+var CZRModOptMths = CZRModOptMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRModOptMths , {
+      modOptWrapperViewSetup : function( modOpt_model ) {
+              var modOpt = this,
+                  module = this.module,
+                  dfd = $.Deferred(),
+                  _setupDOMListeners = function( $_container ) {
+                        api.CZR_Helpers.setupDOMListeners(
+                             [
+                                    {
+                                          trigger   : 'click keydown',
+                                          selector  : '.' + module.control.css_attr.close_modopt_icon,
+                                          name      : 'close_mod_option',
+                                          actions   : function() {
+                                                api.czr_ModOptVisible( false );
+                                          }
+                                    },
+                                    {
+                                          trigger   : 'click keydown',
+                                          selector  : '.tabs nav li',
+                                          name      : 'tab_nav',
+                                          actions   : function( args ) {
+                                                this.module.toggleTabVisibility.call( this, args );
+                                          }
+                                    }
+                              ],//actions to execute
+                              { dom_el: $_container },//model + dom scope
+                              modOpt //instance where to look for the cb methods
+                        );
+                  };
+
+              modOpt_model = modOpt() || modOpt.initial_modOpt_model;//could not be set yet
+              $.when( modOpt.renderModOptContent( modOpt_model ) )
+                    .done( function( $_container ) {
+                          if ( ! _.isUndefined( $_container ) && false !== $_container.length ) {
+                                _setupDOMListeners( $_container );
+                                dfd.resolve( $_container );
+                          }
+                          else {
+                                throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
+                          }
+                    })
+                    .then( function() {
+                          modOpt.module.setupTabNav.call( modOpt );
+                    });
+
+              return dfd.promise();
+      },
+      renderModOptContent : function( modOpt_model ) {
+              var modOpt = this,
+                  module = this.module;
+
+              modOpt_model = modOpt_model || modOpt();
+              if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) ).length ) {
+                    api.errorLog('renderModOptContent : No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) );
+                    return;
+              }
+              var  modOpt_content_template = wp.template( module.getTemplateEl( 'modOptInputList', modOpt_model ) );
+              if ( ! modOpt_content_template )
+                return this;
+
+              var _ctrlLabel = '';
+              try {
+                    _ctrlLabel = [ serverControlParams.i18n['Options for'], module.control.params.label ].join(' ');
+              } catch( er ) {
+                    api.errorLog( 'In renderModOptContent : ' + er );
+                    _ctrlLabel = serverControlParams.i18n['Settings'];
+              }
+
+              $('#widgets-left').after( $( '<div/>', {
+                    class : module.control.css_attr.mod_opt_wrapper,
+                    html : [
+                          [ '<h2 class="mod-opt-title">', _ctrlLabel , '</h2>' ].join(''),
+                          '<span class="fa fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
+                    ].join('')
+              } ) );
+              $( '.' + module.control.css_attr.mod_opt_wrapper ).append( $( modOpt_content_template( modOpt_model ) ) );
+
+              return $( '.' + module.control.css_attr.mod_opt_wrapper );
+      },
+
+
+
+      toggleModPanelView : function( visible ) {
+            var modOpt = this,
+                module = this.module,
+                ctrl = module.control,
+                dfd = $.Deferred();
+
+            module.control.container.toggleClass( 'czr-modopt-visible', visible );
+            $('body').toggleClass('czr-editing-modopt', visible );
+            _.delay( function() {
+                  dfd.resolve();
+            }, 200 );
+            return dfd.promise();
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
+var CZRModuleMths = CZRModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRModuleMths, {
+      initialize: function( id, constructorOptions ) {
+            if ( _.isUndefined(constructorOptions.control) || _.isEmpty(constructorOptions.control) ) {
+                throw new Error('No control assigned to module ' + id );
+            }
+            var module = this;
+            api.Value.prototype.initialize.call( this, null, constructorOptions );
+            module.isReady = $.Deferred();
+            $.extend( module, constructorOptions || {} );
+            $.extend( module, {
+                  crudModulePart : 'czr-crud-module-part',//create, read, update, delete
+                  rudItemPart : 'czr-rud-item-part',//read, update, delete
+                  ruItemPart : 'czr-ru-item-part',//read, update
+                  itemInputList : '',//is specific for each crud module
+                  modOptInputList : '',//is specific for each module
+                  AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
+
+            } );
+            module.embedded = $.Deferred();
+            module.itemsWrapper = '';//will store the $ item container
+            if ( ! module.isInSektion() ) {
+                  module.container = $( module.control.selector );
+                  module.embedded.resolve();
+            }
+            module.embedded.done( function() {
+                  $.when( module.renderModuleParts() ).done(function( $_module_items_wrapper ){
+                        if ( false === $_module_items_wrapper.length ) {
+                            throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
+                        }
+                        module.itemsWrapper = $_module_items_wrapper;
+                  });
+            });
+
+            /*-----------------------------------------------
+            * MODULE OPTIONS
+            ------------------------------------------------*/
+            module.defaultAPImodOptModel = {
+                  initial_modOpt_model : {},
+                  defaultModOptModel : {},
+                  control : {},//control instance
+                  module : {}//module instance
+            };
+            module.defaultModOptModel = {};
+            module.modOptConstructor = api.CZRModOpt;
+
+            /*-----------------------------------------------
+            * ITEMS
+            ------------------------------------------------*/
+            module.itemCollection = new api.Value( [] );
+            module.defaultAPIitemModel = {
+                  id : '',
+                  initial_item_model : {},
+                  defaultItemModel : {},
+                  control : {},//control instance
+                  module : {},//module instance
+                  is_added_by_user : false
+            };
+            module.defaultItemModel = { id : '', title : '' };
+            module.itemConstructor = api.CZRItem;
+            module.czr_Item = new api.Values();
+
+
+            /*-----------------------------------------------
+            * SET THE DEFAULT INPUT CONSTRUCTOR AND INPUT OPTIONS
+            ------------------------------------------------*/
+            module.inputConstructor = api.CZRInput;//constructor for the items input
+            if ( module.hasModOpt() ) {
+                  module.inputModOptConstructor = api.CZRInput;//constructor for the modOpt input
+            }
+            module.inputOptions = {};//<= can be set by each module specifically
+
+
+            /*-----------------------------------------------
+            * FIRE ON isReady
+            ------------------------------------------------*/
+            module.isReady.done( function() {
+                  module.isDirty = new api.Value( constructorOptions.dirty || false );
+                  module.initializeModuleModel( constructorOptions )
+                        .done( function( initialModuleValue ) {
+                              module.set( initialModuleValue );
+                        })
+                        .fail( function( response ){ api.consoleLog( 'Module : ' + module.id + ' initialize module model failed : ', response ); })
+                        .always( function( initialModuleValue ) {
+                              module.callbacks.add( function() { return module.moduleReact.apply( module, arguments ); } );
+                              if (  ! module.control.isModuleRegistered( module.id ) ) {
+                                  module.control.updateModulesCollection( { module : constructorOptions, is_registered : false } );
+                              }
+
+                              module.bind('items-collection-populated', function( collection ) {
+                                    module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply( module, arguments ); } );
+                                    if ( module.isMultiItem() ) {
+                                          module._makeItemsSortable();
+                                    }
+                              });
+                              if ( ! module.isInSektion() )
+                                module.populateSavedItemCollection();
+                              if ( module.hasModOpt() ) {
+                                  module.instantiateModOpt();
+                              }
+                        });
+            });//module.isReady.done()
+      },
+      ready : function() {
+            var module = this;
+            module.isReady.resolve();
+      },
+      initializeModuleModel : function( constructorOptions ) {
+            var module = this, dfd = $.Deferred();
+            if ( ! module.isMultiItem() && ! module.isCrud() ) {
+                  if ( _.isEmpty( constructorOptions.items ) ) {
+                        var def = _.clone( module.defaultItemModel );
+                        constructorOptions.items = [ $.extend( def, { id : module.id } ) ];
+                  }
+            }
+            return dfd.resolve( constructorOptions ).promise();
+      },
+      itemCollectionReact : function( to, from, data ) {
+            var module = this,
+                _current_model = module(),
+                _new_model = $.extend( true, {}, _current_model );
+            _new_model.items = to;
+            module.isDirty.set(true);
+            module.set( _new_model, data || {} );
+      },
+      moduleReact : function( to, from, data ) {
+            var module            = this,
+                control           = module.control,
+                isItemUpdate    = ( _.size( from.items ) == _.size( to.items ) ) && ! _.isEmpty( _.difference( to.items, from.items ) ),
+                isColumnUpdate  = to.column_id != from.column_id,
+                refreshPreview    = function() {
+                      module.control.previewer.refresh();
+                };
+            control.updateModulesCollection( {
+                  module : $.extend( true, {}, to ),
+                  data : data//useful to pass contextual info when a change happens
+            } );
+      },
+      getModuleSection : function() {
+            return this.section;
+      },
+      isInSektion : function() {
+            var module = this;
+            return _.has( module, 'sektion_id' );
+      },
+      isMultiItem : function() {
+            return api.CZR_Helpers.isMultiItemModule( null, this );
+      },
+      isCrud : function() {
+            return api.CZR_Helpers.isCrudModule( null, this );
+      },
+
+      hasModOpt : function() {
+            return api.CZR_Helpers.hasModuleModOpt( null, this );
+      },
+      instantiateModOpt : function() {
+            var module = this;
+            var modOpt_candidate = module.prepareModOptForAPI( module().modOpt || {} );
+            module.czr_ModOpt = new module.modOptConstructor( modOpt_candidate );
+            module.czr_ModOpt.ready();
+            module.czr_ModOpt.callbacks.add( function( to, from, data ) {
+                  var _current_model = module(),
+                      _new_model = $.extend( true, {}, _current_model );
+                  _new_model.modOpt = to;
+                  module.isDirty(true);
+                  module( _new_model, data );
+            });
+      },
+      prepareModOptForAPI : function( modOpt_candidate ) {
+            var module = this,
+                api_ready_modOpt = {};
+            modOpt_candidate = _.isObject( modOpt_candidate ) ? modOpt_candidate : {};
+
+            _.each( module.defaultAPImodOptModel, function( _value, _key ) {
+                  var _candidate_val = modOpt_candidate[_key];
+                  switch( _key ) {
+                        case 'initial_modOpt_model' :
+                            _.each( module.getDefaultModOptModel() , function( _value, _property ) {
+                                  if ( ! _.has( modOpt_candidate, _property) )
+                                     modOpt_candidate[_property] = _value;
+                            });
+                            api_ready_modOpt[_key] = modOpt_candidate;
+
+                        break;
+                        case  'defaultModOptModel' :
+                            api_ready_modOpt[_key] = _.clone( module.defaultModOptModel );
+                        break;
+                        case  'control' :
+                            api_ready_modOpt[_key] = module.control;
+                        break;
+                        case  'module' :
+                            api_ready_modOpt[_key] = module;
+                        break;
+                  }//switch
+            });
+            return api_ready_modOpt;
+      },
+      getDefaultModOptModel : function( id ) {
+            var module = this;
+            return $.extend( _.clone( module.defaultModOptModel ), { is_mod_opt : true } );
+      },
+      sendInputToPreview : function( args ) {
+            var module = this;
+            args = _.extend(
+              {
+                    input_id        : '',
+                    input_parent_id : '',//<= can be the mod opt or an item
+                    to              : null,
+                    from            : null
+              } , args );
+
+            if ( _.isEqual( args.to, args.from ) )
+              return;
+            module.control.previewer.send( 'czr_input', {
+                  set_id        : api.CZR_Helpers.getControlSettingId( module.control.id ),
+                  module_id     : module.id,//<= will allow us to target the right dom element on front end
+                  module        : { items : $.extend( true, {}, module().items ) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
+                  input_parent_id : args.input_parent_id,//<= can be the mod opt or the item
+                  input_id      : args.input_id,
+                  value         : args.to,
+                  isPartialRefresh : args.isPartialRefresh//<= let us know if it is a full wrapper refresh or a single input update ( true when fired from sendModuleInputsToPreview )
+            });
+            module.trigger( 'input_sent', { input : args.to , dom_el: module.container } );
+      },
+      sendModuleInputsToPreview : function( args ) {
+            var module = this,
+                _sendInputData = function() {
+                      var inputParent = this,//this is the input parent : item or modOpt
+                          inputParentModel = $.extend( true, {}, inputParent() );
+                      inputParentModel = _.omit( inputParentModel, 'id' );
+
+                      _.each( inputParentModel, function( inputVal, inputId ) {
+                            module.sendInputToPreview( {
+                                  input_id : inputId,
+                                  input_parent_id : inputParent.id,
+                                  to : inputVal,
+                                  from : null,
+                                  isPartialRefresh : args.isPartialRefresh
+                            });
+                      });
+                };
+
+            module.czr_Item.each( function( _itm_ ) {
+                  _sendInputData.call( _itm_ );
+            });
+
+            if ( module.hasModOpt() ) {
+                  _sendInputData.call( module.czr_ModOpt );
+            }
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
+
+var CZRModuleMths = CZRModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRModuleMths, {
+      populateSavedItemCollection : function() {
+              var module = this, _saved_items = [];
+              if ( ! _.isArray( module().items ) ) {
+                    api.errorLog( 'populateSavedItemCollection : The saved items collection must be an array in module :' + module.id );
+                    return;
+              }
+              _.each( module().items, function( item_candidate , key ) {
+                    if ( _.has( item_candidate, 'id') && ! _.has( item_candidate, 'is_mod_opt' ) ) {
+                          _saved_items.push( item_candidate );
+                    }
+              });
+              _.each( _saved_items, function( item_candidate , key ) {
+                    try { module.instantiateItem( item_candidate ).ready(); } catch( er ) {
+                          api.errorLog( 'populateSavedItemCollection : ' + er );
+                    }
+              });
+              _.each( _saved_items, function( _item ) {
+                    if ( _.isUndefined( _.findWhere( module.itemCollection(), _item.id ) ) ) {
+                          throw new Error( 'populateSavedItemCollection : The saved items have not been properly populated in module : ' + module.id );
+                    }
+              });
+
+              module.trigger( 'items-collection-populated' );
+      },
+
+
+      instantiateItem : function( item, is_added_by_user ) {
+              var module = this;
+              item_candidate = module.prepareItemForAPI( item );
+              if ( ! _.has( item_candidate, 'id' ) ) {
+                throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
+              }
+              if ( module.czr_Item.has( item_candidate.id ) ) {
+                  throw new Error('CZRModule::instantiateItem() : the following item id ' + item_candidate.id + ' already exists in module.czr_Item() for module ' + this.id  );
+              }
+              module.czr_Item.add( item_candidate.id, new module.itemConstructor( item_candidate.id, item_candidate ) );
+
+              if ( ! module.czr_Item.has( item_candidate.id ) ) {
+                  throw new Error('CZRModule::instantiateItem() : instantiation failed for item id ' + item_candidate.id + ' for module ' + this.id  );
+              }
+              return module.czr_Item( item_candidate.id );
+      },
+      prepareItemForAPI : function( item_candidate ) {
+              var module = this,
+                  api_ready_item = {};
+              item_candidate = _.isObject( item_candidate ) ? item_candidate : {};
+
+              _.each( module.defaultAPIitemModel, function( _value, _key ) {
+                    var _candidate_val = item_candidate[_key];
+                    switch( _key ) {
+                          case 'id' :
+                              if ( _.isEmpty( _candidate_val ) ) {
+                                  api_ready_item[_key] = module.generateItemId( module.module_type );
+                              } else {
+                                  api_ready_item[_key] = _candidate_val;
+                              }
+                          break;
+                          case 'initial_item_model' :
+                              _.each( module.getDefaultItemModel() , function( _value, _property ) {
+                                    if ( ! _.has( item_candidate, _property) )
+                                       item_candidate[_property] = _value;
+                              });
+                              api_ready_item[_key] = item_candidate;
+
+                          break;
+                          case  'defaultItemModel' :
+                              api_ready_item[_key] = _.clone( module.defaultItemModel );
+                          break;
+                          case  'control' :
+                              api_ready_item[_key] = module.control;
+                          break;
+                          case  'module' :
+                              api_ready_item[_key] = module;
+                          break;
+                          case 'is_added_by_user' :
+                              api_ready_item[_key] =  _.isBoolean( _candidate_val ) ? _candidate_val : false;
+                          break;
+                    }//switch
+              });
+              if ( ! _.has( api_ready_item, 'id' ) ) {
+                    api_ready_item.id = module.generateItemId( module.module_type );
+              }
+              api_ready_item.initial_item_model.id = api_ready_item.id;
+
+              return api_ready_item;
+      },
+      generateItemId : function( module_type, key, i ) {
+              i = i || 1;
+              if ( i > 100 ) {
+                    throw new Error( 'Infinite loop when generating of a module id.' );
+              }
+              var module = this;
+              key = key || module._getNextItemKeyInCollection();
+              var id_candidate = module_type + '_' + key;
+              if ( ! _.has(module, 'itemCollection') || ! _.isArray( module.itemCollection() ) ) {
+                    throw new Error('The item collection does not exist or is not properly set in module : ' + module.id );
+              }
+              if ( module.isItemRegistered( id_candidate ) ) {
+                key++; i++;
+                return module.generateItemId( module_type, key, i );
+              }
+              return id_candidate;
+      },
+      _getNextItemKeyInCollection : function() {
+              var module = this,
+                _maxItem = {},
+                _next_key = 0;
+              if ( _.isEmpty( module.itemCollection() ) )
+                return _next_key;
+              if ( _.isArray( module.itemCollection() ) && 1 === _.size( module.itemCollection() ) ) {
+                    _maxItem = module.itemCollection()[0];
+              } else {
+                    _maxItem = _.max( module.itemCollection(), function( _item ) {
+                          if ( ! _.isNumber( _item.id.replace(/[^\/\d]/g,'') ) )
+                            return 0;
+                          return parseInt( _item.id.replace( /[^\/\d]/g, '' ), 10 );
+                    });
+              }
+              if ( ! _.isUndefined( _maxItem ) && _.isNumber( _maxItem.id.replace(/[^\/\d]/g,'') ) ) {
+                    _next_key = parseInt( _maxItem.id.replace(/[^\/\d]/g,''), 10 ) + 1;
+              }
+              return _next_key;
+      },
+      isItemRegistered : function( id_candidate ) {
+            var module = this;
+            return ! _.isUndefined( _.findWhere( module.itemCollection(), { id : id_candidate}) );
+      },
+      updateItemsCollection : function( args ) {
+              var module = this,
+                  _current_collection = module.itemCollection(),
+                  _new_collection = _.clone(_current_collection),
+                  dfd = $.Deferred();
+              if ( _.has( args, 'collection' ) ) {
+                    module.itemCollection.set( args.collection );
+                    return;
+              }
+
+              if ( ! _.has( args, 'item' ) ) {
+                  throw new Error('updateItemsCollection, no item provided ' + module.control.id + '. Aborting');
+              }
+              args = _.extend( { data : {} }, args );
+
+              var item = _.clone( args.item );
+              if ( _.findWhere( _new_collection, { id : item.id } ) ) {
+                    _.each( _current_collection , function( _item, _ind ) {
+                          if ( _item.id != item.id )
+                            return;
+                          _new_collection[_ind] = item;
+                    });
+              }
+              else {
+                  _new_collection.push(item);
+              }
+              module.itemCollection.set( _new_collection, args.data );
+              return dfd.resolve( { collection : _new_collection, data : args.data } ).promise();
+      },
+      _getSortedDOMItemCollection : function( ) {
+              var module = this,
+                  _old_collection = _.clone( module.itemCollection() ),
+                  _new_collection = [],
+                  dfd = $.Deferred();
+              $( '.' + module.control.css_attr.single_item, module.container ).each( function( _index ) {
+                    var _item = _.findWhere( _old_collection, {id: $(this).attr('data-id') });
+                    if ( ! _item )
+                      return;
+
+                    _new_collection[_index] = _item;
+              });
+
+              if ( _old_collection.length != _new_collection.length ) {
+                  throw new Error('There was a problem when re-building the item collection from the DOM in module : ' + module.id );
+              }
+              return dfd.resolve( _new_collection ).promise();
+      },
+      refreshItemCollection : function() {
+            var module = this;
+            module.czr_Item.each( function( _itm ) {
+                  $.when( module.czr_Item( _itm.id ).container.remove() ).done( function() {
+                        module.czr_Item.remove( _itm.id );
+                  });
+            });
+            module.itemCollection = new api.Value( [] );
+            module.populateSavedItemCollection();
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
+
+var CZRModuleMths = CZRModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRModuleMths, {
+      getDefaultItemModel : function( id ) {
+              var module = this;
+              return $.extend( _.clone( module.defaultItemModel ), { id : id || '' } );
+      },
+      _initNewItem : function( _item , _next_key ) {
+              var module = this,
+                  _new_item = { id : '' },
+                  _id;
+              _next_key = 'undefined' != typeof(_next_key) ? _next_key : _.size( module.itemCollection() );
+
+              if ( _.isNumber(_next_key) ) {
+                _id = module.module_type + '_' + _next_key;
+              }
+              else {
+                _id = _next_key;
+                _next_key = 0;
+              }
+
+              if ( _item && ! _.isEmpty( _item) )
+                _new_item = $.extend( _item, { id : _id } );
+              else
+                _new_item = this.getDefaultItemModel( _id );
+              if ( _.has(_new_item, 'id') && module._isItemIdPossible(_id) ) {
+                    _.map( module.getDefaultItemModel() , function( value, property ){
+                          if ( ! _.has(_new_item, property) )
+                            _new_item[property] = value;
+                    });
+
+                return _new_item;
+              }
+              return module._initNewItem( _new_item, _next_key + 1);
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
+
+var CZRModuleMths = CZRModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRModuleMths, {
+      renderModuleParts : function() {
+              var module = this,
+                  $_moduleContentEl = module.isInSektion() ? $( module.container ).find('.czr-mod-content') : $( module.container );
+              if ( module.isCrud() ) {
+                    if ( 0 === $( '#tmpl-' + module.crudModulePart ).length ) {
+                      throw new Error('No crud Module Part template for module ' + module.id + '. The template script id should be : #tmpl-' + module.crudModulePart );
+                    }
+                    $_moduleContentEl.append( $( wp.template( module.crudModulePart )( {} ) ) );
+              }
+              var $_module_items_wrapper = $(
+                '<ul/>',
+                {
+                  class : [
+                    module.control.css_attr.items_wrapper,
+                    module.module_type,
+                    module.isMultiItem() ? 'multi-item-mod' : 'mono-item-mod',
+                    module.isCrud() ? 'crud-mod' : 'not-crud-mod'
+                  ].join(' ')
+                }
+              );
+
+              $_moduleContentEl.append($_module_items_wrapper);
+
+              return $( $_module_items_wrapper, $_moduleContentEl );
+      },
+      getTemplateEl : function( type, item_model ) {
+              var module = this, _el;
+              switch(type) {
+                    case 'rudItemPart' :
+                      _el = module.rudItemPart;
+                      break;
+                    case 'ruItemPart' :
+                      _el = module.ruItemPart;
+                      break;
+                    case 'modOptInputList' :
+                      _el = module.modOptInputList;
+                      break;
+                    case 'itemInputList' :
+                      _el = module.itemInputList;
+                      break;
+              }
+              if ( _.isEmpty(_el) ) {
+                   throw new Error('No valid template has been found in getTemplateEl() ' + module.id + '. Aborting');
+              } else {
+                  return _el;
+              }
+      },
+      getViewEl : function( id ) {
+              var module = this;
+              return $( '[data-id = "' + id + '"]', module.container );
+      },
+      closeAllItems : function( id ) {
+              var module = this,
+                  _current_collection = _.clone( module.itemCollection() ),
+                  _filtered_collection = _.filter( _current_collection , function( mod) { return mod.id != id; } );
+
+              _.each( _filtered_collection, function( _item ) {
+                    if ( module.czr_Item.has(_item.id) && 'expanded' == module.czr_Item(_item.id)._getViewState(_item.id) )
+                      module.czr_Item( _item.id ).viewState.set( 'closed' ); // => will fire the cb toggleItemExpansion
+              } );
+              return this;
+      },
+      _adjustScrollExpandedBlock : function( $_block_el, adjust ) {
+              if ( ! $_block_el.length || _.isUndefined( this.getModuleSection() ) )
+                return;
+              var module = this,
+                   $_moduleSection = $( '.accordion-section-content', module.section.container ),//was api.section( control.section() )
+                  _currentScrollTopVal = $_moduleSection.scrollTop(),
+                  _scrollDownVal,
+                  _adjust = adjust || 90;
+
+              setTimeout( function() {
+                    if ( ( $_block_el.offset().top + $_block_el.height() + _adjust ) > $(window.top).height() ) {
+                        _scrollDownVal = $_block_el.offset().top + $_block_el.height() + _adjust - $(window.top).height();
+                        if ( _scrollDownVal > 0 ) {
+                            $_moduleSection.animate({
+                                scrollTop:  _currentScrollTopVal + _scrollDownVal
+                            }, 500);
+                        }
+                    }
+              }, 50);
+      },
+      closeRemoveDialogs : function() {
+              var module = this;
+              if ( ! _.isArray( module.itemCollection() ) )
+                return;
+
+              module.czr_Item.each( function( _item_ ) {
+                    _item_.removeDialogVisible( false );
+              });
+              return this;
+      },
+      _makeItemsSortable : function(obj) {
+              if ( wp.media.isTouchDevice || ! $.fn.sortable )
+                return;
+              var module = this;
+              $( '.' + module.control.css_attr.items_wrapper, module.container ).sortable( {
+                    handle: '.' + module.control.css_attr.item_sort_handle,
+                    start: function() {
+                          if ( _.has(api, 'czrModulePanelState' ) )
+                            api.czrModulePanelState.set(false);
+                          if ( _.has(api, 'czrSekSettingsPanelState' ) )
+                            api.czrSekSettingsPanelState.set(false);
+                    },
+                    update: function( event, ui ) {
+                          var _sortedCollectionReact = function() {
+                                if ( _.has(module, 'preItem') ) {
+                                      module.preItemExpanded.set(false);
+                                }
+
+                                module.closeAllItems().closeRemoveDialogs();
+                                var refreshPreview = function() {
+                                      api.previewer.refresh();
+                                };
+                                if ( 'postMessage' == api(module.control.id).transport  && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
+                                      refreshPreview = _.debounce( refreshPreview, 500 );//500ms are enough
+                                      refreshPreview();
+                                }
+
+                                module.trigger( 'item-collection-sorted' );
+                          };
+                          module._getSortedDOMItemCollection()
+                                .done( function( _collection_ ) {
+                                      module.itemCollection.set( _collection_ );
+                                })
+                                .then( function() {
+                                      _sortedCollectionReact();
+                                });
+                    }//update
+                  }
+              );
+        },
+
+
+
+      /*-----------------------------------------------
+      * TABS NAVIGATION IN ITEMS AND MODOPT
+      ------------------------------------------------*/
+      toggleTabVisibility : function( args ) {
+            var inputParent = this,
+                tabs = $( inputParent.container ).find('li'),
+                content_items = $( inputParent.container ).find('section'),
+                tabIdSwitchedTo = $( args.dom_event.currentTarget, args.dom_el ).attr('data-tab-id');
+
+            $( '.tabs nav li', inputParent.container ).each( function() {
+                  $(this).removeClass('tab-current').addClass('tab-inactive');
+            });
+            $( inputParent.container ).find('li[data-tab-id="' + tabIdSwitchedTo + '"]').addClass('tab-current').removeClass('tab-inactive');
+
+            $( 'section', inputParent.container ).each( function() {
+                    $(this).removeClass('content-current');
+            });
+            $( inputParent.container ).find('section[id="' + tabIdSwitchedTo + '"]').addClass('content-current');
+      },
+      setupTabNav : function() {
+            var inputParent = this,
+                preProcessTabs = function() {
+                      var dfd = $.Deferred(),
+                          $tabs = $( '.tabs nav li', inputParent.container );
+
+                      $tabs.each( function() {
+                            $(this).removeClass('tab-current').addClass('tab-inactive');
+                      });
+                      $tabs.first().addClass( 'tab-current' ).removeClass('tab-inactive');
+                      $( 'section', inputParent.container ).first().addClass( 'content-current' );
+                      var _nb = $tabs.length;
+                      $tabs.each( function() {
+                            $(this).addClass( _nb > 0 ? 'cols-' + _nb : '' );
+                      });
+                      return dfd.resolve().promise();
+                };
+            setTimeout(
+                  function() {
+                        preProcessTabs().done( function() {
+                              $('.tabs', inputParent.container ).fadeIn( 450 );
+                        });
+                  },
+                  20//<= introducing a small delay to let jQuery do its preprocessing job
+            );
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
+
+var CZRDynModuleMths = CZRDynModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRDynModuleMths, {
+      initialize: function( id, options ) {
+              var module = this;
+              api.CZRModule.prototype.initialize.call( module, id, options );
+              $.extend( module, {
+                  itemPreAddEl : ''//is specific for each crud module
+              } );
+
+              module.preItemsWrapper = '';//will store the pre items wrapper
+              module.itemAddedMessage = serverControlParams.i18n.successMessage;
+              module.userEventMap = new api.Value( [
+                    {
+                        trigger   : 'click keydown',
+                        selector  : [ '.' + module.control.css_attr.open_pre_add_btn, '.' + module.control.css_attr.cancel_pre_add_btn ].join(','),
+                        name      : 'pre_add_item',
+                        actions   : [ 'closeAllItems', 'closeRemoveDialogs', 'renderPreItemView','setPreItemViewVisibility' ],
+                    },
+                    {
+                        trigger   : 'click keydown',
+                        selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
+                        name      : 'add_item',
+                        actions   : [ 'closeRemoveDialogs', 'closeAllItems', 'addItem' ],
+                    }
+              ]);//module.userEventMap
+      },
+      ready : function() {
+              var module = this;
+              module.setupDOMListeners( module.userEventMap() , { dom_el : module.container } );
+              module.preItem = new api.Value( module.getDefaultItemModel() );
+              module.preItemEmbedded = $.Deferred();//was module.czr_preItem.create('item_content');
+              module.preItemEmbedded.done( function( $preWrapper ) {
+                    module.preItemsWrapper = $preWrapper;
+                    module.setupPreItemInputCollection();
+              });
+              module.preItemExpanded = new api.Value(false);
+              module.preItemExpanded.callbacks.add( function( to, from ) {
+                    module._togglePreItemViewExpansion( to );
+              });
+
+              api.CZRModule.prototype.ready.call( module );//fires the parent
+      },//ready()
+      setupPreItemInputCollection : function() {
+              var module = this;
+              module.preItem.czr_Input = new api.Values();
+              $('.' + module.control.css_attr.pre_add_wrapper, module.container)
+                    .find( '.' + module.control.css_attr.sub_set_wrapper)
+                    .each( function( _index ) {
+                          var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index;
+                          module.preItem.czr_Input.add( _id, new module.inputConstructor( _id, {//api.CZRInput;
+                                id : _id,
+                                type : $(this).attr('data-input-type'),
+                                container : $(this),
+                                input_parent : module.preItem,
+                                module : module,
+                                is_preItemInput : true
+                          } ) );
+                          module.preItem.czr_Input(_id).ready();
+                    });//each
+      },
+      addItem : function(obj) {
+              var module = this,
+                  item = module.preItem(),
+                  collapsePreItem = function() {
+                        module.preItemExpanded.set(false);
+                        module._resetPreItemInputs();
+                  },
+                  dfd = $.Deferred();
+
+              if ( _.isEmpty(item) || ! _.isObject(item) ) {
+                    api.errorLog( 'addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
+                    return dfd.resolve().promise();
+              }
+              collapsePreItem = _.debounce( collapsePreItem, 200 );
+              module.instantiateItem( item, true ).ready(); //true == Added by user
+              ( function() {
+                    return $.Deferred( function() {
+                          var _dfd_ = this;
+                          module.czr_Item( item.id ).isReady.then( function() {
+                                collapsePreItem();
+
+                                module.trigger('item-added', item );
+                                if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
+                                  module.control.previewer.refresh().done( function() {
+                                        _dfd_.resolve();
+                                  });
+                                } else {
+                                        _dfd_.resolve();
+                                }
+                          });
+                    }).promise();
+              })().done( function() {
+                      module.czr_Item( item.id ).viewState( 'expanded' );
+              }).always( function() {
+                      dfd.resolve();
+              });
+              return dfd.promise();
+      },
+
+      _resetPreItemInputs : function() {
+              var module = this;
+              module.preItem.set( module.getDefaultItemModel() );
+              module.preItem.czr_Input.each( function( input_instance ) {
+                    var _input_id = input_instance.id;
+                    if ( ! _.has( module.getDefaultItemModel(), _input_id ) )
+                      return;
+                    input_instance.set( module.getDefaultItemModel()._input_id );
+              });
+      }
+});//$.extend
+})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
+
+var CZRDynModuleMths = CZRDynModuleMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRDynModuleMths, {
+      renderPreItemView : function( obj ) {
+              var module = this;
+              if ( 'pending' != module.preItemEmbedded.state() ) //was ! _.isEmpty( module.czr_preItem('item_content')() ) )
+                return;
+              if ( ! _.has(module, 'itemPreAddEl') ||  0 === $( '#tmpl-' + module.itemPreAddEl ).length )
+                return this;
+              var pre_add_template = wp.template( module.itemPreAddEl );
+              if ( ! pre_add_template  || ! module.container )
+                return this;
+
+              var $_pre_add_el = $('.' + module.control.css_attr.pre_add_item_content, module.container );
+              $_pre_add_el.prepend( pre_add_template() );
+              module.preItemEmbedded.resolve( $_pre_add_el );
+      },
+      _getPreItemView : function() {
+              var module = this;
+              return $('.' +  module.control.css_attr.pre_add_item_content, module.container );
+      },
+      setPreItemViewVisibility : function(obj) {
+              var module = this;
+              module.preItemExpanded.set( ! module.preItemExpanded() );
+      },
+      _togglePreItemViewExpansion : function( _is_expanded ) {
+              var module = this,
+                $_pre_add_el = $( '.' +  module.control.css_attr.pre_add_item_content, module.container );
+              $_pre_add_el.slideToggle( {
+                    duration : 200,
+                    done : function() {
+                          var $_btn = $( '.' +  module.control.css_attr.open_pre_add_btn, module.container );
+
+                          $(this).toggleClass('open' , _is_expanded );
+                          if ( _is_expanded )
+                            $_btn.find('.fa').removeClass('fa-plus-square').addClass('fa-minus-square');
+                          else
+                            $_btn.find('.fa').removeClass('fa-minus-square').addClass('fa-plus-square');
+                          $_btn.toggleClass( 'active', _is_expanded );
+                          $( module.container ).toggleClass(  module.control.css_attr.adding_new, _is_expanded );
+                          module._adjustScrollExpandedBlock( $(this), 120 );
+                  }//done
+              } );
+      },
+
+
+      toggleSuccessMessage : function( status ) {
+              var module = this,
+                  _message = module.itemAddedMessage,
+                  $_pre_add_wrapper = $('.' + module.control.css_attr.pre_add_wrapper, module.container );
+                  $_success_wrapper = $('.' + module.control.css_attr.pre_add_success, module.container );
+
+              if ( 'on' == status ) {
+                  $_success_wrapper.find('p').text(_message);
+                  $_success_wrapper.css('z-index', 1000001 )
+                    .css('height', $_pre_add_wrapper.height() + 'px' )
+                    .css('line-height', $_pre_add_wrapper.height() + 'px');
+              } else {
+                  $_success_wrapper.attr('style','');
+              }
+              module.container.toggleClass('czr-model-added', 'on' == status );
+              return this;
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );//BASE CONTROL CLASS
+
+var CZRBaseControlMths = CZRBaseControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRBaseControlMths, {
+      initialize: function( id, options ) {
+            var control = this;
+            control.css_attr = _.has( serverControlParams , 'css_attr') ? serverControlParams.css_attr : {};
+            api.Control.prototype.initialize.call( control, id, options );
+            control.bind( 'czr-partial-refresh-done', function() {
+                  if ( _.has( control, 'czr_moduleCollection' ) ) {
+                        _.each( control.czr_moduleCollection(), function( _mod_ ) {
+                              if ( ! control.czr_Module( _mod_.id ) )
+                                return;
+
+                              control.czr_Module( _mod_.id ).sendModuleInputsToPreview( { isPartialRefresh : true } );
+                        });
+                  }
+            });
+      },
+      refreshPreview : function( obj ) {
+            this.previewer.refresh();
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRBaseModuleControlMths, {
+      initialize: function( id, options ) {
+              var control = this;
+
+              control.czr_Module = new api.Values();
+              control.czr_moduleCollection = new api.Value();
+              control.czr_moduleCollection.set([]);
+              control.moduleCollectionReady = $.Deferred();
+              control.moduleCollectionReady.done( function( obj ) {
+                    if ( ! control.isMultiModuleControl( options ) ) {
+                    }
+                    control.czr_moduleCollection.callbacks.add( function() { return control.moduleCollectionReact.apply( control, arguments ); } );
+              } );
+              if ( control.isMultiModuleControl( options ) ) {
+                    control.syncSektionModule = new api.Value();
+              }
+
+              api.CZRBaseControl.prototype.initialize.call( control, id, options );
+              api.section( control.section() ).expanded.bind(function(to) {
+                    control.czr_Module.each( function( _mod ){
+                          _mod.closeAllItems().closeRemoveDialogs();
+                          if ( _.has( _mod, 'preItem' ) ) {
+                                _mod.preItemExpanded(false);
+                          }
+                    });
+              });
+
+      },
+      ready : function() {
+              var control = this;
+              if ( control.isMultiModuleControl() ) {
+                    control.syncSektionModule.bind( function( sektion_module_instance, from) {
+                          if ( 'resolved' == control.moduleCollectionReady.state() )
+                            return;
+                          control.registerModulesOnInit( sektion_module_instance );
+                          control.moduleCollectionReady.resolve();
+                    });
+              } else {
+                    var single_module = {};
+                    _.each( control.getSavedModules() , function( _mod, _key ) {
+                          single_module = _mod;
+                          try { control.instantiateModule( _mod, {} ); } catch( er ) {
+                                api.errorLog( 'Failed to instantiate module ' + _mod.id + ' ' + er );
+                                return;
+                          }
+                          control.container.attr('data-module', _mod.id );
+                    });
+                    control.moduleCollectionReady.resolve( single_module );
+              }
+              control.bind( 'user-module-candidate', function( _module ) {
+                    var module;
+                    try {
+                          module = control.instantiateModule( _module, {} ); //module, constructor
+                    } catch( er ) {
+                          api.errorLog( 'Failed to instantiate module ' + _module.id + ' ' + er );
+                          return;
+                    }
+                    module.ready( _module.is_added_by_user );
+              });
+      },
+      getDefaultModuleApiModel : function() {
+              var commonAPIModel = {
+                    id : '',//module.id,
+                    module_type : '',//module.module_type,
+                    modOpt : {},//the module modOpt property, typically high level properties that area applied to all items of the module
+                    items   : [],//$.extend( true, {}, module.items ),
+                    crud : false,
+                    multi_item : false,
+                    sortable : false,//<= a module can be multi-item but not necessarily sortable
+                    control : {},//control,
+              };
+              if ( ! this.isMultiModuleControl() ) {
+                  return $.extend( commonAPIModel, {
+                      section : ''//id of the control section
+                  } );
+              } else {
+                  return $.extend( commonAPIModel, {
+                      column_id : '',//a string like col_7
+                      sektion : {},// => the sektion instance
+                      sektion_id : '',
+                      is_added_by_user : false,
+                      dirty : false
+                  } );
+              }
+      },
+      getDefaultModuleDBModel : function() {
+              var commonDBModel = {
+                    items   : [],//$.extend( true, {}, module.items ),
+              };
+              if ( this.isMultiModuleControl() ) {
+                  return $.extend( commonDBModel, {
+                      id : '',
+                      module_type : '',
+                      column_id : '',
+                      sektion_id : '',
+                      dirty : false
+                  } );
+              } else {
+                  return commonDBModel;
+              }
+      },
+      isMultiModuleControl : function( options ) {
+              var _type, control = this;
+              if ( _.isUndefined( options ) ){
+                  _type = _.has( control, 'params') ? control.params.type : control.type;
+              } else {
+                  _type = _.has( options, 'params') ? options.params.type : options.type;
+              }
+              return 'czr_multi_module' == _type;
+      },
+      getSyncCollectionControl : function() {
+            var control = this;
+            if ( _.isUndefined( control.params.syncCollection ) ) {
+                throw new Error( 'Control ' + control.id + ' has no synchronized sektion control defined.');
+            }
+            return api.control( api.CZR_Helpers.build_setId( control.params.syncCollection ) );
+      },
+      getSavedModules : function() {
+              var control = this,
+                  _savedModulesCandidates = [],
+                  _module_type = control.params.module_type,
+                  _raw_saved_module_val = [],
+                  _saved_items = [],
+                  _saved_modOpt = {};
+              if ( control.isMultiModuleControl() ) {
+                  _savedModulesCandidates = $.extend( true, [], api( control.id )() );//deep clone
+              } else {
+                  if ( api.CZR_Helpers.isMultiItemModule( _module_type ) && ! _.isEmpty( api( control.id )() ) && ! _.isObject( api( control.id )() ) ) {
+                      api.consoleLog('Module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
+                  }
+                  _raw_saved_module_val = _.isArray( api( control.id )() ) ? api( control.id )() : [ api( control.id )() ];
+
+                  _.each( _raw_saved_module_val, function( item_or_mod_opt_candidate , key ) {
+                        if ( api.CZR_Helpers.hasModuleModOpt( _module_type ) && 0*0 === key ) {
+                              if ( _.has( item_or_mod_opt_candidate, 'id') ) {
+                                    api.consoleLog( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no mod_opt defined while it should.' );
+                              } else {
+                                    _saved_modOpt = item_or_mod_opt_candidate;
+                              }
+                        }
+                        if ( _.has( item_or_mod_opt_candidate, 'id') && ! _.has( item_or_mod_opt_candidate, 'is_mod_opt' ) ) {
+                              _saved_items.push( item_or_mod_opt_candidate );
+                        }
+                  });
+                  _savedModulesCandidates.push(
+                        {
+                              id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
+                              module_type : control.params.module_type,
+                              section : control.section(),
+                              modOpt : $.extend( true, {} , _saved_modOpt ),//disconnect with a deep cloning
+                              items : $.extend( true, [] , _saved_items )//disconnect with a deep cloning
+                        }
+                  );
+              }
+              return _savedModulesCandidates;
+      },
+      isModuleRegistered : function( id_candidate ) {
+            var control = this;
+            return ! _.isUndefined( _.findWhere( control.czr_moduleCollection(), { id : id_candidate}) );
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRBaseModuleControlMths, {
+      instantiateModule : function( module, constructor ) {
+              if ( ! _.has( module,'id') ) {
+                throw new Error('CZRModule::instantiateModule() : a module has no id and could not be added in the collection of : ' + this.id +'. Aborted.' );
+              }
+              var control = this;
+              if ( _.isUndefined(constructor) || _.isEmpty(constructor) ) {
+                  constructor = control.getModuleConstructor( module );
+              }
+              if ( ! _.isEmpty( module.id ) && control.czr_Module.has( module.id ) ) {
+                    throw new Error('The module id already exists in the collection in control : ' + control.id );
+              }
+
+              var module_api_ready = control.prepareModuleForAPI( module );
+              control.czr_Module.add( module_api_ready.id, new constructor( module_api_ready.id, module_api_ready ) );
+
+              if ( ! control.czr_Module.has( module_api_ready.id ) ) {
+                  throw new Error('instantiateModule() : instantiation failed for module id ' + module_api_ready.id + ' in control ' + control.id  );
+              }
+              return control.czr_Module(module_api_ready.id);
+      },
+      getModuleConstructor : function( module ) {
+              var control = this,
+                  parentConstructor = {},
+                  constructor = {};
+
+              if ( ! _.has( module, 'module_type' ) ) {
+                  throw new Error('CZRModule::getModuleConstructor : no module type found for module ' + module.id );
+              }
+              if ( ! _.has( api.czrModuleMap, module.module_type ) ) {
+                  throw new Error('Module type ' + module.module_type + ' is not listed in the module map api.czrModuleMap.' );
+              }
+
+              var _mthds = api.czrModuleMap[ module.module_type ].mthds,
+                  _is_crud = api.czrModuleMap[ module.module_type ].crud,
+                  _base_constructor = _is_crud ? api.CZRDynModule : api.CZRModule;
+              if ( ! _.isEmpty( module.sektion_id ) ) {
+                  parentConstructor = _base_constructor.extend( _mthds );
+                  constructor = parentConstructor.extend( control.getMultiModuleExtender( parentConstructor ) );
+              } else {
+                  constructor = _base_constructor.extend( _mthds );
+              }
+
+              if ( _.isUndefined(constructor) || _.isEmpty(constructor) || ! constructor ) {
+                  throw new Error('CZRModule::getModuleConstructor : no constructor found for module type : ' + module.module_type +'.' );
+              }
+              return constructor;
+      },
+      prepareModuleForAPI : function( module_candidate ) {
+            if ( ! _.isObject( module_candidate ) ) {
+                throw new Error('prepareModuleForAPI : a module must be an object to be instantiated.');
+            }
+
+            var control = this,
+                api_ready_module = {};
+
+            _.each( control.getDefaultModuleApiModel() , function( _value, _key ) {
+                  var _candidate_val = module_candidate[_key];
+                  switch( _key ) {
+                        case 'id' :
+                              if ( _.isEmpty( _candidate_val ) ) {
+                                    api_ready_module[_key] = control.generateModuleId( module_candidate.module_type );
+                              } else {
+                                    api_ready_module[_key] = _candidate_val;
+                              }
+                        break;
+                        case 'module_type' :
+                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module type must a string not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case 'items' :
+                              if ( ! _.isArray( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : a module item list must be an array');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case 'modOpt' :
+                              if ( ! _.isObject( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : a module modOpt property must be an object');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case 'crud' :
+                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
+                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "crud" must be a boolean');
+                              }
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        case 'multi_item' :
+                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "multi_item" must be a boolean');
+                              }
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        case 'sortable' :
+                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].sortable || api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "sortable" must be a boolean');
+                              }
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        case  'control' :
+                              api_ready_module[_key] = control;//this
+                        break;
+                        case  'section' :
+                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module section must be a string not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case  'column_id' :
+                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module column id must a string not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case  'sektion' :
+                              if ( ! _.isObject( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module sektion must be an object not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case  'sektion_id' :
+                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                                    throw new Error('prepareModuleForAPI : a module sektion id must be a string not empty');
+                              }
+                              api_ready_module[_key] = _candidate_val;
+                        break;
+                        case 'is_added_by_user' :
+                              if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "is_added_by_user" must be a boolean');
+                              }
+                            api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        case 'dirty' :
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                  }//switch
+            });
+            return api_ready_module;
+      },
+      generateModuleId : function( module_type, key, i ) {
+              i = i || 1;
+              if ( i > 100 ) {
+                    throw new Error('Infinite loop when generating of a module id.');
+              }
+              var control = this;
+              key = key || control._getNextModuleKeyInCollection();
+              var id_candidate = module_type + '_' + key;
+              if ( ! _.has(control, 'czr_moduleCollection') || ! _.isArray( control.czr_moduleCollection() ) ) {
+                    throw new Error('The module collection does not exist or is not properly set in control : ' + control.id );
+              }
+              if ( control.isModuleRegistered( id_candidate ) ) {
+                key++; i++;
+                return control.generateModuleId( module_type, key, i );
+              }
+
+              return id_candidate;
+      },
+      _getNextModuleKeyInCollection : function() {
+              var control = this,
+                _max_mod_key = {},
+                _next_key = 0;
+              if ( ! _.isEmpty( control.czr_moduleCollection() ) ) {
+                  _max_mod_key = _.max( control.czr_moduleCollection(), function( _mod ) {
+                      return parseInt( _mod.id.replace(/[^\/\d]/g,''), 10 );
+                  });
+                  _next_key = parseInt( _max_mod_key.id.replace(/[^\/\d]/g,''), 10 ) + 1;
+              }
+              return _next_key;
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRBaseModuleControlMths, {
+      registerModulesOnInit : function( sektion_module_instance ) {
+              var control = this,
+                  _orphan_mods = [];
+
+              _.each( control.getSavedModules() , function( _mod, _key ) {
+                      if ( ! sektion_module_instance.czr_Item.has( _mod.sektion_id ) ) {
+                            api.errorLog( 'Warning Module ' + _mod.id + ' is orphan : it has no sektion to be embedded to. It Must be removed.');
+                            _orphan_mods.push(_mod);
+                            return;
+                      }
+
+                      var _sektion = sektion_module_instance.czr_Item( _mod.sektion_id );
+
+                      if ( _.isUndefined( _sektion ) ) {
+                            throw new Error( 'sektion instance missing. Impossible to instantiate module : ' + _mod.id );
+                      }
+                      $.extend( _mod, {sektion : _sektion} );
+                      control.updateModulesCollection( {module : _mod } );
+              });
+              control.moduleCollectionReady.then( function() {
+                    if ( ! _.isEmpty( _orphan_mods ) ) {
+                        control.moduleCollectionReact( control.czr_moduleCollection(), [], { orphans_module_removal : _orphan_mods } );
+                    }
+              });
+      },
+      updateModulesCollection : function( obj ) {
+              var control = this,
+                  _current_collection = control.czr_moduleCollection(),
+                  _new_collection = $.extend( true, [], _current_collection);
+              if ( _.has( obj, 'collection' ) ) {
+                    control.czr_moduleCollection.set( obj.collection, obj.data || {} );
+                    return;
+              }
+
+              if ( ! _.has(obj, 'module') ) {
+                throw new Error('updateModulesCollection, no module provided ' + control.id + '. Aborting');
+              }
+              var module_api_ready = control.prepareModuleForAPI( _.clone( obj.module ) );
+              if ( _.findWhere( _new_collection, { id : module_api_ready.id } ) ) {
+                    _.each( _current_collection , function( _elt, _ind ) {
+                          if ( _elt.id != module_api_ready.id )
+                            return;
+                          _new_collection[_ind] = module_api_ready;
+                    });
+              }
+              else {
+                    _new_collection.push( module_api_ready );
+              }
+              var _params = {};
+              if ( _.has( obj, 'data') ) {
+                  _params = $.extend( true, {}, obj.data );
+                  $.extend( _params, { module : module_api_ready } );
+              }
+              control.czr_moduleCollection.set( _new_collection, _params );
+      },
+      moduleCollectionReact : function( to, from, data ) {
+            var control = this,
+                is_module_added = _.size(to) > _.size(from),
+                is_module_removed = _.size(from) > _.size(to),
+                is_module_update = _.size(from) == _.size(to);
+                is_collection_sorted = false;
+            if ( is_module_removed ) {
+                  var _to_remove = _.filter( from, function( _mod ){
+                      return _.isUndefined( _.findWhere( to, { id : _mod.id } ) );
+                  });
+                  _to_remove = _to_remove[0];
+                  control.czr_Module.remove( _to_remove.id );
+            }
+            if ( _.isObject( data  ) && _.has( data, 'module' ) ) {
+                  data.module_id = data.module.id;
+                  data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
+            }
+            if ( ! control.isMultiModuleControl() && is_module_added ) {
+                  return;
+            }
+            else {
+                  api( this.id )
+                        .set( control.filterModuleCollectionBeforeAjax( to ), data );
+            }
+      },
+      filterModuleCollectionBeforeAjax : function( collection ) {
+              var control = this,
+                  _filtered_collection = $.extend( true, [], collection ),
+                  _to_return;
+
+              _.each( collection , function( _mod, _key ) {
+                    var db_ready_mod = $.extend( true, {}, _mod );
+                    _filtered_collection[_key] = control.prepareModuleForDB( db_ready_mod );
+              });
+              if ( control.isMultiModuleControl() ) {
+                    return _filtered_collection;
+              } else {
+                    if ( _.size( collection ) > 1 ) {
+                      throw new Error('There should not be several modules in the collection of control : ' + control.id );
+                    }
+                    if ( ! _.isArray( collection ) || _.isEmpty( collection ) || ! _.has( collection[0], 'items' ) ) {
+                      throw new Error('The setting value could not be populated in control : ' + control.id );
+                    }
+                    var module_id = collection[0].id;
+
+                    if ( ! control.czr_Module.has( module_id ) ) {
+                       throw new Error('The single module control (' + control.id + ') has no module registered with the id ' + module_id  );
+                    }
+                    var module_instance = control.czr_Module( module_id );
+                    if ( ! _.isArray( module_instance().items ) ) {
+                      throw new Error('The module ' + module_id + ' should be an array in control : ' + control.id );
+                    }
+                    _to_return = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
+                    return module_instance.hasModOpt() ? _.union( [ module_instance().modOpt ] , _to_return ) : _to_return;
+              }
+      },
+      prepareModuleForDB : function ( module_db_candidate ) {
+            if ( ! _.isObject( module_db_candidate ) ) {
+                throw new Error('MultiModule Control::prepareModuleForDB : a module must be an object. Aborting.');
+            }
+            var control = this,
+                db_ready_module = {};
+
+            _.each( control.getDefaultModuleDBModel() , function( _value, _key ) {
+                  if ( ! _.has( module_db_candidate, _key ) ) {
+                      throw new Error('MultiModule Control::prepareModuleForDB : a module is missing the property : ' + _key + ' . Aborting.');
+                  }
+
+                  var _candidate_val = module_db_candidate[ _key ];
+                  switch( _key ) {
+                        case 'items' :
+                          if ( ! _.isArray( _candidate_val )  ) {
+                              throw new Error('prepareModuleForDB : a module item list must be an array');
+                          }
+                          db_ready_module[ _key ] = _candidate_val;
+                        break;
+                        case 'id' :
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                              throw new Error('prepareModuleForDB : a module id must a string not empty');
+                          }
+                          db_ready_module[ _key ] = _candidate_val;
+                        break;
+                        case 'module_type' :
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                              throw new Error('prepareModuleForDB : a module type must a string not empty');
+                          }
+                          db_ready_module[ _key ] = _candidate_val;
+                        break;
+                        case  'column_id' :
+                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
+                              throw new Error('prepareModuleForDB : a module column id must a string not empty');
+                          }
+                          db_ready_module[ _key ] = _candidate_val;
+                        break;
+                        case  'sektion_id' :
+                          if ( ! _.isObject( module_db_candidate.sektion ) || ! _.has( module_db_candidate.sektion, 'id' ) ) {
+                              throw new Error('prepareModuleForDB : a module sektion must be an object with an id.');
+                          }
+                          db_ready_module[ _key ] = module_db_candidate.sektion.id;
+                        break;
+                        case 'dirty' :
+                          if ( control.czr_Module.has( module_db_candidate.id ) )
+                              db_ready_module[ _key ] = control.czr_Module( module_db_candidate.id ).isDirty();
+                          else
+                              db_ready_module[ _key ] = _candidate_val;
+                          if ( ! _.isBoolean( db_ready_module[ _key ] ) ) {
+                              throw new Error('prepareModuleForDB : a module dirty state must be a boolean.');
+                          }
+                        break;
+                  }//switch
+            });
+            return db_ready_module;
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+var CZRMultiModuleControlMths = CZRMultiModuleControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRMultiModuleControlMths, {
+      initialize: function( id, options ) {
+              var control = this;
+              api.consoleLog('IN MULTI MODULE INITIALIZE ? ', options );
+              api(id).callbacks.add( function() { return control.syncColumn.apply( control, arguments ); } );
+
+              api.CZRBaseModuleControl.prototype.initialize.call( control, id, options );
+      },
+
+
+      ready : function() {
+            var control = this;
+            api.consoleLog('MODULE-COLLECTION CONTROL READY', this.id );
+            api.CZRBaseModuleControl.prototype.ready.apply( control, arguments);
+      },
+      syncColumn : function( to, from, data ) {
+            api.consoleLog('IN SYNC COLUMN', to, from, data );
+            if ( ! _.isUndefined(data) && data.silent )
+              return;
+            api.consoleLog('IN SYNXXX', api.control('hu_theme_options[module-collection]').syncSektionModule()(), this.syncSektionModule()(), this.id );
+            if ( _.has( data, 'orphans_module_removal' ) )
+              return;
+            var control = api.control( this.id );
+            var added_mod = _.filter( to, function( _mod, _key ){
+                return ! _.findWhere( from, { id : _mod.id } );
+            } );
+            if ( ! _.isEmpty( added_mod ) ) {
+                  api.consoleLog('ADDED MODULE?', added_mod );
+                  _.each( added_mod, function( _mod ) {
+                          control.syncSektionModule().czr_Column( _mod.column_id ).updateColumnModuleCollection( { module : _mod } );
+                  });
+            }
+            var removed_mod = _.filter( from, function( _mod, _key ){
+                return ! _.findWhere( to, { id : _mod.id } );
+            } );
+            if ( ! _.isEmpty( removed_mod ) ) {
+                  _.each( removed_mod, function( _mod ) {
+                          control.syncSektionModule().czr_Column( _mod.column_id ).removeModuleFromColumnCollection( _mod );
+                  });
+            }
+            if ( _.size(from) == _.size(to) && _.has( data, 'module') && _.has( data, 'source_column') && _.has( data, 'target_column') ) {
+                    $.when( control.syncSektionModule().moveModuleFromTo( data.module, data.source_column, data.target_column ) ).done( function() {
+                          control.syncSektionModule().control.trigger('module-moved', { module : data.module, source_column: data.source_column, target_column :data.target_column });
+                    } );
+            }
+            control.trigger( 'columns-synchronized', to );
+      },
+      removeModule : function( module ) {
+            var control = this;
+            if ( control.czr_Module.has( module.id ) && 'resolved' == control.czr_Module( module.id ).embedded.state() )
+                control.czr_Module( module.id ).container.remove();
+            control.removeModuleFromCollection( module );
+      },
+
+
+      removeModuleFromCollection : function( module ) {
+            var control = this,
+                _current_collection = control.czr_moduleCollection(),
+                _new_collection = $.extend( true, [], _current_collection);
+
+            _new_collection = _.filter( _new_collection, function( _mod ) {
+                  return _mod.id != module.id;
+            } );
+            control.czr_moduleCollection.set( _new_collection );
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+var CZRMultiModuleControlMths = CZRMultiModuleControlMths || {};
+( function ( api, $, _ ) {
+$.extend( CZRMultiModuleControlMths, {
+      getMultiModuleExtender : function( parentConstructor ) {
+            var control = this;
+            $.extend( control.CZRModuleExtended, {
+                  initialize: function( id, constructorOptions ) {
+                        var module = this;
+                        parentConstructor.prototype.initialize.call( module, id, constructorOptions );
+
+                        api.consoleLog('MODULE INSTANTIATED : ', module.id );
+                        $.extend( module, {
+                              singleModuleWrapper : 'czr-single-module-wrapper',
+                              sektionModuleTitle : 'czr-module-sektion-title-part',
+                              ruModuleEl : 'czr-ru-module-sektion-content'
+                        } );
+                        module.czr_ModuleState = new api.Value( false );
+                        module.isReady.done( function() {
+                              module.setupModuleView();
+                        });
+                        module.moduleTitleEmbedded = $.Deferred();
+                        module.modColumn = new api.Value();
+                        module.modColumn.set( constructorOptions.column_id );
+                        module.modColumn.bind( function( to, from ) {
+                              api.consoleLog('MODULE ' + module.id + ' HAS BEEN MOVED TO COLUMN', to, module() );
+                              var _current_model = module(),
+                                  _new_model = $.extend( true, {}, _current_model );
+
+                              _new_model.column_id = to;
+                              module.set( _new_model, { target_column : to, source_column : from } );
+                        } );
+                  },
+                  ready : function( is_added_by_user ) {
+                          var module = this;
+                           api.consoleLog('MODULE READY IN EXTENDED MODULE CLASS : ', module.id );
+                          $.when( module.renderModuleWrapper( is_added_by_user ) ).done( function( $_module_container ) {
+                                if ( _.isUndefined($_module_container) || false === $_module_container.length ) {
+                                    throw new Error( 'Module container has not been embedded for module :' + module.id );
+                                }
+                                module.container = $_module_container;
+                                module.embedded.resolve();
+                          } );
+                          parentConstructor.prototype.ready.call( module );
+                  }
+
+            });
+            return control.CZRModuleExtended;
+      },
+      CZRModuleExtended  : {
+            renderModuleWrapper : function( is_added_by_user ) {
+                    var module = this;
+                    if ( 'resolved' == module.embedded.state() )
+                      return module.container;
+                    if ( 0 === $( '#tmpl-' + module.singleModuleWrapper ).length ) {
+                      throw new Error('No template for module ' + module.id + '. The template script id should be : #tmpl-' + module.singleModuleWrapper );
+                    }
+
+                    var module_wrapper_tmpl = wp.template( module.singleModuleWrapper ),
+                        tmpl_data = {
+                            id : module.id,
+                            type : module.module_type
+                        },
+                        $_module_el = $(  module_wrapper_tmpl( tmpl_data ) );
+                    if ( is_added_by_user ) {
+                        $.when( $( '.czr-module-collection-wrapper' , module._getColumn().container ).find( '.czr-module-candidate').after( $_module_el ) ).
+                          done( function() {
+                            $( '.czr-module-collection-wrapper' , module._getColumn().container ).find( '.czr-module-candidate').remove();
+                          });
+                    } else {
+                        $( '.czr-module-collection-wrapper' , module._getColumn().container).append( $_module_el );
+                    }
+
+                    return $_module_el;
+            },
+
+
+
+
+
+            setupModuleView : function() {
+                    var module = this;
+
+                    module.view_event_map = [
+                            {
+                              trigger   : 'click keydown',
+                              selector  : [ '.czr-remove-mod', '.' + module.control.css_attr.cancel_alert_btn ].join(','),
+                              name      : 'toggle_remove_alert',
+                              actions   : ['toggleModuleRemoveAlert']
+                            },
+                            {
+                              trigger   : 'click keydown',
+                              selector  : '.' + module.control.css_attr.remove_view_btn,
+                              name      : 'remove_module',
+                              actions   : ['removeModule']
+                            },
+                            {
+                              trigger   : 'click keydown',
+                              selector  : '.czr-edit-mod',
+                              name      : 'edit_module',
+                              actions   : ['setModuleViewVisibility', 'sendEditModule']
+                            },
+                            {
+                              trigger   : 'click keydown',
+                              selector  : '.czr-module-back',
+                              name      : 'back_to_column',
+                              actions   : ['setModuleViewVisibility']
+                            },
+                            {
+                              trigger   : 'mouseenter',
+                              selector  : '.czr-mod-header',
+                              name      : 'hovering_module',
+                              actions   : function( obj ) {
+                                    module.control.previewer.send( 'start_hovering_module', {
+                                          id : module.id
+                                    });
+                              }
+                            },
+                            {
+                              trigger   : 'mouseleave',
+                              selector  : '.czr-mod-header',
+                              name      : 'hovering_module',
+                              actions   : function( obj ) {
+                                  module.control.previewer.send( 'stop_hovering_module', {
+                                        id : module.id
+                                  });
+                              }
+                            }
+                    ];
+                    module.embedded.done( function() {
+                          module.czr_ModuleState.callbacks.add( function() { return module.setupModuleViewStateListeners.apply(module, arguments ); } );
+                          api.CZR_Helpers.setupDOMListeners(
+                                module.view_event_map,//actions to execute
+                                { module : { id : module.id } , dom_el:module.container },//model + dom scope
+                                module //instance where to look for the cb methods
+                          );//listeners for the view wrapper
+                    });
+            },
+            setModuleViewVisibility : function( obj, is_added_by_user ) {
+                  var module = this;
+
+                  module.czr_ModuleState( ! module.czr_ModuleState() );
+                  api.czrModulePanelState.set(false);
+                  api.czrSekSettingsPanelState.set(false);
+                  module.control.syncSektionModule().closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
+            },
+            sendEditModule : function( obj ) {
+                  var module = this;
+                  module.control.previewer.send( 'edit_module', {
+                        id : module.id
+                  });
+            },
+            setupModuleViewStateListeners : function( expanded ) {
+                  var module = this;
+                  api.czr_isModuleExpanded = api.czr_isModuleExpanded || new api.Value();
+
+                  if ( expanded )
+                    api.czr_isModuleExpanded( module );
+                  else
+                    api.czr_isModuleExpanded( false );
+                  $.when( module.toggleModuleViewExpansion( expanded ) ).done( function() {
+                        if ( expanded ) {
+                              module.renderModuleTitle();
+                              module.populateSavedItemCollection();
+                        }
+                        else {
+                              module.czr_Item.each ( function( item ) {
+                                    item.viewState.set('closed');
+                                    item._destroyView( 0 );
+                                    module.czr_Item.remove( item.id );
+                              } );
+                        }
+                  });
+            },
+
+
+            renderModuleTitle : function() {
+                  var module = this;
+                  if( 'resolved' == module.moduleTitleEmbedded.state() )
+                    return;
+                  if ( 0 === $( '#tmpl-' + module.sektionModuleTitle ).length ) {
+                    throw new Error('No sektion title Module Part template for module ' + module.id + '. The template script id should be : #tmpl-' + module.sektionModuleTitle );
+                  }
+                  $.when( $( module.container ).find('.czr-mod-content').prepend(
+                        $( wp.template( module.sektionModuleTitle )( { id : module.id } ) )
+                  ) ).done( function() {
+                        module.moduleTitleEmbedded.resolve();
+                  });
+            },
+            toggleModuleViewExpansion : function( expanded, duration ) {
+                  var module = this;
+                  $( '.czr-mod-content' , module.container ).slideToggle( {
+                      duration : duration || 200,
+                      done : function() {
+                            var $_overlay = module.container.closest( '.wp-full-overlay' ),
+                                $_backBtn = module.container.find( '.czr-module-back' ),
+                                $_modTitle = module.container.find('.czr-module-title');
+
+                            module.container.toggleClass('open' , expanded );
+                            $_overlay.toggleClass('czr-module-open', expanded );
+                            $_modTitle.attr( 'tabindex', expanded ? '-1' : '0' );
+                            $_backBtn.attr( 'tabindex', expanded ? '0' : '-1' );
+
+                            if( expanded ) {
+                                $_backBtn.focus();
+                            } else {
+                                $_modTitle.focus();
+                            }
+                            if ( expanded )
+                              module._adjustScrollExpandedBlock( module.container );
+                      }//done callback
+                    } );
+            },
+
+
+
+
+
+
+
+
+
+            toggleModuleRemoveAlert : function( obj ) {
+                    var module = this,
+                        control = this.control,
+                        $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, module.container ).first(),
+                        $_clicked = obj.dom_event,
+                        $_column_container = control.syncSektionModule().czr_Column( module.column_id ).container;
+                    if ( _.has(module, 'preItem') ) {
+                        control.syncSektionModule().preItemExpanded.set( false );
+                    }
+                    $('.' + module.control.css_attr.remove_alert_wrapper, $_column_container ).not($_alert_el).each( function() {
+                          if ( $(this).hasClass('open') ) {
+                                $(this).slideToggle( {
+                                      duration : 200,
+                                      done : function() {
+                                            $(this).toggleClass('open' , false );
+                                            $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass('active' , false );
+                                      }
+                                } );
+                          }
+                    });
+                    if ( ! wp.template( module.AlertPart )  || ! module.container ) {
+                        throw new Error( 'No removal alert template available for module :' + module.id );
+                    }
+
+                    $_alert_el.html( wp.template( module.AlertPart )( { title : ( module().title || module.id ) } ) );
+                    $_alert_el.slideToggle( {
+                          duration : 200,
+                          done : function() {
+                                var _is_open = ! $(this).hasClass('open') && $(this).is(':visible');
+                                $(this).toggleClass('open' , _is_open );
+                                $( obj.dom_el ).find('.' + module.control.css_attr.display_alert_btn).toggleClass( 'active', _is_open );
+                                if ( _is_open )
+                                  module._adjustScrollExpandedBlock( module.container );
+                          }
+                    } );
+            },
+            removeModule : function( obj ) {
+                  this.control.removeModule( obj.module );
+            },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            _getColumn : function() {
+                    var module = this;
+                    return module.control.syncSektionModule().czr_Column( module.modColumn() );
+            },
+
+            _getSektion : function() {
+
+            }
+      }
+});//$.extend//CZRBaseControlMths
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      $.extend( CZRBaseControlMths, api.Events );
+      $.extend( api.Control.prototype, api.Events );//ensures that the default WP control constructor is extended as well
+      $.extend( CZRModuleMths, api.Events );
+      $.extend( CZRItemMths, api.Events );
+      $.extend( CZRModOptMths, api.Events );
+      $.extend( CZRBaseControlMths, api.CZR_Helpers );
+      $.extend( CZRInputMths, api.CZR_Helpers );
+      $.extend( CZRModuleMths, api.CZR_Helpers );
+      api.CZRInput                  = api.Value.extend( CZRInputMths );
+      api.czrInputMap = api.czrInputMap || {};
+      $.extend( api.czrInputMap, {
+            text      : '',
+            textarea  : '',
+            check     : 'setupIcheck',
+            select    : 'setupSelect',
+            number    : 'setupStepper',
+            upload    : 'setupImageUploader',
+            color     : 'setupColorPicker',
+            content_picker : 'setupContentPicker',
+            text_editor    : 'setupTextEditor',
+            password : '',
+            range_slider : 'setupRangeSlider'
+      });
+      api.CZRItem                   = api.Value.extend( CZRItemMths );
+      api.CZRModOpt                 = api.Value.extend( CZRModOptMths );
+      api.CZRModule                 = api.Value.extend( CZRModuleMths );
+      api.CZRDynModule              = api.CZRModule.extend( CZRDynModuleMths );
+      if ( ! _.isUndefined( window.CZRColumnMths ) ) {
+            api.CZRColumn           = api.Value.extend( CZRColumnMths );
+      }
+      api.CZRBaseControl            = api.Control.extend( CZRBaseControlMths );
+      api.CZRBaseModuleControl      = api.CZRBaseControl.extend( CZRBaseModuleControlMths );
+      api.CZRMultiModuleControl     = api.CZRBaseModuleControl.extend( CZRMultiModuleControlMths );
+
+      $.extend( api.controlConstructor, {
+            czr_module : api.CZRBaseModuleControl,
+            czr_multi_module : api.CZRMultiModuleControl,
+      });
+
+})( wp.customize, jQuery, _ );
+( function ( api, $, _ ) {
+      /*****************************************************************************
+      * A SKOPE AWARE PREVIEWER QUERY
+      *****************************************************************************/
+      api.bind('ready', function() {
+            if ( ! serverControlParams.isSkopOn )
+              return;
+
+            /**
+            * Build the query to send along with the Preview request.
+            *
+            * @return {object}
+            */
+            var _coreQuery = api.previewer.query;
+            api.previewer.query =  function( queryVars ) {
+                  if ( ! serverControlParams.isSkopOn ) {
+                        return _coreQuery.apply( this );
+                  }
+                  if ( ! _.has( api, 'czr_skope') ) {
+                        api.consoleLog('QUERY : SKOPE IS NOT FULLY READY YEY. FALLING BACK ON CORE QUERY');
+                        return _coreQuery.apply( this );
+                  }
+                  if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() ) {
+                        api.consoleLog('QUERY : INITIAL SKOPE COLLECTION NOT POPULATED YET. FALLING BACK ON CORE QUERY');
+                        return _coreQuery.apply( this );
+                  }
+                  if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
+                        api.czr_isPreviewerSkopeAware.resolve();
+                  }
+                  if ( ! _.isObject( queryVars ) && 'resolved' == api.czr_initialSkopeCollectionPopulated.state() && 'resolved' == api.czr_initialSkopeCollectionPopulated.state() ) {
+                        return _coreQuery.apply( this );
+                  }
+                  if ( _.isUndefined( queryVars.skope_id ) || ! _.isString( queryVars.skope_id ) ) {
+                        queryVars.skope_id = api.czr_activeSkopeId() || api.czr_skopeBase.getGlobalSkopeId();
+                  }
+
+                  var globalCustomized = {},
+                      skopeCustomized = {},
+                      _defaults = {
+                            skope_id : null,
+                            action : null,
+                            the_dirties : {},
+                            dyn_type : null,
+                            opt_name : null
+                      },
+                      _to_return;
+
+                  queryVars = $.extend( _defaults, queryVars );
+                  if ( ! _.isObject( queryVars.the_dirties ) ) {
+                        api.consoleLog('QUERY PARAMS : ', queryVars );
+                        throw new Error( 'QUERY DIRTIES MUST BE AN OBJECT. Requested action : ' + queryVars.action );
+                  }
+                  if ( 'pending' != api.czr_isPreviewerSkopeAware.state() && _.isNull( queryVars.skope_id ) ) {
+                        api.consoleLog('QUERY PARAMS : ', queryVars );
+                        throw new Error( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY. Requested action : ' + queryVars.action );
+                  }
+                  if ( ! _.contains( [ null, 'refresh', 'save', 'reset', 'changeset_update' ], queryVars.action ) ) {
+                        api.consoleLog('QUERY PARAMS : ', queryVars );
+                        throw new Error( 'A REQUESTED QUERY HAS NO AUTHORIZED ACTION. Requested action : ' + queryVars.action );
+                  }
+                  var _getSkopesCustomized = function() {
+                        if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
+                          return {};
+                        var _skpCust = {};
+                        _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                              if ( 'global' == _skp.skope )
+                                return;
+                              _skpCust[_skp.id] = api.czr_skopeBase.getSkopeDirties( _skp.id );
+                        } );
+                        return _skpCust;
+                  };
+                  if ( _.isNull( queryVars.the_dirties ) || _.isEmpty( queryVars.the_dirties ) ) {
+                        globalCustomized = api.dirtyValues( { unsaved:  queryVars.excludeCustomizedSaved || false } );
+                        skopeCustomized = _getSkopesCustomized();
+                  } else {
+                        if ( 'global' == api.czr_skopeBase.getActiveSkopeName() )
+                          globalCustomized = queryVars.the_dirties;
+                        else
+                          skopeCustomized[ api.czr_activeSkopeId() ] = queryVars.the_dirties;
+                  }
+                  switch( queryVars.action ) {
+                        case null :
+                        case 'refresh' :
+                        break;
+
+                        case 'changeset_update' :
+                              if ( _.isUndefined( queryVars.opt_name ) ) {
+                                    throw new Error('Missing opt_name param in the changeset_update query for skope : ' + queryVars.skope_id );
+                              }
+                        break;
+
+
+                        case 'save' :
+                              if ( _.isNull( queryVars.dyn_type ) )
+                                    queryVars.dyn_type = api.czr_skope( queryVars.skope_id )().dyn_type;//post_meta, term_meta, user_meta, trans, option
+                              if ( _.isNull( queryVars.dyn_type ) || _.isUndefined( queryVars.dyn_type ) ) {
+                                    throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A VALID DYN TYPE.' + queryVars.skope_id );
+                              }
+                        break;
+
+                        case 'reset' :
+                              if ( _.isNull( queryVars.dyn_type ) )
+                                    queryVars.dyn_type = api.czr_skope( queryVars.skope_id )().dyn_type;//post_meta, term_meta, user_meta, trans, option
+                              if ( _.isNull( queryVars.dyn_type ) || _.isUndefined( queryVars.dyn_type ) ) {
+                                    throw new Error( 'QUERY : A RESET QUERY MUST HAVE A VALID DYN TYPE.' + queryVars.skope_id );
+                              }
+                        break;
+                  }
+                  var _current_skopes = {};
+                  _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                        _current_skopes[_skp.skope] = { id : _skp.id, opt_name : _skp.opt_name };
+                  });
+                  _to_return = {
+                        wp_customize: 'on',
+                        customized:      '{}' == JSON.stringify( globalCustomized ) ? '{\"__not_customized__\"}' : JSON.stringify( globalCustomized ),
+                        skopeCustomized:  JSON.stringify( skopeCustomized ),
+                        nonce:            this.nonce.preview,
+                        skope:            api.czr_skope( queryVars.skope_id )().skope,
+                        level_id:          api.czr_skope( queryVars.skope_id )().level,
+                        skope_id:         queryVars.skope_id,
+                        dyn_type:         queryVars.dyn_type,
+                        opt_name:         ! _.isNull( queryVars.opt_name ) ? queryVars.opt_name : api.czr_skope( queryVars.skope_id )().opt_name,
+                        obj_id:           api.czr_skope( queryVars.skope_id )().obj_id,
+                        current_skopes:   JSON.stringify( _current_skopes ) || {},
+                        channel:          this.channel(),
+                        revisionIndex:    api._latestRevision
+                  };
+                  if ( api.czr_isChangeSetOn() ) {
+                        _to_return = $.extend( _to_return , {
+                              customize_theme: api.settings.theme.stylesheet,
+                              customize_changeset_uuid: api.settings.changeset.uuid
+                        });
+                  }
+                  else {
+                        _to_return = $.extend( _to_return , {
+                              theme: api.settings.theme.stylesheet
+                        });
+                  }
+                  return _to_return;
+
+            };//api.previewer.query
+      });//api.bind('ready')
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      api.bind( 'czr-skope-started', function() {
+            api.previewer.save = function( args ) {
+                  return api.czr_skopeSave.save();
+            };
+      });//api.bind('ready')
+})( wp.customize , jQuery, _ );
+(function (api, $, _) {
+      if ( ! serverControlParams.isSkopOn )
+        return;
+
+      /*****************************************************************************
+      * SYNCHRONIZER AUGMENTED
+      *****************************************************************************/
+      api.Element.synchronizer.checkbox.update = function( to ) {
+            this.element.prop( 'checked', to );
+            this.element.iCheck('update');
+      };
+
+      var _original = api.Element.synchronizer.val.update;
+      api.Element.synchronizer.val.update = function(to) {
+            var self = this,
+                _modifySynchronizer = function() {
+                      if ( self.element.is('select') ) {
+                            self.element.val(to).trigger('change');
+                      } else if ( self.element.hasClass('wp-color-picker') ) {
+                            self.element.val(to).trigger('change');
+                      }
+                      else {
+                            self.element.val( to );
+                      }
+                };
+            if ( serverControlParams.isSkopOn ) {
+                  if ( 'resolved' != api.czr_skopeReady.state() ) {
+                        return _original.call( self, to );
+                  } else {
+                        api.czr_skopeReady.then( function () {
+                              _modifySynchronizer();
+                        });
+                  }
+            } else {
+                  _modifySynchronizer();
+            }
+      };
+
+      api.Element.synchronizer.val.refresh = function() {
+            var syncApiInstance = this;
+            if ( this.element.is('select') && _.isNull( this.element.val() ) ) {
+                  if ( _.isArray( syncApiInstance() ) )
+                    return [];
+                  else if ( _.isObject( syncApiInstance() ) )
+                    return {};
+                  else
+                    return '';
+            } else {
+                  return  this.element.val();
+            }
+      };
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      var coreRefresh = api.Previewer.prototype.refresh;
+      var _new_refresh = function( params ) {
+            params = _.extend({
+                        waitSkopeSynced : true,
+                        the_dirties : {}
+                  },
+                  params
+            );
+
+            var previewer = this, dfd = $.Deferred();
+            if ( ! serverControlParams.isSkopOn ) {
+                  return dfd.resolve().promise();
+            }
+            if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
+                  api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.previewer._new_refresh() method.');
+                  coreRefresh.apply( previewer );
+                  return dfd.resolve().promise();
+            }
+            previewer.send( 'loading-initiated' );
+
+            previewer.abort();
+
+            var query_params = api.czr_getSkopeQueryParams({
+                      skope_id : api.czr_activeSkopeId(),
+                      action : 'refresh',
+                      the_dirties : params.the_dirties || {}
+                });
+
+            previewer.loading = new api.PreviewFrame({
+                  url:        previewer.url(),
+                  previewUrl: previewer.previewUrl(),
+                  query:      previewer.query( query_params ) || {},
+                  container:  previewer.container,
+                  signature:  'WP_CUSTOMIZER_SIGNATURE'//will be deprecated in 4.7
+            });
+
+
+            previewer.settingsModifiedWhileLoading = {};
+            onSettingChange = function( setting ) {
+                  previewer.settingsModifiedWhileLoading[ setting.id ] = true;
+            };
+            api.bind( 'change', onSettingChange );
+
+            previewer.loading.always( function() {
+                  api.unbind( 'change', onSettingChange );
+            } );
+            if ( ! api.czr_isChangeSetOn() ) {
+                  previewer._previousPreview = previewer._previousPreview || previewer.preview;
+            }
+
+            previewer.loading.done( function( readyData ) {
+                  var loadingFrame = this, onceSynced;
+
+                  previewer.preview = loadingFrame;
+                  previewer.targetWindow( loadingFrame.targetWindow() );
+                  previewer.channel( loadingFrame.channel() );
+                  onceSynced = function( skopesServerData ) {
+                        loadingFrame.unbind( 'synced', onceSynced );
+                        loadingFrame.unbind( 'czr-skopes-synced', onceSynced );
+
+                        if ( previewer._previousPreview ) {
+                              previewer._previousPreview.destroy();
+                        } //before WP 4.7
+                        else {
+                            if ( previewer.preview )
+                              previewer.preview.destroy();
+                        }
+
+                        previewer._previousPreview = previewer.preview;
+                        previewer.deferred.active.resolve();
+                        delete previewer.loading;
+
+                        api.trigger( 'pre_refresh_done', { previewer : previewer, skopesServerData : skopesServerData || {} } );
+                        dfd.resolve( { previewer : previewer, skopesServerData : skopesServerData || {} } );
+                  };
+                  if ( ! api.czr_isChangeSetOn() ) {
+                      previewer.send( 'sync', {
+                            scroll:   previewer.scroll,
+                            settings: api.get()
+                      });
+                  }
+
+                  if ( params.waitSkopeSynced ) {
+                        loadingFrame.bind( 'czr-skopes-synced', onceSynced );
+                  } else {
+                        loadingFrame.bind( 'synced', onceSynced );
+                  }
+                  previewer.trigger( 'ready', readyData );
+            });
+            previewer.loading.fail( function( reason, location ) {
+                  api.consoleLog('LOADING FAILED : ' , arguments );
+                  previewer.send( 'loading-failed' );
+                  if ( ! api.czr_isChangeSetOn() ) {
+                      if ( 'redirect' === reason && location ) {
+                            previewer.previewUrl( location );
+                      }
+                  }
+
+                  if ( 'logged out' === reason ) {
+                        if ( previewer.preview ) {
+                              previewer.preview.destroy();
+                              delete previewer.preview;
+                        }
+
+                        previewer.login().done( previewer.refresh );
+                  }
+
+                  if ( 'cheatin' === reason ) {
+                        previewer.cheatin();
+                  }
+                  dfd.reject( reason );
+            });
+
+            return dfd.promise();
+      };//_new_refresh()
+      api.bind( 'czr-skope-started' , function() {
+            czr_override_refresh_for_skope();
+            api.Previewer.prototype.refresh = _new_refresh;
+      });
+      api.czr_getSkopeQueryParams = function( params ) {
+            if ( ! api.czr_isChangeSetOn() )
+              return params;
+            params = ! _.isObject(params) ? {} : params;
+            var _action = params.action || 'refresh';
+            switch( _action ) {
+                  case 'refresh' :
+                      params = $.extend( params, { excludeCustomizedSaved: true } );
+                  break;
+            }
+            return params;
+      };
+      czr_override_refresh_for_skope = function() {
+            if ( ! serverControlParams.isSkopOn )
+              return;
+
+
+            /**
+            * Refresh the preview.
+            */
+            api.previewer.refresh = function( _params_ ) {
+                  var dfd = $.Deferred();
+                  var _refresh_ = function( params ) {
+                        var refreshOnceProcessingComplete,
+                            isProcessingComplete = function() {
+                              return 0 === api.state( 'processing' ).get();
+                            },
+                            resolveRefresh = function() {
+                                  _new_refresh.call( api.previewer, params ).done( function( refresh_data ) {
+                                        dfd.resolve( refresh_data );
+                                  });
+                            };
+                        if ( isProcessingComplete() ) {
+                              resolveRefresh();
+                        } else {
+                              refreshOnceProcessingComplete = function() {
+                                    if ( isProcessingComplete() ) {
+                                          resolveRefresh();
+                                          api.state( 'processing' ).unbind( refreshOnceProcessingComplete );
+                                    }
+                              };
+                              api.state( 'processing' ).bind( refreshOnceProcessingComplete );
+                        }
+                  };
+                  _refresh_ = _.debounce( _refresh_, api.previewer.refreshBuffer );
+                  _refresh_( _params_ );
+                  return dfd.promise();
+            };
+      };//czr_override_refresh_for_skope
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      if ( ! serverControlParams.isSkopOn )
+        return;
+
+      /**
+       * Get the dirty setting values.
+       * Overrides the default method introduced in 4.7
+       * !! This method only returns the dirties of the global skope !!
+       *
+       * @param {object} [options] Options.
+       * @param {boolean} [options.unsaved=false] Whether only values not saved yet into a changeset will be returned (differential changes).
+       * @returns {object} Dirty setting values.
+       */
+      api.dirtyValues = function dirtyValues( options ) {
+            return api.czr_skopeBase.getSkopeDirties( api.czr_skopeBase.getGlobalSkopeId(), options );
+      };
+
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      if ( ! serverControlParams.isSkopOn || ! api.czr_isChangeSetOn() )
+        return;
+      var _original_requestChangesetUpdate = api.requestChangesetUpdate;
+
+      /**
+       * Request updates to the changeset.
+       * Always calls the original method when the first promise (the skope changeset save) has been executed.
+       * Returns the $ promise with the set of data from the original method
+       *
+       * @param {object} [changes] Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
+       *                           If not provided, then the changes will still be obtained from unsaved dirty settings.
+       * @returns {jQuery.Promise}
+       */
+      api.requestChangesetUpdate = function( changes ) {
+            var self = this,
+                dfd = $.Deferred(),
+                data,
+                _skopesToUpdate = [],
+                _promises = [],
+                _global_skope_changes = changes || {},
+                failedPromises = [],
+                _all_skopes_data_ = [],
+                _recursiveCallDeferred = $.Deferred();
+            if ( ! serverControlParams.isSkopOn ) {
+                  return _original_requestChangesetUpdate();
+            }
+            if ( 0 === api._lastSavedRevision || _.isEmpty( api.state( 'changesetStatus' )() ) ) {
+                  _global_skope_changes = _.extend( _global_skope_changes, {
+                        blogname : { dummy_change : 'dummy_change' }
+                  } );
+            }
+            _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                  if ( 'global' == _skp.skope )
+                    return;
+                  _skopesToUpdate.push( _skp.id );
+            } );
+
+            var _mayBeresolve = function( _index ) {
+                  if ( ! _.isUndefined( _skopesToUpdate[ _index + 1 ] ) || _promises.length != _skopesToUpdate.length )
+                    return;
+
+                  if ( _.isEmpty( failedPromises ) ) {
+                        _recursiveCallDeferred.resolve( _all_skopes_data_ );
+                  } else {
+                        var _buildResponse = function() {
+                                  var _failedResponse = [];
+                                  _.each( failedPromises, function( _r ) {
+                                        _failedResponse.push( api.czr_skopeBase.buildServerResponse( _r ) );
+                                  } );
+                                  return $.trim( _failedResponse.join( ' | ') );
+                        };
+                        _recursiveCallDeferred.reject( _buildResponse() );
+                  }
+                  return true;
+            };
+            var recursiveCall = function( _index ) {
+                  if ( _.isUndefined( _index ) || ( ( 0 * 0 ) == _index ) ) {
+                      api.state( 'processing' ).set( 1 );
+                  }
+
+                  _index = _index || 0;
+                  if ( _.isUndefined( _skopesToUpdate[_index] ) ) {
+                        api.consoleLog( 'Undefined Skope in changeset recursive call ', _index, _skopesToUpdate, _skopesToUpdate[_index] );
+                        return _recursiveCallDeferred.resolve( _all_skopes_data_ ).promise();
+                  }
+                  api._requestSkopeChangetsetUpdate( changes, _skopesToUpdate[_index] )
+                        .always( function() { _promises.push( _index ); } )
+                        .fail( function( response ) {
+                              failedPromises.push( response );
+                              api.consoleLog('CHANGESET UPDATE RECURSIVE FAIL FOR SKOPE : ', _skopesToUpdate[_index] );
+                              if (  ! _mayBeresolve( _index ) )
+                                recursiveCall( _index + 1 );
+                        } )
+                        .done( function( _skope_data_ ) {
+                              _all_skopes_data_.push( _skope_data_ );
+                              if (  ! _mayBeresolve( _index ) )
+                                recursiveCall( _index + 1 );
+                        } );
+
+                  return _recursiveCallDeferred.promise();
+            };
+            var _lastSavedRevisionBefore = api._lastSavedRevision;
+            _original_requestChangesetUpdate( _global_skope_changes )
+                  .fail( function( r ) {
+                        api.consoleLog( 'WP requestChangesetUpdateFail', r, api.czr_skopeBase.buildServerResponse(r) );
+                        api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
+                        api.state( 'processing' ).set( 0 );
+
+                        dfd.reject( r );
+                        r = api.czr_skopeBase.buildServerResponse(r);
+                        api.czr_serverNotification( { message: r, status : 'error' } );
+                  })
+                  .done( function( wp_original_response ) {
+                        if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
+                          dfd.resolve( wp_original_response );
+
+                        api._lastSavedRevision = _lastSavedRevisionBefore;
+                        recursiveCall()
+                              .always( function() {
+                                    api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
+                                    api.state( 'processing' ).set( 0 );
+                              })
+                              .fail( function( r ) {
+                                    dfd.reject( r );
+                                    api.consoleLog( 'CHANGESET UPDATE RECURSIVE PUSH FAIL', r , _all_skopes_data_ );
+                                    api.trigger( 'changeset-error', r );
+                                    api.czr_serverNotification( { message: r, status : 'error' } );
+                              } )
+                              .done( function() {
+                                    dfd.resolve( wp_original_response );
+                              });
+                  });
+
+            return dfd.promise();
+      };
+      api._requestSkopeChangetsetUpdate = function( changes, skope_id ) {
+            if ( _.isUndefined( skope_id ) || ! api.czr_skope.has( skope_id ) ) {
+                  throw new Error( 'In api._requestSkopeChangetsetUpdate() : a valid and registered skope_id must be provided' );
+            }
+
+            var deferred = new $.Deferred(),
+                request,
+                submittedChanges = {},
+                data;
+            skope_id = skope_id || api.czr_activeSkopeId();
+
+            if ( changes ) {
+                  _.extend( submittedChanges, changes );
+            }
+            _.each( api.czr_skopeBase.getSkopeDirties( skope_id ) , function( dirtyValue, settingId ) {
+                  if ( ! changes || null !== changes[ settingId ] ) {
+                        submittedChanges[ settingId ] = _.extend(
+                              {},
+                              submittedChanges[ settingId ] || {},
+                              { value: dirtyValue }
+                        );
+                  }
+            } );
+            if ( _.isEmpty( submittedChanges ) ) {
+                  deferred.resolve( {} );
+                  return deferred.promise();
+            }
+
+            if ( api._latestRevision <= api._lastSavedRevision ) {
+                  deferred.resolve( {} );
+                  return deferred.promise();
+            }
+            api.trigger( 'skope-changeset-save', submittedChanges );
+
+            var queryVars = {
+                  skope_id : skope_id,
+                  action : 'changeset_update',
+                  opt_name : api.czr_skope( skope_id ).opt_name
+            };
+            data = api.previewer.query( _.extend( queryVars, { excludeCustomizedSaved: true } ) );
+            delete data.customized; // Being sent in customize_changeset_data instead.
+            _.extend( data, {
+                  nonce: api.settings.nonce.save,
+                  customize_changeset_data: JSON.stringify( submittedChanges )
+            } );
+            wp.ajax.post( 'customize_skope_changeset_save', data )
+                  .done( function requestChangesetUpdateDone( _data_ ) {
+                        deferred.resolve( _data_ );
+                  } )
+                  .fail( function requestChangesetUpdateFail( _data_ ) {
+                        api.consoleLog('SKOPE CHANGESET FAIL FOR SKOPE ' + _data_.skope_id, _data_ );
+                        deferred.reject( _data_ );
+                  } )
+                  .always( function( _data_ ) {
+                        if ( _data_.setting_validities ) {
+                              api._handleSettingValidities( {
+                                    settingValidities: _data_.setting_validities
+                              } );
+                        }
+                  } );
+
+            return deferred.promise();
+      };
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      /*****************************************************************************
+      * FIRE SKOPE ON READY
+      *****************************************************************************/
+      api.czr_skopeReady = $.Deferred();
+      api.bind( 'ready' , function() {
+            if ( serverControlParams.isSkopOn ) {
+                  api.czr_isLoadingSkope  = new api.Value( false );
+                  api.czr_isLoadingSkope.bind( function( loading ) {
+                        toggleSkopeLoadPane( loading );
+                  });
+                  api.czr_skopeBase   = new api.CZR_skopeBase();
+                  api.czr_skopeSave   = new api.CZR_skopeSave();
+                  api.czr_skopeReset  = new api.CZR_skopeReset();
+
+                  api.trigger('czr-skope-started');
+                  var _toggleTopFailureNote = function() {
+                        api.czr_skopeBase.toggleTopNote( true, {
+                              title : serverControlParams.i18n.skope['There was a problem when trying to load the customizer.'],
+                              message : [
+                                    serverControlParams.i18n.skope['Please refer to'],
+                                    '<a href="http://docs.presscustomizr.com/article/285-there-was-a-problem-when-trying-to-load-the-customizer" target="_blank">',
+                                    serverControlParams.i18n.skope['this documentation page'],
+                                    '</a>',
+                                    serverControlParams.i18n.skope['to understand how to fix the problem.']
+                              ].join(' '),
+                              selfCloseAfter : 40000
+                        });
+                  };
+
+
+                  api.czr_skopeReady
+                        .done( function() {
+                              api.trigger('czr-skope-ready');
+                        })
+                        .fail( function( error ) {
+                              api.errorLog( 'Skope could not be instantiated : ' + error );
+                              _toggleTopFailureNote();
+                              serverControlParams.isSkopOn = false;
+                        })
+                        .always( function() {
+                              api.czr_isLoadingSkope( false );
+                        });
+                  if ( 'rejected' != api.czr_skopeReady.state() ) {
+                        setTimeout( function() {
+                            if ( 'pending' == api.czr_skopeReady.state() )  {
+                                  _toggleTopFailureNote();
+
+                                  api.czr_isLoadingSkope( false );
+                            }
+                        }, 40000);
+                  }
+            }
+            if ( serverControlParams.isChangeSetOn ) {
+                  api.settings.timeouts.changesetAutoSave = 10000;
+            }
+      } );
+      if ( ! _.has( api, '_latestRevision') ) {
+            /**
+             * Current change count.
+             */
+            api._latestRevision = 0;
+
+            /**
+             * Latest revisions associated with the updated setting.
+             */
+            api._latestSettingRevisions = {};
+
+            /*
+             * Keep track of the revision associated with each updated setting so that
+             * requestChangesetUpdate knows which dirty settings to include. Also, once
+             * ready is triggered and all initial settings have been added, increment
+             * revision for each newly-created initially-dirty setting so that it will
+             * also be included in changeset update requests.
+             */
+            api.bind( 'change', function incrementChangedSettingRevision( setting ) {
+                  api._latestRevision += 1;
+                  api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+            } );
+            api.bind( 'ready', function() {
+                  api.bind( 'add', function incrementCreatedSettingRevision( setting ) {
+                        if ( setting._dirty ) {
+                              api._latestRevision += 1;
+                              api._latestSettingRevisions[ setting.id ] = api._latestRevision;
+                        }
+                  } );
+            } );
+      }
+      var toggleSkopeLoadPane = function( loading ) {
+            loading = _.isUndefined( loading ) ? true : loading;
+            var self = this, $skopeLoadingPanel,
+                _render = function() {
+                      var dfd = $.Deferred();
+                      try {
+                            _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
+                      } catch( er ) {
+                            api.errorLog( 'In toggleSkopeLoadPane : error when parsing the the reset skope template : ' + er );
+                            dfd.resolve( false );
+                      }
+                      $.when( $('#customize-preview').after( $( _tmpl ) ) )
+                            .always( function() {
+                                  dfd.resolve( $( '#czr-skope-pane' ) );
+                            });
+
+                      return dfd.promise();
+                },
+                _destroy = function() {
+                      _.delay( function() {
+                            $.when( $('body').removeClass('czr-skope-pane-open') ).done( function() {
+                                  _.delay( function() {
+                                        $.when( $('body').removeClass('czr-skop-loading') ).done( function() {
+                                              if ( false !== $( '#czr-skope-pane' ).length ) {
+                                                    setTimeout( function() {
+                                                          $( '#czr-skope-pane' ).remove();
+                                                    }, 400 );
+                                              }
+                                        });
+                                  }, 200);
+                            });
+                      }, 50);
+                };
+            if ( 'pending' == api.czr_skopeReady.state() && loading ) {
+                  $('body').addClass('czr-skop-loading');
+                  _render()
+                        .done( function( $_el ) {
+                              $skopeLoadingPanel = $_el;
+                        })
+                        .then( function() {
+                              if ( ! $skopeLoadingPanel.length )
+                                return;
+
+                              _.delay( function() {
+                                    var _height = $('#customize-preview').height();
+                                    $skopeLoadingPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
+                                    $('body').addClass('czr-skope-pane-open');
+                              }, 50 );
+                        });
+            }
+
+            api.czr_skopeReady.done( function() {
+                  _destroy();
+            });
+            if ( ! loading ) {
+                  _destroy();
+            }
+      };//toggleSkopeLoadPane
+
+})( wp.customize , jQuery, _);
 
 
 
@@ -4996,6 +8875,213 @@ $.extend( CZRSkopeMths, {
       }
 });//$.extend(
 })( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      $.extend( CZRSkopeBaseMths, api.Events );
+      $.extend( CZRSkopeMths, api.Events );
+      $.extend( CZRSkopeMths, api.CZR_Helpers );
+      api.CZR_skopeBase             = api.Class.extend( CZRSkopeBaseMths );
+      api.CZR_skopeSave             = api.Class.extend( CZRSkopeSaveMths );
+      api.CZR_skopeReset            = api.Class.extend( CZRSkopeResetMths );
+      api.CZR_skope                 = api.Value.extend( CZRSkopeMths ); //=> used as constructor when creating the collection of skopes
+      if ( _.has(api, 'HeaderTool') ) {
+            api.czr_HeaderTool = $.extend(  true, {}, api.HeaderTool );
+      }
+
+})( wp.customize, jQuery, _ );
+( function ( api, $, _ ) {
+      api.bind('ready', function() {
+            var _do = function() {
+                  api.section('themes').active.bind( function( active ) {
+                        if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
+                          return;
+                        api.section('themes').active( serverControlParams.isThemeSwitchOn );
+                        api.section('themes').active.callbacks = $.Callbacks();
+                  });
+            };
+            if ( api.section.has( 'themes') )
+                _do();
+            else
+                api.section.when( 'themes', function( _s ) {
+                      _do();
+                });
+      });
+
+
+
+})( wp.customize , jQuery, _);
+( function ( api, $, _ ) {
+      /*****************************************************************************
+      * DEFINE SOME USEFUL OBSERVABLE VALUES
+      *****************************************************************************/
+      api.czr_activeSectionId = new api.Value('');
+      api.czr_activePanelId = new api.Value('');
+
+      /*****************************************************************************
+      * OBSERVE UBIQUE CONTROL'S SECTIONS EXPANSION
+      *****************************************************************************/
+      if ( 'function' === typeof api.Section ) {
+            api.control.bind( 'add', function( _ctrl ) {
+                  if ( _ctrl.params.ubq_section && _ctrl.params.ubq_section.section ) {
+                        _ctrl.params.original_priority = _ctrl.params.priority;
+                        _ctrl.params.original_section  = _ctrl.params.section;
+
+                        api.section.when( _ctrl.params.ubq_section.section, function( _section_instance ) {
+                                _section_instance.expanded.bind( function( expanded ) {
+                                      if ( expanded ) {
+                                            if ( _ctrl.params.ubq_section.priority ) {
+                                                  _ctrl.priority( _ctrl.params.ubq_section.priority );
+                                            }
+                                            _ctrl.section( _ctrl.params.ubq_section.section );
+                                      }
+                                      else {
+                                            _ctrl.priority( _ctrl.params.original_priority );
+                                            _ctrl.section( _ctrl.params.original_section );
+                                      }
+                                });
+
+                        } );
+                  }
+            });
+      }
+
+
+      /*****************************************************************************
+      * OBSERVE UBIQUE CONTROL'S PANELS EXPANSION
+      *****************************************************************************/
+      if ( 'function' === typeof api.Panel ) {
+            api.section.bind( 'add', function( _sec ) {
+                  if ( _sec.params.ubq_panel && _sec.params.ubq_panel.panel ) {
+                        _sec.params.original_priority = _sec.params.priority;
+                        _sec.params.original_panel  = _sec.params.panel;
+
+                        api.panel.when( _sec.params.ubq_panel.panel, function( _panel_instance ) {
+                                _panel_instance.expanded.bind( function( expanded ) {
+                                      if ( expanded ) {
+                                            if ( _sec.params.ubq_panel.priority ) {
+                                                  _sec.priority( _sec.params.ubq_panel.priority );
+                                            }
+                                            _sec.panel( _sec.params.ubq_panel.panel );
+                                      }
+                                      else {
+                                            _sec.priority( _sec.params.original_priority );
+                                            _sec.panel( _sec.params.original_panel );
+                                      }
+                                });
+
+                        } );
+                  }
+            });
+      }
+
+
+      /*****************************************************************************
+      * CLOSE THE MOD OPTION PANEL ( if exists ) ON : section change, panel change, skope switch
+      *****************************************************************************/
+      var _closeModOpt = function() {
+            if ( ! _.has( api, 'czr_ModOptVisible') )
+              return;
+            api.czr_ModOptVisible(false);
+      };
+      api.czr_activeSectionId.bind( _closeModOpt );
+      api.czr_activePanelId.bind( _closeModOpt );
+
+      /*****************************************************************************
+      * OBSERVE SECTIONS AND PANEL EXPANSION
+      * /store the current expanded section and panel
+      *****************************************************************************/
+      api.bind('ready', function() {
+            if ( 'function' != typeof api.Section ) {
+              throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
+            }
+            var _storeCurrentSection = function( expanded, section_id ) {
+                  api.czr_activeSectionId( expanded ? section_id : '' );
+            };
+            api.section.each( function( _sec ) {
+                  _sec.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, _sec.id ); } );
+            });
+            api.section.bind( 'add', function( section_instance ) {
+                  api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
+                  section_instance.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, section_instance.id ); } );
+            });
+
+            var _storeCurrentPanel = function( expanded, panel_id ) {
+                  api.czr_activePanelId( expanded ? panel_id : '' );
+                  if ( _.isEmpty( api.czr_activePanelId() ) ) {
+                        api.czr_activeSectionId( '' );
+                  }
+            };
+            api.panel.each( function( _panel ) {
+                  _panel.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, _panel.id ); } );
+            });
+            api.panel.bind( 'add', function( panel_instance ) {
+                  panel_instance.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, panel_instance.id ); } );
+            });
+      });
+
+
+})( wp.customize , jQuery, _);
+( function ( api, $, _ ) {
+      /*****************************************************************************
+      * ADD PRO BEFORE SPECIFIC SECTIONS AND PANELS
+      *****************************************************************************/
+      if ( serverControlParams.isPro ) {
+            _.each( [
+                  'tc_font_customizer_settings',//WFC
+
+                  'header_image_sec',//hueman pro
+                  'content_blog_sec',//hueman pro
+                  'static_front_page',//hueman pro
+                  'content_single_sec',//hueman pro
+
+                  'tc_fpu',//customizr-pro
+                  'nav',//customizr-pro
+                  'post_lists_sec'//customizr-pro
+
+            ], function( _secId ) {
+                  _.delay( function() {
+                      api.section.when( _secId, function( _sec_ ) {
+                            if ( 1 >= _sec_.headContainer.length ) {
+                                _sec_.headContainer.find('.accordion-section-title').prepend( '<span class="pro-title-block">Pro</span>' );
+                            }
+                      });
+                  }, 1000 );
+            });
+            _.each( [
+                  'hu-header-panel',//hueman pro
+                  'hu-content-panel',//hueman pro
+
+                  'tc-header-panel',//customizr-pro
+                  'tc-content-panel',//customizr-pro
+                  'tc-footer-panel'//customizr-pro
+            ], function( _secId ) {
+                  api.panel.when( _secId, function( _sec_ ) {
+                        if ( 1 >= _sec_.headContainer.length ) {
+                            _sec_.headContainer.find('.accordion-section-title').prepend( '<span class="pro-title-block">Pro</span>' );
+                        }
+                  });
+            });
+      }
+
+
+      /*****************************************************************************
+      * PRO SECTION CONSTRUCTOR
+      *****************************************************************************/
+      if ( ! serverControlParams.isPro && _.isFunction( api.Section ) ) {
+            proSectionConstructor = api.Section.extend( {
+                  active : true,
+                  attachEvents: function () {},
+                  isContextuallyActive: function () {
+                    return this.active();
+                  },
+                  _toggleActive: function(){ return true; },
+
+            } );
+
+            $.extend( api.sectionConstructor, {
+                  'czr-customize-section-pro' : proSectionConstructor
+            });
+      }
+})( wp.customize , jQuery, _);
 var CZRSocialModuleMths = CZRSocialModuleMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSocialModuleMths, {
@@ -6205,7 +10291,6 @@ var CZRCroppedImageMths = CZRCroppedImageMths || {};
             },
       });//extend
 })( wp.customize, jQuery, _);
-
 var CZRUploadMths = CZRUploadMths || {};
 ( function ( api, $, _ ) {
 /**
@@ -6298,6 +10383,28 @@ $.extend( CZRLayoutSelectMths , {
       },
 });//$.extend
 })( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+
+      api.CZRUploadControl          = api.Control.extend( CZRUploadMths );
+      api.CZRLayoutControl          = api.Control.extend( CZRLayoutSelectMths );
+      api.CZRMultiplePickerControl  = api.Control.extend( CZRMultiplePickerMths );
+
+
+      $.extend( api.controlConstructor, {
+            czr_upload     : api.CZRUploadControl,
+            czr_multiple_picker : api.CZRMultiplePickerControl,
+            czr_layouts    : api.CZRLayoutControl
+      });
+
+      if ( 'function' == typeof api.CroppedImageControl ) {
+            api.CZRCroppedImageControl   = api.CroppedImageControl.extend( CZRCroppedImageMths );
+
+            $.extend( api.controlConstructor, {
+                  czr_cropped_image : api.CZRCroppedImageControl
+            });
+      }
+
+})( wp.customize, jQuery, _ );
 ( function (api, $, _) {
       var $_nav_section_container,
           i18n = serverControlParams.i18n || {};

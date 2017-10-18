@@ -1,4 +1,212 @@
 
+( function ( api, $, _ ) {
+      //SET THE ACTIVE STATE OF THE THEMES SECTION BASED ON WHAT THE SERVER SENT
+      api.bind('ready', function() {
+            var _do = function() {
+                  api.section('themes').active.bind( function( active ) {
+                        if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
+                          return;
+                        api.section('themes').active( serverControlParams.isThemeSwitchOn );
+                        //reset the callbacks
+                        api.section('themes').active.callbacks = $.Callbacks();
+                  });
+            };
+            if ( api.section.has( 'themes') )
+                _do();
+            else
+                api.section.when( 'themes', function( _s ) {
+                      _do();
+                });
+      });
+
+
+
+})( wp.customize , jQuery, _);
+( function ( api, $, _ ) {
+      /*****************************************************************************
+      * DEFINE SOME USEFUL OBSERVABLE VALUES
+      *****************************************************************************/
+      //STORE THE CURRENTLY ACTIVE SECTION AND PANELS IN AN OBSERVABLE VALUE
+      //BIND EXISTING AND FUTURE SECTIONS AND PANELS
+      api.czr_activeSectionId = new api.Value('');
+      api.czr_activePanelId = new api.Value('');
+
+      /*****************************************************************************
+      * OBSERVE UBIQUE CONTROL'S SECTIONS EXPANSION
+      *****************************************************************************/
+      if ( 'function' === typeof api.Section ) {
+            //move controls back and forth in declared ubique sections
+            //=> implemented in the customizr theme for the social links boolean visibility controls ( socials in header, sidebar, footer )
+            api.control.bind( 'add', function( _ctrl ) {
+                  if ( _ctrl.params.ubq_section && _ctrl.params.ubq_section.section ) {
+                        //save original state
+                        _ctrl.params.original_priority = _ctrl.params.priority;
+                        _ctrl.params.original_section  = _ctrl.params.section;
+
+                        api.section.when( _ctrl.params.ubq_section.section, function( _section_instance ) {
+                                _section_instance.expanded.bind( function( expanded ) {
+                                      if ( expanded ) {
+                                            if ( _ctrl.params.ubq_section.priority ) {
+                                                  _ctrl.priority( _ctrl.params.ubq_section.priority );
+                                            }
+                                            _ctrl.section( _ctrl.params.ubq_section.section );
+                                      }
+                                      else {
+                                            _ctrl.priority( _ctrl.params.original_priority );
+                                            _ctrl.section( _ctrl.params.original_section );
+                                      }
+                                });
+
+                        } );
+                  }
+            });
+      }
+
+
+      /*****************************************************************************
+      * OBSERVE UBIQUE CONTROL'S PANELS EXPANSION
+      *****************************************************************************/
+      if ( 'function' === typeof api.Panel ) {
+            //move section back and forth in declared ubique panels
+            api.section.bind( 'add', function( _sec ) {
+                  if ( _sec.params.ubq_panel && _sec.params.ubq_panel.panel ) {
+                        //save original state
+                        _sec.params.original_priority = _sec.params.priority;
+                        _sec.params.original_panel  = _sec.params.panel;
+
+                        api.panel.when( _sec.params.ubq_panel.panel, function( _panel_instance ) {
+                                _panel_instance.expanded.bind( function( expanded ) {
+                                      if ( expanded ) {
+                                            if ( _sec.params.ubq_panel.priority ) {
+                                                  _sec.priority( _sec.params.ubq_panel.priority );
+                                            }
+                                            _sec.panel( _sec.params.ubq_panel.panel );
+                                      }
+                                      else {
+                                            _sec.priority( _sec.params.original_priority );
+                                            _sec.panel( _sec.params.original_panel );
+                                      }
+                                });
+
+                        } );
+                  }
+            });
+      }
+
+
+      /*****************************************************************************
+      * CLOSE THE MOD OPTION PANEL ( if exists ) ON : section change, panel change, skope switch
+      *****************************************************************************/
+      //@return void()
+      var _closeModOpt = function() {
+            if ( ! _.has( api, 'czr_ModOptVisible') )
+              return;
+            api.czr_ModOptVisible(false);
+      };
+      api.czr_activeSectionId.bind( _closeModOpt );
+      api.czr_activePanelId.bind( _closeModOpt );
+
+      /*****************************************************************************
+      * OBSERVE SECTIONS AND PANEL EXPANSION
+      * /store the current expanded section and panel
+      *****************************************************************************/
+      api.bind('ready', function() {
+            if ( 'function' != typeof api.Section ) {
+              throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
+            }
+            var _storeCurrentSection = function( expanded, section_id ) {
+                  api.czr_activeSectionId( expanded ? section_id : '' );
+            };
+            api.section.each( function( _sec ) {
+                  _sec.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, _sec.id ); } );
+            });
+            api.section.bind( 'add', function( section_instance ) {
+                  api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
+                  section_instance.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, section_instance.id ); } );
+            });
+
+            var _storeCurrentPanel = function( expanded, panel_id ) {
+                  api.czr_activePanelId( expanded ? panel_id : '' );
+                  //if the expanded panel id becomes empty (typically when switching back to the root panel), make sure that no section is set as currently active
+                  //=> fixes the problem of add_menu section staying expanded when switching back to another panel
+                  if ( _.isEmpty( api.czr_activePanelId() ) ) {
+                        api.czr_activeSectionId( '' );
+                  }
+            };
+            api.panel.each( function( _panel ) {
+                  _panel.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, _panel.id ); } );
+            });
+            api.panel.bind( 'add', function( panel_instance ) {
+                  panel_instance.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, panel_instance.id ); } );
+            });
+      });
+
+
+})( wp.customize , jQuery, _);
+( function ( api, $, _ ) {
+      /*****************************************************************************
+      * ADD PRO BEFORE SPECIFIC SECTIONS AND PANELS
+      *****************************************************************************/
+      if ( serverControlParams.isPro ) {
+            _.each( [
+                  'tc_font_customizer_settings',//WFC
+
+                  'header_image_sec',//hueman pro
+                  'content_blog_sec',//hueman pro
+                  'static_front_page',//hueman pro
+                  'content_single_sec',//hueman pro
+
+                  'tc_fpu',//customizr-pro
+                  'nav',//customizr-pro
+                  'post_lists_sec'//customizr-pro
+
+            ], function( _secId ) {
+                  _.delay( function() {
+                      api.section.when( _secId, function( _sec_ ) {
+                            if ( 1 >= _sec_.headContainer.length ) {
+                                _sec_.headContainer.find('.accordion-section-title').prepend( '<span class="pro-title-block">Pro</span>' );
+                            }
+                      });
+                  }, 1000 );
+            });
+            _.each( [
+                  'hu-header-panel',//hueman pro
+                  'hu-content-panel',//hueman pro
+
+                  'tc-header-panel',//customizr-pro
+                  'tc-content-panel',//customizr-pro
+                  'tc-footer-panel'//customizr-pro
+            ], function( _secId ) {
+                  api.panel.when( _secId, function( _sec_ ) {
+                        if ( 1 >= _sec_.headContainer.length ) {
+                            _sec_.headContainer.find('.accordion-section-title').prepend( '<span class="pro-title-block">Pro</span>' );
+                        }
+                  });
+            });
+      }
+
+
+      /*****************************************************************************
+      * PRO SECTION CONSTRUCTOR
+      *****************************************************************************/
+      if ( ! serverControlParams.isPro && _.isFunction( api.Section ) ) {
+            proSectionConstructor = api.Section.extend( {
+                  active : true,
+                  // No events for this type of section.
+                  attachEvents: function () {},
+                  // Always make the section active.
+                  isContextuallyActive: function () {
+                    return this.active();
+                  },
+                  _toggleActive: function(){ return true; },
+
+            } );
+
+            $.extend( api.sectionConstructor, {
+                  'czr-customize-section-pro' : proSectionConstructor
+            });
+      }
+})( wp.customize , jQuery, _);
 //extends api.CZRDynModule
 var CZRSocialModuleMths = CZRSocialModuleMths || {};
 ( function ( api, $, _ ) {
@@ -1534,6 +1742,7 @@ $.extend( CZRBodyBgModuleMths, {
             }
       });
 })( wp.customize, jQuery, _ );
+//named czr_multiple_picker in the php setting map
 var CZRMultiplePickerMths = CZRMultiplePickerMths || {};
 /* Multiple Picker */
 /**
@@ -1566,6 +1775,7 @@ $.extend( CZRMultiplePickerMths , {
       }
 });//$.extend
 })( wp.customize , jQuery, _ );
+//named czr_cropped_image in the php setting map
 var CZRCroppedImageMths = CZRCroppedImageMths || {};
 
 (function (api, $, _) {
@@ -1676,6 +1886,7 @@ var CZRCroppedImageMths = CZRCroppedImageMths || {};
       });//extend
 })( wp.customize, jQuery, _);
 
+//named czr_upload in the php setting map
 var CZRUploadMths = CZRUploadMths || {};
 ( function ( api, $, _ ) {
 /**
@@ -1737,6 +1948,7 @@ $.extend( CZRUploadMths, {
       }
 });//extend
 })( wp.customize , jQuery, _ );
+//named czr_layouts in the php setting map
 var CZRLayoutSelectMths = CZRLayoutSelectMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRLayoutSelectMths , {
@@ -1774,6 +1986,35 @@ $.extend( CZRLayoutSelectMths , {
       },
 });//$.extend
 })( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      //THEME CONTROLS
+      //api.CZRBackgroundControl     = api.CZRItemControl.extend( CZRBackgroundMths );
+
+      //api.CZRWidgetAreasControl    = api.CZRDynModule.extend( CZRWidgetAreasMths );
+
+      api.CZRUploadControl          = api.Control.extend( CZRUploadMths );
+      api.CZRLayoutControl          = api.Control.extend( CZRLayoutSelectMths );
+      api.CZRMultiplePickerControl  = api.Control.extend( CZRMultiplePickerMths );
+
+
+      $.extend( api.controlConstructor, {
+            czr_upload     : api.CZRUploadControl,
+            //czr_sidebars   : api.CZRWidgetAreasControl,
+            //czr_socials    : api.CZRSocialControl,
+            czr_multiple_picker : api.CZRMultiplePickerControl,
+            czr_layouts    : api.CZRLayoutControl
+            //czr_background : api.CZRBackgroundControl
+      });
+
+      if ( 'function' == typeof api.CroppedImageControl ) {
+            api.CZRCroppedImageControl   = api.CroppedImageControl.extend( CZRCroppedImageMths );
+
+            $.extend( api.controlConstructor, {
+                  czr_cropped_image : api.CZRCroppedImageControl
+            });
+      }
+
+})( wp.customize, jQuery, _ );
 ( function (api, $, _) {
       var $_nav_section_container,
           i18n = serverControlParams.i18n || {};

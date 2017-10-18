@@ -1,4 +1,5 @@
 
+//named czr_multiple_picker in the php setting map
 var CZRMultiplePickerMths = CZRMultiplePickerMths || {};
 /* Multiple Picker */
 /**

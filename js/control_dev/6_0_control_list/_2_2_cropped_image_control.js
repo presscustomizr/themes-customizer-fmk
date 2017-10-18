@@ -1,4 +1,5 @@
 
+//named czr_cropped_image in the php setting map
 var CZRCroppedImageMths = CZRCroppedImageMths || {};
 
 (function (api, $, _) {

@@ -1,4 +1,5 @@
 
+//named czr_layouts in the php setting map
 var CZRLayoutSelectMths = CZRLayoutSelectMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRLayoutSelectMths , {
