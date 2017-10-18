@@ -30,406 +30,995 @@ if ( 'function' != typeof(jQuery.fn.stepper) ) {
 }/*! Select2 4.0.3 | https://github.com/select2/select2/blob/master/LICENSE.md */!function(a){"function"==typeof define&&define.amd?define(["jquery"],a):a("object"==typeof exports?require("jquery"):jQuery)}(function(a){var b=function(){if(a&&a.fn&&a.fn.select2&&a.fn.select2.amd)var b=a.fn.select2.amd;var b;return function(){if(!b||!b.requirejs){b?c=b:b={};var a,c,d;!function(b){function e(a,b){return u.call(a,b)}function f(a,b){var c,d,e,f,g,h,i,j,k,l,m,n=b&&b.split("/"),o=s.map,p=o&&o["*"]||{};if(a&&"."===a.charAt(0))if(b){for(a=a.split("/"),g=a.length-1,s.nodeIdCompat&&w.test(a[g])&&(a[g]=a[g].replace(w,"")),a=n.slice(0,n.length-1).concat(a),k=0;k<a.length;k+=1)if(m=a[k],"."===m)a.splice(k,1),k-=1;else if(".."===m){if(1===k&&(".."===a[2]||".."===a[0]))break;k>0&&(a.splice(k-1,2),k-=2)}a=a.join("/")}else 0===a.indexOf("./")&&(a=a.substring(2));if((n||p)&&o){for(c=a.split("/"),k=c.length;k>0;k-=1){if(d=c.slice(0,k).join("/"),n)for(l=n.length;l>0;l-=1)if(e=o[n.slice(0,l).join("/")],e&&(e=e[d])){f=e,h=k;break}if(f)break;!i&&p&&p[d]&&(i=p[d],j=k)}!f&&i&&(f=i,h=j),f&&(c.splice(0,h,f),a=c.join("/"))}return a}function g(a,c){return function(){var d=v.call(arguments,0);return"string"!=typeof d[0]&&1===d.length&&d.push(null),n.apply(b,d.concat([a,c]))}}function h(a){return function(b){return f(b,a)}}function i(a){return function(b){q[a]=b}}function j(a){if(e(r,a)){var c=r[a];delete r[a],t[a]=!0,m.apply(b,c)}if(!e(q,a)&&!e(t,a))throw new Error("No "+a);return q[a]}function k(a){var b,c=a?a.indexOf("!"):-1;return c>-1&&(b=a.substring(0,c),a=a.substring(c+1,a.length)),[b,a]}function l(a){return function(){return s&&s.config&&s.config[a]||{}}}var m,n,o,p,q={},r={},s={},t={},u=Object.prototype.hasOwnProperty,v=[].slice,w=/\.js$/;o=function(a,b){var c,d=k(a),e=d[0];return a=d[1],e&&(e=f(e,b),c=j(e)),e?a=c&&c.normalize?c.normalize(a,h(b)):f(a,b):(a=f(a,b),d=k(a),e=d[0],a=d[1],e&&(c=j(e))),{f:e?e+"!"+a:a,n:a,pr:e,p:c}},p={require:function(a){return g(a)},exports:function(a){var b=q[a];return"undefined"!=typeof b?b:q[a]={}},module:function(a){return{id:a,uri:"",exports:q[a],config:l(a)}}},m=function(a,c,d,f){var h,k,l,m,n,s,u=[],v=typeof d;if(f=f||a,"undefined"===v||"function"===v){for(c=!c.length&&d.length?["require","exports","module"]:c,n=0;n<c.length;n+=1)if(m=o(c[n],f),k=m.f,"require"===k)u[n]=p.require(a);else if("exports"===k)u[n]=p.exports(a),s=!0;else if("module"===k)h=u[n]=p.module(a);else if(e(q,k)||e(r,k)||e(t,k))u[n]=j(k);else{if(!m.p)throw new Error(a+" missing "+k);m.p.load(m.n,g(f,!0),i(k),{}),u[n]=q[k]}l=d?d.apply(q[a],u):void 0,a&&(h&&h.exports!==b&&h.exports!==q[a]?q[a]=h.exports:l===b&&s||(q[a]=l))}else a&&(q[a]=d)},a=c=n=function(a,c,d,e,f){if("string"==typeof a)return p[a]?p[a](c):j(o(a,c).f);if(!a.splice){if(s=a,s.deps&&n(s.deps,s.callback),!c)return;c.splice?(a=c,c=d,d=null):a=b}return c=c||function(){},"function"==typeof d&&(d=e,e=f),e?m(b,a,c,d):setTimeout(function(){m(b,a,c,d)},4),n},n.config=function(a){return n(a)},a._defined=q,d=function(a,b,c){if("string"!=typeof a)throw new Error("See almond README: incorrect module build, no module name");b.splice||(c=b,b=[]),e(q,a)||e(r,a)||(r[a]=[a,b,c])},d.amd={jQuery:!0}}(),b.requirejs=a,b.require=c,b.define=d}}(),b.define("almond",function(){}),b.define("jquery",[],function(){var b=a||$;return null==b&&console&&console.error&&console.error("Select2: An instance of jQuery or a jQuery-compatible library was not found. Make sure that you are including jQuery before Select2 on your web page."),b}),b.define("select2/utils",["jquery"],function(a){function b(a){var b=a.prototype,c=[];for(var d in b){var e=b[d];"function"==typeof e&&"constructor"!==d&&c.push(d)}return c}var c={};c.Extend=function(a,b){function c(){this.constructor=a}var d={}.hasOwnProperty;for(var e in b)d.call(b,e)&&(a[e]=b[e]);return c.prototype=b.prototype,a.prototype=new c,a.__super__=b.prototype,a},c.Decorate=function(a,c){function d(){var b=Array.prototype.unshift,d=c.prototype.constructor.length,e=a.prototype.constructor;d>0&&(b.call(arguments,a.prototype.constructor),e=c.prototype.constructor),e.apply(this,arguments)}function e(){this.constructor=d}var f=b(c),g=b(a);c.displayName=a.displayName,d.prototype=new e;for(var h=0;h<g.length;h++){var i=g[h];d.prototype[i]=a.prototype[i]}for(var j=(function(a){var b=function(){};a in d.prototype&&(b=d.prototype[a]);var e=c.prototype[a];return function(){var a=Array.prototype.unshift;return a.call(arguments,b),e.apply(this,arguments)}}),k=0;k<f.length;k++){var l=f[k];d.prototype[l]=j(l)}return d};var d=function(){this.listeners={}};return d.prototype.on=function(a,b){this.listeners=this.listeners||{},a in this.listeners?this.listeners[a].push(b):this.listeners[a]=[b]},d.prototype.trigger=function(a){var b=Array.prototype.slice,c=b.call(arguments,1);this.listeners=this.listeners||{},null==c&&(c=[]),0===c.length&&c.push({}),c[0]._type=a,a in this.listeners&&this.invoke(this.listeners[a],b.call(arguments,1)),"*"in this.listeners&&this.invoke(this.listeners["*"],arguments)},d.prototype.invoke=function(a,b){for(var c=0,d=a.length;d>c;c++)a[c].apply(this,b)},c.Observable=d,c.generateChars=function(a){for(var b="",c=0;a>c;c++){var d=Math.floor(36*Math.random());b+=d.toString(36)}return b},c.bind=function(a,b){return function(){a.apply(b,arguments)}},c._convertData=function(a){for(var b in a){var c=b.split("-"),d=a;if(1!==c.length){for(var e=0;e<c.length;e++){var f=c[e];f=f.substring(0,1).toLowerCase()+f.substring(1),f in d||(d[f]={}),e==c.length-1&&(d[f]=a[b]),d=d[f]}delete a[b]}}return a},c.hasScroll=function(b,c){var d=a(c),e=c.style.overflowX,f=c.style.overflowY;return e!==f||"hidden"!==f&&"visible"!==f?"scroll"===e||"scroll"===f?!0:d.innerHeight()<c.scrollHeight||d.innerWidth()<c.scrollWidth:!1},c.escapeMarkup=function(a){var b={"\\":"&#92;","&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;","/":"&#47;"};return"string"!=typeof a?a:String(a).replace(/[&<>"'\/\\]/g,function(a){return b[a]})},c.appendMany=function(b,c){if("1.7"===a.fn.jquery.substr(0,3)){var d=a();a.map(c,function(a){d=d.add(a)}),c=d}b.append(c)},c}),b.define("select2/results",["jquery","./utils"],function(a,b){function c(a,b,d){this.$element=a,this.data=d,this.options=b,c.__super__.constructor.call(this)}return b.Extend(c,b.Observable),c.prototype.render=function(){var b=a('<ul class="select2-results__options" role="tree"></ul>');return this.options.get("multiple")&&b.attr("aria-multiselectable","true"),this.$results=b,b},c.prototype.clear=function(){this.$results.empty()},c.prototype.displayMessage=function(b){var c=this.options.get("escapeMarkup");this.clear(),this.hideLoading();var d=a('<li role="treeitem" aria-live="assertive" class="select2-results__option"></li>'),e=this.options.get("translations").get(b.message);d.append(c(e(b.args))),d[0].className+=" select2-results__message",this.$results.append(d)},c.prototype.hideMessages=function(){this.$results.find(".select2-results__message").remove()},c.prototype.append=function(a){this.hideLoading();var b=[];if(null==a.results||0===a.results.length)return void(0===this.$results.children().length&&this.trigger("results:message",{message:"noResults"}));a.results=this.sort(a.results);for(var c=0;c<a.results.length;c++){var d=a.results[c],e=this.option(d);b.push(e)}this.$results.append(b)},c.prototype.position=function(a,b){var c=b.find(".select2-results");c.append(a)},c.prototype.sort=function(a){var b=this.options.get("sorter");return b(a)},c.prototype.highlightFirstItem=function(){var a=this.$results.find(".select2-results__option[aria-selected]"),b=a.filter("[aria-selected=true]");b.length>0?b.first().trigger("mouseenter"):a.first().trigger("mouseenter"),this.ensureHighlightVisible()},c.prototype.setClasses=function(){var b=this;this.data.current(function(c){var d=a.map(c,function(a){return a.id.toString()}),e=b.$results.find(".select2-results__option[aria-selected]");e.each(function(){var b=a(this),c=a.data(this,"data"),e=""+c.id;null!=c.element&&c.element.selected||null==c.element&&a.inArray(e,d)>-1?b.attr("aria-selected","true"):b.attr("aria-selected","false")})})},c.prototype.showLoading=function(a){this.hideLoading();var b=this.options.get("translations").get("searching"),c={disabled:!0,loading:!0,text:b(a)},d=this.option(c);d.className+=" loading-results",this.$results.prepend(d)},c.prototype.hideLoading=function(){this.$results.find(".loading-results").remove()},c.prototype.option=function(b){var c=document.createElement("li");c.className="select2-results__option";var d={role:"treeitem","aria-selected":"false"};b.disabled&&(delete d["aria-selected"],d["aria-disabled"]="true"),null==b.id&&delete d["aria-selected"],null!=b._resultId&&(c.id=b._resultId),b.title&&(c.title=b.title),b.children&&(d.role="group",d["aria-label"]=b.text,delete d["aria-selected"]);for(var e in d){var f=d[e];c.setAttribute(e,f)}if(b.children){var g=a(c),h=document.createElement("strong");h.className="select2-results__group";a(h);this.template(b,h);for(var i=[],j=0;j<b.children.length;j++){var k=b.children[j],l=this.option(k);i.push(l)}var m=a("<ul></ul>",{"class":"select2-results__options select2-results__options--nested"});m.append(i),g.append(h),g.append(m)}else this.template(b,c);return a.data(c,"data",b),c},c.prototype.bind=function(b,c){var d=this,e=b.id+"-results";this.$results.attr("id",e),b.on("results:all",function(a){d.clear(),d.append(a.data),b.isOpen()&&(d.setClasses(),d.highlightFirstItem())}),b.on("results:append",function(a){d.append(a.data),b.isOpen()&&d.setClasses()}),b.on("query",function(a){d.hideMessages(),d.showLoading(a)}),b.on("select",function(){b.isOpen()&&(d.setClasses(),d.highlightFirstItem())}),b.on("unselect",function(){b.isOpen()&&(d.setClasses(),d.highlightFirstItem())}),b.on("open",function(){d.$results.attr("aria-expanded","true"),d.$results.attr("aria-hidden","false"),d.setClasses(),d.ensureHighlightVisible()}),b.on("close",function(){d.$results.attr("aria-expanded","false"),d.$results.attr("aria-hidden","true"),d.$results.removeAttr("aria-activedescendant")}),b.on("results:toggle",function(){var a=d.getHighlightedResults();0!==a.length&&a.trigger("mouseup")}),b.on("results:select",function(){var a=d.getHighlightedResults();if(0!==a.length){var b=a.data("data");"true"==a.attr("aria-selected")?d.trigger("close",{}):d.trigger("select",{data:b})}}),b.on("results:previous",function(){var a=d.getHighlightedResults(),b=d.$results.find("[aria-selected]"),c=b.index(a);if(0!==c){var e=c-1;0===a.length&&(e=0);var f=b.eq(e);f.trigger("mouseenter");var g=d.$results.offset().top,h=f.offset().top,i=d.$results.scrollTop()+(h-g);0===e?d.$results.scrollTop(0):0>h-g&&d.$results.scrollTop(i)}}),b.on("results:next",function(){var a=d.getHighlightedResults(),b=d.$results.find("[aria-selected]"),c=b.index(a),e=c+1;if(!(e>=b.length)){var f=b.eq(e);f.trigger("mouseenter");var g=d.$results.offset().top+d.$results.outerHeight(!1),h=f.offset().top+f.outerHeight(!1),i=d.$results.scrollTop()+h-g;0===e?d.$results.scrollTop(0):h>g&&d.$results.scrollTop(i)}}),b.on("results:focus",function(a){a.element.addClass("select2-results__option--highlighted")}),b.on("results:message",function(a){d.displayMessage(a)}),a.fn.mousewheel&&this.$results.on("mousewheel",function(a){var b=d.$results.scrollTop(),c=d.$results.get(0).scrollHeight-b+a.deltaY,e=a.deltaY>0&&b-a.deltaY<=0,f=a.deltaY<0&&c<=d.$results.height();e?(d.$results.scrollTop(0),a.preventDefault(),a.stopPropagation()):f&&(d.$results.scrollTop(d.$results.get(0).scrollHeight-d.$results.height()),a.preventDefault(),a.stopPropagation())}),this.$results.on("mouseup",".select2-results__option[aria-selected]",function(b){var c=a(this),e=c.data("data");return"true"===c.attr("aria-selected")?void(d.options.get("multiple")?d.trigger("unselect",{originalEvent:b,data:e}):d.trigger("close",{})):void d.trigger("select",{originalEvent:b,data:e})}),this.$results.on("mouseenter",".select2-results__option[aria-selected]",function(b){var c=a(this).data("data");d.getHighlightedResults().removeClass("select2-results__option--highlighted"),d.trigger("results:focus",{data:c,element:a(this)})})},c.prototype.getHighlightedResults=function(){var a=this.$results.find(".select2-results__option--highlighted");return a},c.prototype.destroy=function(){this.$results.remove()},c.prototype.ensureHighlightVisible=function(){var a=this.getHighlightedResults();if(0!==a.length){var b=this.$results.find("[aria-selected]"),c=b.index(a),d=this.$results.offset().top,e=a.offset().top,f=this.$results.scrollTop()+(e-d),g=e-d;f-=2*a.outerHeight(!1),2>=c?this.$results.scrollTop(0):(g>this.$results.outerHeight()||0>g)&&this.$results.scrollTop(f)}},c.prototype.template=function(b,c){var d=this.options.get("templateResult"),e=this.options.get("escapeMarkup"),f=d(b,c);null==f?c.style.display="none":"string"==typeof f?c.innerHTML=e(f):a(c).append(f)},c}),b.define("select2/keys",[],function(){var a={BACKSPACE:8,TAB:9,ENTER:13,SHIFT:16,CTRL:17,ALT:18,ESC:27,SPACE:32,PAGE_UP:33,PAGE_DOWN:34,END:35,HOME:36,LEFT:37,UP:38,RIGHT:39,DOWN:40,DELETE:46};return a}),b.define("select2/selection/base",["jquery","../utils","../keys"],function(a,b,c){function d(a,b){this.$element=a,this.options=b,d.__super__.constructor.call(this)}return b.Extend(d,b.Observable),d.prototype.render=function(){var b=a('<span class="select2-selection" role="combobox"  aria-haspopup="true" aria-expanded="false"></span>');return this._tabindex=0,null!=this.$element.data("old-tabindex")?this._tabindex=this.$element.data("old-tabindex"):null!=this.$element.attr("tabindex")&&(this._tabindex=this.$element.attr("tabindex")),b.attr("title",this.$element.attr("title")),b.attr("tabindex",this._tabindex),this.$selection=b,b},d.prototype.bind=function(a,b){var d=this,e=(a.id+"-container",a.id+"-results");this.container=a,this.$selection.on("focus",function(a){d.trigger("focus",a)}),this.$selection.on("blur",function(a){d._handleBlur(a)}),this.$selection.on("keydown",function(a){d.trigger("keypress",a),a.which===c.SPACE&&a.preventDefault()}),a.on("results:focus",function(a){d.$selection.attr("aria-activedescendant",a.data._resultId)}),a.on("selection:update",function(a){d.update(a.data)}),a.on("open",function(){d.$selection.attr("aria-expanded","true"),d.$selection.attr("aria-owns",e),d._attachCloseHandler(a)}),a.on("close",function(){d.$selection.attr("aria-expanded","false"),d.$selection.removeAttr("aria-activedescendant"),d.$selection.removeAttr("aria-owns"),d.$selection.focus(),d._detachCloseHandler(a)}),a.on("enable",function(){d.$selection.attr("tabindex",d._tabindex)}),a.on("disable",function(){d.$selection.attr("tabindex","-1")})},d.prototype._handleBlur=function(b){var c=this;window.setTimeout(function(){document.activeElement==c.$selection[0]||a.contains(c.$selection[0],document.activeElement)||c.trigger("blur",b)},1)},d.prototype._attachCloseHandler=function(b){a(document.body).on("mousedown.select2."+b.id,function(b){var c=a(b.target),d=c.closest(".select2"),e=a(".select2.select2-container--open");e.each(function(){var b=a(this);if(this!=d[0]){var c=b.data("element");c.select2("close")}})})},d.prototype._detachCloseHandler=function(b){a(document.body).off("mousedown.select2."+b.id)},d.prototype.position=function(a,b){var c=b.find(".selection");c.append(a)},d.prototype.destroy=function(){this._detachCloseHandler(this.container)},d.prototype.update=function(a){throw new Error("The `update` method must be defined in child classes.")},d}),b.define("select2/selection/single",["jquery","./base","../utils","../keys"],function(a,b,c,d){function e(){e.__super__.constructor.apply(this,arguments)}return c.Extend(e,b),e.prototype.render=function(){var a=e.__super__.render.call(this);return a.addClass("select2-selection--single"),a.html('<span class="select2-selection__rendered"></span><span class="select2-selection__arrow" role="presentation"><b role="presentation"></b></span>'),a},e.prototype.bind=function(a,b){var c=this;e.__super__.bind.apply(this,arguments);var d=a.id+"-container";this.$selection.find(".select2-selection__rendered").attr("id",d),this.$selection.attr("aria-labelledby",d),this.$selection.on("mousedown",function(a){1===a.which&&c.trigger("toggle",{originalEvent:a})}),this.$selection.on("focus",function(a){}),this.$selection.on("blur",function(a){}),a.on("focus",function(b){a.isOpen()||c.$selection.focus()}),a.on("selection:update",function(a){c.update(a.data)})},e.prototype.clear=function(){this.$selection.find(".select2-selection__rendered").empty()},e.prototype.display=function(a,b){var c=this.options.get("templateSelection"),d=this.options.get("escapeMarkup");return d(c(a,b))},e.prototype.selectionContainer=function(){return a("<span></span>")},e.prototype.update=function(a){if(0===a.length)return void this.clear();var b=a[0],c=this.$selection.find(".select2-selection__rendered"),d=this.display(b,c);c.empty().append(d),c.prop("title",b.title||b.text)},e}),b.define("select2/selection/multiple",["jquery","./base","../utils"],function(a,b,c){function d(a,b){d.__super__.constructor.apply(this,arguments)}return c.Extend(d,b),d.prototype.render=function(){var a=d.__super__.render.call(this);return a.addClass("select2-selection--multiple"),a.html('<ul class="select2-selection__rendered"></ul>'),a},d.prototype.bind=function(b,c){var e=this;d.__super__.bind.apply(this,arguments),this.$selection.on("click",function(a){e.trigger("toggle",{originalEvent:a})}),this.$selection.on("click",".select2-selection__choice__remove",function(b){if(!e.options.get("disabled")){var c=a(this),d=c.parent(),f=d.data("data");e.trigger("unselect",{originalEvent:b,data:f})}})},d.prototype.clear=function(){this.$selection.find(".select2-selection__rendered").empty()},d.prototype.display=function(a,b){var c=this.options.get("templateSelection"),d=this.options.get("escapeMarkup");return d(c(a,b))},d.prototype.selectionContainer=function(){var b=a('<li class="select2-selection__choice"><span class="select2-selection__choice__remove" role="presentation">&times;</span></li>');return b},d.prototype.update=function(a){if(this.clear(),0!==a.length){for(var b=[],d=0;d<a.length;d++){var e=a[d],f=this.selectionContainer(),g=this.display(e,f);f.append(g),f.prop("title",e.title||e.text),f.data("data",e),b.push(f)}var h=this.$selection.find(".select2-selection__rendered");c.appendMany(h,b)}},d}),b.define("select2/selection/placeholder",["../utils"],function(a){function b(a,b,c){this.placeholder=this.normalizePlaceholder(c.get("placeholder")),a.call(this,b,c)}return b.prototype.normalizePlaceholder=function(a,b){return"string"==typeof b&&(b={id:"",text:b}),b},b.prototype.createPlaceholder=function(a,b){var c=this.selectionContainer();return c.html(this.display(b)),c.addClass("select2-selection__placeholder").removeClass("select2-selection__choice"),c},b.prototype.update=function(a,b){var c=1==b.length&&b[0].id!=this.placeholder.id,d=b.length>1;if(d||c)return a.call(this,b);this.clear();var e=this.createPlaceholder(this.placeholder);this.$selection.find(".select2-selection__rendered").append(e)},b}),b.define("select2/selection/allowClear",["jquery","../keys"],function(a,b){function c(){}return c.prototype.bind=function(a,b,c){var d=this;a.call(this,b,c),null==this.placeholder&&this.options.get("debug")&&window.console&&console.error&&console.error("Select2: The `allowClear` option should be used in combination with the `placeholder` option."),this.$selection.on("mousedown",".select2-selection__clear",function(a){d._handleClear(a)}),b.on("keypress",function(a){d._handleKeyboardClear(a,b)})},c.prototype._handleClear=function(a,b){if(!this.options.get("disabled")){var c=this.$selection.find(".select2-selection__clear");if(0!==c.length){b.stopPropagation();for(var d=c.data("data"),e=0;e<d.length;e++){var f={data:d[e]};if(this.trigger("unselect",f),f.prevented)return}this.$element.val(this.placeholder.id).trigger("change"),this.trigger("toggle",{})}}},c.prototype._handleKeyboardClear=function(a,c,d){d.isOpen()||(c.which==b.DELETE||c.which==b.BACKSPACE)&&this._handleClear(c)},c.prototype.update=function(b,c){if(b.call(this,c),!(this.$selection.find(".select2-selection__placeholder").length>0||0===c.length)){var d=a('<span class="select2-selection__clear">&times;</span>');d.data("data",c),this.$selection.find(".select2-selection__rendered").prepend(d)}},c}),b.define("select2/selection/search",["jquery","../utils","../keys"],function(a,b,c){function d(a,b,c){a.call(this,b,c)}return d.prototype.render=function(b){var c=a('<li class="select2-search select2-search--inline"><input class="select2-search__field" type="search" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="textbox" aria-autocomplete="list" /></li>');this.$searchContainer=c,this.$search=c.find("input");var d=b.call(this);return this._transferTabIndex(),d},d.prototype.bind=function(a,b,d){var e=this;a.call(this,b,d),b.on("open",function(){e.$search.trigger("focus")}),b.on("close",function(){e.$search.val(""),e.$search.removeAttr("aria-activedescendant"),e.$search.trigger("focus")}),b.on("enable",function(){e.$search.prop("disabled",!1),e._transferTabIndex()}),b.on("disable",function(){e.$search.prop("disabled",!0)}),b.on("focus",function(a){e.$search.trigger("focus")}),b.on("results:focus",function(a){e.$search.attr("aria-activedescendant",a.id)}),this.$selection.on("focusin",".select2-search--inline",function(a){e.trigger("focus",a)}),this.$selection.on("focusout",".select2-search--inline",function(a){e._handleBlur(a)}),this.$selection.on("keydown",".select2-search--inline",function(a){a.stopPropagation(),e.trigger("keypress",a),e._keyUpPrevented=a.isDefaultPrevented();var b=a.which;if(b===c.BACKSPACE&&""===e.$search.val()){var d=e.$searchContainer.prev(".select2-selection__choice");if(d.length>0){var f=d.data("data");e.searchRemoveChoice(f),a.preventDefault()}}});var f=document.documentMode,g=f&&11>=f;this.$selection.on("input.searchcheck",".select2-search--inline",function(a){return g?void e.$selection.off("input.search input.searchcheck"):void e.$selection.off("keyup.search")}),this.$selection.on("keyup.search input.search",".select2-search--inline",function(a){if(g&&"input"===a.type)return void e.$selection.off("input.search input.searchcheck");var b=a.which;b!=c.SHIFT&&b!=c.CTRL&&b!=c.ALT&&b!=c.TAB&&e.handleSearch(a)})},d.prototype._transferTabIndex=function(a){this.$search.attr("tabindex",this.$selection.attr("tabindex")),this.$selection.attr("tabindex","-1")},d.prototype.createPlaceholder=function(a,b){this.$search.attr("placeholder",b.text)},d.prototype.update=function(a,b){var c=this.$search[0]==document.activeElement;this.$search.attr("placeholder",""),a.call(this,b),this.$selection.find(".select2-selection__rendered").append(this.$searchContainer),this.resizeSearch(),c&&this.$search.focus()},d.prototype.handleSearch=function(){if(this.resizeSearch(),!this._keyUpPrevented){var a=this.$search.val();this.trigger("query",{term:a})}this._keyUpPrevented=!1},d.prototype.searchRemoveChoice=function(a,b){this.trigger("unselect",{data:b}),this.$search.val(b.text),this.handleSearch()},d.prototype.resizeSearch=function(){this.$search.css("width","25px");var a="";if(""!==this.$search.attr("placeholder"))a=this.$selection.find(".select2-selection__rendered").innerWidth();else{var b=this.$search.val().length+1;a=.75*b+"em"}this.$search.css("width",a)},d}),b.define("select2/selection/eventRelay",["jquery"],function(a){function b(){}return b.prototype.bind=function(b,c,d){var e=this,f=["open","opening","close","closing","select","selecting","unselect","unselecting"],g=["opening","closing","selecting","unselecting"];b.call(this,c,d),c.on("*",function(b,c){if(-1!==a.inArray(b,f)){c=c||{};var d=a.Event("select2:"+b,{params:c});e.$element.trigger(d),-1!==a.inArray(b,g)&&(c.prevented=d.isDefaultPrevented())}})},b}),b.define("select2/translation",["jquery","require"],function(a,b){function c(a){this.dict=a||{}}return c.prototype.all=function(){return this.dict},c.prototype.get=function(a){return this.dict[a]},c.prototype.extend=function(b){this.dict=a.extend({},b.all(),this.dict)},c._cache={},c.loadPath=function(a){if(!(a in c._cache)){var d=b(a);c._cache[a]=d}return new c(c._cache[a])},c}),b.define("select2/diacritics",[],function(){var a={"Ⓐ":"A","Ａ":"A","À":"A","Á":"A","Â":"A","Ầ":"A","Ấ":"A","Ẫ":"A","Ẩ":"A","Ã":"A","Ā":"A","Ă":"A","Ằ":"A","Ắ":"A","Ẵ":"A","Ẳ":"A","Ȧ":"A","Ǡ":"A","Ä":"A","Ǟ":"A","Ả":"A","Å":"A","Ǻ":"A","Ǎ":"A","Ȁ":"A","Ȃ":"A","Ạ":"A","Ậ":"A","Ặ":"A","Ḁ":"A","Ą":"A","Ⱥ":"A","Ɐ":"A","Ꜳ":"AA","Æ":"AE","Ǽ":"AE","Ǣ":"AE","Ꜵ":"AO","Ꜷ":"AU","Ꜹ":"AV","Ꜻ":"AV","Ꜽ":"AY","Ⓑ":"B","Ｂ":"B","Ḃ":"B","Ḅ":"B","Ḇ":"B","Ƀ":"B","Ƃ":"B","Ɓ":"B","Ⓒ":"C","Ｃ":"C","Ć":"C","Ĉ":"C","Ċ":"C","Č":"C","Ç":"C","Ḉ":"C","Ƈ":"C","Ȼ":"C","Ꜿ":"C","Ⓓ":"D","Ｄ":"D","Ḋ":"D","Ď":"D","Ḍ":"D","Ḑ":"D","Ḓ":"D","Ḏ":"D","Đ":"D","Ƌ":"D","Ɗ":"D","Ɖ":"D","Ꝺ":"D","Ǳ":"DZ","Ǆ":"DZ","ǲ":"Dz","ǅ":"Dz","Ⓔ":"E","Ｅ":"E","È":"E","É":"E","Ê":"E","Ề":"E","Ế":"E","Ễ":"E","Ể":"E","Ẽ":"E","Ē":"E","Ḕ":"E","Ḗ":"E","Ĕ":"E","Ė":"E","Ë":"E","Ẻ":"E","Ě":"E","Ȅ":"E","Ȇ":"E","Ẹ":"E","Ệ":"E","Ȩ":"E","Ḝ":"E","Ę":"E","Ḙ":"E","Ḛ":"E","Ɛ":"E","Ǝ":"E","Ⓕ":"F","Ｆ":"F","Ḟ":"F","Ƒ":"F","Ꝼ":"F","Ⓖ":"G","Ｇ":"G","Ǵ":"G","Ĝ":"G","Ḡ":"G","Ğ":"G","Ġ":"G","Ǧ":"G","Ģ":"G","Ǥ":"G","Ɠ":"G","Ꞡ":"G","Ᵹ":"G","Ꝿ":"G","Ⓗ":"H","Ｈ":"H","Ĥ":"H","Ḣ":"H","Ḧ":"H","Ȟ":"H","Ḥ":"H","Ḩ":"H","Ḫ":"H","Ħ":"H","Ⱨ":"H","Ⱶ":"H","Ɥ":"H","Ⓘ":"I","Ｉ":"I","Ì":"I","Í":"I","Î":"I","Ĩ":"I","Ī":"I","Ĭ":"I","İ":"I","Ï":"I","Ḯ":"I","Ỉ":"I","Ǐ":"I","Ȉ":"I","Ȋ":"I","Ị":"I","Į":"I","Ḭ":"I","Ɨ":"I","Ⓙ":"J","Ｊ":"J","Ĵ":"J","Ɉ":"J","Ⓚ":"K","Ｋ":"K","Ḱ":"K","Ǩ":"K","Ḳ":"K","Ķ":"K","Ḵ":"K","Ƙ":"K","Ⱪ":"K","Ꝁ":"K","Ꝃ":"K","Ꝅ":"K","Ꞣ":"K","Ⓛ":"L","Ｌ":"L","Ŀ":"L","Ĺ":"L","Ľ":"L","Ḷ":"L","Ḹ":"L","Ļ":"L","Ḽ":"L","Ḻ":"L","Ł":"L","Ƚ":"L","Ɫ":"L","Ⱡ":"L","Ꝉ":"L","Ꝇ":"L","Ꞁ":"L","Ǉ":"LJ","ǈ":"Lj","Ⓜ":"M","Ｍ":"M","Ḿ":"M","Ṁ":"M","Ṃ":"M","Ɱ":"M","Ɯ":"M","Ⓝ":"N","Ｎ":"N","Ǹ":"N","Ń":"N","Ñ":"N","Ṅ":"N","Ň":"N","Ṇ":"N","Ņ":"N","Ṋ":"N","Ṉ":"N","Ƞ":"N","Ɲ":"N","Ꞑ":"N","Ꞥ":"N","Ǌ":"NJ","ǋ":"Nj","Ⓞ":"O","Ｏ":"O","Ò":"O","Ó":"O","Ô":"O","Ồ":"O","Ố":"O","Ỗ":"O","Ổ":"O","Õ":"O","Ṍ":"O","Ȭ":"O","Ṏ":"O","Ō":"O","Ṑ":"O","Ṓ":"O","Ŏ":"O","Ȯ":"O","Ȱ":"O","Ö":"O","Ȫ":"O","Ỏ":"O","Ő":"O","Ǒ":"O","Ȍ":"O","Ȏ":"O","Ơ":"O","Ờ":"O","Ớ":"O","Ỡ":"O","Ở":"O","Ợ":"O","Ọ":"O","Ộ":"O","Ǫ":"O","Ǭ":"O","Ø":"O","Ǿ":"O","Ɔ":"O","Ɵ":"O","Ꝋ":"O","Ꝍ":"O","Ƣ":"OI","Ꝏ":"OO","Ȣ":"OU","Ⓟ":"P","Ｐ":"P","Ṕ":"P","Ṗ":"P","Ƥ":"P","Ᵽ":"P","Ꝑ":"P","Ꝓ":"P","Ꝕ":"P","Ⓠ":"Q","Ｑ":"Q","Ꝗ":"Q","Ꝙ":"Q","Ɋ":"Q","Ⓡ":"R","Ｒ":"R","Ŕ":"R","Ṙ":"R","Ř":"R","Ȑ":"R","Ȓ":"R","Ṛ":"R","Ṝ":"R","Ŗ":"R","Ṟ":"R","Ɍ":"R","Ɽ":"R","Ꝛ":"R","Ꞧ":"R","Ꞃ":"R","Ⓢ":"S","Ｓ":"S","ẞ":"S","Ś":"S","Ṥ":"S","Ŝ":"S","Ṡ":"S","Š":"S","Ṧ":"S","Ṣ":"S","Ṩ":"S","Ș":"S","Ş":"S","Ȿ":"S","Ꞩ":"S","Ꞅ":"S","Ⓣ":"T","Ｔ":"T","Ṫ":"T","Ť":"T","Ṭ":"T","Ț":"T","Ţ":"T","Ṱ":"T","Ṯ":"T","Ŧ":"T","Ƭ":"T","Ʈ":"T","Ⱦ":"T","Ꞇ":"T","Ꜩ":"TZ","Ⓤ":"U","Ｕ":"U","Ù":"U","Ú":"U","Û":"U","Ũ":"U","Ṹ":"U","Ū":"U","Ṻ":"U","Ŭ":"U","Ü":"U","Ǜ":"U","Ǘ":"U","Ǖ":"U","Ǚ":"U","Ủ":"U","Ů":"U","Ű":"U","Ǔ":"U","Ȕ":"U","Ȗ":"U","Ư":"U","Ừ":"U","Ứ":"U","Ữ":"U","Ử":"U","Ự":"U","Ụ":"U","Ṳ":"U","Ų":"U","Ṷ":"U","Ṵ":"U","Ʉ":"U","Ⓥ":"V","Ｖ":"V","Ṽ":"V","Ṿ":"V","Ʋ":"V","Ꝟ":"V","Ʌ":"V","Ꝡ":"VY","Ⓦ":"W","Ｗ":"W","Ẁ":"W","Ẃ":"W","Ŵ":"W","Ẇ":"W","Ẅ":"W","Ẉ":"W","Ⱳ":"W","Ⓧ":"X","Ｘ":"X","Ẋ":"X","Ẍ":"X","Ⓨ":"Y","Ｙ":"Y","Ỳ":"Y","Ý":"Y","Ŷ":"Y","Ỹ":"Y","Ȳ":"Y","Ẏ":"Y","Ÿ":"Y","Ỷ":"Y","Ỵ":"Y","Ƴ":"Y","Ɏ":"Y","Ỿ":"Y","Ⓩ":"Z","Ｚ":"Z","Ź":"Z","Ẑ":"Z","Ż":"Z","Ž":"Z","Ẓ":"Z","Ẕ":"Z","Ƶ":"Z","Ȥ":"Z","Ɀ":"Z","Ⱬ":"Z","Ꝣ":"Z","ⓐ":"a","ａ":"a","ẚ":"a","à":"a","á":"a","â":"a","ầ":"a","ấ":"a","ẫ":"a","ẩ":"a","ã":"a","ā":"a","ă":"a","ằ":"a","ắ":"a","ẵ":"a","ẳ":"a","ȧ":"a","ǡ":"a","ä":"a","ǟ":"a","ả":"a","å":"a","ǻ":"a","ǎ":"a","ȁ":"a","ȃ":"a","ạ":"a","ậ":"a","ặ":"a","ḁ":"a","ą":"a","ⱥ":"a","ɐ":"a","ꜳ":"aa","æ":"ae","ǽ":"ae","ǣ":"ae","ꜵ":"ao","ꜷ":"au","ꜹ":"av","ꜻ":"av","ꜽ":"ay","ⓑ":"b","ｂ":"b","ḃ":"b","ḅ":"b","ḇ":"b","ƀ":"b","ƃ":"b","ɓ":"b","ⓒ":"c","ｃ":"c","ć":"c","ĉ":"c","ċ":"c","č":"c","ç":"c","ḉ":"c","ƈ":"c","ȼ":"c","ꜿ":"c","ↄ":"c","ⓓ":"d","ｄ":"d","ḋ":"d","ď":"d","ḍ":"d","ḑ":"d","ḓ":"d","ḏ":"d","đ":"d","ƌ":"d","ɖ":"d","ɗ":"d","ꝺ":"d","ǳ":"dz","ǆ":"dz","ⓔ":"e","ｅ":"e","è":"e","é":"e","ê":"e","ề":"e","ế":"e","ễ":"e","ể":"e","ẽ":"e","ē":"e","ḕ":"e","ḗ":"e","ĕ":"e","ė":"e","ë":"e","ẻ":"e","ě":"e","ȅ":"e","ȇ":"e","ẹ":"e","ệ":"e","ȩ":"e","ḝ":"e","ę":"e","ḙ":"e","ḛ":"e","ɇ":"e","ɛ":"e","ǝ":"e","ⓕ":"f","ｆ":"f","ḟ":"f","ƒ":"f","ꝼ":"f","ⓖ":"g","ｇ":"g","ǵ":"g","ĝ":"g","ḡ":"g","ğ":"g","ġ":"g","ǧ":"g","ģ":"g","ǥ":"g","ɠ":"g","ꞡ":"g","ᵹ":"g","ꝿ":"g","ⓗ":"h","ｈ":"h","ĥ":"h","ḣ":"h","ḧ":"h","ȟ":"h","ḥ":"h","ḩ":"h","ḫ":"h","ẖ":"h","ħ":"h","ⱨ":"h","ⱶ":"h","ɥ":"h","ƕ":"hv","ⓘ":"i","ｉ":"i","ì":"i","í":"i","î":"i","ĩ":"i","ī":"i","ĭ":"i","ï":"i","ḯ":"i","ỉ":"i","ǐ":"i","ȉ":"i","ȋ":"i","ị":"i","į":"i","ḭ":"i","ɨ":"i","ı":"i","ⓙ":"j","ｊ":"j","ĵ":"j","ǰ":"j","ɉ":"j","ⓚ":"k","ｋ":"k","ḱ":"k","ǩ":"k","ḳ":"k","ķ":"k","ḵ":"k","ƙ":"k","ⱪ":"k","ꝁ":"k","ꝃ":"k","ꝅ":"k","ꞣ":"k","ⓛ":"l","ｌ":"l","ŀ":"l","ĺ":"l","ľ":"l","ḷ":"l","ḹ":"l","ļ":"l","ḽ":"l","ḻ":"l","ſ":"l","ł":"l","ƚ":"l","ɫ":"l","ⱡ":"l","ꝉ":"l","ꞁ":"l","ꝇ":"l","ǉ":"lj","ⓜ":"m","ｍ":"m","ḿ":"m","ṁ":"m","ṃ":"m","ɱ":"m","ɯ":"m","ⓝ":"n","ｎ":"n","ǹ":"n","ń":"n","ñ":"n","ṅ":"n","ň":"n","ṇ":"n","ņ":"n","ṋ":"n","ṉ":"n","ƞ":"n","ɲ":"n","ŉ":"n","ꞑ":"n","ꞥ":"n","ǌ":"nj","ⓞ":"o","ｏ":"o","ò":"o","ó":"o","ô":"o","ồ":"o","ố":"o","ỗ":"o","ổ":"o","õ":"o","ṍ":"o","ȭ":"o","ṏ":"o","ō":"o","ṑ":"o","ṓ":"o","ŏ":"o","ȯ":"o","ȱ":"o","ö":"o","ȫ":"o","ỏ":"o","ő":"o","ǒ":"o","ȍ":"o","ȏ":"o","ơ":"o","ờ":"o","ớ":"o","ỡ":"o","ở":"o","ợ":"o","ọ":"o","ộ":"o","ǫ":"o","ǭ":"o","ø":"o","ǿ":"o","ɔ":"o","ꝋ":"o","ꝍ":"o","ɵ":"o","ƣ":"oi","ȣ":"ou","ꝏ":"oo","ⓟ":"p","ｐ":"p","ṕ":"p","ṗ":"p","ƥ":"p","ᵽ":"p","ꝑ":"p","ꝓ":"p","ꝕ":"p","ⓠ":"q","ｑ":"q","ɋ":"q","ꝗ":"q","ꝙ":"q","ⓡ":"r","ｒ":"r","ŕ":"r","ṙ":"r","ř":"r","ȑ":"r","ȓ":"r","ṛ":"r","ṝ":"r","ŗ":"r","ṟ":"r","ɍ":"r","ɽ":"r","ꝛ":"r","ꞧ":"r","ꞃ":"r","ⓢ":"s","ｓ":"s","ß":"s","ś":"s","ṥ":"s","ŝ":"s","ṡ":"s","š":"s","ṧ":"s","ṣ":"s","ṩ":"s","ș":"s","ş":"s","ȿ":"s","ꞩ":"s","ꞅ":"s","ẛ":"s","ⓣ":"t","ｔ":"t","ṫ":"t","ẗ":"t","ť":"t","ṭ":"t","ț":"t","ţ":"t","ṱ":"t","ṯ":"t","ŧ":"t","ƭ":"t","ʈ":"t","ⱦ":"t","ꞇ":"t","ꜩ":"tz","ⓤ":"u","ｕ":"u","ù":"u","ú":"u","û":"u","ũ":"u","ṹ":"u","ū":"u","ṻ":"u","ŭ":"u","ü":"u","ǜ":"u","ǘ":"u","ǖ":"u","ǚ":"u","ủ":"u","ů":"u","ű":"u","ǔ":"u","ȕ":"u","ȗ":"u","ư":"u","ừ":"u","ứ":"u","ữ":"u","ử":"u","ự":"u","ụ":"u","ṳ":"u","ų":"u","ṷ":"u","ṵ":"u","ʉ":"u","ⓥ":"v","ｖ":"v","ṽ":"v","ṿ":"v","ʋ":"v","ꝟ":"v","ʌ":"v","ꝡ":"vy","ⓦ":"w","ｗ":"w","ẁ":"w","ẃ":"w","ŵ":"w","ẇ":"w","ẅ":"w","ẘ":"w","ẉ":"w","ⱳ":"w","ⓧ":"x","ｘ":"x","ẋ":"x","ẍ":"x","ⓨ":"y","ｙ":"y","ỳ":"y","ý":"y","ŷ":"y","ỹ":"y","ȳ":"y","ẏ":"y","ÿ":"y","ỷ":"y","ẙ":"y","ỵ":"y","ƴ":"y","ɏ":"y","ỿ":"y","ⓩ":"z","ｚ":"z","ź":"z","ẑ":"z","ż":"z","ž":"z","ẓ":"z","ẕ":"z","ƶ":"z","ȥ":"z","ɀ":"z","ⱬ":"z","ꝣ":"z","Ά":"Α","Έ":"Ε","Ή":"Η","Ί":"Ι","Ϊ":"Ι","Ό":"Ο","Ύ":"Υ","Ϋ":"Υ","Ώ":"Ω","ά":"α","έ":"ε","ή":"η","ί":"ι","ϊ":"ι","ΐ":"ι","ό":"ο","ύ":"υ","ϋ":"υ","ΰ":"υ","ω":"ω","ς":"σ"};return a}),b.define("select2/data/base",["../utils"],function(a){function b(a,c){b.__super__.constructor.call(this)}return a.Extend(b,a.Observable),b.prototype.current=function(a){throw new Error("The `current` method must be defined in child classes.")},b.prototype.query=function(a,b){throw new Error("The `query` method must be defined in child classes.")},b.prototype.bind=function(a,b){},b.prototype.destroy=function(){},b.prototype.generateResultId=function(b,c){var d=b.id+"-result-";return d+=a.generateChars(4),d+=null!=c.id?"-"+c.id.toString():"-"+a.generateChars(4)},b}),b.define("select2/data/select",["./base","../utils","jquery"],function(a,b,c){function d(a,b){this.$element=a,this.options=b,d.__super__.constructor.call(this)}return b.Extend(d,a),d.prototype.current=function(a){var b=[],d=this;this.$element.find(":selected").each(function(){var a=c(this),e=d.item(a);b.push(e)}),a(b)},d.prototype.select=function(a){var b=this;if(a.selected=!0,c(a.element).is("option"))return a.element.selected=!0,void this.$element.trigger("change");
 if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push.apply(a,d);for(var f=0;f<a.length;f++){var g=a[f].id;-1===c.inArray(g,e)&&e.push(g)}b.$element.val(e),b.$element.trigger("change")});else{var d=a.id;this.$element.val(d),this.$element.trigger("change")}},d.prototype.unselect=function(a){var b=this;if(this.$element.prop("multiple"))return a.selected=!1,c(a.element).is("option")?(a.element.selected=!1,void this.$element.trigger("change")):void this.current(function(d){for(var e=[],f=0;f<d.length;f++){var g=d[f].id;g!==a.id&&-1===c.inArray(g,e)&&e.push(g)}b.$element.val(e),b.$element.trigger("change")})},d.prototype.bind=function(a,b){var c=this;this.container=a,a.on("select",function(a){c.select(a.data)}),a.on("unselect",function(a){c.unselect(a.data)})},d.prototype.destroy=function(){this.$element.find("*").each(function(){c.removeData(this,"data")})},d.prototype.query=function(a,b){var d=[],e=this,f=this.$element.children();f.each(function(){var b=c(this);if(b.is("option")||b.is("optgroup")){var f=e.item(b),g=e.matches(a,f);null!==g&&d.push(g)}}),b({results:d})},d.prototype.addOptions=function(a){b.appendMany(this.$element,a)},d.prototype.option=function(a){var b;a.children?(b=document.createElement("optgroup"),b.label=a.text):(b=document.createElement("option"),void 0!==b.textContent?b.textContent=a.text:b.innerText=a.text),a.id&&(b.value=a.id),a.disabled&&(b.disabled=!0),a.selected&&(b.selected=!0),a.title&&(b.title=a.title);var d=c(b),e=this._normalizeItem(a);return e.element=b,c.data(b,"data",e),d},d.prototype.item=function(a){var b={};if(b=c.data(a[0],"data"),null!=b)return b;if(a.is("option"))b={id:a.val(),text:a.text(),disabled:a.prop("disabled"),selected:a.prop("selected"),title:a.prop("title")};else if(a.is("optgroup")){b={text:a.prop("label"),children:[],title:a.prop("title")};for(var d=a.children("option"),e=[],f=0;f<d.length;f++){var g=c(d[f]),h=this.item(g);e.push(h)}b.children=e}return b=this._normalizeItem(b),b.element=a[0],c.data(a[0],"data",b),b},d.prototype._normalizeItem=function(a){c.isPlainObject(a)||(a={id:a,text:a}),a=c.extend({},{text:""},a);var b={selected:!1,disabled:!1};return null!=a.id&&(a.id=a.id.toString()),null!=a.text&&(a.text=a.text.toString()),null==a._resultId&&a.id&&null!=this.container&&(a._resultId=this.generateResultId(this.container,a)),c.extend({},b,a)},d.prototype.matches=function(a,b){var c=this.options.get("matcher");return c(a,b)},d}),b.define("select2/data/array",["./select","../utils","jquery"],function(a,b,c){function d(a,b){var c=b.get("data")||[];d.__super__.constructor.call(this,a,b),this.addOptions(this.convertToOptions(c))}return b.Extend(d,a),d.prototype.select=function(a){var b=this.$element.find("option").filter(function(b,c){return c.value==a.id.toString()});0===b.length&&(b=this.option(a),this.addOptions(b)),d.__super__.select.call(this,a)},d.prototype.convertToOptions=function(a){function d(a){return function(){return c(this).val()==a.id}}for(var e=this,f=this.$element.find("option"),g=f.map(function(){return e.item(c(this)).id}).get(),h=[],i=0;i<a.length;i++){var j=this._normalizeItem(a[i]);if(c.inArray(j.id,g)>=0){var k=f.filter(d(j)),l=this.item(k),m=c.extend(!0,{},j,l),n=this.option(m);k.replaceWith(n)}else{var o=this.option(j);if(j.children){var p=this.convertToOptions(j.children);b.appendMany(o,p)}h.push(o)}}return h},d}),b.define("select2/data/ajax",["./array","../utils","jquery"],function(a,b,c){function d(a,b){this.ajaxOptions=this._applyDefaults(b.get("ajax")),null!=this.ajaxOptions.processResults&&(this.processResults=this.ajaxOptions.processResults),d.__super__.constructor.call(this,a,b)}return b.Extend(d,a),d.prototype._applyDefaults=function(a){var b={data:function(a){return c.extend({},a,{q:a.term})},transport:function(a,b,d){var e=c.ajax(a);return e.then(b),e.fail(d),e}};return c.extend({},b,a,!0)},d.prototype.processResults=function(a){return a},d.prototype.query=function(a,b){function d(){var d=f.transport(f,function(d){var f=e.processResults(d,a);e.options.get("debug")&&window.console&&console.error&&(f&&f.results&&c.isArray(f.results)||console.error("Select2: The AJAX results did not return an array in the `results` key of the response.")),b(f)},function(){d.status&&"0"===d.status||e.trigger("results:message",{message:"errorLoading"})});e._request=d}var e=this;null!=this._request&&(c.isFunction(this._request.abort)&&this._request.abort(),this._request=null);var f=c.extend({type:"GET"},this.ajaxOptions);"function"==typeof f.url&&(f.url=f.url.call(this.$element,a)),"function"==typeof f.data&&(f.data=f.data.call(this.$element,a)),this.ajaxOptions.delay&&null!=a.term?(this._queryTimeout&&window.clearTimeout(this._queryTimeout),this._queryTimeout=window.setTimeout(d,this.ajaxOptions.delay)):d()},d}),b.define("select2/data/tags",["jquery"],function(a){function b(b,c,d){var e=d.get("tags"),f=d.get("createTag");void 0!==f&&(this.createTag=f);var g=d.get("insertTag");if(void 0!==g&&(this.insertTag=g),b.call(this,c,d),a.isArray(e))for(var h=0;h<e.length;h++){var i=e[h],j=this._normalizeItem(i),k=this.option(j);this.$element.append(k)}}return b.prototype.query=function(a,b,c){function d(a,f){for(var g=a.results,h=0;h<g.length;h++){var i=g[h],j=null!=i.children&&!d({results:i.children},!0),k=i.text===b.term;if(k||j)return f?!1:(a.data=g,void c(a))}if(f)return!0;var l=e.createTag(b);if(null!=l){var m=e.option(l);m.attr("data-select2-tag",!0),e.addOptions([m]),e.insertTag(g,l)}a.results=g,c(a)}var e=this;return this._removeOldTags(),null==b.term||null!=b.page?void a.call(this,b,c):void a.call(this,b,d)},b.prototype.createTag=function(b,c){var d=a.trim(c.term);return""===d?null:{id:d,text:d}},b.prototype.insertTag=function(a,b,c){b.unshift(c)},b.prototype._removeOldTags=function(b){var c=(this._lastTag,this.$element.find("option[data-select2-tag]"));c.each(function(){this.selected||a(this).remove()})},b}),b.define("select2/data/tokenizer",["jquery"],function(a){function b(a,b,c){var d=c.get("tokenizer");void 0!==d&&(this.tokenizer=d),a.call(this,b,c)}return b.prototype.bind=function(a,b,c){a.call(this,b,c),this.$search=b.dropdown.$search||b.selection.$search||c.find(".select2-search__field")},b.prototype.query=function(b,c,d){function e(b){var c=g._normalizeItem(b),d=g.$element.find("option").filter(function(){return a(this).val()===c.id});if(!d.length){var e=g.option(c);e.attr("data-select2-tag",!0),g._removeOldTags(),g.addOptions([e])}f(c)}function f(a){g.trigger("select",{data:a})}var g=this;c.term=c.term||"";var h=this.tokenizer(c,this.options,e);h.term!==c.term&&(this.$search.length&&(this.$search.val(h.term),this.$search.focus()),c.term=h.term),b.call(this,c,d)},b.prototype.tokenizer=function(b,c,d,e){for(var f=d.get("tokenSeparators")||[],g=c.term,h=0,i=this.createTag||function(a){return{id:a.term,text:a.term}};h<g.length;){var j=g[h];if(-1!==a.inArray(j,f)){var k=g.substr(0,h),l=a.extend({},c,{term:k}),m=i(l);null!=m?(e(m),g=g.substr(h+1)||"",h=0):h++}else h++}return{term:g}},b}),b.define("select2/data/minimumInputLength",[],function(){function a(a,b,c){this.minimumInputLength=c.get("minimumInputLength"),a.call(this,b,c)}return a.prototype.query=function(a,b,c){return b.term=b.term||"",b.term.length<this.minimumInputLength?void this.trigger("results:message",{message:"inputTooShort",args:{minimum:this.minimumInputLength,input:b.term,params:b}}):void a.call(this,b,c)},a}),b.define("select2/data/maximumInputLength",[],function(){function a(a,b,c){this.maximumInputLength=c.get("maximumInputLength"),a.call(this,b,c)}return a.prototype.query=function(a,b,c){return b.term=b.term||"",this.maximumInputLength>0&&b.term.length>this.maximumInputLength?void this.trigger("results:message",{message:"inputTooLong",args:{maximum:this.maximumInputLength,input:b.term,params:b}}):void a.call(this,b,c)},a}),b.define("select2/data/maximumSelectionLength",[],function(){function a(a,b,c){this.maximumSelectionLength=c.get("maximumSelectionLength"),a.call(this,b,c)}return a.prototype.query=function(a,b,c){var d=this;this.current(function(e){var f=null!=e?e.length:0;return d.maximumSelectionLength>0&&f>=d.maximumSelectionLength?void d.trigger("results:message",{message:"maximumSelected",args:{maximum:d.maximumSelectionLength}}):void a.call(d,b,c)})},a}),b.define("select2/dropdown",["jquery","./utils"],function(a,b){function c(a,b){this.$element=a,this.options=b,c.__super__.constructor.call(this)}return b.Extend(c,b.Observable),c.prototype.render=function(){var b=a('<span class="select2-dropdown"><span class="select2-results"></span></span>');return b.attr("dir",this.options.get("dir")),this.$dropdown=b,b},c.prototype.bind=function(){},c.prototype.position=function(a,b){},c.prototype.destroy=function(){this.$dropdown.remove()},c}),b.define("select2/dropdown/search",["jquery","../utils"],function(a,b){function c(){}return c.prototype.render=function(b){var c=b.call(this),d=a('<span class="select2-search select2-search--dropdown"><input class="select2-search__field" type="search" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="textbox" /></span>');return this.$searchContainer=d,this.$search=d.find("input"),c.prepend(d),c},c.prototype.bind=function(b,c,d){var e=this;b.call(this,c,d),this.$search.on("keydown",function(a){e.trigger("keypress",a),e._keyUpPrevented=a.isDefaultPrevented()}),this.$search.on("input",function(b){a(this).off("keyup")}),this.$search.on("keyup input",function(a){e.handleSearch(a)}),c.on("open",function(){e.$search.attr("tabindex",0),e.$search.focus(),window.setTimeout(function(){e.$search.focus()},0)}),c.on("close",function(){e.$search.attr("tabindex",-1),e.$search.val("")}),c.on("focus",function(){c.isOpen()&&e.$search.focus()}),c.on("results:all",function(a){if(null==a.query.term||""===a.query.term){var b=e.showSearch(a);b?e.$searchContainer.removeClass("select2-search--hide"):e.$searchContainer.addClass("select2-search--hide")}})},c.prototype.handleSearch=function(a){if(!this._keyUpPrevented){var b=this.$search.val();this.trigger("query",{term:b})}this._keyUpPrevented=!1},c.prototype.showSearch=function(a,b){return!0},c}),b.define("select2/dropdown/hidePlaceholder",[],function(){function a(a,b,c,d){this.placeholder=this.normalizePlaceholder(c.get("placeholder")),a.call(this,b,c,d)}return a.prototype.append=function(a,b){b.results=this.removePlaceholder(b.results),a.call(this,b)},a.prototype.normalizePlaceholder=function(a,b){return"string"==typeof b&&(b={id:"",text:b}),b},a.prototype.removePlaceholder=function(a,b){for(var c=b.slice(0),d=b.length-1;d>=0;d--){var e=b[d];this.placeholder.id===e.id&&c.splice(d,1)}return c},a}),b.define("select2/dropdown/infiniteScroll",["jquery"],function(a){function b(a,b,c,d){this.lastParams={},a.call(this,b,c,d),this.$loadingMore=this.createLoadingMore(),this.loading=!1}return b.prototype.append=function(a,b){this.$loadingMore.remove(),this.loading=!1,a.call(this,b),this.showLoadingMore(b)&&this.$results.append(this.$loadingMore)},b.prototype.bind=function(b,c,d){var e=this;b.call(this,c,d),c.on("query",function(a){e.lastParams=a,e.loading=!0}),c.on("query:append",function(a){e.lastParams=a,e.loading=!0}),this.$results.on("scroll",function(){var b=a.contains(document.documentElement,e.$loadingMore[0]);if(!e.loading&&b){var c=e.$results.offset().top+e.$results.outerHeight(!1),d=e.$loadingMore.offset().top+e.$loadingMore.outerHeight(!1);c+50>=d&&e.loadMore()}})},b.prototype.loadMore=function(){this.loading=!0;var b=a.extend({},{page:1},this.lastParams);b.page++,this.trigger("query:append",b)},b.prototype.showLoadingMore=function(a,b){return b.pagination&&b.pagination.more},b.prototype.createLoadingMore=function(){var b=a('<li class="select2-results__option select2-results__option--load-more"role="treeitem" aria-disabled="true"></li>'),c=this.options.get("translations").get("loadingMore");return b.html(c(this.lastParams)),b},b}),b.define("select2/dropdown/attachBody",["jquery","../utils"],function(a,b){function c(b,c,d){this.$dropdownParent=d.get("dropdownParent")||a(document.body),b.call(this,c,d)}return c.prototype.bind=function(a,b,c){var d=this,e=!1;a.call(this,b,c),b.on("open",function(){d._showDropdown(),d._attachPositioningHandler(b),e||(e=!0,b.on("results:all",function(){d._positionDropdown(),d._resizeDropdown()}),b.on("results:append",function(){d._positionDropdown(),d._resizeDropdown()}))}),b.on("close",function(){d._hideDropdown(),d._detachPositioningHandler(b)}),this.$dropdownContainer.on("mousedown",function(a){a.stopPropagation()})},c.prototype.destroy=function(a){a.call(this),this.$dropdownContainer.remove()},c.prototype.position=function(a,b,c){b.attr("class",c.attr("class")),b.removeClass("select2"),b.addClass("select2-container--open"),b.css({position:"absolute",top:-999999}),this.$container=c},c.prototype.render=function(b){var c=a("<span></span>"),d=b.call(this);return c.append(d),this.$dropdownContainer=c,c},c.prototype._hideDropdown=function(a){this.$dropdownContainer.detach()},c.prototype._attachPositioningHandler=function(c,d){var e=this,f="scroll.select2."+d.id,g="resize.select2."+d.id,h="orientationchange.select2."+d.id,i=this.$container.parents().filter(b.hasScroll);i.each(function(){a(this).data("select2-scroll-position",{x:a(this).scrollLeft(),y:a(this).scrollTop()})}),i.on(f,function(b){var c=a(this).data("select2-scroll-position");a(this).scrollTop(c.y)}),a(window).on(f+" "+g+" "+h,function(a){e._positionDropdown(),e._resizeDropdown()})},c.prototype._detachPositioningHandler=function(c,d){var e="scroll.select2."+d.id,f="resize.select2."+d.id,g="orientationchange.select2."+d.id,h=this.$container.parents().filter(b.hasScroll);h.off(e),a(window).off(e+" "+f+" "+g)},c.prototype._positionDropdown=function(){var b=a(window),c=this.$dropdown.hasClass("select2-dropdown--above"),d=this.$dropdown.hasClass("select2-dropdown--below"),e=null,f=this.$container.offset();f.bottom=f.top+this.$container.outerHeight(!1);var g={height:this.$container.outerHeight(!1)};g.top=f.top,g.bottom=f.top+g.height;var h={height:this.$dropdown.outerHeight(!1)},i={top:b.scrollTop(),bottom:b.scrollTop()+b.height()},j=i.top<f.top-h.height,k=i.bottom>f.bottom+h.height,l={left:f.left,top:g.bottom},m=this.$dropdownParent;"static"===m.css("position")&&(m=m.offsetParent());var n=m.offset();l.top-=n.top,l.left-=n.left,c||d||(e="below"),k||!j||c?!j&&k&&c&&(e="below"):e="above",("above"==e||c&&"below"!==e)&&(l.top=g.top-n.top-h.height),null!=e&&(this.$dropdown.removeClass("select2-dropdown--below select2-dropdown--above").addClass("select2-dropdown--"+e),this.$container.removeClass("select2-container--below select2-container--above").addClass("select2-container--"+e)),this.$dropdownContainer.css(l)},c.prototype._resizeDropdown=function(){var a={width:this.$container.outerWidth(!1)+"px"};this.options.get("dropdownAutoWidth")&&(a.minWidth=a.width,a.position="relative",a.width="auto"),this.$dropdown.css(a)},c.prototype._showDropdown=function(a){this.$dropdownContainer.appendTo(this.$dropdownParent),this._positionDropdown(),this._resizeDropdown()},c}),b.define("select2/dropdown/minimumResultsForSearch",[],function(){function a(b){for(var c=0,d=0;d<b.length;d++){var e=b[d];e.children?c+=a(e.children):c++}return c}function b(a,b,c,d){this.minimumResultsForSearch=c.get("minimumResultsForSearch"),this.minimumResultsForSearch<0&&(this.minimumResultsForSearch=1/0),a.call(this,b,c,d)}return b.prototype.showSearch=function(b,c){return a(c.data.results)<this.minimumResultsForSearch?!1:b.call(this,c)},b}),b.define("select2/dropdown/selectOnClose",[],function(){function a(){}return a.prototype.bind=function(a,b,c){var d=this;a.call(this,b,c),b.on("close",function(a){d._handleSelectOnClose(a)})},a.prototype._handleSelectOnClose=function(a,b){if(b&&null!=b.originalSelect2Event){var c=b.originalSelect2Event;if("select"===c._type||"unselect"===c._type)return}var d=this.getHighlightedResults();if(!(d.length<1)){var e=d.data("data");null!=e.element&&e.element.selected||null==e.element&&e.selected||this.trigger("select",{data:e})}},a}),b.define("select2/dropdown/closeOnSelect",[],function(){function a(){}return a.prototype.bind=function(a,b,c){var d=this;a.call(this,b,c),b.on("select",function(a){d._selectTriggered(a)}),b.on("unselect",function(a){d._selectTriggered(a)})},a.prototype._selectTriggered=function(a,b){var c=b.originalEvent;c&&c.ctrlKey||this.trigger("close",{originalEvent:c,originalSelect2Event:b})},a}),b.define("select2/i18n/en",[],function(){return{errorLoading:function(){return"The results could not be loaded."},inputTooLong:function(a){var b=a.input.length-a.maximum,c="Please delete "+b+" character";return 1!=b&&(c+="s"),c},inputTooShort:function(a){var b=a.minimum-a.input.length,c="Please enter "+b+" or more characters";return c},loadingMore:function(){return"Loading more results…"},maximumSelected:function(a){var b="You can only select "+a.maximum+" item";return 1!=a.maximum&&(b+="s"),b},noResults:function(){return"No results found"},searching:function(){return"Searching…"}}}),b.define("select2/defaults",["jquery","require","./results","./selection/single","./selection/multiple","./selection/placeholder","./selection/allowClear","./selection/search","./selection/eventRelay","./utils","./translation","./diacritics","./data/select","./data/array","./data/ajax","./data/tags","./data/tokenizer","./data/minimumInputLength","./data/maximumInputLength","./data/maximumSelectionLength","./dropdown","./dropdown/search","./dropdown/hidePlaceholder","./dropdown/infiniteScroll","./dropdown/attachBody","./dropdown/minimumResultsForSearch","./dropdown/selectOnClose","./dropdown/closeOnSelect","./i18n/en"],function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C){function D(){this.reset()}D.prototype.apply=function(l){if(l=a.extend(!0,{},this.defaults,l),null==l.dataAdapter){if(null!=l.ajax?l.dataAdapter=o:null!=l.data?l.dataAdapter=n:l.dataAdapter=m,l.minimumInputLength>0&&(l.dataAdapter=j.Decorate(l.dataAdapter,r)),l.maximumInputLength>0&&(l.dataAdapter=j.Decorate(l.dataAdapter,s)),l.maximumSelectionLength>0&&(l.dataAdapter=j.Decorate(l.dataAdapter,t)),l.tags&&(l.dataAdapter=j.Decorate(l.dataAdapter,p)),(null!=l.tokenSeparators||null!=l.tokenizer)&&(l.dataAdapter=j.Decorate(l.dataAdapter,q)),null!=l.query){var C=b(l.amdBase+"compat/query");l.dataAdapter=j.Decorate(l.dataAdapter,C)}if(null!=l.initSelection){var D=b(l.amdBase+"compat/initSelection");l.dataAdapter=j.Decorate(l.dataAdapter,D)}}if(null==l.resultsAdapter&&(l.resultsAdapter=c,null!=l.ajax&&(l.resultsAdapter=j.Decorate(l.resultsAdapter,x)),null!=l.placeholder&&(l.resultsAdapter=j.Decorate(l.resultsAdapter,w)),l.selectOnClose&&(l.resultsAdapter=j.Decorate(l.resultsAdapter,A))),null==l.dropdownAdapter){if(l.multiple)l.dropdownAdapter=u;else{var E=j.Decorate(u,v);l.dropdownAdapter=E}if(0!==l.minimumResultsForSearch&&(l.dropdownAdapter=j.Decorate(l.dropdownAdapter,z)),l.closeOnSelect&&(l.dropdownAdapter=j.Decorate(l.dropdownAdapter,B)),null!=l.dropdownCssClass||null!=l.dropdownCss||null!=l.adaptDropdownCssClass){var F=b(l.amdBase+"compat/dropdownCss");l.dropdownAdapter=j.Decorate(l.dropdownAdapter,F)}l.dropdownAdapter=j.Decorate(l.dropdownAdapter,y)}if(null==l.selectionAdapter){if(l.multiple?l.selectionAdapter=e:l.selectionAdapter=d,null!=l.placeholder&&(l.selectionAdapter=j.Decorate(l.selectionAdapter,f)),l.allowClear&&(l.selectionAdapter=j.Decorate(l.selectionAdapter,g)),l.multiple&&(l.selectionAdapter=j.Decorate(l.selectionAdapter,h)),null!=l.containerCssClass||null!=l.containerCss||null!=l.adaptContainerCssClass){var G=b(l.amdBase+"compat/containerCss");l.selectionAdapter=j.Decorate(l.selectionAdapter,G)}l.selectionAdapter=j.Decorate(l.selectionAdapter,i)}if("string"==typeof l.language)if(l.language.indexOf("-")>0){var H=l.language.split("-"),I=H[0];l.language=[l.language,I]}else l.language=[l.language];if(a.isArray(l.language)){var J=new k;l.language.push("en");for(var K=l.language,L=0;L<K.length;L++){var M=K[L],N={};try{N=k.loadPath(M)}catch(O){try{M=this.defaults.amdLanguageBase+M,N=k.loadPath(M)}catch(P){l.debug&&window.console&&console.warn&&console.warn('Select2: The language file for "'+M+'" could not be automatically loaded. A fallback will be used instead.');continue}}J.extend(N)}l.translations=J}else{var Q=k.loadPath(this.defaults.amdLanguageBase+"en"),R=new k(l.language);R.extend(Q),l.translations=R}return l},D.prototype.reset=function(){function b(a){function b(a){return l[a]||a}return a.replace(/[^\u0000-\u007E]/g,b)}function c(d,e){if(""===a.trim(d.term))return e;if(e.children&&e.children.length>0){for(var f=a.extend(!0,{},e),g=e.children.length-1;g>=0;g--){var h=e.children[g],i=c(d,h);null==i&&f.children.splice(g,1)}return f.children.length>0?f:c(d,f)}var j=b(e.text).toUpperCase(),k=b(d.term).toUpperCase();return j.indexOf(k)>-1?e:null}this.defaults={amdBase:"./",amdLanguageBase:"./i18n/",closeOnSelect:!0,debug:!1,dropdownAutoWidth:!1,escapeMarkup:j.escapeMarkup,language:C,matcher:c,minimumInputLength:0,maximumInputLength:0,maximumSelectionLength:0,minimumResultsForSearch:0,selectOnClose:!1,sorter:function(a){return a},templateResult:function(a){return a.text},templateSelection:function(a){return a.text},theme:"default",width:"resolve"}},D.prototype.set=function(b,c){var d=a.camelCase(b),e={};e[d]=c;var f=j._convertData(e);a.extend(this.defaults,f)};var E=new D;return E}),b.define("select2/options",["require","jquery","./defaults","./utils"],function(a,b,c,d){function e(b,e){if(this.options=b,null!=e&&this.fromElement(e),this.options=c.apply(this.options),e&&e.is("input")){var f=a(this.get("amdBase")+"compat/inputData");this.options.dataAdapter=d.Decorate(this.options.dataAdapter,f)}}return e.prototype.fromElement=function(a){var c=["select2"];null==this.options.multiple&&(this.options.multiple=a.prop("multiple")),null==this.options.disabled&&(this.options.disabled=a.prop("disabled")),null==this.options.language&&(a.prop("lang")?this.options.language=a.prop("lang").toLowerCase():a.closest("[lang]").prop("lang")&&(this.options.language=a.closest("[lang]").prop("lang"))),null==this.options.dir&&(a.prop("dir")?this.options.dir=a.prop("dir"):a.closest("[dir]").prop("dir")?this.options.dir=a.closest("[dir]").prop("dir"):this.options.dir="ltr"),a.prop("disabled",this.options.disabled),a.prop("multiple",this.options.multiple),a.data("select2Tags")&&(this.options.debug&&window.console&&console.warn&&console.warn('Select2: The `data-select2-tags` attribute has been changed to use the `data-data` and `data-tags="true"` attributes and will be removed in future versions of Select2.'),a.data("data",a.data("select2Tags")),a.data("tags",!0)),a.data("ajaxUrl")&&(this.options.debug&&window.console&&console.warn&&console.warn("Select2: The `data-ajax-url` attribute has been changed to `data-ajax--url` and support for the old attribute will be removed in future versions of Select2."),a.attr("ajax--url",a.data("ajaxUrl")),a.data("ajax--url",a.data("ajaxUrl")));var e={};e=b.fn.jquery&&"1."==b.fn.jquery.substr(0,2)&&a[0].dataset?b.extend(!0,{},a[0].dataset,a.data()):a.data();var f=b.extend(!0,{},e);f=d._convertData(f);for(var g in f)b.inArray(g,c)>-1||(b.isPlainObject(this.options[g])?b.extend(this.options[g],f[g]):this.options[g]=f[g]);return this},e.prototype.get=function(a){return this.options[a]},e.prototype.set=function(a,b){this.options[a]=b},e}),b.define("select2/core",["jquery","./options","./utils","./keys"],function(a,b,c,d){var e=function(a,c){null!=a.data("select2")&&a.data("select2").destroy(),this.$element=a,this.id=this._generateId(a),c=c||{},this.options=new b(c,a),e.__super__.constructor.call(this);var d=a.attr("tabindex")||0;a.data("old-tabindex",d),a.attr("tabindex","-1");var f=this.options.get("dataAdapter");this.dataAdapter=new f(a,this.options);var g=this.render();this._placeContainer(g);var h=this.options.get("selectionAdapter");this.selection=new h(a,this.options),this.$selection=this.selection.render(),this.selection.position(this.$selection,g);var i=this.options.get("dropdownAdapter");this.dropdown=new i(a,this.options),this.$dropdown=this.dropdown.render(),this.dropdown.position(this.$dropdown,g);var j=this.options.get("resultsAdapter");this.results=new j(a,this.options,this.dataAdapter),this.$results=this.results.render(),this.results.position(this.$results,this.$dropdown);var k=this;this._bindAdapters(),this._registerDomEvents(),this._registerDataEvents(),this._registerSelectionEvents(),this._registerDropdownEvents(),this._registerResultsEvents(),this._registerEvents(),this.dataAdapter.current(function(a){k.trigger("selection:update",{data:a})}),a.addClass("select2-hidden-accessible"),a.attr("aria-hidden","true"),this._syncAttributes(),a.data("select2",this)};return c.Extend(e,c.Observable),e.prototype._generateId=function(a){var b="";return b=null!=a.attr("id")?a.attr("id"):null!=a.attr("name")?a.attr("name")+"-"+c.generateChars(2):c.generateChars(4),b=b.replace(/(:|\.|\[|\]|,)/g,""),b="select2-"+b},e.prototype._placeContainer=function(a){a.insertAfter(this.$element);var b=this._resolveWidth(this.$element,this.options.get("width"));null!=b&&a.css("width",b)},e.prototype._resolveWidth=function(a,b){var c=/^width:(([-+]?([0-9]*\.)?[0-9]+)(px|em|ex|%|in|cm|mm|pt|pc))/i;if("resolve"==b){var d=this._resolveWidth(a,"style");return null!=d?d:this._resolveWidth(a,"element")}if("element"==b){var e=a.outerWidth(!1);return 0>=e?"auto":e+"px"}if("style"==b){var f=a.attr("style");if("string"!=typeof f)return null;for(var g=f.split(";"),h=0,i=g.length;i>h;h+=1){var j=g[h].replace(/\s/g,""),k=j.match(c);if(null!==k&&k.length>=1)return k[1]}return null}return b},e.prototype._bindAdapters=function(){this.dataAdapter.bind(this,this.$container),this.selection.bind(this,this.$container),this.dropdown.bind(this,this.$container),this.results.bind(this,this.$container)},e.prototype._registerDomEvents=function(){var b=this;this.$element.on("change.select2",function(){b.dataAdapter.current(function(a){b.trigger("selection:update",{data:a})})}),this.$element.on("focus.select2",function(a){b.trigger("focus",a)}),this._syncA=c.bind(this._syncAttributes,this),this._syncS=c.bind(this._syncSubtree,this),this.$element[0].attachEvent&&this.$element[0].attachEvent("onpropertychange",this._syncA);var d=window.MutationObserver||window.WebKitMutationObserver||window.MozMutationObserver;null!=d?(this._observer=new d(function(c){a.each(c,b._syncA),a.each(c,b._syncS)}),this._observer.observe(this.$element[0],{attributes:!0,childList:!0,subtree:!1})):this.$element[0].addEventListener&&(this.$element[0].addEventListener("DOMAttrModified",b._syncA,!1),this.$element[0].addEventListener("DOMNodeInserted",b._syncS,!1),this.$element[0].addEventListener("DOMNodeRemoved",b._syncS,!1))},e.prototype._registerDataEvents=function(){var a=this;this.dataAdapter.on("*",function(b,c){a.trigger(b,c)})},e.prototype._registerSelectionEvents=function(){var b=this,c=["toggle","focus"];this.selection.on("toggle",function(){b.toggleDropdown()}),this.selection.on("focus",function(a){b.focus(a)}),this.selection.on("*",function(d,e){-1===a.inArray(d,c)&&b.trigger(d,e)})},e.prototype._registerDropdownEvents=function(){var a=this;this.dropdown.on("*",function(b,c){a.trigger(b,c)})},e.prototype._registerResultsEvents=function(){var a=this;this.results.on("*",function(b,c){a.trigger(b,c)})},e.prototype._registerEvents=function(){var a=this;this.on("open",function(){a.$container.addClass("select2-container--open")}),this.on("close",function(){a.$container.removeClass("select2-container--open")}),this.on("enable",function(){a.$container.removeClass("select2-container--disabled")}),this.on("disable",function(){a.$container.addClass("select2-container--disabled")}),this.on("blur",function(){a.$container.removeClass("select2-container--focus")}),this.on("query",function(b){a.isOpen()||a.trigger("open",{}),this.dataAdapter.query(b,function(c){a.trigger("results:all",{data:c,query:b})})}),this.on("query:append",function(b){this.dataAdapter.query(b,function(c){a.trigger("results:append",{data:c,query:b})})}),this.on("keypress",function(b){var c=b.which;a.isOpen()?c===d.ESC||c===d.TAB||c===d.UP&&b.altKey?(a.close(),b.preventDefault()):c===d.ENTER?(a.trigger("results:select",{}),b.preventDefault()):c===d.SPACE&&b.ctrlKey?(a.trigger("results:toggle",{}),b.preventDefault()):c===d.UP?(a.trigger("results:previous",{}),b.preventDefault()):c===d.DOWN&&(a.trigger("results:next",{}),b.preventDefault()):(c===d.ENTER||c===d.SPACE||c===d.DOWN&&b.altKey)&&(a.open(),b.preventDefault())})},e.prototype._syncAttributes=function(){this.options.set("disabled",this.$element.prop("disabled")),this.options.get("disabled")?(this.isOpen()&&this.close(),this.trigger("disable",{})):this.trigger("enable",{})},e.prototype._syncSubtree=function(a,b){var c=!1,d=this;if(!a||!a.target||"OPTION"===a.target.nodeName||"OPTGROUP"===a.target.nodeName){if(b)if(b.addedNodes&&b.addedNodes.length>0)for(var e=0;e<b.addedNodes.length;e++){var f=b.addedNodes[e];f.selected&&(c=!0)}else b.removedNodes&&b.removedNodes.length>0&&(c=!0);else c=!0;c&&this.dataAdapter.current(function(a){d.trigger("selection:update",{data:a})})}},e.prototype.trigger=function(a,b){var c=e.__super__.trigger,d={open:"opening",close:"closing",select:"selecting",unselect:"unselecting"};if(void 0===b&&(b={}),a in d){var f=d[a],g={prevented:!1,name:a,args:b};if(c.call(this,f,g),g.prevented)return void(b.prevented=!0)}c.call(this,a,b)},e.prototype.toggleDropdown=function(){this.options.get("disabled")||(this.isOpen()?this.close():this.open())},e.prototype.open=function(){this.isOpen()||this.trigger("query",{})},e.prototype.close=function(){this.isOpen()&&this.trigger("close",{})},e.prototype.isOpen=function(){return this.$container.hasClass("select2-container--open")},e.prototype.hasFocus=function(){return this.$container.hasClass("select2-container--focus")},e.prototype.focus=function(a){this.hasFocus()||(this.$container.addClass("select2-container--focus"),this.trigger("focus",{}))},e.prototype.enable=function(a){this.options.get("debug")&&window.console&&console.warn&&console.warn('Select2: The `select2("enable")` method has been deprecated and will be removed in later Select2 versions. Use $element.prop("disabled") instead.'),(null==a||0===a.length)&&(a=[!0]);var b=!a[0];this.$element.prop("disabled",b)},e.prototype.data=function(){this.options.get("debug")&&arguments.length>0&&window.console&&console.warn&&console.warn('Select2: Data can no longer be set using `select2("data")`. You should consider setting the value instead using `$element.val()`.');var a=[];return this.dataAdapter.current(function(b){a=b}),a},e.prototype.val=function(b){if(this.options.get("debug")&&window.console&&console.warn&&console.warn('Select2: The `select2("val")` method has been deprecated and will be removed in later Select2 versions. Use $element.val() instead.'),null==b||0===b.length)return this.$element.val();var c=b[0];a.isArray(c)&&(c=a.map(c,function(a){return a.toString()})),this.$element.val(c).trigger("change")},e.prototype.destroy=function(){this.$container.remove(),this.$element[0].detachEvent&&this.$element[0].detachEvent("onpropertychange",this._syncA),null!=this._observer?(this._observer.disconnect(),this._observer=null):this.$element[0].removeEventListener&&(this.$element[0].removeEventListener("DOMAttrModified",this._syncA,!1),this.$element[0].removeEventListener("DOMNodeInserted",this._syncS,!1),this.$element[0].removeEventListener("DOMNodeRemoved",this._syncS,!1)),this._syncA=null,this._syncS=null,this.$element.off(".select2"),this.$element.attr("tabindex",this.$element.data("old-tabindex")),this.$element.removeClass("select2-hidden-accessible"),this.$element.attr("aria-hidden","false"),this.$element.removeData("select2"),this.dataAdapter.destroy(),this.selection.destroy(),this.dropdown.destroy(),this.results.destroy(),this.dataAdapter=null,this.selection=null,this.dropdown=null,this.results=null;
 },e.prototype.render=function(){var b=a('<span class="select2 select2-container"><span class="selection"></span><span class="dropdown-wrapper" aria-hidden="true"></span></span>');return b.attr("dir",this.options.get("dir")),this.$container=b,this.$container.addClass("select2-container--"+this.options.get("theme")),b.data("element",this.$element),b},e}),b.define("jquery-mousewheel",["jquery"],function(a){return a}),b.define("jquery.select2",["jquery","jquery-mousewheel","./select2/core","./select2/defaults"],function(a,b,c,d){if(null==a.fn.select2){var e=["open","close","destroy"];a.fn.select2=function(b){if(b=b||{},"object"==typeof b)return this.each(function(){var d=a.extend(!0,{},b);new c(a(this),d)}),this;if("string"==typeof b){var d,f=Array.prototype.slice.call(arguments,1);return this.each(function(){var c=a(this).data("select2");null==c&&window.console&&console.error&&console.error("The select2('"+b+"') method was called on an element that is not using Select2."),d=c[b].apply(c,f)}),a.inArray(b,e)>-1?this:d}throw new Error("Invalid arguments for Select2: "+b)}}return null==a.fn.select2.defaults&&(a.fn.select2.defaults=d),c}),{define:b.define,require:b.require}}(),c=b.require("jquery.select2");return a.fn.select2.amd=b,c});/*! rangeslider.js - v2.3.0 | (c) 2016 @andreruffert | MIT license | https://github.com/andreruffert/rangeslider.js */
-!function(a){"use strict";"function"==typeof define&&define.amd?define(["jquery"],a):"object"==typeof exports?module.exports=a(require("jquery")):a(jQuery)}(function(a){"use strict";function b(){var a=document.createElement("input");return a.setAttribute("type","range"),"text"!==a.type}function c(a,b){var c=Array.prototype.slice.call(arguments,2);return setTimeout(function(){return a.apply(null,c)},b)}function d(a,b){return b=b||100,function(){if(!a.debouncing){var c=Array.prototype.slice.apply(arguments);a.lastReturnVal=a.apply(window,c),a.debouncing=!0}return clearTimeout(a.debounceTimeout),a.debounceTimeout=setTimeout(function(){a.debouncing=!1},b),a.lastReturnVal}}function e(a){return a&&(0===a.offsetWidth||0===a.offsetHeight||a.open===!1)}function f(a){for(var b=[],c=a.parentNode;e(c);)b.push(c),c=c.parentNode;return b}function g(a,b){function c(a){"undefined"!=typeof a.open&&(a.open=!a.open)}var d=f(a),e=d.length,g=[],h=a[b];if(e){for(var i=0;i<e;i++)g[i]=d[i].style.cssText,d[i].style.setProperty?d[i].style.setProperty("display","block","important"):d[i].style.cssText+=";display: block !important",d[i].style.height="0",d[i].style.overflow="hidden",d[i].style.visibility="hidden",c(d[i]);h=a[b];for(var j=0;j<e;j++)d[j].style.cssText=g[j],c(d[j])}return h}function h(a,b){var c=parseFloat(a);return Number.isNaN(c)?b:c}function i(a){return a.charAt(0).toUpperCase()+a.substr(1)}function j(b,e){if(this.$window=a(window),this.$document=a(document),this.$element=a(b),this.options=a.extend({},n,e),this.polyfill=this.options.polyfill,this.orientation=this.$element[0].getAttribute("data-orientation")||this.options.orientation,this.onInit=this.options.onInit,this.onSlide=this.options.onSlide,this.onSlideEnd=this.options.onSlideEnd,this.DIMENSION=o.orientation[this.orientation].dimension,this.DIRECTION=o.orientation[this.orientation].direction,this.DIRECTION_STYLE=o.orientation[this.orientation].directionStyle,this.COORDINATE=o.orientation[this.orientation].coordinate,this.polyfill&&m)return!1;this.identifier="js-"+k+"-"+l++,this.startEvent=this.options.startEvent.join("."+this.identifier+" ")+"."+this.identifier,this.moveEvent=this.options.moveEvent.join("."+this.identifier+" ")+"."+this.identifier,this.endEvent=this.options.endEvent.join("."+this.identifier+" ")+"."+this.identifier,this.toFixed=(this.step+"").replace(".","").length-1,this.$fill=a('<div class="'+this.options.fillClass+'" />'),this.$handle=a('<div class="'+this.options.handleClass+'" />'),this.$range=a('<div class="'+this.options.rangeClass+" "+this.options[this.orientation+"Class"]+'" id="'+this.identifier+'" />').insertAfter(this.$element).prepend(this.$fill,this.$handle),this.$element.css({position:"absolute",width:"1px",height:"1px",overflow:"hidden",opacity:"0"}),this.handleDown=a.proxy(this.handleDown,this),this.handleMove=a.proxy(this.handleMove,this),this.handleEnd=a.proxy(this.handleEnd,this),this.init();var f=this;this.$window.on("resize."+this.identifier,d(function(){c(function(){f.update(!1,!1)},300)},20)),this.$document.on(this.startEvent,"#"+this.identifier+":not(."+this.options.disabledClass+")",this.handleDown),this.$element.on("change."+this.identifier,function(a,b){if(!b||b.origin!==f.identifier){var c=a.target.value,d=f.getPositionFromValue(c);f.setPosition(d)}})}Number.isNaN=Number.isNaN||function(a){return"number"==typeof a&&a!==a};var k="rangeslider",l=0,m=b(),n={polyfill:!0,orientation:"horizontal",rangeClass:"rangeslider",disabledClass:"rangeslider--disabled",activeClass:"rangeslider--active",horizontalClass:"rangeslider--horizontal",verticalClass:"rangeslider--vertical",fillClass:"rangeslider__fill",handleClass:"rangeslider__handle",startEvent:["mousedown","touchstart","pointerdown"],moveEvent:["mousemove","touchmove","pointermove"],endEvent:["mouseup","touchend","pointerup"]},o={orientation:{horizontal:{dimension:"width",direction:"left",directionStyle:"left",coordinate:"x"},vertical:{dimension:"height",direction:"top",directionStyle:"bottom",coordinate:"y"}}};return j.prototype.init=function(){this.update(!0,!1),this.onInit&&"function"==typeof this.onInit&&this.onInit()},j.prototype.update=function(a,b){a=a||!1,a&&(this.min=h(this.$element[0].getAttribute("min"),0),this.max=h(this.$element[0].getAttribute("max"),100),this.value=h(this.$element[0].value,Math.round(this.min+(this.max-this.min)/2)),this.step=h(this.$element[0].getAttribute("step"),1)),this.handleDimension=g(this.$handle[0],"offset"+i(this.DIMENSION)),this.rangeDimension=g(this.$range[0],"offset"+i(this.DIMENSION)),this.maxHandlePos=this.rangeDimension-this.handleDimension,this.grabPos=this.handleDimension/2,this.position=this.getPositionFromValue(this.value),this.$element[0].disabled?this.$range.addClass(this.options.disabledClass):this.$range.removeClass(this.options.disabledClass),this.setPosition(this.position,b)},j.prototype.handleDown=function(a){if(a.preventDefault(),this.$document.on(this.moveEvent,this.handleMove),this.$document.on(this.endEvent,this.handleEnd),this.$range.addClass(this.options.activeClass),!((" "+a.target.className+" ").replace(/[\n\t]/g," ").indexOf(this.options.handleClass)>-1)){var b=this.getRelativePosition(a),c=this.$range[0].getBoundingClientRect()[this.DIRECTION],d=this.getPositionFromNode(this.$handle[0])-c,e="vertical"===this.orientation?this.maxHandlePos-(b-this.grabPos):b-this.grabPos;this.setPosition(e),b>=d&&b<d+this.handleDimension&&(this.grabPos=b-d)}},j.prototype.handleMove=function(a){a.preventDefault();var b=this.getRelativePosition(a),c="vertical"===this.orientation?this.maxHandlePos-(b-this.grabPos):b-this.grabPos;this.setPosition(c)},j.prototype.handleEnd=function(a){a.preventDefault(),this.$document.off(this.moveEvent,this.handleMove),this.$document.off(this.endEvent,this.handleEnd),this.$range.removeClass(this.options.activeClass),this.$element.trigger("change",{origin:this.identifier}),this.onSlideEnd&&"function"==typeof this.onSlideEnd&&this.onSlideEnd(this.position,this.value)},j.prototype.cap=function(a,b,c){return a<b?b:a>c?c:a},j.prototype.setPosition=function(a,b){var c,d;void 0===b&&(b=!0),c=this.getValueFromPosition(this.cap(a,0,this.maxHandlePos)),d=this.getPositionFromValue(c),this.$fill[0].style[this.DIMENSION]=d+this.grabPos+"px",this.$handle[0].style[this.DIRECTION_STYLE]=d+"px",this.setValue(c),this.position=d,this.value=c,b&&this.onSlide&&"function"==typeof this.onSlide&&this.onSlide(d,c)},j.prototype.getPositionFromNode=function(a){for(var b=0;null!==a;)b+=a.offsetLeft,a=a.offsetParent;return b},j.prototype.getRelativePosition=function(a){var b=i(this.COORDINATE),c=this.$range[0].getBoundingClientRect()[this.DIRECTION],d=0;return"undefined"!=typeof a.originalEvent["client"+b]?d=a.originalEvent["client"+b]:a.originalEvent.touches&&a.originalEvent.touches[0]&&"undefined"!=typeof a.originalEvent.touches[0]["client"+b]?d=a.originalEvent.touches[0]["client"+b]:a.currentPoint&&"undefined"!=typeof a.currentPoint[this.COORDINATE]&&(d=a.currentPoint[this.COORDINATE]),d-c},j.prototype.getPositionFromValue=function(a){var b,c;return b=(a-this.min)/(this.max-this.min),c=Number.isNaN(b)?0:b*this.maxHandlePos},j.prototype.getValueFromPosition=function(a){var b,c;return b=a/(this.maxHandlePos||1),c=this.step*Math.round(b*(this.max-this.min)/this.step)+this.min,Number(c.toFixed(this.toFixed))},j.prototype.setValue=function(a){a===this.value&&""!==this.$element[0].value||this.$element.val(a).trigger("input",{origin:this.identifier})},j.prototype.destroy=function(){this.$document.off("."+this.identifier),this.$window.off("."+this.identifier),this.$element.off("."+this.identifier).removeAttr("style").removeData("plugin_"+k),this.$range&&this.$range.length&&this.$range[0].parentNode.removeChild(this.$range[0])},a.fn[k]=function(b){var c=Array.prototype.slice.call(arguments,1);return this.each(function(){var d=a(this),e=d.data("plugin_"+k);e||d.data("plugin_"+k,e=new j(this,b)),"string"==typeof b&&e[b].apply(e,c)})},"rangeslider.js is available in jQuery context e.g $(selector).rangeslider(options);"});var czr_debug = {
-      log: function(o) {debug.queue.push(['log', arguments, debug.stack.slice(0)]); if (window.console && typeof window.console.log == 'function') {window.console.log(o);}},
-      error: function(o) {debug.queue.push(['error', arguments, debug.stack.slice(0)]); if (window.console && typeof window.console.error == 'function') {window.console.error(o);}},
-      queue: [],
-      stack: []
-};
+!function(a){"use strict";"function"==typeof define&&define.amd?define(["jquery"],a):"object"==typeof exports?module.exports=a(require("jquery")):a(jQuery)}(function(a){"use strict";function b(){var a=document.createElement("input");return a.setAttribute("type","range"),"text"!==a.type}function c(a,b){var c=Array.prototype.slice.call(arguments,2);return setTimeout(function(){return a.apply(null,c)},b)}function d(a,b){return b=b||100,function(){if(!a.debouncing){var c=Array.prototype.slice.apply(arguments);a.lastReturnVal=a.apply(window,c),a.debouncing=!0}return clearTimeout(a.debounceTimeout),a.debounceTimeout=setTimeout(function(){a.debouncing=!1},b),a.lastReturnVal}}function e(a){return a&&(0===a.offsetWidth||0===a.offsetHeight||a.open===!1)}function f(a){for(var b=[],c=a.parentNode;e(c);)b.push(c),c=c.parentNode;return b}function g(a,b){function c(a){"undefined"!=typeof a.open&&(a.open=!a.open)}var d=f(a),e=d.length,g=[],h=a[b];if(e){for(var i=0;i<e;i++)g[i]=d[i].style.cssText,d[i].style.setProperty?d[i].style.setProperty("display","block","important"):d[i].style.cssText+=";display: block !important",d[i].style.height="0",d[i].style.overflow="hidden",d[i].style.visibility="hidden",c(d[i]);h=a[b];for(var j=0;j<e;j++)d[j].style.cssText=g[j],c(d[j])}return h}function h(a,b){var c=parseFloat(a);return Number.isNaN(c)?b:c}function i(a){return a.charAt(0).toUpperCase()+a.substr(1)}function j(b,e){if(this.$window=a(window),this.$document=a(document),this.$element=a(b),this.options=a.extend({},n,e),this.polyfill=this.options.polyfill,this.orientation=this.$element[0].getAttribute("data-orientation")||this.options.orientation,this.onInit=this.options.onInit,this.onSlide=this.options.onSlide,this.onSlideEnd=this.options.onSlideEnd,this.DIMENSION=o.orientation[this.orientation].dimension,this.DIRECTION=o.orientation[this.orientation].direction,this.DIRECTION_STYLE=o.orientation[this.orientation].directionStyle,this.COORDINATE=o.orientation[this.orientation].coordinate,this.polyfill&&m)return!1;this.identifier="js-"+k+"-"+l++,this.startEvent=this.options.startEvent.join("."+this.identifier+" ")+"."+this.identifier,this.moveEvent=this.options.moveEvent.join("."+this.identifier+" ")+"."+this.identifier,this.endEvent=this.options.endEvent.join("."+this.identifier+" ")+"."+this.identifier,this.toFixed=(this.step+"").replace(".","").length-1,this.$fill=a('<div class="'+this.options.fillClass+'" />'),this.$handle=a('<div class="'+this.options.handleClass+'" />'),this.$range=a('<div class="'+this.options.rangeClass+" "+this.options[this.orientation+"Class"]+'" id="'+this.identifier+'" />').insertAfter(this.$element).prepend(this.$fill,this.$handle),this.$element.css({position:"absolute",width:"1px",height:"1px",overflow:"hidden",opacity:"0"}),this.handleDown=a.proxy(this.handleDown,this),this.handleMove=a.proxy(this.handleMove,this),this.handleEnd=a.proxy(this.handleEnd,this),this.init();var f=this;this.$window.on("resize."+this.identifier,d(function(){c(function(){f.update(!1,!1)},300)},20)),this.$document.on(this.startEvent,"#"+this.identifier+":not(."+this.options.disabledClass+")",this.handleDown),this.$element.on("change."+this.identifier,function(a,b){if(!b||b.origin!==f.identifier){var c=a.target.value,d=f.getPositionFromValue(c);f.setPosition(d)}})}Number.isNaN=Number.isNaN||function(a){return"number"==typeof a&&a!==a};var k="rangeslider",l=0,m=b(),n={polyfill:!0,orientation:"horizontal",rangeClass:"rangeslider",disabledClass:"rangeslider--disabled",activeClass:"rangeslider--active",horizontalClass:"rangeslider--horizontal",verticalClass:"rangeslider--vertical",fillClass:"rangeslider__fill",handleClass:"rangeslider__handle",startEvent:["mousedown","touchstart","pointerdown"],moveEvent:["mousemove","touchmove","pointermove"],endEvent:["mouseup","touchend","pointerup"]},o={orientation:{horizontal:{dimension:"width",direction:"left",directionStyle:"left",coordinate:"x"},vertical:{dimension:"height",direction:"top",directionStyle:"bottom",coordinate:"y"}}};return j.prototype.init=function(){this.update(!0,!1),this.onInit&&"function"==typeof this.onInit&&this.onInit()},j.prototype.update=function(a,b){a=a||!1,a&&(this.min=h(this.$element[0].getAttribute("min"),0),this.max=h(this.$element[0].getAttribute("max"),100),this.value=h(this.$element[0].value,Math.round(this.min+(this.max-this.min)/2)),this.step=h(this.$element[0].getAttribute("step"),1)),this.handleDimension=g(this.$handle[0],"offset"+i(this.DIMENSION)),this.rangeDimension=g(this.$range[0],"offset"+i(this.DIMENSION)),this.maxHandlePos=this.rangeDimension-this.handleDimension,this.grabPos=this.handleDimension/2,this.position=this.getPositionFromValue(this.value),this.$element[0].disabled?this.$range.addClass(this.options.disabledClass):this.$range.removeClass(this.options.disabledClass),this.setPosition(this.position,b)},j.prototype.handleDown=function(a){if(a.preventDefault(),this.$document.on(this.moveEvent,this.handleMove),this.$document.on(this.endEvent,this.handleEnd),this.$range.addClass(this.options.activeClass),!((" "+a.target.className+" ").replace(/[\n\t]/g," ").indexOf(this.options.handleClass)>-1)){var b=this.getRelativePosition(a),c=this.$range[0].getBoundingClientRect()[this.DIRECTION],d=this.getPositionFromNode(this.$handle[0])-c,e="vertical"===this.orientation?this.maxHandlePos-(b-this.grabPos):b-this.grabPos;this.setPosition(e),b>=d&&b<d+this.handleDimension&&(this.grabPos=b-d)}},j.prototype.handleMove=function(a){a.preventDefault();var b=this.getRelativePosition(a),c="vertical"===this.orientation?this.maxHandlePos-(b-this.grabPos):b-this.grabPos;this.setPosition(c)},j.prototype.handleEnd=function(a){a.preventDefault(),this.$document.off(this.moveEvent,this.handleMove),this.$document.off(this.endEvent,this.handleEnd),this.$range.removeClass(this.options.activeClass),this.$element.trigger("change",{origin:this.identifier}),this.onSlideEnd&&"function"==typeof this.onSlideEnd&&this.onSlideEnd(this.position,this.value)},j.prototype.cap=function(a,b,c){return a<b?b:a>c?c:a},j.prototype.setPosition=function(a,b){var c,d;void 0===b&&(b=!0),c=this.getValueFromPosition(this.cap(a,0,this.maxHandlePos)),d=this.getPositionFromValue(c),this.$fill[0].style[this.DIMENSION]=d+this.grabPos+"px",this.$handle[0].style[this.DIRECTION_STYLE]=d+"px",this.setValue(c),this.position=d,this.value=c,b&&this.onSlide&&"function"==typeof this.onSlide&&this.onSlide(d,c)},j.prototype.getPositionFromNode=function(a){for(var b=0;null!==a;)b+=a.offsetLeft,a=a.offsetParent;return b},j.prototype.getRelativePosition=function(a){var b=i(this.COORDINATE),c=this.$range[0].getBoundingClientRect()[this.DIRECTION],d=0;return"undefined"!=typeof a.originalEvent["client"+b]?d=a.originalEvent["client"+b]:a.originalEvent.touches&&a.originalEvent.touches[0]&&"undefined"!=typeof a.originalEvent.touches[0]["client"+b]?d=a.originalEvent.touches[0]["client"+b]:a.currentPoint&&"undefined"!=typeof a.currentPoint[this.COORDINATE]&&(d=a.currentPoint[this.COORDINATE]),d-c},j.prototype.getPositionFromValue=function(a){var b,c;return b=(a-this.min)/(this.max-this.min),c=Number.isNaN(b)?0:b*this.maxHandlePos},j.prototype.getValueFromPosition=function(a){var b,c;return b=a/(this.maxHandlePos||1),c=this.step*Math.round(b*(this.max-this.min)/this.step)+this.min,Number(c.toFixed(this.toFixed))},j.prototype.setValue=function(a){a===this.value&&""!==this.$element[0].value||this.$element.val(a).trigger("input",{origin:this.identifier})},j.prototype.destroy=function(){this.$document.off("."+this.identifier),this.$window.off("."+this.identifier),this.$element.off("."+this.identifier).removeAttr("style").removeData("plugin_"+k),this.$range&&this.$range.length&&this.$range[0].parentNode.removeChild(this.$range[0])},a.fn[k]=function(b){var c=Array.prototype.slice.call(arguments,1);return this.each(function(){var d=a(this),e=d.data("plugin_"+k);e||d.data("plugin_"+k,e=new j(this,b)),"string"==typeof b&&e[b].apply(e,c)})},"rangeslider.js is available in jQuery context e.g $(selector).rangeslider(options);"});
 ( function ( api, $, _ ) {
-      var _prettyPrintLog = function( args ) {
-            var _defaults = {
-                  bgCol : '#5ed1f5',
-                  textCol : '#000',
-                  consoleArguments : []
-            };
-            args = _.extend( _defaults, args );
+      // if ( ! serverControlParams.isSkopOn )
+      //   return;
+      /*****************************************************************************
+      * A "CONTEXT AWARE" SET METHD
+      *****************************************************************************/
+      /**
+      * OVERRIDES BASE api.Value method
+      * => adds the o {} param, allowing to pass additional contextual informations.
+      *
+      * Set the value and trigger all bound callbacks.
+      *
+      * @param {object} to New value.
+      */
+      api.Value.prototype.set = function( to, o ) {
+            var from = this._value, dfd = $.Deferred(), self = this, _promises = [];
 
-            var _toArr = Array.from( args.consoleArguments ),
-                _truncate = function( string ){
-                      if ( ! _.isString( string ) )
-                        return '';
-                      return string.length > 150 ? string.substr( 0, 149 ) : string;
-                };
-            if ( ! _.isEmpty( _.filter( _toArr, function( it ) { return ! _.isString( it ); } ) ) ) {
-                  _toArr =  JSON.stringify( _toArr.join(' ') );
-            } else {
-                  _toArr = _toArr.join(' ');
+            to = this._setter.apply( this, arguments );
+            to = this.validate( to );
+            args = _.extend( { silent : false }, _.isObject( o ) ? o : {} );
+
+            // Bail if the sanitized value is null or unchanged.
+            if ( null === to || _.isEqual( from, to ) ) {
+                  return dfd.resolveWith( self, [ to, from, o ] ).promise();
             }
-            return [
-                  '%c ' + _truncate( _toArr ),
-                  [ 'background:' + args.bgCol, 'color:' + args.textCol, 'display: block;' ].join(';')
-            ];
-      };
-      api.consoleLog = function() {
-            if ( ! serverControlParams.isDevMode )
-              return;
-            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
-              return;
-            console.log.apply( console, _prettyPrintLog( { consoleArguments : arguments } ) );
-      };
 
-      api.errorLog = function() {
-            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
-              return;
-
-            console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : arguments } ) );
-      };
-
-      api.czr_isSkopOn = function() {
-            return serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
-      };
-
-      api.czr_isChangeSetOn = function() {
-            return serverControlParams.isChangeSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
-      };
-
-
-
-      /*****************************************************************************
-      * DEFINE SOME USEFUL OBSERVABLE VALUES
-      *****************************************************************************/
-      api.czr_activeSectionId = new api.Value('');
-      api.czr_activePanelId = new api.Value('');
-
-      /*****************************************************************************
-      * OBSERVE UBIQUE CONTROL'S SECTIONS EXPANSION
-      *****************************************************************************/
-      if ( 'function' === typeof api.Section ) {
-            api.control.bind( 'add', function( _ctrl ) {
-                  if ( _ctrl.params.ubq_section && _ctrl.params.ubq_section.section ) {
-                        _ctrl.params.original_priority = _ctrl.params.priority;
-                        _ctrl.params.original_section  = _ctrl.params.section;
-
-                        api.section.when( _ctrl.params.ubq_section.section, function( _section_instance ) {
-                                _section_instance.expanded.bind( function( expanded ) {
-                                      if ( expanded ) {
-                                            if ( _ctrl.params.ubq_section.priority ) {
-                                                  _ctrl.priority( _ctrl.params.ubq_section.priority );
-                                            }
-                                            _ctrl.section( _ctrl.params.ubq_section.section );
-                                      }
-                                      else {
-                                            _ctrl.priority( _ctrl.params.original_priority );
-                                            _ctrl.section( _ctrl.params.original_section );
-                                      }
-                                });
-
-                        } );
-                  }
-            });
-      }
-
-
-      /*****************************************************************************
-      * OBSERVE UBIQUE CONTROL'S PANELS EXPANSION
-      *****************************************************************************/
-      if ( 'function' === typeof api.Panel ) {
-            api.section.bind( 'add', function( _sec ) {
-                  if ( _sec.params.ubq_panel && _sec.params.ubq_panel.panel ) {
-                        _sec.params.original_priority = _sec.params.priority;
-                        _sec.params.original_panel  = _sec.params.panel;
-
-                        api.panel.when( _sec.params.ubq_panel.panel, function( _panel_instance ) {
-                                _panel_instance.expanded.bind( function( expanded ) {
-                                      if ( expanded ) {
-                                            if ( _sec.params.ubq_panel.priority ) {
-                                                  _sec.priority( _sec.params.ubq_panel.priority );
-                                            }
-                                            _sec.panel( _sec.params.ubq_panel.panel );
-                                      }
-                                      else {
-                                            _sec.priority( _sec.params.original_priority );
-                                            _sec.panel( _sec.params.original_panel );
-                                      }
-                                });
-
-                        } );
-                  }
-            });
-      }
-
-
-      /*****************************************************************************
-      * CLOSE THE MOD OPTION PANEL ( if exists ) ON : section change, panel change, skope switch
-      *****************************************************************************/
-      var _closeModOpt = function() {
-            if ( ! _.has( api, 'czr_ModOptVisible') )
-              return;
-            api.czr_ModOptVisible(false);
-      };
-      api.czr_activeSectionId.bind( _closeModOpt );
-      api.czr_activePanelId.bind( _closeModOpt );
-
-      /*****************************************************************************
-      * OBSERVE SECTIONS AND PANEL EXPANSION
-      * /store the current expanded section and panel
-      *****************************************************************************/
-      api.bind('ready', function() {
-            if ( 'function' != typeof api.Section ) {
-              throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
+            this._value = to;
+            this._dirty = true;
+            if ( true === args.silent ) {
+                  return dfd.resolveWith( self, [ to, from, o ] ).promise();
             }
-            var _storeCurrentSection = function( expanded, section_id ) {
-                  api.czr_activeSectionId( expanded ? section_id : '' );
-            };
-            api.section.each( function( _sec ) {
-                  _sec.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, _sec.id ); } );
-            });
-            api.section.bind( 'add', function( section_instance ) {
-                  api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
-                  section_instance.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, section_instance.id ); } );
-            });
 
-            var _storeCurrentPanel = function( expanded, panel_id ) {
-                  api.czr_activePanelId( expanded ? panel_id : '' );
-                  if ( _.isEmpty( api.czr_activePanelId() ) ) {
-                        api.czr_activeSectionId( '' );
-                  }
-            };
-            api.panel.each( function( _panel ) {
-                  _panel.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, _panel.id ); } );
-            });
-            api.panel.bind( 'add', function( panel_instance ) {
-                  panel_instance.expanded.bind( function( expanded ) { _storeCurrentPanel( expanded, panel_instance.id ); } );
-            });
-      });
-      api.bind('ready', function() {
-            var _do = function() {
-                  api.section('themes').active.bind( function( active ) {
-                        if ( ! _.has( serverControlParams, 'isThemeSwitchOn' ) || ! _.isEmpty( serverControlParams.isThemeSwitchOn ) )
-                          return;
-                        api.section('themes').active( serverControlParams.isThemeSwitchOn );
-                        api.section('themes').active.callbacks = $.Callbacks();
+            if ( this._deferreds ) {
+                  _.each( self._deferreds, function( _prom ) {
+                        _promises.push( _prom.apply( null, [ to, from, o ] ) );
                   });
-            };
-            if ( api.section.has( 'themes') )
-                _do();
-            else
-                api.section.when( 'themes', function( _s ) {
-                      _do();
-                });
-      });
 
-
-      /*****************************************************************************
-      * FIRE SKOPE ON READY
-      *****************************************************************************/
-      api.czr_skopeReady = $.Deferred();
-      api.bind( 'ready' , function() {
-            if ( serverControlParams.isSkopOn ) {
-                  api.czr_isLoadingSkope  = new api.Value( false );
-                  api.czr_isLoadingSkope.bind( function( loading ) {
-                        toggleSkopeLoadPane( loading );
-                  });
-                  api.czr_skopeBase   = new api.CZR_skopeBase();
-                  api.czr_skopeSave   = new api.CZR_skopeSave();
-                  api.czr_skopeReset  = new api.CZR_skopeReset();
-
-                  api.trigger('czr-skope-started');
-                  var _toggleTopFailureNote = function() {
-                        api.czr_skopeBase.toggleTopNote( true, {
-                              title : serverControlParams.i18n.skope['There was a problem when trying to load the customizer.'],
-                              message : [
-                                    serverControlParams.i18n.skope['Please refer to'],
-                                    '<a href="http://docs.presscustomizr.com/article/285-there-was-a-problem-when-trying-to-load-the-customizer" target="_blank">',
-                                    serverControlParams.i18n.skope['this documentation page'],
-                                    '</a>',
-                                    serverControlParams.i18n.skope['to understand how to fix the problem.']
-                              ].join(' '),
-                              selfCloseAfter : 40000
+                  $.when.apply( null, _promises )
+                        .fail( function() { api.errorLog( 'A deferred callback failed in api.Value::set()'); })
+                        .then( function() {
+                              self.callbacks.fireWith( self, [ to, from, o ] );
+                              dfd.resolveWith( self, [ to, from, o ] );
                         });
+            } else {
+                  this.callbacks.fireWith( this, [ to, from, o ] );
+                  return dfd.resolveWith( self, [ to, from, o ] ).promise( self );
+            }
+            return dfd.promise( self );
+      };
+
+      //allows us to specify a list of callbacks + a { deferred : true } param
+      //if deferred is found and true, then the callback(s) are added in a list of deferred
+      //@see how this deferred list is used in api.Value.prototype.set()
+      api.Value.prototype.bind = function() {
+          //find an object in the argument
+          var self = this,
+              _isDeferred = false,
+              _cbs = [];
+
+          $.each( arguments, function( _key, _arg ) {
+                if ( ! _isDeferred )
+                  _isDeferred = _.isObject( _arg  ) && _arg.deferred;
+                if ( _.isFunction( _arg ) )
+                  _cbs.push( _arg );
+          });
+
+          if ( _isDeferred ) {
+                self._deferreds = self._deferreds || [];
+                _.each( _cbs, function( _cb ) {
+                      if ( ! _.contains( _cb, self._deferreds ) )
+                        self._deferreds.push( _cb );
+                });
+          } else {
+                //original method
+                self.callbacks.add.apply( self.callbacks, arguments );
+          }
+          return this;
+      };
+
+      /*****************************************************************************
+      * A SILENT SET METHOD :
+      * => keep the dirtyness param unchanged
+      * => stores the api state before callback calls, and reset it after
+      * => add an object param to the callback to inform that this is a silent process
+      * , this is typically used in the overridden api.Setting.preview method
+      *****************************************************************************/
+      //@param to : the new value to set
+      //@param dirtyness : the current dirtyness status of this setting in the skope
+      //
+      api.Setting.prototype.silent_set =function( to, dirtyness ) {
+            var from = this._value,
+                _save_state = api.state('saved')();
+
+            to = this._setter.apply( this, arguments );
+            to = this.validate( to );
+
+            // Bail if the sanitized value is null or unchanged.
+            if ( null === to || _.isEqual( from, to ) ) {
+              return this;
+            }
+
+            this._value = to;
+            this._dirty = ( _.isUndefined( dirtyness ) || ! _.isBoolean( dirtyness ) ) ? this._dirty : dirtyness;
+
+            this.callbacks.fireWith( this, [ to, from, { silent : true } ] );
+            //reset the api state to its value before the callback call
+            api.state('saved')( _save_state );
+            return this;
+      };
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      //PREPARE THE SKOPE AWARE PREVIEWER
+
+      //@return void()
+      //Changed the core to specify that the setting preview is actually a deferred callback
+      //=> allows us to use syntax like :
+      //api( setId ).set( new_value ).done( function() { execute actions when all the setting callbacks have been done })
+      api.Setting.prototype.initialize = function( id, value, options ) {
+            var setting = this;
+            api.Value.prototype.initialize.call( setting, value, options );
+
+            setting.id = id;
+            setting.transport = setting.transport || 'refresh';
+            setting._dirty = options.dirty || false;
+            setting.notifications = new api.Values({ defaultConstructor: api.Notification });
+
+            // Whenever the setting's value changes, refresh the preview.
+            setting.bind( setting.preview );
+
+            // the deferred can be used in moduleCollectionReact to execute actions after the module has been set.
+            // setting.bind( function( to, from , data ) {
+            //       return setting.preview( to, from , data );
+            // }, { deferred : true } );
+      };
+
+
+      //var _old_preview = api.Setting.prototype.preview;
+      //@return a deferred promise
+      api.Setting.prototype.preview = function( to, from , data ) {
+            var setting = this, transport, dfd = $.Deferred();
+
+            transport = setting.transport;
+
+            if ( serverControlParams.isSkopOn && api.czr_isPreviewerSkopeAware && 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
+                  this.previewer.refresh();
+                  return dfd.resolve( arguments ).promise();
+            }
+            //as soon as the previewer is setup, let's behave as usual
+            //=> but don't refresh when silently updating
+
+            //Each input instantiated in an item or a modOpt can have a specific transport set.
+            //the input transport is hard coded in the module js template, with the attribute : data-transport="postMessage" or "refresh"
+            //=> this is optional, if not set, then the transport will be inherited from the the module, which inherits from the control.
+            //
+            //If the input transport is specifically set to postMessage, then we don't want to send the 'setting' event to the preview
+            //=> this will prevent any partial refresh to be triggered if the input control parent is defined has a partial refresh one.
+            //=> the input will be sent to preview with module.control.previewer.send( 'czr_input', {...} )
+            //
+            //One exception : if the input transport is set to postMessage but the setting has not been set yet in the api (from is undefined, null, or empty) , we usually need to make an initial refresh
+            //=> typically, the initial refresh can be needed to set the relevant module css id selector that will be used afterwards for the postMessage input preview
+
+            //If we are in an input postMessage situation, the not_preview_sent param has been set in the czr_Input.inputReact method
+            //=> 1) We bail here
+            //=> 2) and we will send a custom event to the preview looking like :
+            //module.control.previewer.send( 'czr_input', {
+            //       set_id        : module.control.id,
+            //       module        : { items : $.extend( true, {}, module().items) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
+            //       module_id     : module.id,//<= will allow us to target the right dom element on front end
+            //       input_id      : input.id,
+            //       input_parent_id : input.input_parent.id,//<= can be the mod opt or the item
+            //       value         : to
+            // });
+
+            //=> if no from (setting not set yet => fall back on defaut transport)
+            if ( ! _.isUndefined( from ) && ! _.isEmpty( from ) && ! _.isNull( from ) ) {
+                  if ( _.isObject( data ) && true === data.not_preview_sent ) {
+                        return dfd.resolve( arguments ).promise();
+                  }
+            }
+
+            //Don't do anything id we are silent
+            if ( _.has( data, 'silent' ) && false !== data.silent )
+              return dfd.resolve( arguments ).promise();
+
+
+            //CORE PREVIEW AS OF WP 4.7+
+            if ( 'postMessage' === transport && ! api.state( 'previewerAlive' ).get() ) {
+                  transport = 'refresh';
+            }
+
+            if ( 'postMessage' === transport ) {
+                  //Pre setting event with a richer object passed
+                  //=> can be used in a partial refresh scenario to execute actions prior to the actual selective refresh which is triggered on 'setting', just after
+                  setting.previewer.send( 'pre_setting', {
+                        set_id : setting.id,
+                        data   : data,//<= { module_id : 'string', module : {} } which typically includes the module_id and the module model ( items, mod options )
+                        value  : to
+                  });
+
+                  //WP Default
+                  //=> the 'setting' event is used for normal and partial refresh post message actions
+                  //=> the partial refresh is fired on the preview if a partial has been registered for this setting in the php customize API
+                  //=> When a partial has been registered, the "normal" ( => the not partial refresh ones ) postMessage callbacks will be fired before the ajax ones
+                  setting.previewer.send( 'setting', [ setting.id, setting() ] );
+
+                  dfd.resolve( arguments );
+
+            } else if ( 'refresh' === transport ) {
+                  //the refresh() method only returns a promise when skope is on
+                  if ( serverControlParams.isSkopOn ) {
+                        setting.previewer.refresh().always( function() {
+                              dfd.resolve( arguments );
+                        });
+                  } else {
+                        setting.previewer.refresh();
+                        dfd.resolve( arguments );
+                  }
+            }
+
+            return dfd.promise();
+      };//api.Setting.prototype.preview
+})( wp.customize , jQuery, _ );
+( function ( api, $, _ ) {
+      /* monkey patch for the content height set */
+      //wp.customize.Section is not available before wp 4.1
+      if ( 'function' == typeof api.Section ) {
+            // backup the original function
+            var _original_section_initialize = api.Section.prototype.initialize;
+            api.Section.prototype.initialize = function( id, options ) {
+                  //call the original constructor
+                  _original_section_initialize.apply( this, [id, options] );
+                  var section = this;
+
+                  this.expanded.callbacks.add( function( _expanded ) {
+                    if ( ! _expanded )
+                      return;
+
+                  var container = section.container.closest( '.wp-full-overlay-sidebar-content' ),
+                        content = section.container.find( '.accordion-section-content' );
+                    //content resizing to the container height
+                    _resizeContentHeight = function() {
+                      content.css( 'height', container.innerHeight() );
+                  };
+                    _resizeContentHeight();
+                    //this is set to off in the original expand callback if 'expanded' is false
+                    $( window ).on( 'resize.customizer-section', _.debounce( _resizeContentHeight, 110 ) );
+                  });
+            };
+      }
+})( wp.customize , jQuery, _ );
+(function (api, $, _) {
+api.CZR_Helpers = api.CZR_Helpers || {};
+//////////////////////////////////////////////////
+/// ACTIONS AND DOM LISTENERS
+//////////////////////////////////////////////////
+//adds action to an existing event map
+//@event map = [ {event1}, {event2}, ... ]
+//@new_event = {  trigger   : event name , actions   : [ 'cb1', 'cb2', ... ] }
+api.CZR_Helpers = $.extend( api.CZR_Helpers, {
+      //While a control should always have a default setting,
+      //It can have additional setting assigned
+      //This method returns the default setting or the specified type if requested
+      //Example : header_image has default and data
+      getControlSettingId : function( control_id, setting_type ) {
+            setting_type = 'default' || setting_type;
+            if ( ! api.control.has( control_id ) ) {
+                  api.consoleLog( 'getControlSettingId : The requested control_id is not registered in the api yet : ' + control_id );
+                  return control_id;
+            }
+            if ( ! _.has( api.control( control_id ), 'settings' ) || _.isEmpty( api.control( control_id ).settings ) )
+              return control_id;
+
+            if ( ! _.has( api.control( control_id ).settings, setting_type ) ) {
+                  api.consoleLog( 'getControlSettingId : The requested control_id does not have the requested setting type : ' + control_id + ' , ' + setting_type );
+                  return control_id;
+            }
+            if ( _.isUndefined( api.control( control_id ).settings[setting_type].id ) ) {
+                  api.consoleLog( 'getControlSettingId : The requested control_id has no setting id assigned : ' + control_id );
+                  return control_id;
+            }
+            return api.control( control_id ).settings[setting_type].id;
+      },
+
+
+
+      getDocSearchLink : function( text ) {
+            text = ! _.isString(text) ? '' : text;
+            var _searchtext = text.replace( / /g, '+'),
+                _url = [ serverControlParams.docURL, 'search?query=', _searchtext ].join('');
+            return [
+              '<a href="' + _url + '" title="' + serverControlParams.i18n.readDocumentation + '" target="_blank">',
+              ' ',
+              '<span class="fa fa-question-circle-o"></span>'
+            ].join('');
+      },
+
+
+      /*
+      * @return string
+      * simple helper to build the setting wp api ready id
+      */
+      build_setId : function ( setId ) {
+            //exclude the WP built-in settings like blogdescription, show_on_front, etc
+            if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
+              return setId;
+
+            // //extract the setting id for theme mods
+            // var _pattern;
+
+            //exclude the WP built-in settings like sidebars_widgets*, nav_menu_*, widget_*, custom_css
+            // var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css' ],
+            //     _isExcld = false;
+            // _.each( _patterns, function( _ptrn ) {
+            //       if ( _isExcld )
+            //         return;
+            //       _isExcld = _ptrn == setId.substring( 0, _ptrn.length );
+            // });
+            // if ( _isExcld )
+            // return setId;
+            if ( ! _.contains( serverControlParams.themeSettingList, setId ) )
+              return setId;
+
+            return -1 == setId.indexOf( serverControlParams.themeOptions ) ? [ serverControlParams.themeOptions +'[' , setId  , ']' ].join('') : setId;
+    },
+
+      /*
+      * @return string
+      * simple helper to extract the option name from a setting id
+      */
+      getOptionName : function(name) {
+            var self = this;
+            //targets only the options of the theme
+            if ( -1 == name.indexOf(serverControlParams.themeOptions) )
+              return name;
+            return name.replace(/\[|\]/g, '').replace(serverControlParams.themeOptions, '');
+      },
+
+
+
+      //@return bool
+      //@uses api.czr_partials
+      hasPartRefresh : function( setId ) {
+            if ( ! _.has( api, 'czr_partials')  )
+              return;
+            return  _.contains( _.map( api.czr_partials(), function( partial, key ) {
+                  return _.contains( partial.settings, setId );
+            }), true );
+      },
+
+      //@return the array of controls in a given section_id
+      getSectionControlIds : function( section_id ) {
+            section_id = section_id || api.czr_activeSectionId();
+            return ! api.section.has( section_id ) ?
+                  [] :
+                  _.map( api.section( section_id ).controls(), function( _ctrl ) {
+                        return _ctrl.id;
+                  });
+      },
+
+
+      //1) get the control of a given section
+      //2) for each control get the associated setting(s)
+      //=> important, a control might have several associated settings. Typical example : header_image.
+      //@return [] of setting ids for a given czr section
+      getSectionSettingIds : function( section_id ) {
+            section_id = section_id || api.czr_activeSectionId();
+            if ( ! api.section.has( section_id) )
+              return;
+            var self = this,
+                _sec_settings = [],
+                _sec_controls = self.getSectionControlIds( section_id );
+
+            _.each( _sec_controls, function( ctrlId ) {
+                  _.each( api.control(ctrlId).settings, function( _instance, _k ) {
+                        _sec_settings.push( _instance.id );
+                  });
+            });
+            return _sec_settings;
+      },
+
+
+      //////////////////////////////////////////////////
+      /// STRINGS HELPERS
+      //////////////////////////////////////////////////
+      capitalize : function( string ) {
+            if( ! _.isString(string) )
+              return string;
+            return string.charAt(0).toUpperCase() + string.slice(1);
+      },
+
+      truncate : function( string, n, useWordBoundary ){
+            if ( ! _.isString( string ) )
+              return '';
+            n = n || 20;
+            var isTooLong = string.length > n,
+                s_ = isTooLong ? string.substr(0,n-1) : string;
+                s_ = (useWordBoundary && isTooLong) ? s_.substr(0,s_.lastIndexOf(' ')) : s_;
+            return  isTooLong ? s_ + '...' : s_;
+      },
+
+
+      //////////////////////////////////////////////////
+      /// STRINGS HELPERS
+      //////////////////////////////////////////////////
+      //is a module multi item ?
+      //@return bool
+      isMultiItemModule : function( module_type, moduleInst ) {
+            if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
+              return;
+            if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
+              module_type = moduleInst.module_type;
+            else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
+              return;
+            if ( ! _.has( api.czrModuleMap, module_type ) )
+              return;
+
+            return api.czrModuleMap[module_type].crud || api.czrModuleMap[module_type].multi_item || false;
+      },
+
+      //is a module crud ?
+      //@return bool
+      isCrudModule : function( module_type, moduleInst ) {
+            if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
+              return;
+            if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
+              module_type = moduleInst.module_type;
+            else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
+              return;
+            if ( ! _.has( api.czrModuleMap, module_type ) )
+              return;
+
+            return api.czrModuleMap[module_type].crud || false;
+      },
+
+      //is a module crud ?
+      //@return bool
+      hasModuleModOpt : function( module_type, moduleInst ) {
+            if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
+              return;
+            if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
+              module_type = moduleInst.module_type;
+            else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
+              return;
+            if ( ! _.has( api.czrModuleMap, module_type ) )
+              return;
+
+            return api.czrModuleMap[module_type].has_mod_opt || false;
+      },
+
+
+
+      //This method is now statically accessed by item and modopt instances because it does the same job for both.
+      //=> It instantiates the inputs based on what it finds in the DOM ( item or mod opt js templates )
+      //
+      //Fired on 'contentRendered' for items and on user click for module options (mod opt)
+      //creates the inputs based on the rendered parent item or mod option
+      //inputParentInst can be an item instance or a module option instance
+      setupInputCollectionFromDOM : function() {
+            var inputParentInst = this;//<= because fired with .call( inputParentInst )
+            if ( ! _.isFunction( inputParentInst ) ) {
+                  throw new Error( 'setupInputCollectionFromDOM : inputParentInst is not valid.' );
+            }
+            var module = inputParentInst.module,
+                is_mod_opt = _.has( inputParentInst() , 'is_mod_opt' );
+
+            //bail if already done
+            if ( _.has( inputParentInst, 'czr_Input') && ! _.isEmpty( inputParentInst.inputCollection() ) )
+              return;
+
+            //INPUTS => Setup as soon as the view content is rendered
+            //the inputParentInst is a collection of inputs, each one has its own view module.
+            inputParentInst.czr_Input = new api.Values();
+
+            //IS THE PARENT AN ITEM OR A MODULE OPTION ?
+            //those default constructors (declared in the module init ) can be overridden by extended item or mod opt constructors inside the modules
+            inputParentInst.inputConstructor = is_mod_opt ? module.inputModOptConstructor : module.inputConstructor;
+
+            var _defaultInputParentModel = is_mod_opt ? inputParentInst.defaultModOptModel : inputParentInst.defaultItemModel;
+
+            if ( _.isEmpty( _defaultInputParentModel ) || _.isUndefined( _defaultInputParentModel ) ) {
+              throw new Error( 'No default model found in item or mod opt ' + inputParentInst.id + '.' );
+            }
+
+            //prepare and sets the inputParentInst value on api ready
+            //=> triggers the module rendering + DOM LISTENERS
+            var inputParentInst_model = $.extend( true, {}, inputParentInst() );
+
+            if ( ! _.isObject( inputParentInst_model ) )
+              inputParentInst_model = _defaultInputParentModel;
+            else
+              inputParentInst_model = $.extend( _defaultInputParentModel, inputParentInst_model );
+
+            var dom_inputParentInst_model = {};
+
+            //creates the inputs based on the rendered item or mod opt
+            $( '.' + module.control.css_attr.sub_set_wrapper, inputParentInst.container).each( function( _index ) {
+                  var _id = $(this).find('[data-type]').attr( 'data-type' ),
+                      _value = _.has( inputParentInst_model, _id ) ? inputParentInst_model[ _id ] : '';
+
+                  //skip if no valid input data-type is found in this node
+                  if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
+                        api.consoleLog( 'setupInputCollectionFromDOM : missing data-type for ' + module.id );
+                        return;
+                  }
+                  //check if this property exists in the current inputParentInst model
+                  if ( ! _.has( inputParentInst_model, _id ) ) {
+                        throw new Error('The item or mod opt property : ' + _id + ' has been found in the DOM but not in the item or mod opt model : '+ inputParentInst.id + '. The input can not be instantiated.');
+                  }
+
+                  //Do we have a specific set of options defined in the parent module for this inputConstructor ?
+                  var _inputType      = $(this).attr( 'data-input-type' ),
+                      _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
+                      _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
+
+                  //INSTANTIATE THE INPUT
+                  inputParentInst.czr_Input.add( _id, new inputParentInst.inputConstructor( _id, {
+                        id            : _id,
+                        type          : _inputType,
+                        transport     : _inputTransport,
+                        input_value   : _value,
+                        input_options : _inputOptions,//<= a module can define a specific set of option
+                        container     : $(this),
+                        input_parent  : inputParentInst,
+                        is_mod_opt    : is_mod_opt,
+                        module        : module
+                  } ) );
+
+                  //FIRE THE INPUT
+                  //fires ready once the input Value() instance is initialized
+                  inputParentInst.czr_Input( _id ).ready();
+
+                  //POPULATES THE PARENT INPUT COLLECTION
+                  dom_inputParentInst_model[ _id ] = _value;
+                  //shall we trigger a specific event when the input collection from DOM has been populated ?
+            });//each
+
+            //stores the collection
+            inputParentInst.inputCollection( dom_inputParentInst_model );
+
+            //chain
+            return inputParentInst;
+      },
+
+      //@self explanatory: removes a collection of input from a parent item or modOpt instance
+      //Triggered by : user actions usually when an item is collapsed or when the modOpt panel is closed
+      removeInputCollection : function() {
+            var inputParentInst = this;//<= because fired with .call( inputParentInst )
+            if ( ! _.isFunction( inputParentInst ) ) {
+                  throw new Error( 'removeInputCollection : inputParentInst is not valid.' );
+            }
+            if ( ! _.has( inputParentInst, 'czr_Input') )
+              return;
+            //remove each input api.Value() instance
+            inputParentInst.czr_Input.each( function( _input ) {
+                  inputParentInst.czr_Input.remove( _input.id );
+            });
+            //reset the input collection property
+            inputParentInst.inputCollection({});
+      },
+
+      //Re-instantiate a module control based on its id
+      //@param wpSetId : the api id of the control to refresh
+      refreshModuleControl : function( wpSetId ) {
+            var _constructor = api.controlConstructor.czr_module,
+                _control_type = api.control( wpSetId ).params.type,
+                _control_data = api.settings.controls[wpSetId];
+
+            //remove the container and its control
+            $.when( api.control( wpSetId ).container.remove() ).done( function() {
+                  //remove the control from the api control collection
+                  api.control.remove( wpSetId );
+
+                  //re-instantiate the control with the updated _control_data
+                  api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
+            });
+
+      },
+
+
+      //COLORS
+      hexToRgb : function( hex ) {
+            // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+            var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+            try {
+                  hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+                      return r + r + g + g + b + b;
+                  });
+            } catch( er ) {
+                  api.errorLog( 'Error in Helpers::hexToRgb : ' + er );
+                  return hex;
+            }
+
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec( hex );
+            result = result ? [
+                  parseInt(result[1], 16),//r
+                  parseInt(result[2], 16),//g
+                  parseInt(result[3], 16)//b
+            ] : [];
+            return 'rgb(' + result.join(',') + ')';
+      },
+
+      rgbToHex : function ( r, g, b ) {
+            var componentToHex = function(c) {
+                  var hex = c.toString(16);
+                  return hex.length == 1 ? "0" + hex : hex;
+            };
+            return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+      }
+
+});//$.extend
+  // $( window ).on( 'message', function( e, o) {
+  //   api.consoleLog('WHAT ARE WE LISTENING TO?', e, o );
+  // });
+})( wp.customize , jQuery, _);
+(function (api, $, _) {
+api.CZR_Helpers = api.CZR_Helpers || {};
+//////////////////////////////////////////////////
+/// ACTIONS AND DOM LISTENERS
+//////////////////////////////////////////////////
+//adds action to an existing event map
+//@event map = [ {event1}, {event2}, ... ]
+//@new_event = {  trigger   : event name , actions   : [ 'cb1', 'cb2', ... ] }
+api.CZR_Helpers = $.extend( api.CZR_Helpers, {
+      addActions : function( event_map, new_events, instance ) {
+              var control = this;
+              instance = instance || control;
+              instance[event_map] = instance[event_map] || [];
+              new_event_map = _.clone( instance[event_map] );
+              instance[event_map] = _.union( new_event_map, ! _.isArray(new_events) ? [new_events] : new_events );
+      },
+
+      doActions : function( action, $dom_el, obj ) {
+              $dom_el.trigger( action, obj );
+      },
+
+
+      //@args = {model : model, dom_el : $_view_el, refreshed : _refreshed }
+      setupDOMListeners : function( event_map , args, instance ) {
+              var control = this,
+                  _defaultArgs = {
+                        model : {},
+                        dom_el : {}
                   };
 
+              instance = instance || control;
+              //event_map : are we good ?
+              if ( ! _.isArray( event_map ) ) {
+                    api.errorLog( 'setupDomListeners : event_map should be an array', args );
+                    return;
+              }
 
-                  api.czr_skopeReady
-                        .done( function() {
-                              api.trigger('czr-skope-ready');
-                        })
-                        .fail( function( error ) {
-                              api.errorLog( 'Skope could not be instantiated : ' + error );
-                              _toggleTopFailureNote();
-                              serverControlParams.isSkopOn = false;
-                        })
-                        .always( function() {
-                              api.czr_isLoadingSkope( false );
-                        });
-                  if ( 'rejected' != api.czr_skopeReady.state() ) {
-                        setTimeout( function() {
-                            if ( 'pending' == api.czr_skopeReady.state() )  {
-                                  _toggleTopFailureNote();
+              //args : are we good ?
+              if ( ! _.isObject( args ) ) {
+                    api.errorLog( 'setupDomListeners : args should be an object', event_map );
+                    return;
+              }
 
-                                  api.czr_isLoadingSkope( false );
-                            }
-                        }, 40000);
-                  }
-            }
-            if ( serverControlParams.isChangeSetOn ) {
-                  api.settings.timeouts.changesetAutoSave = 10000;
-            }
-      } );
-      if ( ! _.has( api, '_latestRevision') ) {
-            /**
-             * Current change count.
-             */
-            api._latestRevision = 0;
+              args = _.extend( _defaultArgs, args );
+              // => we need an existing dom element
+              if ( ! args.dom_el instanceof jQuery || 1 != args.dom_el.length ) {
+                    api.errorLog( 'setupDomListeners : dom element should be an existing dom element', args );
+                    return;
+              }
 
-            /**
-             * Latest revisions associated with the updated setting.
-             */
-            api._latestSettingRevisions = {};
+              //loop on the event map and map the relevant callbacks by event name
+              // @param _event :
+              //{
+              //       trigger : '',
+              //       selector : '',
+              //       name : '',
+              //       actions : ''
+              // },
+              _.map( event_map , function( _event ) {
+                    if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
+                          api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
+                          return;
+                    }
 
-            /*
-             * Keep track of the revision associated with each updated setting so that
-             * requestChangesetUpdate knows which dirty settings to include. Also, once
-             * ready is triggered and all initial settings have been added, increment
-             * revision for each newly-created initially-dirty setting so that it will
-             * also be included in changeset update requests.
-             */
-            api.bind( 'change', function incrementChangedSettingRevision( setting ) {
-                  api._latestRevision += 1;
-                  api._latestSettingRevisions[ setting.id ] = api._latestRevision;
-            } );
-            api.bind( 'ready', function() {
-                  api.bind( 'add', function incrementCreatedSettingRevision( setting ) {
-                        if ( setting._dirty ) {
-                              api._latestRevision += 1;
-                              api._latestSettingRevisions[ setting.id ] = api._latestRevision;
-                        }
-                  } );
-            } );
-      }
-      var toggleSkopeLoadPane = function( loading ) {
-            loading = _.isUndefined( loading ) ? true : loading;
-            var self = this, $skopeLoadingPanel,
-                _render = function() {
-                      var dfd = $.Deferred();
-                      try {
-                            _tmpl =  wp.template( 'czr-skope-pane' )({ is_skope_loading : true });
-                      } catch( er ) {
-                            api.errorLog( 'In toggleSkopeLoadPane : error when parsing the the reset skope template : ' + er );
-                            dfd.resolve( false );
-                      }
-                      $.when( $('#customize-preview').after( $( _tmpl ) ) )
-                            .always( function() {
-                                  dfd.resolve( $( '#czr-skope-pane' ) );
-                            });
+                    //Are we good ?
+                    if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
+                          api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
+                          return;
+                    }
 
-                      return dfd.promise();
-                },
-                _destroy = function() {
-                      _.delay( function() {
-                            $.when( $('body').removeClass('czr-skope-pane-open') ).done( function() {
-                                  _.delay( function() {
-                                        $.when( $('body').removeClass('czr-skop-loading') ).done( function() {
-                                              if ( false !== $( '#czr-skope-pane' ).length ) {
-                                                    setTimeout( function() {
-                                                          $( '#czr-skope-pane' ).remove();
-                                                    }, 400 );
-                                              }
-                                        });
-                                  }, 200);
-                            });
-                      }, 50);
-                };
-            if ( 'pending' == api.czr_skopeReady.state() && loading ) {
-                  $('body').addClass('czr-skop-loading');
-                  _render()
-                        .done( function( $_el ) {
-                              $skopeLoadingPanel = $_el;
-                        })
-                        .then( function() {
-                              if ( ! $skopeLoadingPanel.length )
+                    //LISTEN TO THE DOM => USES EVENT DELEGATION
+                    args.dom_el.on( _event.trigger , _event.selector, function( e, event_params ) {
+                          //stop propagation to ancestors modules, typically a sektion
+                          e.stopPropagation();
+                          //particular treatment
+                          if ( api.utils.isKeydownButNotEnterEvent( e ) ) {
+                            return;
+                          }
+                          e.preventDefault(); // Keep this AFTER the key filter above
+
+                          //It is important to deconnect the original object from its source
+                          //=> because we will extend it when used as params for the action chain execution
+                          var actionsParams = $.extend( true, {}, args );
+
+                          //always get the latest model from the collection
+                          if ( _.has( actionsParams, 'model') && _.has( actionsParams.model, 'id') ) {
+                                if ( _.has( instance, 'get' ) )
+                                  actionsParams.model = instance();
+                                else
+                                  actionsParams.model = instance.getModel( actionsParams.model.id );
+                          }
+
+                          //always add the event obj to the passed args
+                          //+ the dom event
+                          $.extend( actionsParams, { event : _event, dom_event : e } );
+
+                          //add the event param => useful for triggered event
+                          $.extend( actionsParams, event_params );
+
+                          //SETUP THE EMITTERS
+                          //inform the container that something has happened
+                          //pass the model and the current dom_el
+                          //the model is always passed as parameter
+                          if ( ! _.has( actionsParams, 'event' ) || ! _.has( actionsParams.event, 'actions' ) ) {
+                                api.errorLog( 'executeEventActionChain : missing obj.event or obj.event.actions' );
                                 return;
-
-                              _.delay( function() {
-                                    var _height = $('#customize-preview').height();
-                                    $skopeLoadingPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
-                                    $('body').addClass('czr-skope-pane-open');
-                              }, 50 );
-                        });
-            }
-
-            api.czr_skopeReady.done( function() {
-                  _destroy();
-            });
-            if ( ! loading ) {
-                  _destroy();
-            }
-      };//toggleSkopeLoadPane
+                          }
+                          try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
+                                api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
+                                api.errorLog( 'Error : ' + er );
+                          }
+                    });//.on()
+              });//_.map()
+      },//setupDomListeners
 
 
-      /*****************************************************************************
-      * REACT TO PREVIEW DEVICE SWITCH => send device to preview
-      *****************************************************************************/
-      api.bind( 'ready' , function() {
-          if ( api.previewedDevice ) {
-                api.previewedDevice.bind( function( device ) {
-                      api.previewer.send( 'previewed-device', device );
-                });
-          }
-      });
 
-      /*****************************************************************************
-      * ADD PRO BEFORE SPECIFIC SECTIONS AND PANELS
-      *****************************************************************************/
-      if ( serverControlParams.isPro ) {
-            _.each( [
-                  'tc_font_customizer_settings',//WFC
+      //GENERIC METHOD TO SETUP EVENT LISTENER
+      //NOTE : the args.event must alway be defined
+      executeEventActionChain : function( args, instance ) {
+              var control = this;
 
-                  'header_image_sec',//hueman pro
-                  'content_blog_sec',//hueman pro
-                  'static_front_page',//hueman pro
-                  'content_single_sec',//hueman pro
+              //if the actions param is a anonymous function, fire it and stop there
+              if ( 'function' === typeof( args.event.actions ) )
+                return args.event.actions.call( instance, args );
 
-                  'tc_fpu',//customizr-pro
-                  'nav',//customizr-pro
-                  'post_lists_sec'//customizr-pro
+              //execute the various actions required
+              //first normalizes the provided actions into an array of callback methods
+              //then loop on the array and fire each cb if exists
+              if ( ! _.isArray( args.event.actions ) )
+                args.event.actions = [ args.event.actions ];
 
-            ], function( _secId ) {
-                  _.delay( function() {
-                      api.section.when( _secId, function( _sec_ ) {
-                            if ( 1 >= _sec_.headContainer.length ) {
-                                _sec_.headContainer.find('.accordion-section-title').prepend( '<span class="pro-title-block">Pro</span>' );
-                            }
-                      });
-                  }, 1000 );
-            });
-            _.each( [
-                  'hu-header-panel',//hueman pro
-                  'hu-content-panel',//hueman pro
+              //if one of the callbacks returns false, then we break the loop
+              //=> allows us to stop a chain of callbacks if a condition is not met
+              var _break = false;
+              _.map( args.event.actions, function( _cb ) {
+                    if ( _break )
+                      return;
 
-                  'tc-header-panel',//customizr-pro
-                  'tc-content-panel',//customizr-pro
-                  'tc-footer-panel'//customizr-pro
-            ], function( _secId ) {
-                  api.panel.when( _secId, function( _sec_ ) {
-                        if ( 1 >= _sec_.headContainer.length ) {
-                            _sec_.headContainer.find('.accordion-section-title').prepend( '<span class="pro-title-block">Pro</span>' );
-                        }
-                  });
-            });
+                    if ( 'function' != typeof( instance[ _cb ] ) ) {
+                          throw new Error( 'executeEventActionChain : the action : ' + _cb + ' has not been found when firing event : ' + args.event.selector );
+                    }
+
+                    //Allow other actions to be bound before action and after
+                    //
+                    //=> we don't want the event in the object here => we use the one in the event map if set
+                    //=> otherwise will loop infinitely because triggering always the same cb from args.event.actions[_cb]
+                    //=> the dom element shall be get from the passed args and fall back to the controler container.
+                    var $_dom_el = ( _.has(args, 'dom_el') && -1 != args.dom_el.length ) ? args.dom_el : control.container;
+
+                    $_dom_el.trigger( 'before_' + _cb, _.omit( args, 'event' ) );
+
+                    //executes the _cb and stores the result in a local var
+                    var _cb_return = instance[ _cb ].call( instance, args );
+                    //shall we stop the action chain here ?
+                    if ( false === _cb_return )
+                      _break = true;
+
+                    //allow other actions to be bound after
+                    $_dom_el.trigger( 'after_' + _cb, _.omit( args, 'event' ) );
+              });//_.map
       }
-
-
-      /*****************************************************************************
-      * PRO SECTION CONSTRUCTOR
-      *****************************************************************************/
-      if ( ! serverControlParams.isPro && _.isFunction( api.Section ) ) {
-            proSectionConstructor = api.Section.extend( {
-                  active : true,
-                  attachEvents: function () {},
-                  isContextuallyActive: function () {
-                    return this.active();
-                  },
-                  _toggleActive: function(){ return true; },
-
-            } );
-
-            $.extend( api.sectionConstructor, {
-                  'czr-customize-section-pro' : proSectionConstructor
-            });
-      }
+});//$.extend
 })( wp.customize , jQuery, _);
+(function (api, $, _) {
+  //This promise will let us know when we have the first set of preview query ready to use
+  //This is needed for modules contextually dependant
+  //For example, the slider module will initialize the module model based on the contextual informations, if no items have been set yet.
+
+  api.czr_wpQueryDataReady = $.Deferred();
+  api.czr_wpQueryInfos = api.czr_wpQueryInfos || new api.Value();
+  api.czr_partials = api.czr_partials || new api.Value();
+  /*****************************************************************************
+  * CAPTURE PREVIEW INFORMATIONS ON REFRESH + REACT TO THEM
+  *****************************************************************************/
+  //Data are sent by the preview frame when the panel has sent the 'sync' or even better 'active' event
+  api.bind( 'ready', function() {
+        //observe widget settings changes
+        api.previewer.bind('houston-widget-settings', function(data) {
+              //get the difference
+              var _candidates = _.filter( data.registeredSidebars, function( sb ) {
+                return ! _.findWhere( _wpCustomizeWidgetsSettings.registeredSidebars, { id: sb.id } );
+              });
+
+              var _inactives = _.filter( data.registeredSidebars, function( sb ) {
+                return ! _.has( data.renderedSidebars, sb.id );
+              });
+
+              _inactives = _.map( _inactives, function(obj) {
+                return obj.id;
+              });
+
+              var _registered = _.map( data.registeredSidebars, function(obj) {
+                return obj.id;
+              });
+
+              //stores and update the widget zone settings
+              api.czr_widgetZoneSettings = api.czr_widgetZoneSettings || new api.Value();//will store all widget zones data sent by preview as an observable object
+              api.czr_widgetZoneSettings.set( {
+                    actives :  data.renderedSidebars,
+                    inactives :  _inactives,
+                    registered :  _registered,
+                    candidates :  _candidates,
+                    available_locations :  data.availableWidgetLocations//built server side
+              } );
+
+        });
+
+        /* WP CONDITIONAL TAGS => stores and observes the WP conditional tags sent by the preview */
+        api.previewer.bind( 'czr-query-data-ready', function( data ) {
+              api.czr_wpQueryInfos( data );
+              if ( 'pending' == api.czr_wpQueryDataReady.state() ) {
+                    api.czr_wpQueryDataReady.resolve( data );
+              }
+        });
+
+        //PARTIAL REFRESHS => stores and observes the partials data sent by the preview
+        api.previewer.bind( 'czr-partial-refresh-data', function( data ) {
+              api.czr_partials.set( data );
+        });
+
+        //PARTIAL REFRESHS : React on partial refresh done
+        // @data : { set_id : api setting id }
+        api.previewer.bind( 'czr-partial-refresh-done', function( data ) {
+              if ( ! _.has( data, 'set_id' ) )
+                return;
+              var setId = api.CZR_Helpers.build_setId( data.set_id );
+              if ( ! api.has( setId ) )
+                return;
+              //inform the control
+              var ctrlId = api.CZR_Helpers.getControlSettingId( setId );
+              if ( ! api.control.has( ctrlId ) )
+                return;
+              api.control( ctrlId ).trigger( 'czr-partial-refresh-done' );
+        });
+  });//api.bind('ready')
+})( wp.customize , jQuery, _ );
+
+  //WHAT IS A SKOPE ?
+  //A skope is an object describing a set of options for a given customization context
+  //It is constructed by the czr_skopeModel constructor
+  //it has a model with the following properties
+  // - a name : 'global', 'all_posts'
+  // - a corresponding database option name
+  // - a database option type (dyn_type)
+  // - a customization status : active, inactive. Are we currently customizing this skope ?
+  // - a priority status that can be forced
+  // - an applied status => is this skope the one that will be applied on front end in the current context?
+  //  => this status depends on :
+  //      1) a default priority local (post id ) > global specific (all posts) > global (default options)
+  //      2) a user decision : a priority can be forced. For example who is the winner when two categories have been customized ?
+  // - a dirtyness status : has this skope been customized ?
+  // - a set of values, each one having a dirtyness state => the  : { optname#2 : { value : ..., _dirty : bool }, optname#2 : {...}, ...  }
+  //
+  // It is rendered with a view which includes DOM listeners.
+  // Users can :
+  //  - customize each skope separately,
+  //  - force a priority
+  //  - reset a skope set of option
+  //  - copy the values of one skope to another
+  //
+  //  What is the default skope ?
+  //  - 'global' when accessing the customizer from appearance > customize
+  //  - 'local' when customizing from the front end, or an edit screen : post (post, cpt, page, attachment), tax term, user
+  //
+  //  What are the options eligibile for the skope customization ?
+  //  - the skope customization can be applied to all theme settings 'hu_theme_options'. The option not eligible have been flagged 'no-skope' when registered server side.
+  //  - the WP built-in settings like blogname, site-icon,... are also eligible
+  //  - all other settings like menu, widgets, sidebars are excluded for the moment.
+  //
+  //  On init, the default skope is set as active.
+  //  if the default skope is not 'global', then the switch to the relevant skope is triggered and the eligible settings values are updated "silently"
+  //  the dirties are stored in each skope models when the user customize
+  //
+  //
+  //  On skope switch,
+  //  1) the values of the dirty values of the current skope are stored in the model
+  //  2) the values of the new skope are fetched from the db if they have not been yet.
+  //  3) all eligible settings are updated with the new values.
+  //  4) if the new skope has no dirty value yet, the saved state is reset.
+  //
+  //
+  //
+  //
+  //
+  // WHAT IS THE SKOPE PRIORITY CONCEPT ?
+  // Since a given option can have its value set differently for each skope level, a priority must be defined, in order to know what is the value to use.
+  //
+  //  => The skope priority defines which option value will be used if this option has been customized in several skopes.
+  //
+  // There are 3 main levels of skopes :
+  // 1) GLOBAL : the options applied to the entire website. Those are saved in the regular (the old) theme options
+  // 2) SPECIAL GROUP : those groups are dynamically set, depending on how a user creates a post or a page
+  //      all posts from a specific author,
+  //      all posts tagged with a specific tag,
+  //      all posts tagged with a specific category,
+  //      all pages using a specific template
+  // 3) GROUP : the options applied to a group of contexts. Those are saved as long life transients
+  //      all pages,
+  //      all posts,
+  //      all tags,
+  //      all categories,
+  //      all authors,
+  // 4) LOCAL : the options applied to a specific context :
+  //      a page,
+  //      a post (or a CPT),
+  //      an attachment,
+  //      a tag archive page,
+  //      a category archive page,
+  //      an author archive page,
+  //      the home page,
+  //      the 404 page,
+  //      the search results page,
+  // Note: except for home, 404 and search which are saved as transients, the other local skopes are saved as metas : post metas, term metas, user metas
+  //
+  // Priorities without the special group (tag, cat, author):
+  //    - For a post, page or term : LOCAL (this post id) > GROUP (all posts)  > GLOBAL (entire website options)
+  //    - For home, 404, search : LOCAL > GLOBAL. There's no GROUP in this case.
+  //    - for a term archive (tag, cat, custom tax) : LOCAL (the term id) > GROUP ( all terms of this type ) > GLOBAL
+  //
+  // Priorities with the special groups : this is relevant for post and pages only.
+  // Let's take a post example.
+  // A user can decide to define a set of option (a skope) for all posts tagged with a specific tag.
+  // In this case the priority is : LOCAL > SPECIAL GROUP (the "post tagged with {tag}") > GROUP > GLOBAL
+  // CONFLICT CASE : If a given post has several terms, and if more than one term have a customized skope.
+  //  => since no priority can be defined between two terms, the priority is back to the default : LOCAL > GROUP > GLOBAL
+  // How to fix a conflict case ?
+  // It is possible to force a "winner" within the special groups. When editing a skope, the user can check an option (! => force this skope when relevant )
+  // => if there's a forced winner the priority becomes : LOCAL > FORCED SPECIAL GROUP > GROUP > GLOBAL
+  // In the customizer, only one special group winner can be set at a time.
+  // If different winners have been set in separate customization sessions, and that the user add several winners term in the post edit screen, it might happen that
+  // a the customizer ends up to have several special group winners. In this case, a conflict notice is displayed in the skope dialog box, explaining how to resolve this
+  // winner conflict. As long as the winner conflict is unresolved, the priority falls back to : LOCAL > GROUP > GLOBAL.
+  //
+  //
+  //
+  //
+  //
+  //
+  // WHAT IS THE SKOPE INHERITANCE CONCEPT ?
+  // In the customizer, all skopes are partially customized => For example, a page can only have specific layout options set
+  // The question to adress is then : What about all the un-customized options of this skope? Which value should be applied ?
+  //
+  // The skope inheritance is the complement of the skope priority.
+  // It addresses the problem of which values should be used for un-customized options in a given skope.
+  //
+  // Taking the same page example, if the "skin" option has not been set locally, then it checks the lower skope priority level.
+  // In this case, the previous level is "All Pages".
+  // If nothing has been set in the "All Pages", we'll go to the previous one : "Global."
+  //
+  // In the customizer, this skope inheritance has to be reflected so that user can immediately understand which option is applied to which skope.
+  // For a given skope, all un-customized settings will inherit their value from the lower priority levels, down to GLOBAL.
+  //
+  //
+  //
+  // HOW DOES THIS WORK ?
+  // CZR_skopeBase listens to skope collection changes
+  // 1) instantiate new models (CZR_skope), remove old ones and their view
+  // 2) sets each skope models active skope state changes
+
+
+  // CZR_skope
+  // 1) instantiate, the skope view (CZR_skopeView)
+  // 2) listens to the active state
+  //   => store dirtyness on switch
+  //   => fetch the db values, build the full set of values ( db + dirties + default) and update the settings
+
+  // CZR_skopeView
+  // 1) renders the view
+  // 2) listens to model active state
+  //   => change the view display elements
+  // 3) listen to DOM interactions and set skope values : state, priority
+
+  // @todo in the view, return the $() element to store the view.container
 
 
 
@@ -445,28 +1034,62 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 
           initialize: function() {
                 var self = this;
+                ///////////////////// DEFINITIONS /////////////////////
                 self.skope_colors = {
                       global : 'rgb(255, 255, 255)',
                       special_group : 'rgba(173, 213, 247, 0.55)',
                       group  : 'rgba(39, 59, 88, 0.12)',// 'rgba(173, 213, 247, 0.55)',
                       local  : 'rgba(39, 59, 88, 0.28)'// 'rgba(78, 122, 199, 0.35)'
                 };
+                //Deferred used to make sure the overridden api.previewer.query method has been taken into account
                 api.czr_isPreviewerSkopeAware   = $.Deferred();
+                //Store the state of the first skope collection state
                 api.czr_initialSkopeCollectionPopulated = $.Deferred();
+                //store the embed state
                 self.skopeWrapperEmbedded       = $.Deferred();
+
+                //the skope instance constructor
                 api.czr_skope                   = new api.Values();
+
+                //the czr_skopeCollection stores all skopes instantiated by the user
+                //this collection is not updated directly
+                //=> it's updated on skope() instance change
                 api.czr_skopeCollection         = new api.Value([]);//all available skope, including the current skopes
+                //the current skopes collection get updated each time the 'czr-skopes-synced' event is triggered on the api by the preview
                 api.czr_currentSkopesCollection = new api.Value([]);
+
+
+                //the currently active skope
                 api.czr_activeSkopeId           = new api.Value();
+                //Store the global dirtyness state of the API
                 api.czr_dirtyness               = new api.Value( false );
+                //store the resetting state
                 api.czr_isResettingSkope        = new api.Value( false );
+
+                //Add new state to the api
                 api.state.create('switching-skope')( false );
+
+                ///////////////////// SKOPIFY THE API AND THE PANEL /////////////////////
+                //REACT TO API DIRTYNESS
                 api.czr_dirtyness.callbacks.add( function() { return self.apiDirtynessReact.apply(self, arguments ); } );
+
+                //LOADING ICON DURING INITIAL SKOPE SETUP
+                //this api.Value() and its callback are declared in pre_base
                 api.czr_isLoadingSkope( true );
+
+                //LISTEN TO EACH API SETTING CHANGES
+                // => POPULATE THE DIRTYNESS OF THE CURRENTLY ACTIVE SKOPE
                 self.bindAPISettings();
+
+                //LISTEN TO THE API STATES => SET SAVE BUTTON STATE
+                //=> this value is set on control and skope reset
+                //+ set by wp
                 api.state.bind( 'change', function() {
                       self.setSaveButtonStates();
                 });
+
+                //EMBED THE SKOPE WRAPPER
+                //=> WAIT FOR SKOPE TO BE READY api.czr_skopeReady.state == 'resolved'
                 api.czr_skopeReady.then( function() {
                       if ( 'pending' == self.skopeWrapperEmbedded.state() ) {
                             $.when( self.embedSkopeWrapper() ).done( function() {
@@ -474,12 +1097,27 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                             });
                       }
                 });
+
+
+                ///////////////////// SKOPE COLLECTIONS SYNCHRONISATION AND LISTENERS /////////////////////
+                //LISTEN TO SKOPE SYNC => UPDATE SKOPE COLLECTION ON START AND ON EACH REFRESH
+                //Will make sure server DB values are always synchronized with the instantiated skopes
+                //the sent data look like :
+                //{
+                //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+                //  isChangesetDirty : boolean
+                // }
+                //
+                //Bail if skope has not been properly instantiated 'rejected' == api.czr_skopeReady.state()
                 api.previewer.bind( 'czr-skopes-synced', function( data ) {
                       if ( ! serverControlParams.isSkopOn || 'rejected' == api.czr_skopeReady.state() ) {
                             return;
                       }
+                      //api.consoleLog('czr-skopes-ready DATA', data );
                       var preview = this,
                           previousSkopeCollection = api.czr_currentSkopesCollection();
+                      //initialize skopes with the server sent data
+                      //if skope has not been initialized yet and the server sent wrong data, then reject the skope ready promise()
                       if ( ! _.has( data, 'czr_skopes') ) {
                             if ( 'resolved' != api.czr_skopeReady.state() ) {
                                   api.czr_skopeReady.reject();
@@ -487,23 +1125,42 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                             api.errorLog( "On 'czr-skopes-synced' : missing skopes in the server data" );
                             return;
                       }
+
+                      //1) Updated the collection with normalized skopes  => prepareSkopeForAPI + api.czr_currentSkopesCollection( collection )
+                      //2) When the api.czr_currentSkopesCollection() Value is set => instantiates the missing skope
+                      //3) Set the skope layout view when the skope embedded promise is resolved
                       try {
                             api.czr_skopeBase.updateSkopeCollection( data.czr_skopes , preview.channel() );
                       } catch ( er ) {
                             api.czr_skopeReady.reject( er );
                             return;
                       }
+
+                      //@return void()
+                      // => refresh skope notice below the skope switcher title
+                      // => refresh bottom skope infos in the preview
                       var _refreshSkopeInfosNotices = function() {
+                            //WRITE THE CURRENT SKOPE TITLE
                             self._writeCurrentSkopeTitle();
+
+                            //REFRESH PREVIEW BOTTOM INFOS
+                            //the default behaviour is to display the bottom infos block in the preview
+                            //and to refresh its content
                             if ( api.czr_bottomInfosVisible() ) {
                                   self.renderBottomInfosTmpl();//<= will build a new bottom skope message infos in the preview based on the new active skopes
                             } else {
+                                  //Display + build and render the skope infos
                                   api.czr_bottomInfosVisible( true );
                             }
                       };
+
+
+                      //Always wait for the initial collection to be populated
                       api.czr_initialSkopeCollectionPopulated.then( function() {
                             var refreshActiveSkope = _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), {id : api.czr_activeSkopeId() } ) );
                             api.czr_skopeBase.reactWhenSkopeSyncedDone( data ).done( function() {
+                                  //if the current active skope has been removed from the current skopes collection
+                                  //=> set relevant scope as active. Falls back on 'global'
                                   if ( refreshActiveSkope ) {
                                         try {
                                               api.czr_activeSkopeId( self.getActiveSkopeId() )
@@ -511,6 +1168,7 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                                           if ( 'resolved' != api.czr_skopeReady.state() ) {
                                                                 api.czr_skopeReady.resolve( self.getActiveSkopeId() );
                                                           }
+                                                          //REFRESH SKOPE INFOS IN TITLE AND PREVIEW FRAME
                                                           _refreshSkopeInfosNotices();
                                                     })
                                                     .fail( function() {
@@ -524,17 +1182,32 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                             _newLoc  =_.findWhere( data.czr_skopes, { skope : 'local' } ).opt_name;
 
                                         if ( _newLoc !== _prevLoc && 'resolved' == api.czr_skopeReady.state() ) {
+                                              //REFRESH SKOPE INFOS IN TITLE AND PREVIEW FRAME
                                               _refreshSkopeInfosNotices();
                                         }
                                   }
                             });
                       });
                 });
+
+
+                //CURRENT SKOPE COLLECTION LISTENER
+                //The skope collection is set on 'czr-skopes-synced' triggered by the preview
+                //setup the callbacks of the skope collection update
+                //on init and on preview change : the collection of skopes is populated with new skopes
+                //=> instanciate the relevant skope object + render them
                 api.czr_currentSkopesCollection.bind( function( to, from ) {
                       return self.currentSkopesCollectionReact( to, from );
                 }, { deferred : true });
+
+
+                //WHEN THE INITIAL SKOPE COLLECTION HAS BEEN POPULATED ( in currentSkopesCollectionReact )
+                //LET'S BIND CALLBACKS TO ACTIVE SKOPE AND ACTIVE SECTION
                 api.czr_initialSkopeCollectionPopulated.done( function() {
+                      //LISTEN AND REACT TO ACTIVE SKOPE UPDATE
+                      //api.czr_activeSkopeId.callbacks.add( function() { return self.activeSkopeReact.apply(self, arguments ); } );
                       api.czr_activeSkopeId.bind( function( to, from ) {
+                              //Always close the mod option panel if exists
                               if ( _.has( api, 'czr_ModOptVisible') ) {
                                     api.czr_ModOptVisible( false );
                               }
@@ -548,9 +1221,29 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                     );
                               });
                       }, { deferred : true } );
+
+                      //REACT TO EXPANDED ACTIVE SECTION
+                      //=> silently update all eligible controls of this sektion with the current skope values
                       api.czr_activeSectionId.callbacks.add( function() { return self.activeSectionReact.apply(self, arguments ); } );
+
+                      //REACT TO EXPANDED ACTIVE PANEL
+                      //=> silently update all eligible controls of this sektion with the current skope values
                       api.czr_activePanelId.callbacks.add( function() { return self.activePanelReact.apply(self, arguments ); } );
+
+                      //GLOBAL SKOPE COLLECTION LISTENER
+                      //api.czr_skopeCollection.callbacks.add( function() { return self.globalSkopeCollectionReact.apply(self, arguments ); } );
                 });
+
+
+                //////////////// LISTEN TO SKOPE SWITCH EVENT //////////////////
+                //1) reset visibilities
+                //2) update control skope notices
+                //@args =
+                //{
+                //  current_skope_id : string
+                //  previous_skope_id : string
+                //  updated_setting_ids : [] //<= can be empty if no section was expanded
+                //}
                 api.bind( 'skope-switched-done', function( args ) {
                       args = _.extend(
                             {
@@ -562,12 +1255,28 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                       );
                       return self.skopeSwitchedDoneReact( args );
                 });
+
+
+                ///////////////////// LISTEN TO THE SERVER /////////////////////
+                //SERVER NOTIFICATION SETUP
                 api.czr_serverNotification   = new api.Value( {status : 'success', message : '', expanded : true} );
                 api.czr_serverNotification.bind( function( to, from ) {
                         self.toggleServerNotice( to );
                 });
+
+
+
+                ///////////////////// SETUP PREVIEW NOTE AND INFOS BLOCKS /////////////////////
+                /// 1) defines observable value to control the block view visibilities
+                /// 2) listen to those values state to render / destroy the views
+                /// 3) setup DOM listeners inside the views to react on user actions : close block + write an ajax option for example
                 self._setupPreviewNotificationsBlocks();//top note and bottom skope infos
+
+
+
+                ///////////////////// SKOPE SWITCHER EVENT MAP /////////////////
                 self.scopeSwitcherEventMap = [
+                      //skope reset : do reset
                       {
                             trigger   : 'click keydown',
                             selector  : '.czr-dismiss-notification',
@@ -576,6 +1285,7 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                   api.czr_serverNotification( { expanded : false } );
                             }
                       },
+                      //toggle title notice
                       {
                             trigger   : 'click keydown',
                             selector  : '.czr-toggle-title-notice',
@@ -593,11 +1303,31 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                             }
                       }
                 ];
+
+                //Setup DOM user actions when api.czr_skopeReady => self.skopeWrapperEmbedded are resolved
                 self.skopeWrapperEmbedded.then( function() {
                       api.CZR_Helpers.setupDOMListeners( self.scopeSwitcherEventMap , { dom_el : $('.czr-scope-switcher') }, self );
                 });
+
+
+                ///////////////////// VARIOUS /////////////////////
+                //DECLARE THE LIST OF CONTROL TYPES FOR WHICH THE VIEW IS REFRESHED ON CHANGE
                 self.refreshedControls = [ 'czr_cropped_image'];// [ 'czr_cropped_image', 'czr_multi_module', 'czr_module' ];
+
+                //WIDGETS AND SIDEBAR SPECIFIC TREATMENTS
                 self.initWidgetSidebarSpecifics();
+
+                //LISTEN TO GLOBAL DB OPTION CHANGES
+                //When an option is reset on the global skope,
+                //we need to update it in the initially sent _wpCustomizeSettings.settings
+                //api.czr_globalDBoptions.callbacks.add( function() { return self.globalDBoptionsReact.apply(self, arguments ); } );
+
+
+                ///////////////////// LISTEN TO PAINT EVENT /////////////////////
+                //The paint event occurs :
+                //1) on skope switch
+                //2) on sektion expansion
+                //3) on panel expansion
                 api.bind( 'czr-paint', function( params ) {
                       api.czr_skopeReady.then( function() {
                             self.wash( params ).paint( params );
@@ -624,11 +1354,16 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
           /*****************************************************************************
           * EMBED WRAPPER
           *****************************************************************************/
+          //fired in initialize
+          //=> embed the wrapper for all skope boxes
+          //=> add a specific class to the body czr-skop-on
+          //=> Listen to skope switch in main title
           embedSkopeWrapper : function() {
                 var self = this;
                 $('#customize-header-actions').append( $('<div/>', {class:'czr-scope-switcher', html:'<div class="czr-skopes-wrapper"></div>'}) );
                 $('body').addClass('czr-skop-on');
                 var _eventMap = [
+                    //skope switch
                     {
                           trigger   : 'click keydown',
                           selector  : '.czr-skope-switch',
@@ -654,6 +1389,7 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
           /*****************************************************************************
           * API DIRTYNESS REACTIONS
           *****************************************************************************/
+          //cb of api.czr_dirtyness()
           apiDirtynessReact : function( is_dirty ) {
                 $('body').toggleClass('czr-api-dirty', is_dirty );
                 api.state( 'saved')( ! is_dirty );
@@ -670,7 +1406,10 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
           /*****************************************************************************
           * OVERRIDE SAVE BUTTON STATES : api.state.bind( 'change') callback
           *****************************************************************************/
+          //@return void()
           setSaveButtonStates : function() {
+                //the 'saving' state was introduced in 4.7
+                //For prior versions, let's declare it and add its callback that we need in the api.previewer.save() method
                 if ( ! api.state.has('saving') ) {
                       api.state.create('saving');
                       api.state('saving').bind( function( isSaving ) {
@@ -694,9 +1433,31 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 var canSave = ! saving() && ( ! activated() || ! saved() ) && 'publish' !== changesetStatus;
                 saveBtn.prop( 'disabled', ! canSave );
           },
+
+
+
+
+
+
+
+
+
+
+
+          //cb of 'skope-switched-done' event => fired when the api.czr_activeSkopeId().done() <=> refresh is done()
+          //1) set the ctrl dependencies in the currently active section
+          //2) update ctrl skope notices in the currently active section + expand the ctrl notice if skope is not 'global'
+          //3) adds a skope level class to the #customize-controls wrapper
+          //@args =
+          //{
+          //  current_skope_id : string
+          //  previous_skope_id : string
+          //  updated_setting_ids : [] //<= can be empty if no section was expanded
+          //}
           skopeSwitchedDoneReact : function( args ) {
                 var self = this,
                     _doWhenSkopeReady = function() {
+                          //CURRENTLY EXPANDED SECTION : SET CTRL DEPENDENCIES WHEN POSSIBLE
                           api.czr_CrtlDependenciesReady.then( function() {
                             if ( ! _.isUndefined( api.czr_activeSectionId() ) && ! _.isEmpty( api.czr_activeSectionId() ) ) {
                                   try {
@@ -706,13 +1467,21 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                   }
                                 }
                           });
+
+                          //CURRENTLY EXPANDED SECTION : UPDATE CURRENT SKOPE CONTROL NOTICES AND MAYBE EXPAND THE NOTICE
                           self.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
+
+                          //ADD A SKOPE LEVEL CSS CLASS TO THE #customize-controls wrapper
                           if ( api.czr_skope.has( args.previous_skope_id ) ) {
                                 $( '#customize-controls' ).removeClass( [ 'czr-', api.czr_skope( args.previous_skope_id )().skope, '-skope-level'].join('') );
                           }
                           if ( api.czr_skope.has( args.current_skope_id ) ) {
                                 $( '#customize-controls' ).addClass( [ 'czr-', api.czr_skope( args.current_skope_id )().skope, '-skope-level'].join('') );
                           }
+
+                          //CURRENTLY EXPANDED SECTION
+                          //=> Display ctrl notice if skope is not global
+                          //=> Hide the reset dialog
                           var _setupSectionControlDialogs = function() {
                                 if ( _.isUndefined( api.czr_activeSectionId() ) || _.isEmpty( api.czr_activeSectionId() ) )
                                   return;
@@ -724,27 +1493,60 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                               return;
 
                                             ctrl.deferred.embedded.then( function() {
+                                                  //Always display the notice when skope is not global
+                                                  //=> let user understand where the setting value is coming from
                                                   ctrl.czr_states( 'noticeVisible' )( self.isCtrlNoticeVisible( ctrlId ) );
                                                   ctrl.czr_states( 'resetVisible' )( false );
                                             });
                                       });
                                 });
                           };
+
+                          //REFRESH PREVIEW BOTTOM INFOS
+                          //on skope switched done, the default behaviour is to display the bottom infos block in the preview
+                          //and to refresh its content
                           if ( api.czr_bottomInfosVisible() ) {
                                 self.renderBottomInfosTmpl();//<= will build a new bottom skope message infos in the preview based on the new active skopes
                           } else {
+                                //Display + build and render the skope infos
                                 api.czr_bottomInfosVisible( true );
                           }
+
+                          //Setup control dialogs after a delay on skope switched.
+                          //=> the delay is needed for controls that have been re-rendered.
                           _.delay( function() {
                                 _setupSectionControlDialogs();
                           }, 500 );
                     };
+
+
+                //api.consoleLog('SKOPE SWITCHED TO', args.current_skope_id, api.czr_activeSectionId() );
+                //Skope is ready when :
+                //1) the initial skopes collection has been populated
+                //2) the initial skope has been switched to
                 api.czr_skopeReady.then( function() {
                       _doWhenSkopeReady();
                 });
           },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          //@return void()
           _setupPreviewNotificationsBlocks : function() {
                 var self = this;
+                ///////////////////// TOP NOTE BLOCK /////////////////////
                 api.czr_topNoteVisible = new api.Value( false );
                 api.czr_skopeReady.then( function() {
                       api.czr_topNoteVisible.bind( function( visible ) {
@@ -755,7 +1557,16 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                         actions : '',
                                         selfCloseAfter : 20000
                                   };
+                              //noteParams is an object :
+                              //{
+                              // title : '',
+                              // message : '',
+                              // actions : fn(),
+                              // selfCloseAfter : 20000 in ms
+                              //}
                               noteParams = $.extend( _defaultParams , serverControlParams.topNoteParams );
+
+                              //SPECIFIC AJAX ACTION FOR THE WELCOME NOTE
                               noteParams.actions = function() {
                                     var _query = $.extend(
                                           api.previewer.query(),
@@ -769,12 +1580,19 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 
                               self.toggleTopNote( visible, noteParams );
                       });
+
+                      //Toggle the top note on initialization
                       _.delay( function() {
                             api.czr_topNoteVisible( ! _.isEmpty( serverControlParams.isTopNoteOn ) || 1 == serverControlParams.isTopNoteOn );
                       }, 2000 );
                 });
+
+
+
+                ///////////////////// BOTTOM INFOS BLOCK /////////////////////
                 api.czr_bottomInfosVisible = new api.Value( false );
                 api.czr_skopeReady.then( function() {
+                      //Listen to changes
                       api.czr_bottomInfosVisible.bind( function( visible ) {
                               var noteParams = {},
                                   _defaultParams = {
@@ -783,10 +1601,19 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                                         actions : '',
                                         selfCloseAfter : 20000
                                   };
+                              //noteParams is an object :
+                              //{
+                              // title : '',
+                              // message : '',
+                              // actions : fn(),
+                              // selfCloseAfter : 20000 in ms
+                              //}
                               noteParams = $.extend( _defaultParams , {} );
 
                               return self.toggleBottomInfos( visible, noteParams );//returns a promise()
                       }, { deferred : true } );
+
+                      //never set to true if 'show-skope-infos' is unchecked
                       var _skopeInfosSetId = api.CZR_Helpers.build_setId( 'show-skope-infos' );
                       api.when( _skopeInfosSetId, function( _set_ ){
                             api.czr_bottomInfosVisible.validate = function( value ) {
@@ -795,21 +1622,63 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 
                                   return _isChecked ? value : false;
                             };
+
+                            //Listen to skope infos setting in admin section
                             _set_.bind( function( visible ) {
                                   api.czr_bottomInfosVisible( 0 !== visible && '0' !== visible && false !== visible && 'off' !== visible );
                             });
                       });
+
+
+
+                      //Toggle the top note on initialization
                       _.delay( function() {
                             api.czr_bottomInfosVisible( true );
                       }, 2000 );
                 });//api.czr_skopeReady.then()
           }
+
+
+
+
+
+          //cb of api.czr_globalDBoptions.callbacks
+          //update the _wpCustomizeSettings.settings if they have been updated by a reset of global skope, or a control reset of global skope
+          //When an option is reset on the global skope, we need to set the new value to default in _wpCustomizeSettings.settings
+          // globalDBoptionsReact : function( to, from ) {
+          //       var self = this,
+          //           resetted_opts = _.difference( from, to );
+
+          //       //reset option case
+          //       if ( ! _.isEmpty(resetted_opts) ) {
+          //             api.consoleLog( 'HAS RESET OPTIONS', resetted_opts );
+          //             //reset each reset setting to its default val
+          //             _.each( resetted_opts, function( shortSetId ) {
+          //                   var wpSetId = api.CZR_Helpers.build_setId( shortSetId );
+          //                   if ( _.has( api.settings.settings, wpSetId) )
+          //                     api.settings.settings[wpSetId].value = serverControlParams.defaultOptionsValues[shortSetId];
+          //                   self.processSilentUpdates( { refresh : false } );//silently update with no refresh
+          //             });
+          //       }
+
+          //       //make sure the hasDBValues is synchronized with the server
+          //       api.czr_skope( self.getGlobalSkopeId() ).hasDBValues( ! _.isEmpty( to ) );//might trigger cb hasDBValuesReact()
+          // }
       });//$.extend()
 })( wp.customize , jQuery, _);
 
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 (function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
+
+      //callback of api.czr_serverNotification
+      //notice is an object :
+      //  {
+      //    status : 'success',
+      //    expanded : true,
+      //    message : '',
+      //    auto_collapse : false
+      //  }
       toggleServerNotice : function( notice ) {
             notice = _.isObject( notice ) ? notice : {};
             notice = _.extend( {
@@ -818,8 +1687,12 @@ $.extend( CZRSkopeBaseMths, {
                   message : '',
                   auto_collapse : false
             }, notice );
+
+            //bail for changeset_already_published
             if ( 'changeset_already_published' == notice.message )
               return;
+
+            //bail if not dev mode
             if ( ! serverControlParams.isDevMode )
               return;
 
@@ -841,8 +1714,16 @@ $.extend( CZRSkopeBaseMths, {
                           _header_height,
                           _notif_wrap_height,
                           _set_height = function( _h ) {
+                                // $header.css( 'height', '');
+                                // $sidebar.css( 'top', '' );
+                                // if ( _.isUndefined( _h ) )
+                                //   return;
+                                // $header.css( 'height', _h + 'px' );
+                                // $sidebar.css( 'top', _h + 'px' );
                                 return true;
                           };
+
+                      //Close the main skope switcher title inheritance infos if exists and opened
                       if ( self.skopeTitleNoticeVisible )
                           self.skopeTitleNoticeVisible( false );
 
@@ -851,6 +1732,7 @@ $.extend( CZRSkopeBaseMths, {
                                   .fadeOut( {
                                         duration : 200,
                                         complete : function() {
+                                              //$( this ).css( 'height', 'auto' );
                                   } } );
                             setTimeout( function() {
                                   _set_height();
@@ -880,6 +1762,8 @@ $.extend( CZRSkopeBaseMths, {
                             }, 400 );
                       }
                 };
+
+            //prepend the wrapper if needed
             if ( 'pending' == self.serverNoticeEmbedded.state() ) {
                   $.when( _embed() ).done( function() {
                         setTimeout( function() {
@@ -890,18 +1774,31 @@ $.extend( CZRSkopeBaseMths, {
             } else {
                   _toggleNotice();
             }
+
+            //Always auto-collapse the notification after a custom delay
             _.delay( function() {
                         api.czr_serverNotification( { expanded : false } );
                   },
                   ( 'success' == notice.status || false !== notice.auto_collapse ) ? 4000 : 5000
             );
       },
+
+      //utility : build a server response as a string
+      //ready to be displayed in the notifications
       buildServerResponse : function( _r ) {
             var resp = false;
+            //server error
             if ( _.isObject( _r ) ) {
                   if ( _.has( _r, 'responseJSON') && ! _.isUndefined( _r.responseJSON.data ) && ! _.isEmpty( _r.responseJSON.data ) ) {
                         resp = _r.responseJSON.data;
                   }
+                  // else if ( _.has( _r, 'responseText') && ! _.isEmpty( _r.responseText ) ) {
+                  //       try {
+                  //             resp = JSON.parse( _r.responseText );
+                  //       } catch( e ) {
+                  //             resp = 'Server Error';
+                  //       }
+                  // }
                   else if ( _.has( _r , 'statusText' ) && ! _.isEmpty( _r.statusText ) ) {
                         resp = _r.statusText;
                   }
@@ -915,6 +1812,7 @@ $.extend( CZRSkopeBaseMths, {
             } else if ( ! resp ) {
                   resp = '0' === _r ? 'Not logged in.' : _r;
             } else if ( '-1' === _r ) {
+              // Back-compat in case any other check_ajax_referer() call is dying
                   resp = 'Identification issue detected, please refresh your page.';
             }
             return resp;
@@ -924,6 +1822,14 @@ $.extend( CZRSkopeBaseMths, {
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 (function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
+
+      //can be call directly, but is also a callback of api.czr_topNoteVisible, fired on skope base initialize
+      //noteParams is an object :
+      //{
+      // title : '',
+      // message : '',
+      // actions : fn()
+      //}
       toggleTopNote : function( visible, noteParams ) {
             noteParams = _.isObject( noteParams ) ? noteParams : {};
             var self = this,
@@ -936,6 +1842,7 @@ $.extend( CZRSkopeBaseMths, {
                 _renderAndSetup = function() {
                       $.when( self.renderTopNoteTmpl( noteParams ) ).done( function( $_el ) {
                             self.welcomeNote = $_el;
+                            //display
                             _.delay( function() {
                                 $('body').addClass('czr-top-note-open');
                             }, 200 );
@@ -961,6 +1868,7 @@ $.extend( CZRSkopeBaseMths, {
                       var dfd = $.Deferred();
                       $('body').removeClass('czr-top-note-open');
                       if ( self.welcomeNote.length ) {
+                            //remove Dom element after slide up
                             _.delay( function() {
                                   self.welcomeNote.remove();
                                   dfd.resolve();
@@ -980,12 +1888,17 @@ $.extend( CZRSkopeBaseMths, {
                         api.czr_topNoteVisible( false );//should be already false
                   });
             }
+
+            //Always auto-collapse the notification
             _.delay( function() {
                         api.czr_topNoteVisible( false );
                   },
                   noteParams.selfCloseAfter || 20000
             );
       },
+
+
+      //@param = { note_title  : '', note_message : '' }
       renderTopNoteTmpl : function( params ) {
             if ( $( '#czr-top-note' ).length )
               return $( '#czr-top-note' );
@@ -1013,36 +1926,64 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * WORDPRESS API ACTIONS ON INIT
     *****************************************************************************/
+    //fired in initialize
+    //Listen to each api settings changes
+    //1) update the current skope dirties with the user val
+    //2) Refresh the controls reset state
+    //can be fired when a setting is dynamically added. For example a widget.
+    //In this case, the param SetId is not null
     bindAPISettings : function( requestedSetId ) {
           var self = this,
+              //This is fired after the WP Core callback : setting.bind( setting.preview );
               _settingChangeReact = function( new_val, old_val, o ) {
+                    //"this" is the setting instance
                     var setId = this.id,
                         skope_id;
+
+                    //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
+                    //=> that's why we check it here again before doing anything else
                     if ( ! serverControlParams.isSkopOn )
                       return;
 
                     if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
                           api.errorLog( 'The api.czr_activeSkopeId() is undefined in the api.czr_skopeBase.bindAPISettings method.');
+                          //return;
                     }
+
+                    //For skope eligible settings : Update the skope dirties with the new val of this setId
+                    //=> not eligibile skope will update the global skope dirties
+                    //=> this has to be kept like this because the global dirties aare being populated with :
+                    // api.dirtyValues = function dirtyValues( options ) {
+                    //       return api.czr_skopeBase.getSkopeDirties( api.czr_skopeBase.getGlobalSkopeId(), options );
+                    // };
                     if ( api( setId )._dirty ) {
                           skope_id = self.isSettingSkopeEligible( setId ) ? api.czr_activeSkopeId() : self.getGlobalSkopeId();
                           api.czr_skope( skope_id ).updateSkopeDirties( setId, new_val );
                     }
+
+                    //collapse any expanded reset modifications if the control is not currently being reset.
                     if ( _.has( api.control(setId), 'czr_states' ) && ! api.control(setId).czr_states( 'isResetting' )() ) {
                           api.control( setId ).czr_states( 'resetVisible' )( false );
                     }
+
+                    //Update the skope inheritance notice for the setting control
                     if ( self.isSettingSkopeEligible( setId ) ) {
                           self.updateCtrlSkpNot( setId );
                     }
               };//_settingChangeReact()
+
+          //if a setting Id is requested
           if ( ! _.isUndefined( requestedSetId ) ) {
                 api( requestedSetId ).bind( _settingChangeReact );
           }
           else {
+                //parse the current eligible skope settings and write a setting val object
                 api.each( function ( _setting ) {
                     _setting.bind( _settingChangeReact );
                 });
           }
+
+          //BIND SETTINGS ADDED LATER : Typical example : menus
           var _dynamicallyAddedSettingsReact = function( setting_instance ) {
                 if ( setting_instance.callbacks.has( _settingChangeReact ) )
                   return;
@@ -1062,38 +2003,66 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * REACT ON SKOPE SYNCED
     *****************************************************************************/
+    //Fired on 'czr-skopes-synced'
+    //with param :
+    //{
+    //  czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+    //  isChangesetDirty : boolean,
+    // }
     reactWhenSkopeSyncedDone : function( server_params ) {
           var self = this, dfd = $.Deferred();
           if ( ! _.has( server_params, 'czr_skopes' ) || _.isEmpty( server_params.czr_skopes ) ) {
                 api.errorLog( 'Missing skope data after refresh', server_params );
                 return dfd.resolve().promise();
           }
+          //API DIRTYNESS UPDATE
           if ( ! api.czr_dirtyness() ) {
                 api.czr_dirtyness( _.isBoolean( server_params.isChangesetDirty ) ? server_params.isChangesetDirty : false );
           }
 
           var _sentSkopeCollection = server_params.czr_skopes;
+          //CHANGESET UPDATE
+          //always update the changesets of the sent skope collection after a refresh
+          //match them with the opt_name, because they don't have an id when emitted from server
           _.each( api.czr_skopeCollection(), function( _skp ) {
                 var _sent_skope = _.findWhere( _sentSkopeCollection, { opt_name : _skp.opt_name } );
+                //do we have a match based on opt_name with the _sentSkopeCollection ?
                 if ( _.isUndefined( _sent_skope ) )
                   return;
+                //if so then let's update the skope model with the new db values
                 var _changeset_candidate = _.isEmpty( _sent_skope.changeset || {} ) ? {} : _sent_skope.changeset,
                     _api_ready_chgset = {};
+
+                //We only update the changeset with registered setting id
                 _.each( _changeset_candidate, function( _val, _setId ) {
                       if ( ! api.has( _setId ) ) {
                             api.consoleLog( 'In reactWhenSkopeSyncedDone : attempting to update the changeset with a non registered setting : ' + _setId );
                       }
                       _api_ready_chgset[_setId] = _val;
                 });
+
+                //_new_changeset = $.extend( api.czr_skope( _skp.id ).changesetValues(), _sent_changeset );
+                //=> updating the changeset will also trigger a skope dirtyValues() update
                 api.czr_skope( _skp.id ).changesetValues( _api_ready_chgset );
           });
+
+          //DB VALUES UPDATE
+          //UPDATE EACH SKOPE MODEL WITH THE NEW DB VAL SENT BY THE SERVER
+          //The sent skope have no id (because assigned in the api)
+          //=> however we can match them with their unique opt_name property
+          //then update the skope db values, including the global skope
           _.each( api.czr_skopeCollection(), function( _skp ) {
                 var _sent_skope = _.findWhere( _sentSkopeCollection, { opt_name : _skp.opt_name } );
+                //do we have a match based on opt_name with the _sentSkopeCollection ?
                 if ( _.isUndefined( _sent_skope ) )
                   return;
+
+                //if so then let's update the skope model with the new db values
                 var _current_db_vals  = $.extend( true, {}, api.czr_skope( _skp.id ).dbValues() ),
                     _dbVals_candidate = $.extend( _current_db_vals , _sent_skope.db || {} ),
                     _api_ready_dbvals = {};
+
+                //We only update the dbValues with registered setting id
                 _.each( _dbVals_candidate, function( _val, _setId ) {
                       if ( ! api.has( _setId ) ) {
                             api.consoleLog( 'In reactWhenSkopeSyncedDone : attempting to update the db values with a non registered setting : ' + _setId );
@@ -1104,6 +2073,8 @@ $.extend( CZRSkopeBaseMths, {
 
                 api.czr_skope( _skp.id ).dbValues( _api_ready_dbvals );
           });
+          //introduce a small delay to let the api values be fully updated
+          //useful when attempting to refresh the control notices after a save action
           _.delay( function() {
               dfd.resolve();
           }, 500 );
@@ -1119,13 +2090,19 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * REACT ON ACTIVE SECTION SETUP DONE
     *****************************************************************************/
+    // fired on 'active-section-setup'
+    // params looks like : { controls : controls, section_id : section_id }
     _maybeSetupAssignedMenuLocations : function( active_section ) {
           if ( _.isUndefined( active_section ) || _.isEmpty( active_section ) || ! api.section.has( active_section.id ) ) {
                 api.consoleLog( 'In _maybeSetupAssignedMenuLocations : no valid section_id provided.');
           }
           var self = this;
+          //is this a menu section ? and does it have assigned locations ?
           if ( ! active_section.assignedLocations )
             return;
+
+          //locations is an array of locations for a menu
+          //=> we want to synchronize the reset button of this menu location in this section, with the one of the nav_menu_location setting
           var _assignedLocReact = function( locations ) {};
 
           if ( ! active_section.assignedLocations.callbacks.has( _assignedLocReact ) ) {
@@ -1138,13 +2115,16 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * REACT TO ACTIVE SECTION EXPANSION
     *****************************************************************************/
+    //cb of api.czr_activeSectionId()
     activeSectionReact : function( active_sec_id , previous_sec_id ) {
+          //PAINT
           if ( 'add_menu' != active_sec_id ) {
                 api.trigger('czr-paint', { active_section_id : active_sec_id } );
           }
 
           var self = this,
               _doReactPrevious = function( previous_sec_id ) {
+                    //COLLAPSE ANY RESET DIALOG
                     var controls = api.CZR_Helpers.getSectionControlIds( previous_sec_id  );
                     _.each( controls, function( ctrlId ) {
                           if ( ! api.has( ctrlId ) || _.isUndefined( api.control( ctrlId ) ) )
@@ -1157,14 +2137,24 @@ $.extend( CZRSkopeBaseMths, {
                     });
               },
               _doReactActive = function( active_section, active_sec_id ) {
+                    //PRE RENDER THE CONTROL RESET ICONS + NOTICE
                     self.setupActiveSkopedControls( {
                           section_id : active_sec_id
                     });
+
+                    //PROCESS SILENT UPDATES
                     self.processSilentUpdates( { section_id : active_sec_id  } )
                           .fail( function() {
                                 throw new Error( 'Fail to process silent updates after initial skope collection has been populated' );
                           })
                           .done( function() {
+                                // var _update_candidates = self._getSilentUpdateCandidates( active_sec_id  );
+                                // self.processSilentUpdates( { candidates : _update_candidates } );
+                                // //add control single reset + observable values
+                                // self.setupActiveSkopedControls();
+
+                                //Always display the notice when skope is not global
+                                //=> let user understand where the setting value is coming from
                                 var _setupSectionCtrlNotices = function() {
                                       var controls = api.CZR_Helpers.getSectionControlIds( active_sec_id );
                                       _.each( controls, function( ctrlId ) {
@@ -1176,13 +2166,24 @@ $.extend( CZRSkopeBaseMths, {
                                             ctrl.czr_states( 'noticeVisible' )( self.isCtrlNoticeVisible( ctrlId ) );
                                       });
                                 };
+
+                                //Setup ctrol notices after a delay
+                                //=>the delay is needed for controls that have been re-rendered.
                                 _.delay( function() {
                                       _setupSectionCtrlNotices();
                                 }, 700 );
+
+                                //Sidebar Widget specific
                                 if ( ! self.isExcludedSidebarsWidgets() ) {
                                       self.forceSidebarDirtyRefresh( active_sec_id , api.czr_activeSkopeId() );
                                 }
                           });
+
+                    //TRIGGER AN OBJECT RICH EVENT
+                    //LISTEN TO ACTIVE SECTION SETUP : RESET ICONS + CONTROL NOTICES ARE WRITEEN
+                    //=> handles the synchronized assigned locations for menus
+                    // 'skoped-controls-setup' is triggered when self.setupActiveSkopedControls()
+                    // params looks like : { controls : controls, section_id : section_id }
                     if ( ! _.has( api.topics, 'active-section-setup' ) ) {
                           api.bind( 'active-section-setup', function( params ) {
                                 var defaults = {
@@ -1193,6 +2194,8 @@ $.extend( CZRSkopeBaseMths, {
                                 self._maybeSetupAssignedMenuLocations( params );
                           });
                     }
+
+                    //Switch to global skope for not skoped sections
                     api.czr_skopeReady.then( function() {
                           var _switchBack = function( _title ) {
                                 api.czr_serverNotification({
@@ -1201,6 +2204,7 @@ $.extend( CZRSkopeBaseMths, {
                                 });
                                 api.czr_activeSkopeId( self.getGlobalSkopeId() );
                           };
+                          //Switch to global skope for not skoped sections
                           if ( 'global' != api.czr_skope( api.czr_activeSkopeId() )().skope ) {
                                 if (
                                   self.isExcludedWPCustomCss() &&
@@ -1216,11 +2220,19 @@ $.extend( CZRSkopeBaseMths, {
                                                   serverControlParams.i18n.skope['Menus are created sitewide.']
                                             ].join(' ')
                                       });
+                                      //_switchBack( api.section( active_sec_id ).params.title );
                                 }
                           }
                     });
+
+                    //SAY IT
                     api.trigger('active-section-setup', active_section );
               };
+
+
+
+          //defer the callback execution when the first skope collection has been populated
+          //=> otherwise it might be to early. For example in autofocus request cases.
           api.czr_initialSkopeCollectionPopulated.then( function() {
                 api.section.when( active_sec_id , function( active_section ) {
                       active_section.deferred.embedded.then( function() {
@@ -1240,6 +2252,7 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * REACT TO ACTIVE PANEL EXPANSION
     *****************************************************************************/
+    //cb of api.czr_activePanelId()
     activePanelReact : function( active_panel_id , previous_panel_id ) {
           var self = this;
           api.czr_initialSkopeCollectionPopulated.then( function() {
@@ -1251,6 +2264,8 @@ $.extend( CZRSkopeBaseMths, {
                       });
                       api.czr_activeSkopeId( self.getGlobalSkopeId() );
                 };
+
+                //Display a notifictation skoped panels
                 api.czr_skopeReady.then( function() {
                       if ( 'global' != api.czr_skope( api.czr_activeSkopeId() )().skope ) {
                             if ( self.isExcludedSidebarsWidgets() && 'widgets' == active_panel_id ) {
@@ -1260,12 +2275,17 @@ $.extend( CZRSkopeBaseMths, {
                                               serverControlParams.i18n.skope['Widgets are created sitewide.']
                                         ].join(' ')
                                   });
+                                  //_switchBack( api.panel( active_panel_id ).params.title );
                             }
                       }
                 });
+
+                //Silently update all sections of the nav_menus panel each time it's switch to
+                //=> fixes the problem of locations not being refreshd below the menu titles
                 api.czr_skopeReady.then( function() {
                       if ( 'nav_menus' == active_panel_id ) {
                             _.each( api.panel( active_panel_id ).sections(), function( _sec ) {
+                                  //PROCESS SILENT UPDATES
                                   self.processSilentUpdates( { section_id : _sec.id, awake_if_not_active : true } );
                             });
                       }
@@ -1284,8 +2304,15 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * PAINT AND WASH
     *****************************************************************************/
+    //fired on 'czr-paint'
+    //params = {
+    //  active_panel_id : '',
+    //  active_section_id : '',
+    //  is_skope_switch : false
+    //}
     wash : function( params ) {
           var self = this,
+              //@param element = { el : ${}, color : string }
               _do_wash = function( element ) {
                     if ( ! _.has( element, 'el') || ! element.el.length )
                       return;
@@ -1299,6 +2326,13 @@ $.extend( CZRSkopeBaseMths, {
           }
           return this;
     },
+
+    //fired on 'czr-paint'
+    //params = {
+    //  active_panel_id : '',
+    //  active_section_id : '',
+    //  is_skope_switch : false
+    //}
     paint : function( params ) {
           var _bgColor = 'inherit',
               defaults = {
@@ -1312,9 +2346,12 @@ $.extend( CZRSkopeBaseMths, {
           if ( ! _.isUndefined( api.czr_activeSkopeId() ) && api.czr_skope.has( api.czr_activeSkopeId() ) ) {
                   _bgColor = api.czr_skope( api.czr_activeSkopeId() ).color;
           }
+
+          //@param element = { el : ${}, color : string }
           var _do_paint = function( element ) {
                 if ( ! _.has( element, 'el') || ! element.el.length )
                   return;
+                //If is skope switch, add a css class to handle a smoother background color transition
                 if ( params.is_skope_switch ) {
                       $.when( element.el.addClass('czr-painted') ).done( function() {
                             $(this).css( 'background', element.bgColor || _bgColor );
@@ -1322,6 +2359,7 @@ $.extend( CZRSkopeBaseMths, {
                 } else {
                       element.el.css( 'background', element.bgColor || _bgColor );
                 }
+                //paint text in dark for accessibility when skope background is not white ( == not global skope )
                 if ( 'global' != api.czr_skope( api.czr_activeSkopeId() )().skope ) {
                        element.el.css( 'color', '#000');
                 }
@@ -1329,15 +2367,20 @@ $.extend( CZRSkopeBaseMths, {
           };
 
           api.czr_skopeBase.paintedElements = api.czr_skopeBase.paintedElements || new api.Value( [] );
+
+          //CASE 1 : NO ACTIVE PANEL, NO ACTIVE SECTION => WE ARE ON ROOT
           if ( _.isEmpty( params.active_panel_id ) && _.isEmpty( params.active_section_id ) ) {
                 _paint_candidates.push( {
                       el : $( '#customize-info' ).find('.accordion-section-title').first()
                 });
                 api.panel.each( function( _panel ) {
+                      // _panel.container.css('background', _bgColor );
                       _paint_candidates.push( {
                             el : _panel.container.find( '.accordion-section-title').first()
                       });
                 });
+                //Also include orphaned sections that have no panel assigned
+                //=> example front page content
                 api.section.each( function( _section ) {
                       if ( ! _.isEmpty( _section.panel() ) )
                         return;
@@ -1346,15 +2389,20 @@ $.extend( CZRSkopeBaseMths, {
                       });
                 });
           }
+
+          //CASE 2 : ACTIVE PANEL, NO ACTIVE SECTION => WE ARE IN A PANEL ROOT
           if ( ! _.isEmpty( params.active_panel_id ) && _.isEmpty( params.active_section_id ) ) {
                 api.panel.when( params.active_panel_id , function( active_panel ) {
                       active_panel.deferred.embedded.then( function() {
+                            //active_panel.container.css('background', _bgColor );
                             _paint_candidates.push( {
                                   el : active_panel.container.find( '.accordion-section-title, .customize-panel-back' )
                             });
                       });
                 });
           }
+
+          //CASE 3 : ACTIVE SECTION
           if ( ! _.isEmpty( params.active_section_id ) ) {
                 api.section.when( params.active_section_id , function( active_section ) {
                       active_section.deferred.embedded.then( function() {
@@ -1367,6 +2415,7 @@ $.extend( CZRSkopeBaseMths, {
                                         el : active_section.container
                                   }
                             );
+                            //for WP < 4.7
                             if ( ! api.czr_isChangeSetOn() ) {
                                   _paint_candidates.push(
                                         {
@@ -1377,6 +2426,8 @@ $.extend( CZRSkopeBaseMths, {
                       });
                 });
           }
+
+          //PROCESS PAINT AND POPULATE THE VALUE
           _.each( _paint_candidates, function( _el ) { _do_paint( _el ); } );
           api.czr_skopeBase.paintedElements( _paint_candidates );
           return this;
@@ -1386,6 +2437,14 @@ $.extend( CZRSkopeBaseMths, {
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 (function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
+
+      //can be call directly, but the recommend way is to use api.czr_bottomInfosVisible, fired on skope base initialize, for which the following method is a callback
+      //noteParams is an object :
+      //{
+      // title : '',
+      // message : '',
+      // actions : fn()
+      //}
       toggleBottomInfos : function( visible, noteParams ) {
             noteParams = _.isObject( noteParams ) ? noteParams : {};
             var self = this,
@@ -1399,13 +2458,17 @@ $.extend( CZRSkopeBaseMths, {
                 _skopeInfosSetId = api.CZR_Helpers.build_setId('show-skope-infos'),
                 _renderAndSetup = function() {
                       var _dfd = $.Deferred();
+                      //Render and setup DOM listeners
                       $.when( self.renderBottomInfosTmpl( noteParams ) )
                             .done( function( $_el ) {
                                   self.bottomInfosContainer = $_el;
+                                  //Reveal and resolve
                                   _.delay( function() {
                                         $('body').addClass('czr-bottom-infos-open');
                                         _dfd.resolve();
                                   }, 200 );
+
+                                  //setup DOM listeners
                                   api.CZR_Helpers.setupDOMListeners(
                                         [
                                               {
@@ -1420,6 +2483,7 @@ $.extend( CZRSkopeBaseMths, {
                                                           });
                                                     }
                                               },
+                                              //skope switch
                                               {
                                                     trigger   : 'click keydown',
                                                     selector  : '.czr-skope-switch',
@@ -1453,6 +2517,7 @@ $.extend( CZRSkopeBaseMths, {
                             var _dfd_ = this;
                             $('body').removeClass('czr-bottom-infos-open');
                             if ( self.bottomInfosContainer.length ) {
+                                  //remove and reset
                                   _.delay( function() {
                                         self.bottomInfosContainer.remove();
                                         self.bottomInfosContainer = false;
@@ -1477,13 +2542,25 @@ $.extend( CZRSkopeBaseMths, {
                         dfd.resolve();
                   });
             }
+
+            //Always auto-collapse the infos block
+            // _.delay( function() {
+            //             api.czr_bottomInfosVisible( false );
+            //       },
+            //       noteParams.selfCloseAfter || 20000
+            // );
             return dfd.promise();
       },
+
+
+      //@param = { note_title  : '', note_message : '' }
       renderBottomInfosTmpl : function( params ) {
             params = params || {};
             var self = this,
                 _tmpl = '',
                 _skope_id = api.czr_activeSkopeId();
+
+            //Don't go further if the current skope is not registered yet
             if ( ! api.czr_skope.has( _skope_id ) || ! _.isObject( api.czr_skope( _skope_id )() ) )
               return false;
 
@@ -1508,6 +2585,8 @@ $.extend( CZRSkopeBaseMths, {
                             }
                       });
                 };
+
+            //on initial rendering, print the template
             if ( _.isUndefined( this.bottomInfosContainer ) || 1 != this.bottomInfosContainer.length ) {
                   _renderTmpl().done( function() {
                         $('.czr-note-message', '#czr-bottom-infos').html( _message );
@@ -1525,9 +2604,30 @@ $.extend( CZRSkopeBaseMths, {
             }
             return ( this.bottomInfosContainer && 1 == this.bottomInfosContainer.length ) ? this.bottomInfosContainer : $( '#czr-bottom-infos' );
       },
+
+
+      //@return html string
+      //a skope is described by the following properties :
+      // color:"rgba(39, 59, 88, 0.28)"
+      // ctx_title:"Home"
+      // dyn_type:"skope_meta"
+      // id:"local_home"
+      // is_forced:false
+      // is_winner:true
+      // level:"home"
+      // long_title:"Options for home"
+      // obj_id:"home"
+      // opt_name:"hueman_czr_home"
+      // skope:"local"
+      // title:"Options for home"
       _getSkopeInfosMessage : function( skope_id ) {
             skope_id = skope_id || api.czr_activeSkopeId();
             var _localSkopeId = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
+
+            //Paranoid but, always bail if :
+            //1) the current skope id is not registered,
+            //2) the skope is not an object
+            //3) the local skope is undefined
             if ( ! api.czr_skope.has( skope_id ) || ! _.isObject( api.czr_skope( skope_id )() ) || _.isUndefined( _localSkopeId ) )
               return '';
 
@@ -1583,6 +2683,17 @@ $.extend( CZRSkopeBaseMths, {
                     _html,
                     '</span>'
             ].join(' ') );
+
+            // return $.trim( [
+            //       '<span class="czr-skope-bottom-infos">',
+            //         serverControlParams.i18n.skope['In this context :'],
+            //         _.isEmpty( _inheritedFrom ) ? ' ' : serverControlParams.i18n.skope['inherits from'],
+            //         _inheritedFrom,
+            //         _.isEmpty( _inheritedFrom ) ? '' : _.isEmpty( _overrides ) ? '.' : [',' , serverControlParams.i18n.skope['and'] ].join(' '),
+            //         _.isEmpty( _overrides ) ? ' ' : serverControlParams.i18n.skope['overridden by'],
+            //         _overrides,
+            //         _.isEmpty( _overrides ) ? '</span>' : '.</span>'
+            // ].join(' ') );
       }
 });//$.extend()
 })( wp.customize , jQuery, _);
@@ -1593,20 +2704,27 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * HELPERS
     *****************************************************************************/
+    //@return bool
     isSkopeRegisteredInCollection : function( skope_id, collection ) {
           var self = this;
           collection = collection || api.czr_skopeCollection();
           return ! _.isUndefined( _.findWhere( collection, { id : skope_id } ) );
     },
+
+    //@return bool
     isSkopeRegisteredInCurrentCollection : function( skope_id, collection ) {
           var self = this;
           collection = collection || api.czr_currentSkopesCollection();
           return ! _.isUndefined( _.findWhere( collection, { id : skope_id } ) );
     },
+
+    //@return bool
     isGlobalSkopeRegistered : function() {
           var _model = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'global'} );
           return _.isObject( _model ) && _.has( _model, 'id' );
     },
+
+    //@return string
     getGlobalSkopeId : function() {
           if ( ! _.has(api, 'czr_skope') )
             return '';
@@ -1617,6 +2735,9 @@ $.extend( CZRSkopeBaseMths, {
           });
           return id;
     },
+
+    //after a saved action, the 'global' option might have changed
+    //=> this method, return only the changed db values
     getChangedGlobalDBSettingValues : function( serverGlobalDBValues ) {
           var _changedDbVal = {};
 
@@ -1631,6 +2752,11 @@ $.extend( CZRSkopeBaseMths, {
           });
           return _changedDbVal;
     },
+
+
+    //@return the current active skope id
+    //If server send isLocalSkope = true, then try to activate the local skope
+    //Fallbacks on global
     getActiveSkopeId : function( _current_skope_collection ) {
           _current_skope_collection = _current_skope_collection || api.czr_currentSkopesCollection();
 
@@ -1650,13 +2776,32 @@ $.extend( CZRSkopeBaseMths, {
           if ( _.isUndefined( _skpId ) ) {
                 throw new Error( 'No default skope was found in getActiveSkopeId ', _current_skope_collection );
           }
+
+          // _.each( _current_skope_collection, function( _skop ) {
+          //       _active_candidates[ _skop.skope ] = _skop.id;
+          // });
+
+          // //Apply a basic skope priority. => @todo refine this treatment
+          // if ( _.has( _active_candidates, 'local' ) )
+          //   return _active_candidates.local;
+          // if ( _.has( _active_candidates, 'group' ) )
+          //   return _active_candidates.group;
+          // if ( _.has( _active_candidates, 'special_group' ) )
+          //   return active_candidates.special_group;
           return _skpId;
+          //return _.findWhere( _current_skope_collection, { skope : 'global' } ).id;
     },
+
+    //@return a skope name string : local, group, special_group, global
     getActiveSkopeName : function() {
           if ( ! api.czr_skope.has( api.czr_activeSkopeId() ) )
             return 'global';
           return api.czr_skope( api.czr_activeSkopeId() )().skope;
     },
+
+
+    //@return boolean
+    //! important : the setId param must be the full name. For example : hu_theme_option[color-1]
     isSettingSkopeEligible : function( setId ) {
           var self = this,
               shortSetId = api.CZR_Helpers.getOptionName( setId );
@@ -1665,15 +2810,40 @@ $.extend( CZRSkopeBaseMths, {
             api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE UNDEFINED OR NOT REGISTERED IN THE API.' );
             return false;
           }
+          //exclude :
+          //widget controls
+          //sidebars
+          //menu settings
+          //active_theme
           if ( self.isExcludedWPBuiltinSetting( setId ) )
             return false;
+          //skopeExcludedSettings look like ( short IDs ) :
+          //{
+          //   //short ids of theme settings
+          //   'post-comments',
+          //   'page-comments',
+          //   'layout-home',
+          //
+          //   //protected theme settings
+          //   'ver'
+          //
+          //   //wp builtins
+          //   'show_on_front',
+          //   'page_on_front',
+          // }
           if ( _.contains( serverControlParams.skopeExcludedSettings, shortSetId ) ) {
+            //api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE PART OF THE EXCLUDED LIST.' );
             return false;
           } else if ( self.isThemeSetting( setId ) ) {
             return true;
+            //api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO SKOPE BECAUSE NOT PART OF THE THEME OPTIONS AND NOT WP AUTHORIZED BUILT IN OPTIONS' );
           } else
            return true;
     },
+
+
+    //@return boolean
+    //! important : the setId param must be the full name. For example : hu_theme_option[color-1]
     isSettingResetEligible : function( setId ) {
           var self = this,
               shortSetId = api.CZR_Helpers.getOptionName( setId );
@@ -1682,6 +2852,7 @@ $.extend( CZRSkopeBaseMths, {
             api.consoleLog( 'THE SETTING ' + setId + ' IS NOT ELIGIBLE TO RESET BECAUSE UNDEFINED OR NOT REGISTERED IN THE API.' );
             return;
           }
+          //exclude widget controls and menu settings and sidebars
           if ( self.isExcludedWPBuiltinSetting( setId ) )
             return;
           if ( ! self.isThemeSetting( setId ) && ! self.isWPAuthorizedSetting( setId ) ) {
@@ -1689,20 +2860,36 @@ $.extend( CZRSkopeBaseMths, {
           } else
            return true;
     },
+
+    //@return bool
     isThemeSetting : function( setId ) {
           return _.isString( setId ) && -1 !== setId.indexOf( serverControlParams.themeOptions );
     },
+
+    //@return bool
     isWPAuthorizedSetting : function( setId ) {
           return _.isString( setId ) && _.contains( serverControlParams.wpBuiltinSettings, setId );
     },
+
+    //@return boolean
     isExcludedWPBuiltinSetting : function( setId ) {
           var self = this;
           if ( _.isUndefined(setId) )
             return true;
           if ( 'active_theme' == setId )
             return true;
+          //allow the list of server defined settings
           if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
             return false;
+
+          //exclude the WP built-in settings like sidebars_widgets*, widget_*, custom_css
+          //specifics for nav_menus:
+          //1) exclude always :
+          //nav_menu[* => each menu created
+          //nav_menu_item => the items of the menus
+          //nav_menus_created_posts
+          //2) exclude maybe :
+          //nav_menu_locations
           var _patterns = [ 'widget_', 'nav_menu', 'sidebars_', 'custom_css', 'nav_menu[', 'nav_menu_item', 'nav_menus_created_posts', 'nav_menu_locations' ],
               _isExcld = false;
           _.each( _patterns, function( _ptrn ) {
@@ -1739,20 +2926,30 @@ $.extend( CZRSkopeBaseMths, {
           });
           return _isExcld;
     },
+
+    //@return bool
     isExcludedSidebarsWidgets : function() {
           var _servParam = serverControlParams.isSidebarsWigetsSkoped;//can be a boolean or a string "" for false, "1" for true
           return ! ( ! _.isUndefined( _servParam ) && ! _.isEmpty( _servParam ) && false !== _servParam );
     },
+
+    //@return bool
     isExcludedNavMenuLocations : function() {
+          //Nav menu location are not well supported before 4.7 => potential infinite refresh
           if ( ! api.czr_isChangeSetOn() )
             return true;
           var _servParam = serverControlParams.isNavMenuLocationsSkoped;//can be a boolean or a string "" for false, "1" for true
           return ! ( ! _.isUndefined( _servParam ) && ! _.isEmpty( _servParam ) && false !== _servParam );
     },
+
+    //@return bool
     isExcludedWPCustomCss : function() {
           var _servParam = serverControlParams.isWPCustomCssSkoped;//can be a boolean or a string "" for false, "1" for true
           return ! ( ! _.isUndefined( _servParam ) && ! _.isEmpty( _servParam ) && false !== _servParam );
     },
+
+
+    //return the current db value for a pair setId / skope_id
     _getDBSettingVal : function( setId, skope_id  ) {
           var shortSetId = api.CZR_Helpers.getOptionName(setId),
               wpSetId = api.CZR_Helpers.build_setId(setId);
@@ -1768,18 +2965,30 @@ $.extend( CZRSkopeBaseMths, {
                 return '_no_db_val';
           }
     },
+
+
+    //@return {} of dirties
+    //@options object { unsaved: boolean } was introduced with the changeset in WP 4.7.
+    //=> the goal is to only get the api dirties that have not yet been saved in the changeset.
     getSkopeDirties : function( skope_id, options ) {
           if ( ! api.czr_skope.has( skope_id ) )
             return {};
+
+          //the already saved settings are excluded from the skope dirties by default
+          //=> the "real" customized values will be re-built server side anyway, by merging $_POST and changeset data, either on refresh or save.
           options = options || {};
           options = _.extend( { unsaved : true }, options );
 
           var values = {};
+          //each skope stores its API dirties in an observable value : dirtyValues()
           _.each( api.czr_skope( skope_id ).dirtyValues(), function( _val, _setId ) {
                 var settingRevision;
+                //since 4.7 and the changeset, only the settings not yet saved in the db changeset are returned
                 if ( api.czr_isChangeSetOn() ) {
                       settingRevision = api._latestSettingRevisions[ _setId ];
+                      // Skip including settings that have already been included in the changeset, if only requesting unsaved.
                       if ( api.state( 'changesetStatus' ).get() && ( options && options.unsaved ) && ( _.isUndefined( settingRevision ) || settingRevision <= api._lastSavedRevision ) ) {
+                            //api.consoleLog( 'DIRTIES : ' + _setId + ' will be excluded from dirties because last revision was : ' + settingRevision + ' == to last saved revision : ' + api._lastSavedRevision );
                             return;
                       }
                 }
@@ -1789,6 +2998,7 @@ $.extend( CZRSkopeBaseMths, {
     },
 
     getSkopeExcludedDirties : function() {
+          //ARE THERE DIRTIES IN THE WP API ?
           var self = this,
               _wpDirties = {};
           api.each( function ( value, setId ) {
@@ -1796,9 +3006,14 @@ $.extend( CZRSkopeBaseMths, {
                   _wpDirties[ setId ] = value();
                 }
           } );
+
+          //ARE THERE DIRTIES IN THE GLOBAL SKOPE
           var _globalSkopeId = self.getGlobalSkopeId(),
               _globalSkpDirties = self.getSkopeDirties( _globalSkopeId );
+
+          //RETURN THE _wpDirties not present in the global skope dirties
           return _.omit( _wpDirties, function( _value, setId ) {
+              //var shortOptName = api.CZR_Helpers.getOptionName( setId );
               return self.isSettingSkopeEligible( setId );
           } );
     },
@@ -1818,6 +3033,7 @@ $.extend( CZRSkopeBaseMths, {
           parsed.id_base = matches[1];
           parsed.number = parseInt( matches[2], 10 );
         } else {
+          // likely an old single widget
           parsed.id_base = widgetId;
         }
 
@@ -1867,11 +3083,17 @@ $.extend( CZRSkopeBaseMths, {
                 api.errorLog( 'getAppliedPrioritySkopeId : the requested skope id is not registered : ' + skope_id );
                 return skope_id;
           }
+
+          //Are we already in the 'local' skope ?
           var self = this,
               _local_skope_id = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
 
           if ( _.isUndefined( _local_skope_id ) || skope_id == _local_skope_id )
             return skope_id;
+
+          //start from local and do the salmon until either :
+          //1) a value is found
+          //2) the requested skope id is reached in the hierarchy
           var _salmonToMatch = function( _skp_id ) {
                 var wpSetId = api.CZR_Helpers.build_setId( setId ),
                     val_candidate = '___',
@@ -1880,36 +3102,52 @@ $.extend( CZRSkopeBaseMths, {
 
                 if ( _skp_id == skope_id )
                   return skope_id;
+
+                //is the setting API dirty ?
                 if ( api.czr_skope( _skp_id ).getSkopeSettingAPIDirtyness( wpSetId ) )
                   return skope_model.id;
+
+                //is the setting CHANGESET dirty ?
                 if ( api.czr_isChangeSetOn() ) {
                       if ( api.czr_skope( _skp_id ).getSkopeSettingChangesetDirtyness( wpSetId ) )
                         return skope_model.id;
                 }
+
+                //do we have a db val stored ?
                 var _skope_db_val = self._getDBSettingVal( setId, _skp_id);
                 if ( _skope_db_val != '_no_db_val' ) {
                       return skope_model.id;
                 }
+                //if we are already in the final 'local' skope, then let's return its value
                 else if( 'global' == skope_model.skope ) {
+                      // if ( _.isNull(initial_val) ) {
+                      //   throw new Error('INITIAL VAL IS NULL FOR SETTING ' + setId + ' CHECK IF IT HAS BEEN DYNAMICALLY ADDED. IF SO, THERE SHOULD BE A DIRTY TO GRAB');
+                      // }
                       return skope_model.id;
                 }
                 else {
+                      //if not dirty and no db val, then let's recursively apply the inheritance
                       return '___' != val_candidate ? skope_model.title : _salmonToMatch( self._getParentSkopeId( skope_model ) );
                 }
           };
           return _salmonToMatch( _local_skope_id );
     },
+
+    //@return string : the skope title from which a setting id inherits its current value
     getOverridenSkopeTitles : function() {
           var skope_id = skope_id || api.czr_activeSkopeId();
           if ( ! api.czr_skope.has( skope_id ) ) {
                 api.errorLog( 'getInheritedSkopeTitles : the requested skope id is not registered : ' + skope_id );
                 return '';
           }
+           //Are we already in the 'local' skope ?
           var self = this,
               _local_skope_id = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
 
           if ( _.isUndefined( _local_skope_id ) || skope_id == _local_skope_id )
             return '';
+
+          //start from local and do the salmon
           var _salmonToMatch = function( _skp_id, _skp_ids ) {
                 _skp_ids = _skp_ids || [];
                 var skope_model = api.czr_skope( _skp_id )();
@@ -1924,6 +3162,9 @@ $.extend( CZRSkopeBaseMths, {
                 return self.buildSkopeLink( id );
           }).join( ' ' + serverControlParams.i18n.skope['and'] + ' ' );
     },
+
+
+    //@return the skope title from which a setting id inherits its current value
     getInheritedSkopeId : function( setId, skope_id ) {
           if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
                 api.errorLog( 'getInheritedSkopeId : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
@@ -1939,25 +3180,42 @@ $.extend( CZRSkopeBaseMths, {
               val_candidate = '___',
               skope_model = api.czr_skope( skope_id )(),
               initial_val;
+          //initial val
+          //some settings like widgets may be dynamically added. Therefore their initial val won't be stored in the api.settings.settings
           if ( _.has( api.settings.settings, wpSetId ) )
             initial_val = api.settings.settings[wpSetId].value;
           else
             initial_val = null;
+
+          //is the setting API dirty ?
           if ( api.czr_skope( skope_id ).getSkopeSettingAPIDirtyness( wpSetId ) )
             return skope_id;
+
+          //is the setting CHANGESET dirty ?
           if ( api.czr_isChangeSetOn() ) {
                 if ( api.czr_skope( skope_id ).getSkopeSettingChangesetDirtyness( wpSetId ) )
                   return skope_id;
           }
+
+          //do we have a db val stored ?
           var _skope_db_val = self._getDBSettingVal( setId, skope_id );
           if ( _skope_db_val != '_no_db_val' )
             return skope_id;
+          //if we are already in the final 'global' skope, then let's return its value
           else if( 'global' == skope_model.skope ) {
+            // if ( _.isNull(initial_val) ) {
+            //   throw new Error('INITIAL VAL IS NULL FOR SETTING ' + setId + ' CHECK IF IT HAS BEEN DYNAMICALLY ADDED. IF SO, THERE SHOULD BE A DIRTY TO GRAB');
+            // }
             return skope_id;
           }
           else
+            //if not dirty and no db val, then let's recursively apply the inheritance
             return '___' != val_candidate ?skope_id : self.getInheritedSkopeId( setId, self._getParentSkopeId( skope_model ) );
     },
+
+
+    //@return the skope title from which a setting id inherits its current value
+    //@return string
     getInheritedSkopeTitles : function( skope_id, skope_ids ) {
           skope_id = skope_id || api.czr_activeSkopeId();
           if ( ! api.czr_skope.has( skope_id ) ) {
@@ -1978,6 +3236,8 @@ $.extend( CZRSkopeBaseMths, {
                 return self.buildSkopeLink( id );
           }).join(' ' + serverControlParams.i18n.skope['and'] + ' ');
     },
+
+    //@return string
     buildSkopeLink : function( skope_id ) {
           if ( ! api.czr_skope.has( skope_id ) ) {
                 api.errorLog( 'buildSkopeLink : the requested skope id is not registered : ' + skope_id );
@@ -1990,6 +3250,13 @@ $.extend( CZRSkopeBaseMths, {
                 '</span>'
           ].join( '' );
     },
+
+
+    //@return boolean
+    //isAllowedWPBuiltinSetting :
+
+    //performs a recursive inheritance to get a setId Val for a given skope
+    //@return an api setting value
     getSkopeSettingVal : function( setId, skope_id ) {
           if ( ! api.has( api.CZR_Helpers.build_setId(setId) ) ) {
                 api.errorLog( 'getSkopeSettingVal : the requested setting id does not exist in the api : ' + api.CZR_Helpers.build_setId(setId) );
@@ -2005,25 +3272,43 @@ $.extend( CZRSkopeBaseMths, {
               val_candidate = '___',
               skope_model = api.czr_skope( skope_id )(),
               initial_val;
+
+          //initial val
+          //some settings like widgets may be dynamically added. Therefore their initial val won't be stored in the api.settings.settings
           if ( _.has( api.settings.settings, wpSetId ) )
             initial_val = api.settings.settings[wpSetId].value;
           else
             initial_val = null;
+
+          //is the setting API dirty ?
           if ( api.czr_skope( skope_id ).getSkopeSettingAPIDirtyness( wpSetId ) )
             return api.czr_skope( skope_id ).dirtyValues()[ wpSetId ];
+
+          //is the setting CHANGESET dirty ?
           if ( api.czr_isChangeSetOn() ) {
                 if ( api.czr_skope( skope_id ).getSkopeSettingChangesetDirtyness( wpSetId ) )
                   return api.czr_skope( skope_id ).changesetValues()[ wpSetId ];
           }
+
+          //do we have a db val stored ?
           var _skope_db_val = self._getDBSettingVal( setId, skope_id );
           if ( _skope_db_val != '_no_db_val' )
             return _skope_db_val;
+          //if we are already in the final 'global' skope, then let's return its value
           else if( 'global' == skope_model.skope ) {
+            // if ( _.isNull(initial_val) ) {
+            //   throw new Error('INITIAL VAL IS NULL FOR SETTING ' + setId + ' CHECK IF IT HAS BEEN DYNAMICALLY ADDED. IF SO, THERE SHOULD BE A DIRTY TO GRAB');
+            // }
             return '___' == val_candidate ? initial_val : val_candidate;
           }
           else
+            //if not dirty and no db val, then let's recursively apply the inheritance
             return '___' != val_candidate ? val_candidate : self.getSkopeSettingVal( setId, self._getParentSkopeId( skope_model ) );
     },
+
+
+    //implement the skope inheritance to build the dirtyCustomized
+    //@recursive
     applyDirtyCustomizedInheritance : function( dirtyCustomized, skope_id ) {
           skope_id = skope_id || api.czr_activeSkopeId() || api.czr_skopeBase.getGlobalSkopeId();
           dirtyCustomized = dirtyCustomized || {};
@@ -2036,6 +3321,8 @@ $.extend( CZRSkopeBaseMths, {
 
           var parent_skope_id = self._getParentSkopeId( skope_model ),
               parent_dirties = api.czr_skope( parent_skope_id ).dirtyValues();
+
+          //use the parent dirty value if the current skope setId is not dirty and has no db val
           _.each( parent_dirties, function( _val, wpSetId ){
                 var shortSetId = api.CZR_Helpers.getOptionName( wpSetId );
                 if ( _.isUndefined( dirtyCustomized[wpSetId] ) && _.isUndefined( api.czr_skope( skope_model.id ).dbValues()[shortSetId] ) )
@@ -2043,6 +3330,11 @@ $.extend( CZRSkopeBaseMths, {
           });
           return 'global' == api.czr_skope( parent_skope_id )().skope ? dirtyCustomized : self.applyDirtyCustomizedInheritance( dirtyCustomized, parent_skope_id );
     },
+
+
+
+    //@return the parent skope id of a given skope within the collections of currentSkopes
+    //recursive
     _getParentSkopeId : function( skope_model, _index ) {
           var self = this,
               hierark = ['local', 'group', 'special_group', 'global'],
@@ -2052,11 +3344,17 @@ $.extend( CZRSkopeBaseMths, {
           if ( _.isUndefined( parent_skope_skope ) ) {
               return _.findWhere( api.czr_currentSkopesCollection(), { skope : 'global' } ).id;
           }
+
+          //=> the inheritance is limited to current set of skopes
           if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), { skope : parent_skope_skope } ) ) ) {
               return self._getParentSkopeId( skope_model, parent_skope_ind + 1 );
           }
           return _.findWhere( api.czr_currentSkopesCollection(), { skope : parent_skope_skope } ).id;
     },
+
+
+    //@return the parent skope id of a given skope within the collections of currentSkopes
+    //recursive
     _getChildSkopeId : function( skope_model, _index ) {
           var self = this,
               hierark = ['local', 'group', 'special_group', 'global'],
@@ -2066,6 +3364,8 @@ $.extend( CZRSkopeBaseMths, {
           if ( _.isUndefined( child_skope_skope ) ) {
               return _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
           }
+
+          //=> the inheritance is limited to current set of skopes
           if ( _.isUndefined( _.findWhere( api.czr_currentSkopesCollection(), { skope : child_skope_skope } ) ) ) {
               return self._getParentSkopeId( skope_model, child_skope_ind - 1 );
           }
@@ -2077,13 +3377,44 @@ $.extend( CZRSkopeBaseMths, {
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
+
+    //Fired on 'czr-skopes-synced' triggered by the preview, each time the preview is refreshed.
+    //On a Save Action, api.czr_savedDirties has been populated =>
+    // 1) check if the server sends the same saved values
+    // 2) update the skope db properties with the latests saved ones
+    //
+    //A skope candidate is structured this way :
+    //{
+    // changeset : Object
+    // color:"rgb(255, 255, 255)"
+    // db:Object
+    // dyn_type:"option"
+    // has_db_val:true
+    // id:""
+    // is_forced:false
+    // is_primary:true
+    // is_winner:false
+    // level:"_all_"
+    // long_title:"Site wide options"
+    // obj_id:""
+    // opt_name:"hu_theme_options"
+    // skope:"global"
+    // title:"Site wide options"
+    //}
+    //@see api_overrides
     updateSkopeCollection : function( sent_collection, sent_channel ) {
+          //api.consoleLog('UPDATE SKOPE COLLECTION', sent_collection, sent_channel );
           var self = this;
               _api_ready_collection = [];
+
+          //normalize each sent skopes
           _.each( sent_collection, function( _skope, _key ) {
                 var skope_candidate = $.extend( true, {}, _skope );//deep clone to avoid any shared references
                 _api_ready_collection.push( self.prepareSkopeForAPI( skope_candidate ) );
           });
+
+          //keep the global skope unchanged
+          //=> this is required because the server always sends an empty set of db options for the global skope, unlike the other skopes
           if ( self.isGlobalSkopeRegistered() ) {
                 var _updated_api_ready_collection = [],
                     _global_skp_model = $.extend( true, {}, api.czr_skope( self.getGlobalSkopeId() )() );
@@ -2096,8 +3427,32 @@ $.extend( CZRSkopeBaseMths, {
                 });
                 _api_ready_collection = _updated_api_ready_collection;
           }
+
+          //set the new collection of current skopes
+          //=> this will instantiate the not instantiated skopes
           api.czr_currentSkopesCollection( _api_ready_collection );
     },
+
+
+    //@param skope_candidate
+    ////A skope candidate is structured this way :
+    //{
+    // changeset : Object
+    // color:"rgb(255, 255, 255)"
+    // db:Object
+    // dyn_type:"option"
+    // has_db_val:true
+    // id:""
+    // is_forced:false
+    // is_primary:true
+    // is_winner:false
+    // level:"_all_"
+    // long_title:"Site wide options"
+    // obj_id:""
+    // opt_name:"hu_theme_options"
+    // skope:"global"
+    // title:"Site wide options"
+    //}
     prepareSkopeForAPI : function( skope_candidate ) {
           if ( ! _.isObject( skope_candidate ) ) {
               throw new Error('prepareSkopeForAPI : a skope must be an object to be API ready');
@@ -2168,6 +3523,8 @@ $.extend( CZRSkopeBaseMths, {
                             }
                             api_ready_skope[_key] = _candidate_val;
                       break;
+                      //when the global db values have been changed, typically on save,
+                      //the 'db' property will store the difference between api.settings.settings and the db options server generated
                       case  'db' :
                             if ( _.isArray( _candidate_val ) || _.isEmpty( _candidate_val ) )
                               _candidate_val = {};
@@ -2192,7 +3549,11 @@ $.extend( CZRSkopeBaseMths, {
                       break;
                 }//switch
           });
+
+          //Assign a color based on the hiearchy level
           api_ready_skope.color = self.skope_colors[ api_ready_skope.skope ] || 'rgb(255, 255, 255)';
+
+          //Finally, generate the id and the title
           api_ready_skope.id = api_ready_skope.skope + '_' + api_ready_skope.level;
           if ( ! _.isString( api_ready_skope.id ) || _.isEmpty( api_ready_skope.id ) ) {
                 throw new Error('prepareSkopeForAPI : a skope id must a string not empty');
@@ -2203,20 +3564,34 @@ $.extend( CZRSkopeBaseMths, {
           }
           return api_ready_skope;
     },
+
+
+    //cb of api.czr_currentSkopesCollection.callbacks
+    //fired in initialize
     currentSkopesCollectionReact : function( to, from ) {
           var self = this,
               _new_collection = $.extend( true, [], to ) || [],
               _old_collection = $.extend( true, [], from ) || [],
               dfd = $.Deferred();
+
+          //what are the skope to instantiate ?
+          //=>on init, instantiate them all
+          //=>on refresh, instantiate the new ones and remove the non relevant
           var _to_instantiate = [];
               _to_remove = [];
               _to_update = [];
               _instantiateAndEmbed = function( _candidates_ ) {
+                    //Instantiate the new skopes
+                    //api.consoleLog('SKOPES TO INSTANTIATE?', _to_instantiate );
                     _.each( _candidates_, function( _skope ) {
                           _skope = $.extend( true, {}, _skope );//use a cloned skop to instantiate : @todo : do we still need that ?
                           api.czr_skope.add( _skope.id , new api.CZR_skope( _skope.id , _skope ) );
                     });
+
+                    //Then embed the not ready ones
+                    //=> we need to do that after the instantiaion of the entire new collection, because a skope instance my need to get other skope instances when embedded
                     _.each( _candidates_, function( _skope ) {
+                          //fire this right after instantiation for the views (we need the model instances in the views)
                           if ( ! api.czr_skope.has( _skope.id ) ) {
                               throw new Error( 'Skope id : ' + _skope.id + ' has not been instantiated.');
                           }
@@ -2225,19 +3600,29 @@ $.extend( CZRSkopeBaseMths, {
                           }
                     });
               };
+
+          //BUILD THE CANDIDATES TO INSTANTIATE
           _.each( _new_collection, function( _sent_skope ) {
                 if ( ! api.czr_skope.has( _sent_skope.id  ) )
                   _to_instantiate.push( _sent_skope );
           });
+
+          //TRY TO INSTANTIATE
           try {
                 _instantiateAndEmbed( _to_instantiate );
           } catch( er ) {
                 api.errorLog( "currentSkopesCollectionReact : " + er );
                 return dfd.resolve().promise();
           }
+
+
+          //SET THE CONTEXTUALLY ACTIVE SKOPES VISIBILITY AND LAYOUT WHEN skopeReady and skopeWrapperEmbedded
+          //Which skopes are visible ?
+          //=> the ones sent by the preview
           var _setActiveAndLayout = function() {
                 var _activeSkopeNum = _.size( _new_collection ),
                     _setLayoutClass = function( _skp_instance ) {
+                          //remove previous layout class
                           var _newClasses = _skp_instance.container.attr('class').split(' ');
                           _.each( _skp_instance.container.attr('class').split(' '), function( _c ) {
                                 if ( 'width-' == _c.substring( 0, 6) ) {
@@ -2246,6 +3631,7 @@ $.extend( CZRSkopeBaseMths, {
                           });
                           $.when( _skp_instance.container.attr('class', _newClasses.join(' ') ) )
                                 .done( function() {
+                                      //set new layout class
                                       _skp_instance.container.addClass( 'width-' + ( Math.round( 100 / _activeSkopeNum ) ) );
                                 });
                     };
@@ -2272,15 +3658,34 @@ $.extend( CZRSkopeBaseMths, {
                       }
                 } );
           };
+
+          //SET THE CONTEXTUALLY ACTIVE SKOPES VISIBILITY AND LAYOUT WHEN skopeReady and skopeWrapperEmbedded
           self.skopeWrapperEmbedded.then( function() {
                 _setActiveAndLayout();
           });
+
+          //ON INITIAL COLLECTION POPULATE, RESOLVE THE DEFERRED STATE
+          //=> this way we can defer earlier actions.
+          //For example when autofocus is requested, the section might be expanded before the initial skope collection is sent from the preview.
           if ( _.isEmpty( from ) && ! _.isEmpty( to ) )
             api.czr_initialSkopeCollectionPopulated.resolve();
+
+          //MAKE SURE TO SYNCHRONIZE api.settings.settings with the current global skope updated db values
           self.maybeSynchronizeGlobalSkope();
 
           return dfd.resolve( 'changed' ).promise();
     },//listenToSkopeCollection()
+
+
+    //fired in updateSkopeCollection
+    //args can be
+    //{
+    //  isGlobalReset : false
+    //  isSetting : false,
+    //  isSkope : false,
+    //  settingIdToReset : '',
+    //  skopeIdToReset : ''
+    //}
     maybeSynchronizeGlobalSkope : function( args ) {
           args = args || {};
           if ( ! _.isObject( args ) ) {
@@ -2308,6 +3713,8 @@ $.extend( CZRSkopeBaseMths, {
                             api.settings.settings[setId].value = _val;
                       }
                 });
+
+                //check if there's theme option removed from the global skope db values that needs to be set to default
                 if ( args.isGlobalReset && args.isSetting ) {
                       _setIdToReset = args.settingIdToReset;
                       shortSetId    = api.CZR_Helpers.getOptionName( _setIdToReset );
@@ -2319,6 +3726,8 @@ $.extend( CZRSkopeBaseMths, {
                             api.settings.settings[ _setIdToReset ].value = defaultVal;
                       }
                 }
+
+                //check if there's theme option removed from the global skope db values that needs to be set to default
                 if ( args.isGlobalReset && args.isSkope ) {
                       _.each( api.settings.settings, function( _params, _setId ) {
                             if ( ! self.isThemeSetting( _setId ) )
@@ -2338,8 +3747,15 @@ $.extend( CZRSkopeBaseMths, {
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
+
+    //declared in initialize
+    //cb of api.czr_activeSkopeId.callbacks
+    //react when the active skope has been set to a new value
+    // => change the to and from skope active() state
+    // => silently update each setting values with the skope set of vals
     activeSkopeReact : function( to, from ) {
           var self = this, dfd = $.Deferred();
+          //set the to and from scope state on init and switch
           if ( ! _.isUndefined(from) && api.czr_skope.has(from) )
             api.czr_skope(from).active(false);
           else if ( ! _.isUndefined( from ) )
@@ -2349,6 +3765,11 @@ $.extend( CZRSkopeBaseMths, {
             api.czr_skope(to).active(true);
           else
             throw new Error('listenToActiveSkope : requested scope ' + to + ' does not exist in the collection');
+
+
+          //BAIL AND RETURN PROMISE HERE IF SWITCHING TO A PANEL OR SECTION WITH ONLY UNSKOPED SETTINGS
+          // => widgets and custom_css
+          //Switch to global skope for not skoped panels
           var _switchBack = function( _title ) {
                 api.czr_activeSkopeId( self.getGlobalSkopeId() );
                 api.czr_serverNotification({
@@ -2364,6 +3785,7 @@ $.extend( CZRSkopeBaseMths, {
                             serverControlParams.i18n.skope['Widgets are created sitewide.']
                       ].join(' ')
                 });
+                //return dfd.resolve().promise();// _switchBack( api.panel( api.czr_activePanelId() ).params.title );
           }
           if ( self.isExcludedWPCustomCss() && 'custom_css' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
                 return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
@@ -2378,23 +3800,53 @@ $.extend( CZRSkopeBaseMths, {
                             serverControlParams.i18n.skope['Menus are created sitewide.']
                       ].join(' ')
                 });
+                //_switchBack( api.section( api.czr_activeSectionId() ).params.title );
           }
+
+
+          //AWAKE NOT CURRENTLY ACTIVE NAV MENUS SECTION
+          //=> this solves the problem of nav menu location not being refreshed on skope switch
           if ( 'nav_menus' == api.czr_activePanelId() ) {
                 _.each( api.panel( api.czr_activePanelId() ).sections(), function( _sec ) {
+                      //PROCESS SILENT UPDATES
                       self.processSilentUpdates( { section_id : _sec.id, awake_if_not_active : true } );
                 });
           }
+
+
+          //Set state
           api.state('switching-skope')( true );
+          //write the current skope title
           self._writeCurrentSkopeTitle( to );
+          //paint skope color
           api.trigger( 'czr-paint', { is_skope_switch : true } );
+
+          //CURRENT EXPANDED SECTION DEPENDANT ACTIONS
+          //stop here if the active section is not set yet
+          //=> the silent update will be fired on section expansion anyway
+          //=> refresh now if the previewer is not skope aware, this will post the dyn_type used in the preview to get the proper option if the skope is not 'global'
+          //=> otherwise simply refresh to set the new skope in the query params => needed for the preview frame
           if ( _.isUndefined( api.czr_activeSectionId() ) ) {
+                // if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
+                //     api.previewer.refresh();
+                // } else {
+                //     api.previewer.refresh();
+                // }
                 api.state('switching-skope')( false );
                 api.previewer.refresh();
                 return dfd.resolve().promise();
           }
+
+          //close the module panel id needed
           if ( _.has( api, 'czrModulePanelState') )
             api.czrModulePanelState(false);
+
+          //PROCESS SILENT UPDATES
+          //Build the silent update candidates array
+          //populates with the current section setting ids or the one provided
           var _silentUpdateCands = self._getSilentUpdateCandidates();
+
+          //add the previous skope dirty settings ids
           if ( ! _.isUndefined( from ) ) {
             _.each( api.czr_skope( from ).dirtyValues(), function( val, _setId ) {
                   if ( ! _.contains( _silentUpdateCands, _setId ) )
@@ -2407,6 +3859,11 @@ $.extend( CZRSkopeBaseMths, {
                       _silentUpdateCands.push( _setId );
             } );
           }
+
+          //api.consoleLog('ACTIVE SKOPE REACT', to, from, _silentUpdateCands );
+
+          //Process Silent Updates and
+          //make sure that the visibility is processed after the silent updates
           var _debouncedProcessSilentUpdates = function() {
                 self.processSilentUpdates( {
                             candidates : _silentUpdateCands,
@@ -2424,8 +3881,24 @@ $.extend( CZRSkopeBaseMths, {
                                         dfd.resolve( _updatedSetIds );
                                         api.state( 'switching-skope' )( false );
                                   });
+
+                            //on first skope reaction ( initialization phase ) , when from is still undefined : no need to refresh if the target skope is global
+                            //=> improve speed performance on init
+                            // if ( _.isUndefined( from ) && api.czr_skope.has( to ) && 'global' == api.czr_skope( to )().skope ) {
+                            //       dfd.resolve( _updatedSetIds );
+                            //       api.state( 'switching-skope' )( false );
+                            // } else {
+                            //       api.previewer.refresh()
+                            //             .always( function() {
+                            //                   dfd.resolve( _updatedSetIds );
+                            //                   api.state( 'switching-skope' )( false );
+                            //             });
+                            // }
                       });
           };
+
+          //Process silent updates
+          //Collapse the current expanded module if any
           if ( _.has(api, 'czr_isModuleExpanded') && false !== api.czr_isModuleExpanded() ) {
                 api.czr_isModuleExpanded().setupModuleViewStateListeners(false);
                 _debouncedProcessSilentUpdates = _.debounce( _debouncedProcessSilentUpdates, 400 );
@@ -2435,6 +3908,11 @@ $.extend( CZRSkopeBaseMths, {
           }
           return dfd.promise();
     },//activeSkopeReact
+
+
+
+    //@return void()
+    //Fired in activeSkopeReact()
     _writeCurrentSkopeTitle : function( skope_id ) {
           var self = this,
               current_title = api.czr_skope( skope_id || api.czr_activeSkopeId() )().long_title,
@@ -2464,6 +3942,8 @@ $.extend( CZRSkopeBaseMths, {
                           $('.czr-scope-switcher').find('.spinner').fadeOut();
                     }
               };
+
+          //render / update the title
           self.skopeWrapperEmbedded
                 .then( function() {
                       if ( ! $('.czr-scope-switcher').find('.czr-current-skope-title').length ) {
@@ -2498,7 +3978,16 @@ $.extend( CZRSkopeBaseMths, {
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
+    //@param params :
+    // {
+    //   candidates : silentUpdateCands,
+    //   section_id : section_id,
+    //   refresh : true,
+    //   awake_if_not_active : false
+    // }
     processSilentUpdates : function( params ) {
+          //api.consoleLog('PROCESS SILENT UPDATES', params );
+          //a setting id can be passed as param instead of an object
           if ( _.isString( params ) )
             params = { candidates : [ params ] };
           else
@@ -2514,14 +4003,20 @@ $.extend( CZRSkopeBaseMths, {
               dfd = $.Deferred();
 
           params = $.extend( defaultParams, params );
+
+          //Cast the candidates to an array, if only one setId is passed as a string
           if ( _.isString( params.candidates ) ) {
             params.candidates = [ params.candidates ];
           }
+
+          //do we have well defined silent update candidates ?
           if ( _.isEmpty( params.candidates ) )
                 params.candidates = self._getSilentUpdateCandidates( params.section_id, params.awake_if_not_active );
           if ( ! _.isArray( params.candidates ) ) {
                 throw new Error('processSilentUpdates : the update candidates must be an array.');
           }
+
+          //bail now if we still don't have candidates to update
           if ( _.isEmpty( params.candidates ) )
             return dfd.resolve( [] ).promise();
 
@@ -2540,6 +4035,9 @@ $.extend( CZRSkopeBaseMths, {
                             dfd.resolve( updated_settings );
                       });
           };
+
+          //silently update the settings of a the currently active section() to the values of the current skope
+          //silentlyUpdateSettings returns a promise.
           if ( 'resolved' != api.czr_skopeReady.state() ) {
                 dfd.resolve( [] );
                 api.czr_skopeReady.done( function() {
@@ -2558,11 +4056,18 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * UPDATE SETTING VALUES
     *****************************************************************************/
+    //silently update a set of settings or a given setId
+    //1) Build an array of promises for each settings
+    //2) When all asynchronous promises are done(). Refresh()
+    //@return an array of promises. Typically if a setting update has to re-render an image related control, the promise is the ajax request object
     silentlyUpdateSettings : function( _silentUpdateCands, refresh ) {
+          //Declare a new api state
           if ( ! api.state.has( 'silent-update-processing') )
             api.state.create( 'silent-update-processing' )( false );
 
           api.state( 'silent-update-processing' )(true);
+
+          //api.consoleLog('silentlyUpdateSettings', _silentUpdateCands, refresh );
           var self = this,
               _silentUpdatePromises = {},
               dfd = $.Deferred();
@@ -2576,6 +4081,10 @@ $.extend( CZRSkopeBaseMths, {
           if ( _.isString( _silentUpdateCands ) ) {
             _silentUpdateCands = [ _silentUpdateCands ];
           }
+
+          //api.consoleLog('the silentUpdateCands', _silentUpdateCands );
+
+          //Fire the silent updates promises
           _.each( _silentUpdateCands, function( setId ) {
                 if ( api.control.has( setId ) &&  'czr_multi_module' == api.control(setId).params.type )
                   return;
@@ -2585,8 +4094,20 @@ $.extend( CZRSkopeBaseMths, {
 
           var _deferred = [],
               _updatedSetIds = [];
+              // _silently_update = function( _silentUpdatePromises ) {
+              //        _.each( _silentUpdatePromises, function( _promise_ , setId ) {
+              //               //Silently set
+              //               var wpSetId = api.CZR_Helpers.build_setId( setId ),
+              //                   _skopeDirtyness = api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( setId );
+              //               api( wpSetId ).silent_set( obj.val, _skopeDirtyness );
+              //         });
+              // };
+
+         //Populates the promises
+         //Silently set each setting when its promise is done.
           _.each( _silentUpdatePromises, function( _promise_ , setId ) {
                 _promise_.done( function( _new_setting_val_ ) {
+                      //Silently set
                       var wpSetId = api.CZR_Helpers.build_setId( setId ),
                           _skopeDirtyness = api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( setId );
                       if ( ! _.isEqual( api( wpSetId )(), _new_setting_val_ ) ) {
@@ -2597,7 +4118,22 @@ $.extend( CZRSkopeBaseMths, {
 
                 _deferred.push( _promise_ );
           });
+
+          //Resolve this method deferred when all setting promises are done
           $.when.apply( null, _deferred )
+          // .always( function() {
+          //       var _has_rejected_promise = false;
+          //       _.each( _deferred, function( _defd ) {
+          //             if ( _.isObject( _defd ) && 'rejected' == _defd.state() ) {
+          //                   _has_rejected_promise = true;
+          //             }
+          //             //@todo improve this!
+          //             $.when( _silently_update() ).done( function() {
+          //                 api.previewer.refresh();
+          //             });
+          //       });
+
+          // })
           .fail( function() {
                 dfd.reject();
                 throw new Error( 'silentlyUpdateSettings FAILED. Candidates : ' + _silentUpdateCands );
@@ -2611,6 +4147,7 @@ $.extend( CZRSkopeBaseMths, {
                             throw new Error( 'a silent update promise is unresolved : ' + _silentUpdateCands );
                       }
                 });
+                //always refresh by default
                 if ( refresh && ! _.isEmpty( _updatedSetIds ) ) {
                       api.previewer.refresh()
                             .always( function() {
@@ -2620,8 +4157,22 @@ $.extend( CZRSkopeBaseMths, {
                       dfd.resolve( _updatedSetIds );
                 }
           });
+
+          //return the collection of update promises
           return dfd.promise();
     },
+
+
+
+
+
+
+    //This method is typically called to update the current active skope settings values
+    //
+    //, therefore @param shortSetId is the only mandatory param
+    //@param setId : the api setting id, might be the short version
+    //@param val : the new val
+    //@return a promise() $ object when an ajax fetch is processed, typically when updating an image.
     getSettingUpdatePromise : function( setId ) {
           if ( _.isUndefined( setId ) ) {
               throw new Error('getSettingUpdatePromise : the provided setId is not defined');
@@ -2637,15 +4188,30 @@ $.extend( CZRSkopeBaseMths, {
               _promise = false,
               skope_id = api.czr_activeSkopeId(),
               val = api.czr_skopeBase.getSkopeSettingVal( setId, skope_id );
+
+          //resolve here if the setting val was unchanged
           if ( _.isEqual( current_setting_val, val ) ) {
                 return dfd.resolve( val ).promise();
           }
+
+          //THE FOLLOWING TREATMENTS ARE ADAPTED TO SETTING WITH A CORRESPONDING CONTROL
+          //header_image_data not concerned for example
           if ( api.control.has( wpSetId ) ) {
+                //The normal way to synchronize the setting api val and the html val is to use
+                //an overridden version of api.Element.synchronizer.val.update
+                //For some specific controls, we need to implement a different way to synchronize
                 var control_type = api.control( wpSetId ).params.type,
                     _control_data = api.settings.controls[wpSetId],
                     _constructor;
 
+                //////////EXPERIMENT
+                // if ( 'widget_form' == control_type ) {
+                //   api.control( wpSetId ).container.remove();
+                //   api.control.remove( wpSetId );
+                // }
+
                 switch ( control_type ) {
+                      //CROPPED IMAGE CONTROL
                       case 'czr_cropped_image' :
                             _promise = self._getCzrCroppedImagePromise( wpSetId, _control_data );
                       break;
@@ -2653,8 +4219,31 @@ $.extend( CZRSkopeBaseMths, {
                       case 'czr_module' :
                             self._processCzrModuleSilentActions( wpSetId, control_type, skope_id , _control_data);
                       break;
+
+                      // case 'czr_multi_module' :
+                      //       _constructor = api.controlConstructor[control_type];
+                      //       if ( api.control.has( wpSetId ) ) {
+                      //           //remove the container and its control
+                      //           api.control( wpSetId ).container.remove();
+                      //           api.control.remove( wpSetId );
+                      //       }
+                      //       //Silently set
+                      //       api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+                      //       //re-instantiate the control with the updated _control_data
+                      //       api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
+                      // break;
+
+                      // default :
+                      //       //Silent set
+                      //       api( wpSetId ).silent_set( val, current_skope_instance.getSkopeSettingDirtyness( setId ) );
+                      // break;
                 }//switch
           }//end if api.control.has( wpSetId )
+
+
+          //Special case : the header_image control has 2 associated settings : header_image and header_image_data
+          //when switching skope, we want to refresh the control with the right image
+          //This is a setting
           if ( _.has(api.settings.controls, 'header_image') && 'header_image' == wpSetId  ) {
                 _promise = self._getHeaderImagePromise( wpSetId, skope_id );
           }
@@ -2679,9 +4268,14 @@ $.extend( CZRSkopeBaseMths, {
           var self = this,
               SilentUpdateCands = [];
           section_id = ( _.isUndefined( section_id ) || _.isNull( section_id ) ) ? api.czr_activeSectionId() : section_id;
+
+          //skope switch when no section expanded
+          //=> Make it possible to "awake" a not active section
+          //=> typically used to awake nav_menu_locations section when in nav_menus panel
           if ( _.isEmpty( api.czr_activeSectionId() ) && ! awake_if_not_active ) {
                 return [];
           }
+          //error cases
           if ( _.isUndefined( section_id ) ) {
                 api.consoleLog( '_getSilentUpdateCandidates : No active section provided');
                 return [];
@@ -2689,10 +4283,16 @@ $.extend( CZRSkopeBaseMths, {
           if ( ! api.section.has( section_id ) ) {
                 throw new Error( '_getSilentUpdateCandidates : The section ' + section_id + ' is not registered in the API.');
           }
+
+          //GET THE CURRENT EXPANDED SECTION SET IDS
           var section_settings = api.CZR_Helpers.getSectionSettingIds( section_id );
+
+          //keep only the skope eligible setIds
           section_settings = _.filter( section_settings, function( setId ) {
               return self.isSettingSkopeEligible( setId );
           });
+
+          //Populates the silent update candidates array
           _.each( section_settings, function( setId ) {
                 SilentUpdateCands.push( setId );
           });
@@ -2709,31 +4309,50 @@ $.extend( CZRSkopeBaseMths, {
     * SILENT ACTIONS for czr_module_type on skope switch
     * ?? @todo : can't we fire this earlier than in getPromises ?
     *****************************************************************************/
+    //@return void()
     _processCzrModuleSilentActions : function( wpSetId, control_type, skope_id, _control_data) {
           var _synced_control_id, _synced_control_val, _synced_control_data, _synced_control_constructor, _syncSektionModuleId,
               _synced_short_id = _.has( api.control( wpSetId ).params, 'syncCollection' ) ? api.control( wpSetId ).params.syncCollection : '',
               _shortSetId =  api.CZR_Helpers.build_setId(wpSetId),
               _val = api.czr_skopeBase.getSkopeSettingVal( _shortSetId, skope_id ),
               current_skope_instance = api.czr_skope( api.czr_activeSkopeId() );
+
+          //if in a multimodule context
           if ( ! _.isEmpty( _synced_short_id ) && ! _.isUndefined( _synced_short_id ) ) {
                 _synced_control_id = api.CZR_Helpers.build_setId( _synced_short_id );
                 _synced_control_val = api.czr_skopeBase.getSkopeSettingVal( _synced_control_id, skope_id );
                 _synced_control_data = api.settings.controls[_synced_control_id];
                 _synced_control_constructor = api.controlConstructor.czr_multi_module;
                 _syncSektionModuleId =  api.control( _synced_control_id ).syncSektionModule()().id;
+
+                //remove the container and its control
                 api.control( _synced_control_id ).container.remove();
                 api.control.remove(_synced_control_id );
+                //Silently set
                 api( _synced_control_id ).silent_set( _synced_control_val, current_skope_instance.getSkopeSettingDirtyness( _synced_control_id ) );
+
+                //add the current skope to the control
                 $.extend( _synced_control_data, { czr_skope : skope_id });
+
+                //re-instantiate the control with the updated _control_data
                 api.control.add( _synced_control_id,  new _synced_control_constructor( _synced_control_id, { params : _synced_control_data, previewer : api.previewer }) );
           }
 
           _constructor = api.controlConstructor[control_type];
+
+          //remove the container and its control
           api.control( wpSetId ).container.remove();
           api.control.remove( wpSetId );
+          //Silently set
           api( wpSetId ).silent_set( _val, current_skope_instance.getSkopeSettingDirtyness( _shortSetId ) );
+
+          //add the current skope to the control
           $.extend( _control_data, { czr_skope : skope_id });
+
+          //re-instantiate the control with the updated _control_data
           api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
+
+          //Fire the sektion module if there's a synced sektion
           if ( ! _.isEmpty( _synced_short_id ) && ! _.isUndefined( _synced_short_id ) ) {
                 api.consoleLog('FIRE SEKTION MODULE?', _syncSektionModuleId, api.control( wpSetId ).czr_Module( _syncSektionModuleId ).isReady.state() );
                 api.control( wpSetId ).czr_Module( _syncSektionModuleId ).fireSektionModule();
@@ -2747,23 +4366,37 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * GET PROMISE FOR TYPE : czr_cropped_image
     *****************************************************************************/
+    //@return promise
     _getCzrCroppedImagePromise : function( wpSetId, _control_data ) {
           var _constructor = api.controlConstructor.czr_cropped_image, dfd = $.Deferred(),
               val = api.has(wpSetId) ? api(wpSetId)() : null;
+          //@make sure that the val is not null => won't be accepted in silent set
           val = null === val ? "" : val;
+
+          //re-add the control when the new image has been fetched asynchronously.
+          //if no image can be fetched, for example when in the active skope, the image is not set, then
+          //refresh the control without attachment data
           wp.media.attachment( val ).fetch().done( function() {
+                //remove the container and its control
                 api.control( wpSetId ).container.remove();
                 api.control.remove( wpSetId );
+                //update the data with the new img attributes
                 _control_data.attachment = this.attributes;
+                //instantiate the control with the updated _control_data
                 api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
                 dfd.resolve();
           } ).fail( function() {
+                //remove the container and its control
                 api.control( wpSetId ).container.remove();
                 api.control.remove( wpSetId );
+                //update the data : remove the attachment property
                 _control_data = _.omit( _control_data, 'attachment' );
+                //instantiate the control with the updated _control_data
                 api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
                 dfd.reject();
           });
+
+          //set the media fetched as promise to return;
           return dfd.promise();
     },
 
@@ -2772,6 +4405,7 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * HEADER IMAGE PROMISE
     *****************************************************************************/
+    //@return promise
     _getHeaderImagePromise : function( wpSetId, skope_id ) {
           var dfd = $.Deferred();
           if ( ! _.has(api.settings.controls, 'header_image') || 'header_image' != wpSetId  ) {
@@ -2780,17 +4414,23 @@ $.extend( CZRSkopeBaseMths, {
 
           var _header_constructor = api.controlConstructor.header,
               _header_control_data = $.extend( true, {}, api.settings.controls.header_image );
+
+          //@make sure that the header_image_data is not null => won't be accepted in silent set
           header_image_data = null === api.czr_skopeBase.getSkopeSettingVal( 'header_image_data', skope_id ) ? "" : api.czr_skopeBase.getSkopeSettingVal( 'header_image_data', skope_id );
 
           var attachment_id;
           var _reset_header_image_crtl = function( _updated_header_control_data ) {
                 _updated_header_control_data = _updated_header_control_data || _header_control_data;
+                //remove the container and its control
                 api.control( 'header_image' ).container.remove();
                 api.control.remove( 'header_image' );
+
+                //reset the HeaderTool objects, captured early
                 api.HeaderTool.UploadsList = api.czr_HeaderTool.UploadsList;
                 api.HeaderTool.DefaultsList = api.czr_HeaderTool.DefaultsList;
                 api.HeaderTool.CombinedList = api.czr_HeaderTool.CombinedList;
                 var _render_control = function() {
+                      //instantiate the control with the updated _header_control_data
                       api.control.add( 'header_image',  new _header_constructor( 'header_image', { params : _updated_header_control_data, previewer : api.previewer }) );
                 };
                 _render_control = _.debounce( _render_control, 800 );
@@ -2803,21 +4443,34 @@ $.extend( CZRSkopeBaseMths, {
                 dfd.resolve();
           } else {
                 attachment_id = header_image_data.attachment_id;
+
+                //re-add the control when the new image has been fetched asynchronously.
+                //if no image can be fetched, for example when in the active skope, the image is not set, then
+                //refresh the control without attachment data
                 wp.media.attachment( attachment_id ).fetch().done( function() {
+                      //update the data with the new img attributes
                       _header_control_data.attachment = this.attributes;
                       _reset_header_image_crtl( _header_control_data );
                       dfd.resolve();
                 } ).fail( function() {
+                      //update the data : remove the attachment property
                       _header_control_data = _.omit( _header_control_data, 'attachment' );
+
+                      //remove the container and its control
                       api.control( 'header_image' ).container.remove();
                       api.control.remove( 'header_image' );
+
+                      //reset the HeaderTool objects, captured early
                       api.HeaderTool.UploadsList = api.czr_HeaderTool.UploadsList;
                       api.HeaderTool.DefaultsList = api.czr_HeaderTool.DefaultsList;
                       api.HeaderTool.CombinedList = api.czr_HeaderTool.CombinedList;
+                      //instantiate the control with the updated _header_control_data
                       api.control.add( 'header_image',  new _header_constructor( 'header_image', { params : _header_control_data, previewer : api.previewer }) );
                       dfd.reject();
                 });
           }//else
+
+          //return the promise
           return dfd.promise();
     }
 });//$.extend
@@ -2832,6 +4485,13 @@ $.extend( CZRSkopeBaseMths, {
     /*****************************************************************************
     * SETUP CONTROL RESET ON SECTION EXPANSION + SKOPE SWITCH
     *****************************************************************************/
+    //fired on section expansion + skope switch, when silentlyUpdateSettings.done()
+    //@param obj :
+    //{
+    //  controls : [] of controls or controlId string
+    //  section_id : string
+    //}
+    //@return void()
     setupActiveSkopedControls : function( obj ) {
           var self = this, section_id, controls, setupParams, eligibleCtrls, dfd = $.Deferred();
               defaultSetupParams = {
@@ -2856,6 +4516,10 @@ $.extend( CZRSkopeBaseMths, {
           }
 
           controls = _.isString( controls ) ? [controls] : controls;
+
+
+          //1) Add CSS classes
+          //2) filter only eligible ctrlIds
           eligibleCtrls = _.filter( controls, function( ctrlId ) {
                 var setId = api.CZR_Helpers.getControlSettingId( ctrlId );
                 if ( setId && ! self.isSettingSkopeEligible( setId ) ) {
@@ -2865,24 +4529,41 @@ $.extend( CZRSkopeBaseMths, {
                       api.control( ctrlId ).container.addClass('is-wp-authorized-setting');
                 }
                 return setId && self.isSettingSkopeEligible( setId );
+                //return true;
+                //return self.isSettingSkopeEligible( ctrlId );
+                //return self.isSettingResetEligible( ctrlId );
           });
+
+          //Bail before printing anything if 'nav_menu[' section
           if ( 'nav_menu[' == section_id.substring( 0, 'nav_menu['.length ) )
             return dfd.resolve().promise();
+
+          //Render the reset icon ONLY for eligible controls
+          //Setup the state for all controls, even not eligible ones
           if ( ! _.isEmpty( controls ) ) {
                 api.czr_skopeReady.then( function() {
                       $.when( self.renderControlsSingleReset( eligibleCtrls ) ).done( function() {
+                            //api.consoleLog('RENDER CONTROL SINGLE RESET DONE', controls );
+                            //add observable Value(s) to the section control
                             _.each( controls, function( ctrlId ) {
                                   self.listenSkopedControl( ctrlId );
                             } );
                             dfd.resolve();
                       });
                 });
+                //paranoid line of code...
                 if ( 'rejected' == api.czr_skopeReady.state() )
                   dfd.resolve();
           }
+
+          //Prepare skope control notice for all controls, even the non eligible ones
           self.renderCtrlSkpNotIcon( controls );
           return dfd.promise();
     },//setupActiveSkopedControls
+
+
+
+    //@params ctrlId = string control id candidate to setup
     listenSkopedControl : function( ctrlId ) {
           var self = this;
 
@@ -2900,22 +4581,38 @@ $.extend( CZRSkopeBaseMths, {
                     isResetting : false
               },
               initial_states = {};
+
+          //Declare observable Values
+          // + Bind them
           if ( ! _.has( ctrl, 'czr_states' ) ) {
                 ctrl.czr_states = new api.Values();
                 _.each( defaults, function( _state_val, _state_name ) {
                       ctrl.czr_states.create( _state_name );
                       ctrl.czr_states( _state_name )( _state_val );
                 });
+                //Then listen to their changes
                 try { self.bindControlStates( ctrl ); } catch( er ) {
                       api.errorLog( 'bindControlStates : ' + er );
                 }
           }
+
+          //Set them
+          // initial_states = _.extend(
+          //       defaults,
+          //       {
+          //             hasDBVal : api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( ctrlId ),
+          //             isDirty : api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( ctrlId )
+          //       }
+          // );
           ctrl.czr_states( 'hasDBVal' )( api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( setId ) );
           ctrl.czr_states( 'isDirty' )( api.czr_skope( api.czr_activeSkopeId() ).getSkopeSettingDirtyness( setId ) );
+
+          //api.consoleLog( 'SETUP CONTROL VALUES ?', ctrlId, api.czr_skope( api.czr_activeSkopeId() ).hasSkopeSettingDBValues( ctrlId ) );
 
 
           if ( ! _.has( ctrl, 'userEventMap' ) ) {
                 ctrl.userEventMap = [
+                      //toggle reset dialog
                       {
                             trigger   : 'click keydown',
                             selector  : '.czr-setting-reset, .czr-cancel-button',
@@ -2923,15 +4620,18 @@ $.extend( CZRSkopeBaseMths, {
                             actions   : function() {
                                   if ( ! ctrl.czr_states('isDirty')() && ! ctrl.czr_states( 'hasDBVal' )() )
                                     return;
+                                  //close all other warnings expanded in the section
                                   _.each( _.without( api.CZR_Helpers.getSectionControlIds( ctrl.section() ), ctrlId ) , function( _id ) {
                                         if ( _.has( api.control(_id), 'czr_states') ) {
                                               api.control(_id).czr_states( 'resetVisible' )( false );
                                         }
                                   });
                                   ctrl.czr_states( 'resetVisible' )( ! ctrl.czr_states( 'resetVisible' )() );
+                                  //collapse the control notice expanded if resetting requested
                                   ctrl.czr_states( 'noticeVisible' )( ! ctrl.czr_states( 'resetVisible' )() );
                             }
                       },
+                      //skope reset : do reset
                       {
                             trigger   : 'click keydown',
                             selector  : '.czr-control-do-reset',
@@ -2940,6 +4640,7 @@ $.extend( CZRSkopeBaseMths, {
                                   self.doResetSetting( ctrlId );
                             }
                       },
+                      //skope switch
                       {
                             trigger   : 'click keydown',
                             selector  : '.czr-skope-switch',
@@ -2950,12 +4651,14 @@ $.extend( CZRSkopeBaseMths, {
                                     api.czr_activeSkopeId( _skopeIdToSwithTo );
                             }
                       },
+                      //Toggle Notice
                       {
                             trigger   : 'click keydown',
                             selector  : '.czr-toggle-notice',
                             name      : 'control_toggle_notice',
                             actions   : function( params ) {
                                   ctrl.czr_states( 'noticeVisible' )( ! ctrl.czr_states( 'noticeVisible' )() );
+                                  //collapse the control reset dialog expanded
                                   if ( ctrl.czr_states( 'noticeVisible' )() ) {
                                         ctrl.czr_states( 'resetVisible' )( false );
                                   }
@@ -2965,12 +4668,20 @@ $.extend( CZRSkopeBaseMths, {
                 api.CZR_Helpers.setupDOMListeners( ctrl.userEventMap , { dom_el : ctrl.container }, self );
           }
     },
+
+    //The ctrl.czr_states registered api.Values are :
+    //hasDBVal : false,
+    //isDirty : false,
+    //noticeVisible : false,
+    //resetVisible : false
     bindControlStates : function( ctrl ) {
           if ( ! api.control.has( ctrl.id ) ) {
                 throw new Error( 'in bindControlStates, the provided ctrl id is not registered in the api : ' + ctrl.id );
           }
           var self = this,
               setId = api.CZR_Helpers.getControlSettingId( ctrl.id );
+
+          //DB VALS
           ctrl.czr_states( 'hasDBVal' ).bind( function( bool ) {
                 ctrl.container.toggleClass( 'has-db-val', bool );
                 if ( bool ) {
@@ -2982,6 +4693,8 @@ $.extend( CZRSkopeBaseMths, {
                 }
                 ctrl.container.find('.czr-setting-reset').attr( 'title', _title );
           });
+
+          //API DIRTYNESS
           ctrl.czr_states( 'isDirty' ).bind( function( bool ) {
                 ctrl.container.toggleClass( 'is-dirty', bool );
                 var _title;
@@ -2994,6 +4707,8 @@ $.extend( CZRSkopeBaseMths, {
                 }
                 ctrl.container.find('.czr-setting-reset').attr( 'title', _title );
           });
+
+          //NOTICE VISIBILITY
           ctrl.czr_states( 'noticeVisible' ).bind( function( visible ) {
                 ctrl.container.toggleClass( 'czr-notice-visible', visible );
                 var $noticeContainer = ctrl.getNotificationsContainerElement();
@@ -3016,14 +4731,23 @@ $.extend( CZRSkopeBaseMths, {
                       }
                 }
           });
+
+          //RESET VISIBILITY
           ctrl.czr_states( 'resetVisible' ).bind( function( visible ) {
                 var section_id = ctrl.section() || api.czr_activeSectionId();
                 if ( visible ) {
+                      //self.renderControlResetWarningTmpl
+                      //returns an object : { container : $(el), is_authorized : is_authorized }
                       $.when( self.renderControlResetWarningTmpl( ctrl.id ) ).done( function( _params ) {
                             if ( _.isEmpty( _params ) )
                               return;
                             ctrl.czr_resetDialogContainer = _params.container;
                             _params.container.slideToggle('fast');
+                            //Close and remove automatically if the user attempted to reset a non authorized setting
+                            //The setting can not be reset if :
+                            //1) WP setting
+                            //2) global skope
+                            //3) setting not dirty => db reset
                             if ( ! _params.is_authorized ) {
                                   _.delay( function() {
                                         $.when( ctrl.czr_resetDialogContainer.slideToggle('fast') ).done( function() {
@@ -3049,10 +4773,18 @@ $.extend( CZRSkopeBaseMths, {
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
+    //fired on
+    //1) active section expansion
+    //2) and on skope switch
+    //render each control reset icons with a delay
+    //=> because some control like media upload are re-rendered on section expansion
+    //@params controls = array of skope eligible control ids
     renderControlsSingleReset : function( controls ) {
           var self = this, dfd = $.Deferred();
+          //create the control ids list if not set
           if ( _.isUndefined( controls ) || _.isEmpty( controls ) ) {
                 controls = api.CZR_Helpers.getSectionControlIds( api.czr_activeSectionId() );
+                //filter only eligible controlIds
                 controls = _.filter( controls, function( _id ) {
                       var setId = api.CZR_Helpers.getControlSettingId( _id );
                       return setId && self.isSettingSkopeEligible( setId );
@@ -3065,6 +4797,7 @@ $.extend( CZRSkopeBaseMths, {
                           dfd.resolve();
                           return;
                     }
+                    //api.consoleLog('IN RENDER RESET ICONS', ctrlIds );
                     _.each( ctrlIds, function( _id ) {
                           api.control.when( _id, function() {
                                 var ctrl  = api.control( _id ),
@@ -3092,10 +4825,17 @@ $.extend( CZRSkopeBaseMths, {
                           });//when()
                     });//_each
               };
+
+          //debounce because some control like media upload are re-rendered on section expansion
           render_reset_icons = _.debounce( render_reset_icons , 200 );
           render_reset_icons( controlIds );
           return dfd.promise();
     },
+
+
+
+    //Fired in self.bindControlStates()
+    //@uses The ctrl.czr_states('isDirty') value
     renderControlResetWarningTmpl : function( ctrlId ) {
           if ( ! api.control.has( ctrlId ) )
             return {};
@@ -3107,6 +4847,7 @@ $.extend( CZRSkopeBaseMths, {
               warning_message,
               success_message,
               isWPSetting = ( function() {
+                    //exclude the WP built-in settings like blogdescription, show_on_front, etc
                     if ( _.contains( serverControlParams.wpBuiltinSettings, api.CZR_Helpers.getOptionName( setId ) ) )
                       return true;
                     if ( ! _.contains( serverControlParams.themeSettingList, api.CZR_Helpers.getOptionName( setId ) ) )
@@ -3132,6 +4873,11 @@ $.extend( CZRSkopeBaseMths, {
                       success_message = serverControlParams.i18n.skope['The option has been reset'];
                 }
           }
+
+          //The setting can not be reset if :
+          //1) WP setting
+          //2) global skope
+          //3) setting not dirty => db reset
           var is_authorized = ! ( isWPSetting && 'global' == api.czr_skope( api.czr_activeSkopeId() )().skope && ! ctrl.czr_states( 'isDirty' )() ),
               _tmpl_data = {
                     warning_message : warning_message + '.',
@@ -3149,6 +4895,12 @@ $.extend( CZRSkopeBaseMths, {
 
           return { container : $( '.czr-ctrl-reset-warning', ctrl.container ), is_authorized : is_authorized };
     },
+
+
+    //Fired on user click
+    //Defined in the ctrl user event map
+    //@uses The ctrl.czr_states values
+    //Will fire a different callback, whether the setting is dirty or has db val
     doResetSetting : function( ctrlId ) {
           var self = this,
               setId = api.CZR_Helpers.getControlSettingId( ctrlId ),
@@ -3167,6 +4919,8 @@ $.extend( CZRSkopeBaseMths, {
                                     .fail( function() { api.consoleLog( 'Silent update failed after resetting control : ' + ctrlId ); } )
                                     .done( function() {
                                           api.control.when( ctrlId, function() {
+                                                //the control instance might have changed if it has been re-rendered.
+                                                //=> make sure we grab the new one
                                                 var ctrl = api.control( ctrlId );
                                                 $.when( $('.czr-crtl-reset-dialog', ctrl.container ).fadeOut('300') ).done( function() {
                                                       $.when( $('.czr-reset-success', ctrl.container ).fadeIn('300') ).done( function( $_el ) {
@@ -3185,9 +4939,21 @@ $.extend( CZRSkopeBaseMths, {
                                           });
                                     });//done()
                     };//_silentUpdate
+
+                    //Specific case for global :
+                    //After a published value reset (not a dirty reset),
+                    //we need to re-synchronize the api.settings.settings with the default theme options values
                     self[reset_method](ctrlId)
                           .done( function() {
                                 api.consoleLog('REFRESH AFTER A SETTING RESET');
+                                //api.previewer.refresh() method is resolved with an object looking like :
+                                //{
+                                //    previewer : api.previewer,
+                                //    skopesServerData : {
+                                //        czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+                                //        isChangesetDirty : boolean
+                                //    },
+                                // }
                                 api.previewer.refresh()
                                       .fail( function( refresh_data ) {
                                             api.errorLog('Setting reset refresh failed.', refresh_data );
@@ -3219,6 +4985,8 @@ $.extend( CZRSkopeBaseMths, {
           ctrl.czr_states( 'isResetting' )( true );
           ctrl.container.addClass('czr-resetting-control');
 
+          //api.consoleLog('DO RESET SETTING', ctrlId, ctrl.czr_states( 'isDirty' )() );
+
           api.czr_skopeReset[ ctrl.czr_states( 'isDirty' )() ? 'resetChangeset' : 'resetPublished' ](
                       { skope_id : skope_id, setId : setId, is_setting : true } )
                       .done( function( r ) {
@@ -3238,6 +5006,8 @@ $.extend( CZRSkopeBaseMths, {
                       });
 
     },
+
+    //updates the current skope dirties and the changeset dirties
     _resetControlDirtyness : function( ctrlId ) {
           var setId           = api.CZR_Helpers.getControlSettingId( ctrlId ),
               skope_instance  = api.czr_skope( api.czr_activeSkopeId() ),
@@ -3254,6 +5024,11 @@ $.extend( CZRSkopeBaseMths, {
 
           return dfd.resolve().promise();
     },
+
+
+    //@uses The ctrl.czr_states values
+    //updates the current skope dbValues
+    //update the ctrl state
     _resetControlAPIVal : function( ctrlId ) {
           var setId = api.CZR_Helpers.getControlSettingId( ctrlId ),
               current_skope_db  = api.czr_skope( api.czr_activeSkopeId() ).dbValues(),
@@ -3262,6 +5037,7 @@ $.extend( CZRSkopeBaseMths, {
 
           if ( _.has( api.control( ctrlId ), 'czr_states') ) {
                 api.control(ctrlId).czr_states( 'hasDBVal' )( false );
+                //update the skope db property and say it
                 api.czr_skope( api.czr_activeSkopeId() ).dbValues( _.omit( new_skope_db, setId ) );
           }
           return dfd.resolve().promise();
@@ -3275,6 +5051,9 @@ $.extend( CZRSkopeBaseMths, {
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
+
+    //fired when a section is expanded
+    //fired when a setting value is changed
     renderCtrlSkpNotIcon : function( controlIdCandidates ) {
           var self = this,
               controlIds = _.isArray(controlIdCandidates) ? controlIdCandidates : [controlIdCandidates];
@@ -3283,6 +5062,7 @@ $.extend( CZRSkopeBaseMths, {
                 api.control.when( _id, function() {
                       var ctrl = api.control( _id );
                       ctrl.deferred.embedded.then( function() {
+                            //RENDER TOGGLE ICON
                             if( $('.czr-toggle-notice', ctrl.container ).length )
                               return;
 
@@ -3301,6 +5081,9 @@ $.extend( CZRSkopeBaseMths, {
 
           });
     },
+
+
+    //fired when a control notice is expanded
     updateCtrlSkpNot : function( controlIdCandidates, visible ) {
            var self = this,
               controlIds = _.isArray(controlIdCandidates) ? controlIdCandidates : [controlIdCandidates],
@@ -3316,13 +5099,20 @@ $.extend( CZRSkopeBaseMths, {
                         _isCustomized,
                         _hasDBVal,
                         _ctxTitle;
+
+                    //////////////////////
+                    /// CASE 0 : not skoped
                     if ( ! _isSkoped( setId ) ) {
                           _html.push( [
                                 serverControlParams.i18n.skope['This option is always customized sitewide and cannot be reset.']
                           ].join(' ') );
                           return _html.join(' | ');
                     }
+
+                    //////////////////////
+                    /// CASE 1
                     if ( _inheritedFromSkopeId == _overridedBySkopeId && api.czr_skope.has( _inheritedFromSkopeId ) && _currentSkopeId == _inheritedFromSkopeId ) {
+                          //is the setId customized in the current skope ?
                           _isCustomized = ! _.isUndefined( api.czr_skope( _currentSkopeId ).dirtyValues()[setId] );
                           _hasDBVal     = ! _.isUndefined( api.czr_skope( _currentSkopeId ).dbValues()[setId] );
 
@@ -3359,7 +5149,12 @@ $.extend( CZRSkopeBaseMths, {
                                 }
                           }
                     }
+
+
+                    /////////////////////
+                    /// CASE 2 : Skope is different than global, there is an inheritance
                     if ( _inheritedFromSkopeId !== _currentSkopeId && api.czr_skope.has( _inheritedFromSkopeId ) ) {
+                          //is the setId customized in the current skope ?
                           _isCustomized = ! _.isUndefined( api.czr_skope( _inheritedFromSkopeId ).dirtyValues()[setId] );
                           _hasDBVal     = ! _.isUndefined( api.czr_skope( _inheritedFromSkopeId ).dbValues()[setId] );
 
@@ -3386,7 +5181,13 @@ $.extend( CZRSkopeBaseMths, {
                                 );
                           }
                     }
+
+
+                    /////////////////////
+                    /// CASE 3
                     if ( _overridedBySkopeId !== _currentSkopeId && api.czr_skope.has( _overridedBySkopeId ) ) {
+                          //is the setId customized or saved in the winner skope ?
+                          //_hasDBVal = ! _.isUndefined( api.czr_skope( _overridedBySkopeId ).dbValues()[setId] );
                           _isCustomized = ! _.isUndefined( api.czr_skope( _overridedBySkopeId ).dirtyValues()[setId] );
 
                           _ctxTitle = api.czr_skope( _localSkopeId )().ctx_title;
@@ -3412,6 +5213,8 @@ $.extend( CZRSkopeBaseMths, {
                       var ctrl = api.control( _id ),
                           setId = api.CZR_Helpers.getControlSettingId( _id ),//get the relevant setting_id for this control
                           _visible = _.isUndefined( visible ) ? ( ctrl.czr_states && ctrl.czr_states( 'noticeVisible' )() ) : visible;
+
+                      //Bail here if the ctrl notice is not set to visible
                       if ( ! _visible  )
                         return;
 
@@ -3441,6 +5244,13 @@ $.extend( CZRSkopeBaseMths, {
                 });
           });
     },//updateCtrlSkpNot
+
+    // Utility
+    // @return bool
+    // @param ctrlId = string
+    // When do we display the ctrl notice ?
+    // 1) When the current skope is not global
+    // 2) when the current skope is global AND is overriden by a local or group skope
     isCtrlNoticeVisible : function( ctrlId ) {
           if ( ! api.control.has( ctrlId ) )
             return false;
@@ -3460,6 +5270,9 @@ $.extend( CZRSkopeBaseMths, {
           }
           return false;
     },
+
+
+    //@return void()
     removeCtrlSkpNot : function( controlIdCandidates ) {
           var self = this,
               controlIds = _.isArray(controlIdCandidates) ? controlIdCandidates : [controlIdCandidates];
@@ -3501,6 +5314,8 @@ $.extend( CZRSkopeSaveMths, {
                       url: api.settings.url.parent,
                       channel: 'loader',
                 });//this has to be reinstantiated because not accessible from core
+
+            //reset some properties on each save call
             self.globalSaveDeferred = $.Deferred();
             self.previewer          = api.previewer;
             self.globalSkopeId      = api.czr_skopeBase.getGlobalSkopeId();
@@ -3513,7 +5328,10 @@ $.extend( CZRSkopeSaveMths, {
             if ( api.state( 'saving' )() ) {
                   self.globalSaveDeferred.reject( 'already_saving' );
             }
+
+            //api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
             var alwaysAfterSubmission = function( response, state ) {
+                      //WP default treatments
                       api.state( 'saving' )( false );
                       api.state( 'processing' ).set( 0 );
                       self.saveBtn.prop( 'disabled', false );
@@ -3526,10 +5344,14 @@ $.extend( CZRSkopeSaveMths, {
                       if ( 'pending' == state ) {
                             api.czr_serverNotification( { message: response, status : 'error' } );
                       } else {
+                            //api.czr_serverNotification( { message: 'Successfully published !' } );
                       }
                 },
+                //params : { saveGlobal : true, saveSkopes : true }
                 resolveSave = function( params ) {
                       var response, resolveSaveDfd = $.Deferred();
+                      // set saving state.
+                      // => will be set to false when all saved promises resolved
                       api.state( 'saving' )( true );
                       self.fireAllSubmission( params )
                             .always( function( _response_ ) {
@@ -3543,8 +5365,17 @@ $.extend( CZRSkopeSaveMths, {
                                   api.trigger( 'error', response );
                                   resolveSaveDfd.resolve( _response_.hasNewMenu );
                             })
+                            //_response_ = { response : response,  hasNewMenu : boolean }
                             .done( function( _response_ ) {
                                   response = _response_.response;
+                                  //api.previewer.refresh() method is resolved with an object looking like :
+                                  //{
+                                  //    previewer : api.previewer,
+                                  //    skopesServerData : {
+                                  //        czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+                                  //        isChangesetDirty : boolean
+                                  //    },
+                                  // }
                                   api.previewer.refresh( { waitSkopeSynced : true } )
                                         .fail( function( refresh_data ) {
                                               self.globalSaveDeferred.reject( self.previewer, [ response ] );
@@ -3552,11 +5383,17 @@ $.extend( CZRSkopeSaveMths, {
                                         })
                                         .done( function( refresh_data ) {
                                               api.previewer.send( 'saved', response );
+
+                                              //response can be undefined, always set them as an object with 'publish' changet_setstatus by default
+                                              //because this will be used in various api events ( 'saved', ... ) that does not accept an undefined val.
                                               response = _.extend( { changeset_status : 'publish' },  response || {} );
+
+                                              //since 4.7 : if changeset is on, let's add stuff to the query object
                                               if ( api.czr_isChangeSetOn() ) {
                                                     var latestRevision = api._latestRevision;
                                                     api.state( 'changesetStatus' ).set( response.changeset_status );
                                                     if ( 'publish' === response.changeset_status ) {
+                                                          // Mark all published as clean if they haven't been modified during the request.
                                                           api.each( function( setting ) {
                                                                 /*
                                                                  * Note that the setting revision will be undefined in the case of setting
@@ -3574,17 +5411,26 @@ $.extend( CZRSkopeSaveMths, {
                                                           parent.send( 'changeset-uuid', api.settings.changeset.uuid );
                                                     }
                                               } else {
+                                                    // Clear api setting dirty states
                                                     api.each( function ( value ) {
                                                           value._dirty = false;
                                                     } );
                                               }
+
+                                              //let's use the data sent back by the server on refresh
                                               refresh_data = _.extend( {
                                                           previewer : refresh_data.previewer || self.previewer,
                                                           skopesServerData : refresh_data.skopesServerData || {},
                                                     },
                                                     refresh_data
                                               );
+
+                                              //POST PROCESS AFTER SAVE
+                                              //Reset dirtyness
+                                              //check if synchronized with server
                                               self.reactWhenSaveDone( refresh_data.skopesServerData );
+
+                                              //Resolve the general globalSaveDeferred
                                               self.globalSaveDeferred.resolveWith( self.previewer, [ response ] );
 
                                               api.trigger( 'saved', response || {} );
@@ -3616,6 +5462,7 @@ $.extend( CZRSkopeSaveMths, {
 var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSkopeSaveMths, {
+      //@return a promise()
       getSubmitPromise : function( skope_id ) {
             var self = this,
                 dfd = $.Deferred(),
@@ -3627,14 +5474,23 @@ $.extend( CZRSkopeSaveMths, {
             }
 
             var skopeObjectToSubmit = api.czr_skope( skope_id )();
+
+            // Resolve here if not dirty AND not global skope
+            // always submit the global skope, even if not dirty => required to properly clean the changeset post server side
             if ( ! api.czr_skope( skope_id ).dirtyness() && skope_id !== self.globalSkopeId ) {
                 return dfd.resolve().promise();
             }
+
+            //////////////////////////////////SUBMIT THE ELIGIBLE SETTINGS OF EACH SKOPE ////////////////////////////
+            //Ensure all revised settings (changes pending save) are also included, but not if marked for deletion in changes.
             _.each( api.czr_skopeBase.getSkopeDirties( skope_id ) , function( dirtyValue, settingId ) {
                   submittedChanges[ settingId ] = _.extend(
                         { value: dirtyValue }
                   );
             } );
+
+            //a submit call returns a promise resolved when the db ajax query is done().
+            //api.consoleLog('submit request for skope : id, object, dirties : ', skope_id, skopeObjectToSubmit , api.czr_skopeBase.getSkopeDirties( skope_id ) );
 
             this.submit(
                   {
@@ -3643,6 +5499,7 @@ $.extend( CZRSkopeSaveMths, {
                         dyn_type : skopeObjectToSubmit.dyn_type
                   })
                   .done( function(_resp) {
+                        //api.consoleLog('GETSUBMIT DONE PROMISE FOR SKOPE : ', skope_id, _resp );
                         dfd.resolve( _resp );
                   } )
                   .fail( function( _resp ) {
@@ -3704,11 +5561,17 @@ $.extend( CZRSkopeSaveMths, {
                   invalidControls = api.findControlsForSettings( invalidSettings );
                   if ( ! _.isEmpty( invalidControls ) ) {
                         _.values( invalidControls )[0][0].focus();
+                        //api.unbind( 'change', captureSettingModifiedDuringSave );
                         return submit_dfd.rejectWith( self.previewer, [
                               { setting_invalidities: settingInvalidities }
                         ] ).promise();
                   }
             }
+
+
+
+            //BUILD THE QUERY OBJECT
+            //the skope save query takes parameters
             var query_params = {
                   skope_id : params.skope_id,
                   action : 'save',
@@ -3716,6 +5579,8 @@ $.extend( CZRSkopeSaveMths, {
                   dyn_type : params.dyn_type,
                   opt_name : params.opt_name
             };
+
+            //since 4.7 : if changeset is on, let's add stuff to the query params
             if ( api.czr_isChangeSetOn() ) {
                   $.extend( query_params, { excludeCustomizedSaved: false } );
             }
@@ -3729,6 +5594,8 @@ $.extend( CZRSkopeSaveMths, {
                   customize_changeset_status: self.changesetStatus,
                   customize_changeset_data : JSON.stringify( params.customize_changeset_data )
             } );
+
+            //since 4.7 : if changeset is on, let's add stuff to the query object
             if ( api.czr_isChangeSetOn() ) {
                   if ( self.saveArgs && self.saveArgs.date ) {
                     query.customize_changeset_date = self.saveArgs.date;
@@ -3737,6 +5604,10 @@ $.extend( CZRSkopeSaveMths, {
                     query.customize_changeset_title = self.saveArgs.title;
                   }
             }
+
+
+
+            //api.consoleLog( 'in submit : ', params.skope_id, query, self.previewer.channel() );
 
             /*
              * Note that the dirty customized values will have already been set in the
@@ -3753,15 +5624,24 @@ $.extend( CZRSkopeSaveMths, {
                   'global' !== query.skope ? 'customize_skope_changeset_save' : 'customize_save',
                   query
             );
+
+            // Disable save button during the save request.
             self.saveBtn.prop( 'disabled', true );
 
             api.trigger( 'save', request );
+
+            // request.always( function () {
+            //       api.state( 'saving' ).set( false );
+            //       self.saveBtn.prop( 'disabled', false );
+            //       api.unbind( 'change', captureSettingModifiedDuringSave );
+            // } );
 
             request.fail( function ( response ) {
                   api.consoleLog('SUBMIT REQUEST FAIL', params.skope_id, response );
                   if ( '0' === response ) {
                         response = 'not_logged_in';
                   } else if ( '-1' === response ) {
+                        // Back-compat in case any other check_ajax_referer() call is dying
                         response = 'invalid_nonce';
                   }
 
@@ -3779,8 +5659,11 @@ $.extend( CZRSkopeSaveMths, {
             } );
 
             request.done( function( response ) {
+                  //api.consoleLog('SUBMIT REQUEST DONE ?', params.skope_id, response );
                   submit_dfd.resolve( response );
             } );
+
+            //return the promise
             return submit_dfd.promise();
       }//submit()
 });//$.extend
@@ -3788,6 +5671,12 @@ $.extend( CZRSkopeSaveMths, {
 var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSkopeSaveMths, {
+      //PROCESS SUBMISSIONS
+      //ALWAYS FIRE THE GLOBAL SKOPE WHEN ALL OTHER SKOPES HAVE BEEN DONE.
+      //=> BECAUSE WHEN SAVING THE GLOBAL SKOPE, THE CHANGESET POST STATUS WILL BE CHANGED TO 'publish' AND THEREFORE NOT ACCESSIBLE ANYMORE
+      //1) first all skopes but global, recursively
+      //2) then global => will publish the changeset. Server side, the changeset post will be trashed and the next uuid will be returned to the API
+      //@param params : { saveGlobal : true, saveSkopes : true }
       fireAllSubmission : function( params ) {
             var self = this,
                 dfd = $.Deferred(),
@@ -3801,6 +5690,8 @@ $.extend( CZRSkopeSaveMths, {
                     saveSkopes : true
                 };
             params = $.extend( _defaultParams, params );
+
+            // build the skope ids array to submit recursively
             _.each( api.czr_skopeCollection(), function( _skp_ ) {
                   if ( 'global' !== _skp_.skope ) {
                         skopesToSave.push( _skp_.id );
@@ -3825,12 +5716,17 @@ $.extend( CZRSkopeSaveMths, {
                   }
                   return true;
             };
+
+
+            // recursive pushes for not global skopes
             var recursiveCall = function( _index ) {
                   _index = _index || 0;
                   if ( _.isUndefined( skopesToSave[_index] ) ) {
                         api.consoleLog( 'Undefined Skope in Save recursive call ', _index, _skopesToUpdate, _skopesToUpdate[_index] );
                         _recursiveCallDeferred.resolve( _responses_ );
                   }
+
+                  //_promises.push( self.getSubmitPromise( skopesToSave[ _index ] ) );
                   self.getSubmitPromise( skopesToSave[ _index ] )
                         .always( function() { _promises.push( _index ); } )
                         .fail( function( response ) {
@@ -3840,7 +5736,10 @@ $.extend( CZRSkopeSaveMths, {
                                 recursiveCall( _index + 1 );
                         } )
                         .done( function( response ) {
+                              //api.consoleLog('RECURSIVE PUSH DONE FOR SKOPE : ', skopesToSave[_index] );
                               response = response || {};
+
+                              //WE NEED TO BUILD A PROPER RESPONSE HERE
                               if ( _.isEmpty( _responses_ ) ) {
                                     _responses_ = response || {};
                               } else {
@@ -3852,6 +5751,9 @@ $.extend( CZRSkopeSaveMths, {
 
                   return _recursiveCallDeferred.promise();
             };
+
+
+            //What do we have in the global dirties ?
             var _globalHasNewMenu = false;
             _.each( api.czr_skope('global__all_').dirtyValues(), function( _setDirtVal , _setId ) {
                   if ( 'nav_menu[' != _setId.substring( 0, 'nav_menu['.length ) )
@@ -3867,6 +5769,7 @@ $.extend( CZRSkopeSaveMths, {
                               dfd.reject( r );
                         })
                         .done( function( r ) {
+                              //WE NEED TO BUILD A PROPER RESPONSE HERE
                               if ( _.isEmpty( _responses_ ) ) {
                                     _responses_ = r || {};
                               } else {
@@ -3881,6 +5784,7 @@ $.extend( CZRSkopeSaveMths, {
                   _submitGlobal();
             } else {
                   if ( params.saveGlobal && params.saveSkopes ) {
+                        // Unleash hell
                         recursiveCall()
                               .fail( function( r ) {
                                     api.consoleLog('RECURSIVE SAVE CALL FAIL', r );
@@ -3898,6 +5802,7 @@ $.extend( CZRSkopeSaveMths, {
                                     dfd.reject( r );
                               })
                               .done( function( r ) {
+                                   //WE NEED TO BUILD A PROPER RESPONSE HERE
                                     if ( _.isEmpty( _responses_ ) ) {
                                           _responses_ = r || {};
                                     } else {
@@ -3912,6 +5817,9 @@ $.extend( CZRSkopeSaveMths, {
 
             return dfd.promise();
       },//fireAllSubmissions
+
+
+      //Fired when the skopes metas have been published
       cleanSkopeChangesetMetas : function() {
             var self = this,
                 dfd = $.Deferred();
@@ -3928,9 +5836,101 @@ $.extend( CZRSkopeSaveMths, {
       }
 });//$.extend
 })( wp.customize , jQuery, _ );
+
+
+
+
+
+
+
+
+///////////////////////////////////ALWAYS SUBMIT NOT YET REGISTERED WIDGETS TO GLOBAL OPTIONS
+// if ( ! api.czr_skopeBase.isExcludedSidebarsWidgets() ) {
+//       _.each( skopeObjectToSubmit, function( _skop ) {
+//             if ( _skop.id == globalSkopeId )
+//               return;
+//             var widget_dirties = {};
+//             var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
+
+//             //loop on each skop dirties and check if there's a new widget not yet registered globally
+//             //if a match is found, add it to the widget_dirties, if not already added, and add it to the promises submission
+//             _.each( the_dirties, function( _val, _setId ) {
+//                   //must be a widget setting and not yet registered globally
+//                   if ( 'widget_' == _setId.substring(0, 7) && ! api.czr_skopeBase.isWidgetRegisteredGlobally( _setId ) ) {
+//                         if ( ! _.has( widget_dirties, _setId ) ) {
+//                               widget_dirties[ _setId ] = _val;
+//                         }
+//                   }
+//             });
+
+
+//             if ( ! _.isEmpty(widget_dirties) ) {
+//                   //each promise is a submit ajax query
+//                   promises.push( submit( {
+//                         skope_id : globalSkopeId,
+//                         the_dirties : widget_dirties,
+//                         dyn_type : 'wp_default_type'
+//                     } )
+//                   );
+//             }
+//       });
+// }
+
+
+
+
+
+
+
+//ARE THERE SKOPE EXCLUDED DIRTIES ?
+  //var _skopeExcludedDirties = api.czr_skopeBase.getSkopeExcludedDirties();
+
+  //////////////////////////////////SUBMIT EXCLUDED SETTINGS ////////////////////////////
+  ///@to do : do we need to check if we are not already in the global skope ?
+  // if ( ! _.isEmpty( _skopeExcludedDirties ) ) {
+  //       //each promise is a submit ajax query
+  //       promises.push( submit( {
+  //             skope_id : globalSkopeId,
+  //             the_dirties : _skopeExcludedDirties,
+  //             dyn_type : 'wp_default_type'
+  //           })
+  //       );
+  // }
+
+
+
+
+
+  ///////////////////////////////////ALWAYS SUBMIT GLOBAL SKOPE ELIGIBLE SETTINGS TO SPECIFIC GLOBAL OPTION
+  // _.each( skopeObjectToSubmit, function( _skop ) {
+  //       if ( _skop.skope != 'global' )
+  //             return;
+
+  //       if ( _.isUndefined( serverControlParams.globalSkopeOptName) ) {
+  //             throw new Error('serverControlParams.globalSkopeOptName MUST BE DEFINED TO SAVE THE GLOBAL SKOPE.');
+  //       }
+  //       //each promise is a submit ajax query
+  //       promises.push( submit( {
+  //             skope_id : globalSkopeId,
+  //             the_dirties : api.czr_skopeBase.getSkopeDirties( _skop.id ),
+  //             dyn_type : 'global_option',
+  //             opt_name : serverControlParams.globalSkopeOptName
+  //         } )
+  //       );
+  // });
 var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSkopeSaveMths, {
+      //Fired when all submissions are done and the preview has been refreshed
+      //@param {} skopesServerData looks like :
+      //{
+      //    czr_skopes : [
+      //        0 : { ... skope_model_0 ... },
+      //        1 : { ... skope_model_1 ... },
+      //        2 : { ... skope_model_2 ... }
+      //    ],
+      //    isChangesetDirty : boolean
+      //}
       reactWhenSaveDone : function( skopesServerData ) {
             var saved_dirties = {};
             skopesServerData = _.extend(
@@ -3940,11 +5940,21 @@ $.extend( CZRSkopeSaveMths, {
                 },
                 skopesServerData
             );
+
+            //STORE THE SAVED DIRTIES AND RESET THEM FOR EACH SKOPE
+            // store the saved dirties with their opt name ! important because we will need to match the data sent by the server, before the skope id is generated
+            // (will be used as param to update the db val property of each saved skope)
+            // AND THEN reset them for each skope
             _.each( api.czr_skopeCollection(), function( _skp_ ) {
                   saved_dirties[ _skp_.opt_name ] = api.czr_skopeBase.getSkopeDirties( _skp_.id );
                   api.czr_skope( _skp_.id ).dirtyValues( {} );
                   api.czr_skope( _skp_.id ).changesetValues( {} );
             });
+
+
+            //ARE THE SAVED DIRTIES AND THE UPDATED DB VALUES SENT BY SERVER SYNCHRONIZED ?
+            // => let's check if the server sends the same saved values
+            // => reset the czr_saveDirties to default.
             var _notSyncedSettings    = [],
                 _sentSkopeCollection  = skopesServerData.czr_skopes;
 
@@ -3952,8 +5962,10 @@ $.extend( CZRSkopeSaveMths, {
 
             _.each( saved_dirties, function( skp_data, _saved_opt_name ) {
                   _.each( skp_data, function( _val, _setId ) {
+                        //first, let's check if the sent skopes have not changed ( typically, if a user has opened another page in the preview )
                         if ( _.isUndefined( _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ) ) )
                           return;
+                        //exclude ExcludedWPBuiltinSetting and not eligible theme settings from this check
                         if ( ! api.czr_skopeBase.isSettingSkopeEligible( _setId ) )
                           return;
 
@@ -3962,6 +5974,9 @@ $.extend( CZRSkopeSaveMths, {
                             wpSetId               = api.CZR_Helpers.build_setId( _setId ),
                             shortSetId            = api.CZR_Helpers.getOptionName( _setId ),
                             sent_set_val          = sent_skope_db_values[wpSetId];
+
+                        //for the global skope, the server won't send the settings for which the value has been reset to default
+                        //skip this case too
                         if ( _.isUndefined( sent_set_val ) && 'global' == sent_skope_level && _val === serverControlParams.defaultOptionsValues[shortSetId] )
                           return;
 
@@ -3976,8 +5991,15 @@ $.extend( CZRSkopeSaveMths, {
             } else {
                   api.consoleLog('ALL RIGHT, SERVER AND API ARE SYNCHRONIZED AFTER SAVE' );
             }
+
+            //SYNCHRONIZE THE API.SETTINGS.SETTINGS WITH THE SAVED VALUE FOR GLOBAL SKOPE
+            //finally make sure the api.settings.settings values are always synchronized with the global skope instance
             api.czr_skopeBase.maybeSynchronizeGlobalSkope();
+
+            //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
             api.czr_skopeBase.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
+
+            //MAKE SURE TO COLLAPSE THE CONTROL NOTICES AFTER SAVED IF CURRENT SKOPE IS GLOBAL
             var _setupSectionCtrlNotices = function() {
                   var sectionCtrls = api.CZR_Helpers.getSectionControlIds( api.czr_activeSectionId() );
                   _.each( sectionCtrls, function( ctrlId ) {
@@ -3989,6 +6011,7 @@ $.extend( CZRSkopeSaveMths, {
                         ctrl.czr_states( 'noticeVisible' )( api.czr_skopeBase.isCtrlNoticeVisible( ctrlId ) );
                   });
             };
+            //_.delay( _setupSectionCtrlNotices, 500 );
       }
 });//$.extend
 })( wp.customize , jQuery, _ );
@@ -4003,6 +6026,13 @@ $.extend( CZRSkopeResetMths, {
                   $( document.body ).toggleClass( 'czr-resetting', false !== state );
             });
       },
+
+      //args : {
+      //  is_setting : false,
+      //  is_skope : false,
+      //  skope_id : '',
+      //  setId : ''
+      //}
       resetChangeset : function( args ) {
             var dfd = $.Deferred(),
                 self = this,
@@ -4026,11 +6056,15 @@ $.extend( CZRSkopeResetMths, {
 
             if( ! api.czr_isChangeSetOn() )
               return dfd.resolve().promise();
+
+            // => will be set to false always after asynchronous request
+            //skope dependant submit()
             submit_reset = function( skope_id, setId ) {
                   if ( _.isUndefined( skope_id ) ) {
                       throw new Error( 'RESET: MISSING skope_id');
                   }
                   api.state( 'czr-resetting' )( true );
+                  //the skope reset query takes parameters
                   query_params = {
                         skope_id : skope_id,
                         action : 'reset'
@@ -4039,6 +6073,10 @@ $.extend( CZRSkopeResetMths, {
                         self.previewer.query( query_params ),
                         { nonce:  self.previewer.nonce.save }
                   );
+
+                  //Several cases here :
+                  //1) single setting reset
+                  //2) entire skope reset
                   if ( args.is_setting ) {
                         $.extend( query , { setting_id : setId } );
                         requestAjaxAction = 'czr_changeset_setting_reset';
@@ -4056,6 +6094,7 @@ $.extend( CZRSkopeResetMths, {
                               if ( '0' === response ) {
                                   response = 'not_logged_in';
                               } else if ( '-1' === response ) {
+                                // Back-compat in case any other check_ajax_referer() call is dying
                                   response = 'invalid_nonce';
                               }
 
@@ -4094,6 +6133,17 @@ $.extend( CZRSkopeResetMths, {
 
             return dfd.promise();
       },
+
+
+
+
+
+      //args : {
+      //  is_setting : false,
+      //  is_skope : false,
+      //  skope_id : '',
+      //  setId : ''
+      //}
       resetPublished : function( args ) {
             var dfd = $.Deferred(),
                 self = this,
@@ -4114,11 +6164,14 @@ $.extend( CZRSkopeResetMths, {
             args = _.extend( defaults, args );
             var skope_id = args.skope_id,
                 setId = args.setId;
+
+            //skope dependant submit()
             submit_reset = function( skope_id, setId ) {
                   if ( _.isUndefined( skope_id ) ) {
                       throw new Error( 'RESET: MISSING skope_id');
                   }
                   api.state( 'czr-resetting' )( true );
+                  //the skope reset query takes parameters
                   query_params = {
                         skope_id : skope_id,
                         action : 'reset'
@@ -4127,6 +6180,10 @@ $.extend( CZRSkopeResetMths, {
                         self.previewer.query( query_params ),
                         { nonce:  self.previewer.nonce.save }
                   );
+
+                  //Several cases here :
+                  //1) single setting reset
+                  //2) entire skope reset
                   if ( args.is_setting ) {
                       $.extend( query , { setting_id : setId } );
                       requestAjaxAction = 'czr_published_setting_reset';
@@ -4146,6 +6203,7 @@ $.extend( CZRSkopeResetMths, {
                               if ( '0' === response ) {
                                   response = 'not_logged_in';
                               } else if ( '-1' === response ) {
+                                // Back-compat in case any other check_ajax_referer() call is dying
                                   response = 'invalid_nonce';
                               }
 
@@ -4191,6 +6249,7 @@ $.extend( CZRSkopeResetMths, {
 var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSkopeBaseMths, {
+      //fired in skopeBase initialize
       initWidgetSidebarSpecifics : function() {
             var self = this;
             if ( ! self.isExcludedSidebarsWidgets() ) {
@@ -4198,11 +6257,14 @@ $.extend( CZRSkopeBaseMths, {
                     self.forceSidebarDirtyRefresh( api.czr_activeSectionId(), active_skope );
                 });
             }
+
+          //WHEN A WIDGET IS ADDED
           $( document ).bind( 'widget-added', function( e, $o ) {
               if ( self.isExcludedSidebarsWidgets() )
                   return;
 
               var wgtIdAttr = $o.closest('.customize-control').attr('id'),
+                  //get the widget id from the customize-control id attr, and remove 'customize-control-' prefix to get the proper set id
                   wdgtSetId = api.czr_skopeBase.widgetIdToSettingId( wgtIdAttr, 'customize-control-' );
               if ( ! api.has( wdgtSetId ) ) {
                   throw new Error( 'AN ADDED WIDGET COULD NOT BE BOUND IN SKOPE. ' +  wdgtSetId);
@@ -4218,11 +6280,15 @@ $.extend( CZRSkopeBaseMths, {
             if ( self.isExcludedSidebarsWidgets() )
               return;
             var _save_state = api.state('saved')();
+
+            //Specific for widget sidebars section
             var _debounced = function() {
                 if ( api.section.has( active_section ) && "sidebar" == api.section(active_section).params.type ) {
                     var active_skope = active_skope || api.czr_activeSkopeId(),
                         related_setting_name = 'sidebars_widgets[' + api.section(active_section).params.sidebarId + ']',
                         related_setting_val = self.getSkopeSettingVal( related_setting_name, active_skope );
+
+                    //api( related_setting_name )( self.getSkopeSettingVal( related_setting_name, api.czr_activeSkopeId() ) );
                     api.czr_skope( active_skope ).updateSkopeDirties( related_setting_name, related_setting_val );
 
                     api.previewer.refresh( { the_dirties : api.czr_skope( active_skope ).dirtyValues() } )
@@ -4239,10 +6305,19 @@ $.extend( CZRSkopeBaseMths, {
 
 var CZRSkopeMths = CZRSkopeMths || {};
 ( function ( api, $, _ ) {
+//The Active state is delegated to the scope base class
 $.extend( CZRSkopeMths, {
       /*****************************************************************************
       * THE SKOPE MODEL
       *****************************************************************************/
+      // 'id'          => 'global',
+      // 'level'       => '_all_',
+      // 'dyn_type'    => 'option',
+      // 'opt_name'    => HU_THEME_OPTIONS,
+      // 'is_winner'   => false,
+      // 'db'    => array(),
+      // 'has_db_val'  => false
+      // 'is_forced'  => false,
       initialize: function( skope_id, constructor_options ) {
             var skope = this;
             api.Value.prototype.initialize.call( skope, null, constructor_options );
@@ -4250,18 +6325,29 @@ $.extend( CZRSkopeMths, {
             skope.isReady = $.Deferred();
             skope.embedded = $.Deferred();
             skope.el = 'czr-scope-' + skope_id;//@todo replace with a css selector based on the scope name
+
+            //write the options as properties, skope_id is included
             $.extend( skope, constructor_options || {} );
+
+            //Make it alive with various Values
             skope.visible     = new api.Value( true );
             skope.winner      = new api.Value( false ); //is this skope the one that will be applied on front end in the current context?
             skope.priority    = new api.Value(); //shall this skope always win or respect the default skopes priority
             skope.active      = new api.Value( false ); //active, inactive. Are we currently customizing this skope ?
             skope.dirtyness   = new api.Value( false ); //true or false : has this skope been customized ?
             skope.skopeResetDialogVisibility = new api.Value( false );
+
+            //setting values are stored in :
             skope.hasDBValues = new api.Value( false );
             skope.dirtyValues = new api.Value({});//stores the current customized value.
             skope.dbValues    = new api.Value({});//stores the latest db values => will be updated on each skope synced event
             skope.changesetValues = new api.Value({});//stores the latest changeset values => will be updated on each skope synced eventsynced event
+
+            ////////////////////////////////////////////////////
+            /// MODULE DOM EVENT MAP
+            ////////////////////////////////////////////////////
             skope.userEventMap = new api.Value( [
+                  //skope switch
                   {
                         trigger   : 'click keydown',
                         selector  : '.czr-scope-switch, .czr-skp-switch-link',
@@ -4270,6 +6356,7 @@ $.extend( CZRSkopeMths, {
                               api.czr_activeSkopeId( skope().id );
                         }
                   },
+                  //skope reset : display warning
                   {
                         trigger   : 'click keydown',
                         selector  : '.czr-scope-reset',
@@ -4277,37 +6364,81 @@ $.extend( CZRSkopeMths, {
                         actions   : 'reactOnSkopeResetUserRequest'
                   }
             ]);//module.userEventMap
+
+            //Reset actions ( deferred cb )
             skope.skopeResetDialogVisibility.bind( function( to, from ) {
                   return skope.skopeResetDialogReact( to );
             }, { deferred : true } );
+
+
+            //LISTEN TO API DIRTYNESS
+            //@to is {setId1 : val1, setId2 : val2, ...}
             skope.dirtyValues.callbacks.add(function() { return skope.dirtyValuesReact.apply(skope, arguments ); } );
+
+            //LISTEN TO CHANGESET VALUES
             skope.changesetValues.callbacks.add(function() { return skope.changesetValuesReact.apply(skope, arguments ); } );
+
+            //LISTEN TO DB VALUES
             skope.dbValues.callbacks.add(function() { return skope.dbValuesReact.apply(skope, arguments ); } );
+
+            //UPDATE global skope collection each time a skope model is populated or updated
             skope.callbacks.add(function() { return skope.skopeReact.apply( skope, arguments ); } );
+
+            //PREPARE THE CONSTRUCTOR OPTIONS AND SET SKOPE MODEL WITH IT
+            //=> we don't need to store the db , has_db_val, and changeset properties in the model statically
+            //because it will be stored as observable values
             skope.set( _.omit( constructor_options, function( _v, _key ) {
                   return _.contains( [ 'db', 'changeset', 'has_db_val' ], _key );
             } ) );
+
+
+
+
+
+            ////////////////////////////////////////////////////
+            /// SETUP SKOPE OBSERVABLE VALUES LISTENERS
+            /// => skope embedded dependants
+            ////////////////////////////////////////////////////
             skope.setupObservableViewValuesCallbacks();
+
+            //Now that the values are listened to. Let's set some initial values
             skope.dirtyness( ! _.isEmpty( constructor_options.changeset ) );
             skope.hasDBValues( ! _.isEmpty( constructor_options.db ) );
             skope.winner( constructor_options.is_winner );
+
+
+
+
+            ////////////////////////////////////////////////////
+            /// EMBED + SETUP DOM LISTENERS
+            ////////////////////////////////////////////////////
             skope.embedded
                   .fail( function() {
                         throw new Error('The container of skope ' + skope().id + ' has not been embededd');
                   })
                   .done( function() {
+                        //api.consoleLog('SKOPE : '  + skope().id + ' EMBEDDED');
+                        //Setup the user event listeners
                         skope.setupDOMListeners( skope.userEventMap() , { dom_el : skope.container } );
 
                         skope.isReady.resolve();
                   });
 
       },//initialize
+
+
+
+      //this skope model is instantiated at this point.
       ready : function() {
             var skope = this;
+            //WAIT FOR THE SKOPE WRAPPER TO BE EMBEDDED
+            //=> The skope wrapper is embedded when api.czr_skopeReady.state() == 'resolved'
             api.czr_skopeBase.skopeWrapperEmbedded.done( function() {
+                  //EMBED THE SKOPE VIEW : EMBED AND STORE THE CONTAINER
                   try {
                         $.when( skope.embedSkopeDialogBox() ).done( function( $_container ){
                               if ( false !== $_container.length ) {
+                                    //paint it
                                     $_container.css('background-color', skope.color );
                                     skope.container = $_container;
                                     skope.embedded.resolve( $_container );
@@ -4329,21 +6460,48 @@ $.extend( CZRSkopeMths, {
       * SKOPE API DIRTIES REACTIONS
       *****************************************************************************/
       dirtyValuesReact : function( to, from ) {
+            //api.consoleLog('IN DIRTY VALUES REACT', this.id, to, from );
             var skope = this;
+
+            //set the skope() dirtyness boolean state value
             skope.dirtyness( ! _.isEmpty( to ) );
+            // skope.dirtyness(
+            //       ! _.isEmpty(
+            //             'global' != skope().skope ?
+            //             to :
+            //             _.omit( to, function( _val, _id ) {
+            //                   return ! api.czr_skopeBase.isThemeSetting( _id );
+            //             })
+            //       )
+            // );
+
+            //set the API global dirtyness
             api.czr_dirtyness( ! _.isEmpty(to) );
+
+            //build the collection of control ids for which the dirtyness has to be reset
             var ctrlIdDirtynessToClean = [];
             _.each( from, function( _val, _id ) {
                 if ( _.has( to, _id ) )
                   return;
                 ctrlIdDirtynessToClean.push( _id );
             });
+
+            //SET THE ACTIVE SKOPE CONTROLS DIRTYNESSES
+            //The ctrl.czr_state value looks like :
+            //{
+            // hasDBVal : false,
+            // isDirty : false,
+            // noticeVisible : false,
+            // resetVisible : false
+            //}
             if ( skope().id == api.czr_activeSkopeId() ) {
+                  //RESET DIRTYNESS FOR THE CLEAN SETTINGS CONTROLS IN THE ACTIVE SKOPE
                   _.each( ctrlIdDirtynessToClean , function( setId ) {
                         if ( ! _.has( api.control( setId ), 'czr_states') )
                           return;
                         api.control( setId ).czr_states( 'isDirty' )( false );
                   });
+                  //Set control dirtyness for dirty settings
                   _.each( to, function( _val, _setId ) {
                         if ( ! _.has( api.control( _setId ), 'czr_states') )
                           return;
@@ -4368,6 +6526,8 @@ $.extend( CZRSkopeMths, {
       *****************************************************************************/
       dbValuesReact : function( to, from ) {
             var skope = this;
+
+            //set the skope() db dirtyness boolean state value
             skope.hasDBValues(
                   ! _.isEmpty(
                         'global' != skope().skope ?
@@ -4377,18 +6537,29 @@ $.extend( CZRSkopeMths, {
                         })
                   )
             );
+
+            //RESET DIRTYNESS FOR THE CONTROLS IN THE ACTIVE SKOPE
+            //=> make sure this is set for the active skopes only
             var ctrlIdDbToReset = [];
             _.each( from, function( _val, _id ) {
                 if ( _.has( to, _id ) )
                   return;
                 ctrlIdDbToReset.push( _id );
             });
+            //The ctrl.czr_state value looks like :
+            //{
+            // hasDBVal : false,
+            // isDirty : false,
+            // noticeVisible : false,
+            // resetVisible : false
+            //}
             if ( skope().id == api.czr_activeSkopeId() ) {
                   _.each( ctrlIdDbToReset , function( setId ) {
                         if ( ! _.has( api.control( setId ), 'czr_states') )
                           return;
                         api.control( setId ).czr_states( 'hasDBVal' )( false );
                   });
+                  //Set control db dirtyness for settings with a db value
                   _.each( to, function( _val, _setId ) {
                         if ( ! _.has( api.control( _setId ), 'czr_states') )
                           return;
@@ -4402,18 +6573,26 @@ $.extend( CZRSkopeMths, {
       /*****************************************************************************
       * SKOPE MODEL CHANGES CALLBACKS
       *****************************************************************************/
+      //cb of skope.callbacks
       skopeReact : function( to, from ) {
             var skope = this,
                 _current_collection = [],
                 _new_collection = [];
+
+            //INFORM COLLECTION
+            //populate case
             if ( ! api.czr_skopeBase.isSkopeRegisteredInCollection( to.id ) ) {
+                  //Add this new skope to the global skope collection
                   _current_collection = $.extend( true, [], api.czr_skopeCollection() );
                   _current_collection.push( to );
                   api.czr_skopeCollection( _current_collection );
             }
+            //update case
             else {
+                  //Add this new skope to the global skope collection
                   _current_collection = $.extend( true, [], api.czr_skopeCollection() );
                   _new_collection = _current_collection;
+                  //update the collection with the current new skope model
                   _.each( _current_collection, function( _skope, _key ) {
                       if ( _skope.id != skope().id )
                         return;
@@ -4434,8 +6613,10 @@ $.extend( CZRSkopeMths, {
       * VALUES CALLBACKS WHEN SKOPE EMBEDDED AND READY
       * => The skope container exists at this stage
       *****************************************************************************/
+      //@fired in initiliaze
       setupObservableViewValuesCallbacks : function() {
             var skope = this;
+            //hide when this skope is not in the current skopes list
             skope.visible.bind( function( is_visible ){
                   if ( 'pending' == skope.embedded.state() ) {
                         skope.embedded.done( function() {
@@ -4446,6 +6627,11 @@ $.extend( CZRSkopeMths, {
                   }
 
             });
+
+            //How does the view react to model changes ?
+            //When active :
+            //1) add a green point to the view box
+            //2) disable the switch-to icon
             skope.active.bind( function() {
                   if ( 'pending' == skope.embedded.state() ) {
                         skope.embedded.done( function() {
@@ -4486,11 +6672,16 @@ $.extend( CZRSkopeMths, {
                   }
             });
       },//setupObservableViewValuesCallbacks
+
+      //cb of skope.active.callbacks
       activeStateReact : function( to, from ){
             var skope = this;
             skope.container.toggleClass('inactive', ! to ).toggleClass( 'active', to );
+            //api.consoleLog('in the view : listen for scope state change', this.name, to, from );
             $('.czr-scope-switch', skope.container).toggleClass('fa-toggle-on', to).toggleClass('fa-toggle-off', !to);
       },
+
+      //cb of skope.dirtyness.callbacks
       dirtynessReact : function( to, from ) {
             var skope = this;
             $.when( this.container.toggleClass( 'dirty', to ) ).done( function() {
@@ -4500,6 +6691,8 @@ $.extend( CZRSkopeMths, {
                   $( '.czr-scope-reset', skope.container).fadeOut('fast');
             });
       },
+
+      //cb of skope.hasDBValues.callbacks
       hasDBValuesReact : function( to, from ) {
             var skope = this;
             $.when( skope.container.toggleClass('has-db-val', to ) ).done( function() {
@@ -4516,11 +6709,14 @@ $.extend( CZRSkopeMths, {
                 }
             });
       },
+
+      //cb of skope.winner.callbacks
       winnerReact : function( is_winner ) {
             var skope = this;
             this.container.toggleClass('is_winner', is_winner );
 
             if ( is_winner ) {
+                  //make sure there's only one winner in the current skope collection
                   _.each( api.czr_currentSkopesCollection(), function( _skope ) {
                         if ( _skope.id == skope().id )
                           return;
@@ -4537,9 +6733,14 @@ $.extend( CZRSkopeMths, {
       /*****************************************************************************
       * HELPERS
       *****************************************************************************/
+      //this method updates a given skope instance dirty values
+      //and returns the dirty values object
+      //fired on api setting change and in the ajax query
       updateSkopeDirties : function( setId, new_val ) {
             var skope = this,
                 shortSetId = api.CZR_Helpers.getOptionName( setId );
+
+            //for the settings that are excluded from skope, the skope is always the global one
             if ( ! api.czr_skopeBase.isSettingSkopeEligible( setId ) && 'global' != skope().skope )
               return api.czr_skope( api.czr_skopeBase.getGlobalSkopeId() ).updateSkopeDirties( setId, new_val );
 
@@ -4550,20 +6751,30 @@ $.extend( CZRSkopeMths, {
             skope.dirtyValues.set( $.extend( current_dirties , _dirtyCustomized ) );
             return skope.dirtyValues();
       },
+
+
+
+      //@return the boolean dirtyness state of a given setId for a given skope
       getSkopeSettingDirtyness : function( setId ) {
             var skope = this;
             return skope.getSkopeSettingAPIDirtyness( setId ) || skope.getSkopeSettingChangesetDirtyness( setId );
       },
+
+      //Has this skope already be customized in the API ?
       getSkopeSettingAPIDirtyness : function( setId ) {
             var skope = this;
             return _.has( skope.dirtyValues(), api.CZR_Helpers.build_setId( setId ) );
       },
+
+      //Has this skope already be customized in the API ?
       getSkopeSettingChangesetDirtyness : function( setId ) {
             var skope = this;
             if ( ! api.czr_isChangeSetOn() )
               return skope.getSkopeSettingAPIDirtyness( setId );
             return _.has( skope.changesetValues(), api.CZR_Helpers.build_setId( setId ) );
       },
+
+      //@return boolean
       hasSkopeSettingDBValues : function( setId ) {
             var skope = this,
                 _setId = api.CZR_Helpers.build_setId(setId);
@@ -4579,6 +6790,8 @@ $.extend( CZRSkopeMths, {
             var skope = this,
                 skope_model = $.extend( true, {}, skope() ),
                 _tmpl = '';
+
+            //@todo will need to be refreshed on scopes change in the future
             if ( ! $('#customize-header-actions').find('.czr-scope-switcher').length ) {
                 throw new Error('The skope switcher wrapper is not printed, the skope can not be embedded.');
             }
@@ -4592,6 +6805,15 @@ $.extend( CZRSkopeMths, {
             $('.czr-skopes-wrapper', '#customize-header-actions').append( $( _tmpl ) );
             return $( '.' + skope.el , '.czr-skopes-wrapper' );
       },
+
+
+
+
+      // setSkopeSwitcherButtonActive : function( dyn_type ) {
+      //       $('.button', '.czr-scope-switcher').each( function( ind ) {
+      //         $(this).toggleClass( 'active', dyn_type == $(this).attr('data-dyn-type') );
+      //       });
+      // },
 
 
 
@@ -4658,10 +6880,15 @@ $.extend( CZRSkopeMths, {
 
 var CZRSkopeMths = CZRSkopeMths || {};
 ( function ( api, $, _ ) {
+//The Active state is delegated to the skope base class
 $.extend( CZRSkopeMths, {
       /*****************************************************************************
       * RESET
       *****************************************************************************/
+      //Fired when on user click on ".czr-scope-reset", defined in skope model init
+      //Handles several scenarios :
+      //1) a reset ajax request (save, changeset, reset) can be currently processed, we need to wait for completion
+      //2) another skope reset dialog panel might be already opened
       reactOnSkopeResetUserRequest : function() {
             var skope = this,
                 _fireReaction = function() {
@@ -4680,6 +6907,8 @@ $.extend( CZRSkopeMths, {
                             });
                       }
                 };
+
+            //Bail if other process currenty running
             if ( ( api.state( 'czr-resetting')() || 0 !== api.state( 'processing' )() ) ) {
                     api.czr_serverNotification( {
                           message: 'Slow down, you move too fast !',
@@ -4688,6 +6917,7 @@ $.extend( CZRSkopeMths, {
                     });
                     return;
             }
+            //Close the current panel if a reset for a different skope is requested
             if ( api.czr_activeSkopeId() != skope().id && api.czr_skope( api.czr_activeSkopeId() ).skopeResetDialogVisibility() ) {
                   api.czr_skope( api.czr_activeSkopeId() ).skopeResetDialogVisibility( false ).done( function() {
                         _fireReaction();
@@ -4696,9 +6926,36 @@ $.extend( CZRSkopeMths, {
                   _fireReaction();
             }
       },
+
+
+
+
+
+
+
+
+
+      //cb of skope.skopeResetDialogVisibility.callbacks
+      //Setup user DOM events listeners
+      //Render the dialog box
       skopeResetDialogReact : function( visible ) {
             var skope = this, dfd = $.Deferred();
+            //Are we currently performing a reset or any other processing task ? (reset setting or skope, saving )
+            //=> if so, let's defer the current action when its possible
+            // if ( api.state( 'czr-resetting')() || 0 !== api.state( 'processing' )() ) {
+            //         var reactWhenPossible = function () {
+            //               if ( 0 === api.state( 'processing' )() && false === api.state( 'czr-resetting' )() ) {
+            //                     api.state.unbind( 'change', reactWhenPossible );
+            //                     skope.skopeResetDialogReact( visible );
+            //               }
+            //         };
+            //         api.state.bind( 'change', reactWhenPossible );
+            //         return dfd.resolve().promise();
+            // }
+
+            //Event Map for the Reset Panel
             skope.userResetEventMap = skope.userResetEventMap || new api.Value( [
+                  //skope reset : display warning
                   {
                         trigger   : 'click keydown',
                         selector  : '.czr-scope-reset-cancel',
@@ -4707,6 +6964,7 @@ $.extend( CZRSkopeMths, {
                             skope.skopeResetDialogVisibility( ! skope.skopeResetDialogVisibility() );
                         }
                   },
+                  //skope reset : do reset
                   {
                         trigger   : 'click keydown',
                         selector  : '.czr-scope-do-reset',
@@ -4717,15 +6975,24 @@ $.extend( CZRSkopeMths, {
             );
 
             if ( visible ) {
+                  //inform the api that we are resetting
+                  //=> some actions have to be frozen in this state
+                  //like for example, resetting another skope
                   api.czr_isResettingSkope( skope().id );
+
+                  //render reset warning template
                   $.when( skope.renderResetWarningTmpl() ).done( function( $_container ) {
                         skope.resetPanel = $_container;
+                        //add the reset type class
                         skope.resetPanel.addClass( skope.dirtyness() ? 'dirty-reset' : 'db-reset' );
                         skope.setupDOMListeners( skope.userResetEventMap() , { dom_el : skope.resetPanel } );
+                        //$('body').addClass('czr-skope-pane-open');
                   }).then( function() {
                         setTimeout( function() {
+                              //set height
                               var _height = $('#customize-preview').height();
                               skope.resetPanel.css( 'line-height', _height +'px' ).css( 'height', _height + 'px' );
+                              //display
                               $('body').addClass('czr-skope-pane-open');
                         }, 50 );
                   });
@@ -4739,10 +7006,17 @@ $.extend( CZRSkopeMths, {
                         }
                   });
             }
+
+            //wait for panel sliding action before resolving
             _.delay( function() { dfd.resolve(); }, 350 );
 
             return dfd.promise();
       },
+
+
+
+      //fired on user click
+      //Is used for both resetting customized and db values, depending on the skope customization state
       doResetSkopeValues : function() {
             var skope = this,
                 skope_id = skope().id,
@@ -4765,6 +7039,14 @@ $.extend( CZRSkopeMths, {
 
                       skope[reset_method]()
                             .done( function() {
+                                  //api.previewer.refresh() method is resolved with an object looking like :
+                                  //{
+                                  //    previewer : api.previewer,
+                                  //    skopesServerData : {
+                                  //        czr_skopes : _wpCustomizeSettings.czr_skopes || [],
+                                  //        isChangesetDirty : boolean
+                                  //    },
+                                  // }
                                   api.previewer.refresh()
                                         .fail( function( refresh_data ) {
                                               api.consoleLog('SKOPE RESET REFRESH FAILED', refresh_data );
@@ -4794,6 +7076,9 @@ $.extend( CZRSkopeMths, {
                 };//_updateAPI
 
             $('body').addClass('czr-resetting-skope');
+            //$('.czr-reset-warning', skope.resetPanel ).hide();
+
+            //When resetting the db value, wait for the ajax promise to be done before reseting the api values.
             api.czr_skopeReset[ skope.dirtyness() ? 'resetChangeset' : 'resetPublished' ](
                         { skope_id : skope().id, is_skope : true } )
                         .always( function() {
@@ -4807,3332 +7092,37 @@ $.extend( CZRSkopeMths, {
                                 api.consoleLog('Skope reset failed', r );
                         });
       },
+
+
+      //fired in doResetSkopeValues
+      //@uses The ctrl.czr_states values
       _resetSkopeDirties : function() {
             var skope = this, dfd = $.Deferred();
             skope.dirtyValues({});
             skope.changesetValues({});
             return dfd.resolve().promise();
       },
+
+      //fired in doResetSkopeValues
+      //@uses The ctrl.czr_states values
       _resetSkopeAPIValues : function() {
             var skope = this, dfd = $.Deferred();
+            //update the skope model db property
             skope.dbValues( {} );
             return dfd.resolve().promise();
       }
 });//$.extend(
 })( wp.customize , jQuery, _ );
-( function ( api, $, _ ) {
-      /*****************************************************************************
-      * A "CONTEXT AWARE" SET METHD
-      *****************************************************************************/
-      /**
-      * OVERRIDES BASE api.Value method
-      * => adds the o {} param, allowing to pass additional contextual informations.
-      *
-      * Set the value and trigger all bound callbacks.
-      *
-      * @param {object} to New value.
-      */
-      api.Value.prototype.set = function( to, o ) {
-            var from = this._value, dfd = $.Deferred(), self = this, _promises = [];
-
-            to = this._setter.apply( this, arguments );
-            to = this.validate( to );
-            args = _.extend( { silent : false }, _.isObject( o ) ? o : {} );
-            if ( null === to || _.isEqual( from, to ) ) {
-                  return dfd.resolveWith( self, [ to, from, o ] ).promise();
-            }
-
-            this._value = to;
-            this._dirty = true;
-            if ( true === args.silent ) {
-                  return dfd.resolveWith( self, [ to, from, o ] ).promise();
-            }
-
-            if ( this._deferreds ) {
-                  _.each( self._deferreds, function( _prom ) {
-                        _promises.push( _prom.apply( null, [ to, from, o ] ) );
-                  });
-
-                  $.when.apply( null, _promises )
-                        .fail( function() { api.errorLog( 'A deferred callback failed in api.Value::set()'); })
-                        .then( function() {
-                              self.callbacks.fireWith( self, [ to, from, o ] );
-                              dfd.resolveWith( self, [ to, from, o ] );
-                        });
-            } else {
-                  this.callbacks.fireWith( this, [ to, from, o ] );
-                  return dfd.resolveWith( self, [ to, from, o ] ).promise( self );
-            }
-            return dfd.promise( self );
-      };
-      api.Value.prototype.bind = function() {
-          var self = this,
-              _isDeferred = false,
-              _cbs = [];
-
-          $.each( arguments, function( _key, _arg ) {
-                if ( ! _isDeferred )
-                  _isDeferred = _.isObject( _arg  ) && _arg.deferred;
-                if ( _.isFunction( _arg ) )
-                  _cbs.push( _arg );
-          });
-
-          if ( _isDeferred ) {
-                self._deferreds = self._deferreds || [];
-                _.each( _cbs, function( _cb ) {
-                      if ( ! _.contains( _cb, self._deferreds ) )
-                        self._deferreds.push( _cb );
-                });
-          } else {
-                self.callbacks.add.apply( self.callbacks, arguments );
-          }
-          return this;
-      };
-
-      /*****************************************************************************
-      * A SILENT SET METHOD :
-      * => keep the dirtyness param unchanged
-      * => stores the api state before callback calls, and reset it after
-      * => add an object param to the callback to inform that this is a silent process
-      * , this is typically used in the overridden api.Setting.preview method
-      *****************************************************************************/
-      api.Setting.prototype.silent_set =function( to, dirtyness ) {
-            var from = this._value,
-                _save_state = api.state('saved')();
-
-            to = this._setter.apply( this, arguments );
-            to = this.validate( to );
-            if ( null === to || _.isEqual( from, to ) ) {
-              return this;
-            }
-
-            this._value = to;
-            this._dirty = ( _.isUndefined( dirtyness ) || ! _.isBoolean( dirtyness ) ) ? this._dirty : dirtyness;
-
-            this.callbacks.fireWith( this, [ to, from, { silent : true } ] );
-            api.state('saved')( _save_state );
-            return this;
-      };
-})( wp.customize , jQuery, _ );
-( function ( api, $, _ ) {
-      /*****************************************************************************
-      * A SKOPE AWARE PREVIEWER QUERY
-      *****************************************************************************/
-      api.bind('ready', function() {
-            if ( ! serverControlParams.isSkopOn )
-              return;
-
-            /**
-            * Build the query to send along with the Preview request.
-            *
-            * @return {object}
-            */
-            var _coreQuery = api.previewer.query;
-            api.previewer.query =  function( queryVars ) {
-                  if ( ! serverControlParams.isSkopOn ) {
-                        return _coreQuery.apply( this );
-                  }
-                  if ( ! _.has( api, 'czr_skope') ) {
-                        api.consoleLog('QUERY : SKOPE IS NOT FULLY READY YEY. FALLING BACK ON CORE QUERY');
-                        return _coreQuery.apply( this );
-                  }
-                  if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() ) {
-                        api.consoleLog('QUERY : INITIAL SKOPE COLLECTION NOT POPULATED YET. FALLING BACK ON CORE QUERY');
-                        return _coreQuery.apply( this );
-                  }
-                  if ( 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
-                        api.czr_isPreviewerSkopeAware.resolve();
-                  }
-                  if ( ! _.isObject( queryVars ) && 'resolved' == api.czr_initialSkopeCollectionPopulated.state() && 'resolved' == api.czr_initialSkopeCollectionPopulated.state() ) {
-                        return _coreQuery.apply( this );
-                  }
-                  if ( _.isUndefined( queryVars.skope_id ) || ! _.isString( queryVars.skope_id ) ) {
-                        queryVars.skope_id = api.czr_activeSkopeId() || api.czr_skopeBase.getGlobalSkopeId();
-                  }
-
-                  var globalCustomized = {},
-                      skopeCustomized = {},
-                      _defaults = {
-                            skope_id : null,
-                            action : null,
-                            the_dirties : {},
-                            dyn_type : null,
-                            opt_name : null
-                      },
-                      _to_return;
-
-                  queryVars = $.extend( _defaults, queryVars );
-                  if ( ! _.isObject( queryVars.the_dirties ) ) {
-                        api.consoleLog('QUERY PARAMS : ', queryVars );
-                        throw new Error( 'QUERY DIRTIES MUST BE AN OBJECT. Requested action : ' + queryVars.action );
-                  }
-                  if ( 'pending' != api.czr_isPreviewerSkopeAware.state() && _.isNull( queryVars.skope_id ) ) {
-                        api.consoleLog('QUERY PARAMS : ', queryVars );
-                        throw new Error( 'OVERRIDEN QUERY : NO SKOPE ID. FALLING BACK ON CORE QUERY. Requested action : ' + queryVars.action );
-                  }
-                  if ( ! _.contains( [ null, 'refresh', 'save', 'reset', 'changeset_update' ], queryVars.action ) ) {
-                        api.consoleLog('QUERY PARAMS : ', queryVars );
-                        throw new Error( 'A REQUESTED QUERY HAS NO AUTHORIZED ACTION. Requested action : ' + queryVars.action );
-                  }
-                  var _getSkopesCustomized = function() {
-                        if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
-                          return {};
-                        var _skpCust = {};
-                        _.each( api.czr_currentSkopesCollection(), function( _skp ) {
-                              if ( 'global' == _skp.skope )
-                                return;
-                              _skpCust[_skp.id] = api.czr_skopeBase.getSkopeDirties( _skp.id );
-                        } );
-                        return _skpCust;
-                  };
-                  if ( _.isNull( queryVars.the_dirties ) || _.isEmpty( queryVars.the_dirties ) ) {
-                        globalCustomized = api.dirtyValues( { unsaved:  queryVars.excludeCustomizedSaved || false } );
-                        skopeCustomized = _getSkopesCustomized();
-                  } else {
-                        if ( 'global' == api.czr_skopeBase.getActiveSkopeName() )
-                          globalCustomized = queryVars.the_dirties;
-                        else
-                          skopeCustomized[ api.czr_activeSkopeId() ] = queryVars.the_dirties;
-                  }
-                  switch( queryVars.action ) {
-                        case null :
-                        case 'refresh' :
-                        break;
-
-                        case 'changeset_update' :
-                              if ( _.isUndefined( queryVars.opt_name ) ) {
-                                    throw new Error('Missing opt_name param in the changeset_update query for skope : ' + queryVars.skope_id );
-                              }
-                        break;
-
-
-                        case 'save' :
-                              if ( _.isNull( queryVars.dyn_type ) )
-                                    queryVars.dyn_type = api.czr_skope( queryVars.skope_id )().dyn_type;//post_meta, term_meta, user_meta, trans, option
-                              if ( _.isNull( queryVars.dyn_type ) || _.isUndefined( queryVars.dyn_type ) ) {
-                                    throw new Error( 'QUERY : A SAVE QUERY MUST HAVE A VALID DYN TYPE.' + queryVars.skope_id );
-                              }
-                        break;
-
-                        case 'reset' :
-                              if ( _.isNull( queryVars.dyn_type ) )
-                                    queryVars.dyn_type = api.czr_skope( queryVars.skope_id )().dyn_type;//post_meta, term_meta, user_meta, trans, option
-                              if ( _.isNull( queryVars.dyn_type ) || _.isUndefined( queryVars.dyn_type ) ) {
-                                    throw new Error( 'QUERY : A RESET QUERY MUST HAVE A VALID DYN TYPE.' + queryVars.skope_id );
-                              }
-                        break;
-                  }
-                  var _current_skopes = {};
-                  _.each( api.czr_currentSkopesCollection(), function( _skp ) {
-                        _current_skopes[_skp.skope] = { id : _skp.id, opt_name : _skp.opt_name };
-                  });
-                  _to_return = {
-                        wp_customize: 'on',
-                        customized:      '{}' == JSON.stringify( globalCustomized ) ? '{\"__not_customized__\"}' : JSON.stringify( globalCustomized ),
-                        skopeCustomized:  JSON.stringify( skopeCustomized ),
-                        nonce:            this.nonce.preview,
-                        skope:            api.czr_skope( queryVars.skope_id )().skope,
-                        level_id:          api.czr_skope( queryVars.skope_id )().level,
-                        skope_id:         queryVars.skope_id,
-                        dyn_type:         queryVars.dyn_type,
-                        opt_name:         ! _.isNull( queryVars.opt_name ) ? queryVars.opt_name : api.czr_skope( queryVars.skope_id )().opt_name,
-                        obj_id:           api.czr_skope( queryVars.skope_id )().obj_id,
-                        current_skopes:   JSON.stringify( _current_skopes ) || {},
-                        channel:          this.channel(),
-                        revisionIndex:    api._latestRevision
-                  };
-                  if ( api.czr_isChangeSetOn() ) {
-                        _to_return = $.extend( _to_return , {
-                              customize_theme: api.settings.theme.stylesheet,
-                              customize_changeset_uuid: api.settings.changeset.uuid
-                        });
-                  }
-                  else {
-                        _to_return = $.extend( _to_return , {
-                              theme: api.settings.theme.stylesheet
-                        });
-                  }
-                  return _to_return;
-
-            };//api.previewer.query
-      });//api.bind('ready')
-})( wp.customize , jQuery, _ );
-( function ( api, $, _ ) {
-      api.bind( 'czr-skope-started', function() {
-            api.previewer.save = function( args ) {
-                  return api.czr_skopeSave.save();
-            };
-      });//api.bind('ready')
-})( wp.customize , jQuery, _ );
-(function (api, $, _) {
-      if ( ! serverControlParams.isSkopOn )
-        return;
-
-      /*****************************************************************************
-      * SYNCHRONIZER AUGMENTED
-      *****************************************************************************/
-      api.Element.synchronizer.checkbox.update = function( to ) {
-            this.element.prop( 'checked', to );
-            this.element.iCheck('update');
-      };
-
-      var _original = api.Element.synchronizer.val.update;
-      api.Element.synchronizer.val.update = function(to) {
-            var self = this,
-                _modifySynchronizer = function() {
-                      if ( self.element.is('select') ) {
-                            self.element.val(to).trigger('change');
-                      } else if ( self.element.hasClass('wp-color-picker') ) {
-                            self.element.val(to).trigger('change');
-                      }
-                      else {
-                            self.element.val( to );
-                      }
-                };
-            if ( serverControlParams.isSkopOn ) {
-                  if ( 'resolved' != api.czr_skopeReady.state() ) {
-                        return _original.call( self, to );
-                  } else {
-                        api.czr_skopeReady.then( function () {
-                              _modifySynchronizer();
-                        });
-                  }
-            } else {
-                  _modifySynchronizer();
-            }
-      };
-
-      api.Element.synchronizer.val.refresh = function() {
-            var syncApiInstance = this;
-            if ( this.element.is('select') && _.isNull( this.element.val() ) ) {
-                  if ( _.isArray( syncApiInstance() ) )
-                    return [];
-                  else if ( _.isObject( syncApiInstance() ) )
-                    return {};
-                  else
-                    return '';
-            } else {
-                  return  this.element.val();
-            }
-      };
-})( wp.customize , jQuery, _ );
-( function ( api, $, _ ) {
-      var coreRefresh = api.Previewer.prototype.refresh;
-      var _new_refresh = function( params ) {
-            params = _.extend({
-                        waitSkopeSynced : true,
-                        the_dirties : {}
-                  },
-                  params
-            );
-
-            var previewer = this, dfd = $.Deferred();
-            if ( ! serverControlParams.isSkopOn ) {
-                  return dfd.resolve().promise();
-            }
-            if ( ! _.has( api, 'czr_activeSkopeId') || _.isUndefined( api.czr_activeSkopeId() ) ) {
-                  api.consoleLog( 'The api.czr_activeSkopeId() is undefined in the api.previewer._new_refresh() method.');
-                  coreRefresh.apply( previewer );
-                  return dfd.resolve().promise();
-            }
-            previewer.send( 'loading-initiated' );
-
-            previewer.abort();
-
-            var query_params = api.czr_getSkopeQueryParams({
-                      skope_id : api.czr_activeSkopeId(),
-                      action : 'refresh',
-                      the_dirties : params.the_dirties || {}
-                });
-
-            previewer.loading = new api.PreviewFrame({
-                  url:        previewer.url(),
-                  previewUrl: previewer.previewUrl(),
-                  query:      previewer.query( query_params ) || {},
-                  container:  previewer.container,
-                  signature:  'WP_CUSTOMIZER_SIGNATURE'//will be deprecated in 4.7
-            });
-
-
-            previewer.settingsModifiedWhileLoading = {};
-            onSettingChange = function( setting ) {
-                  previewer.settingsModifiedWhileLoading[ setting.id ] = true;
-            };
-            api.bind( 'change', onSettingChange );
-
-            previewer.loading.always( function() {
-                  api.unbind( 'change', onSettingChange );
-            } );
-            if ( ! api.czr_isChangeSetOn() ) {
-                  previewer._previousPreview = previewer._previousPreview || previewer.preview;
-            }
-
-            previewer.loading.done( function( readyData ) {
-                  var loadingFrame = this, onceSynced;
-
-                  previewer.preview = loadingFrame;
-                  previewer.targetWindow( loadingFrame.targetWindow() );
-                  previewer.channel( loadingFrame.channel() );
-                  onceSynced = function( skopesServerData ) {
-                        loadingFrame.unbind( 'synced', onceSynced );
-                        loadingFrame.unbind( 'czr-skopes-synced', onceSynced );
-
-                        if ( previewer._previousPreview ) {
-                              previewer._previousPreview.destroy();
-                        } //before WP 4.7
-                        else {
-                            if ( previewer.preview )
-                              previewer.preview.destroy();
-                        }
-
-                        previewer._previousPreview = previewer.preview;
-                        previewer.deferred.active.resolve();
-                        delete previewer.loading;
-
-                        api.trigger( 'pre_refresh_done', { previewer : previewer, skopesServerData : skopesServerData || {} } );
-                        dfd.resolve( { previewer : previewer, skopesServerData : skopesServerData || {} } );
-                  };
-                  if ( ! api.czr_isChangeSetOn() ) {
-                      previewer.send( 'sync', {
-                            scroll:   previewer.scroll,
-                            settings: api.get()
-                      });
-                  }
-
-                  if ( params.waitSkopeSynced ) {
-                        loadingFrame.bind( 'czr-skopes-synced', onceSynced );
-                  } else {
-                        loadingFrame.bind( 'synced', onceSynced );
-                  }
-                  previewer.trigger( 'ready', readyData );
-            });
-            previewer.loading.fail( function( reason, location ) {
-                  api.consoleLog('LOADING FAILED : ' , arguments );
-                  previewer.send( 'loading-failed' );
-                  if ( ! api.czr_isChangeSetOn() ) {
-                      if ( 'redirect' === reason && location ) {
-                            previewer.previewUrl( location );
-                      }
-                  }
-
-                  if ( 'logged out' === reason ) {
-                        if ( previewer.preview ) {
-                              previewer.preview.destroy();
-                              delete previewer.preview;
-                        }
-
-                        previewer.login().done( previewer.refresh );
-                  }
-
-                  if ( 'cheatin' === reason ) {
-                        previewer.cheatin();
-                  }
-                  dfd.reject( reason );
-            });
-
-            return dfd.promise();
-      };//_new_refresh()
-      api.bind( 'czr-skope-started' , function() {
-            czr_override_refresh_for_skope();
-            api.Previewer.prototype.refresh = _new_refresh;
-      });
-      api.czr_getSkopeQueryParams = function( params ) {
-            if ( ! api.czr_isChangeSetOn() )
-              return params;
-            params = ! _.isObject(params) ? {} : params;
-            var _action = params.action || 'refresh';
-            switch( _action ) {
-                  case 'refresh' :
-                      params = $.extend( params, { excludeCustomizedSaved: true } );
-                  break;
-            }
-            return params;
-      };
-      czr_override_refresh_for_skope = function() {
-            if ( ! serverControlParams.isSkopOn )
-              return;
-
-
-            /**
-            * Refresh the preview.
-            */
-            api.previewer.refresh = function( _params_ ) {
-                  var dfd = $.Deferred();
-                  var _refresh_ = function( params ) {
-                        var refreshOnceProcessingComplete,
-                            isProcessingComplete = function() {
-                              return 0 === api.state( 'processing' ).get();
-                            },
-                            resolveRefresh = function() {
-                                  _new_refresh.call( api.previewer, params ).done( function( refresh_data ) {
-                                        dfd.resolve( refresh_data );
-                                  });
-                            };
-                        if ( isProcessingComplete() ) {
-                              resolveRefresh();
-                        } else {
-                              refreshOnceProcessingComplete = function() {
-                                    if ( isProcessingComplete() ) {
-                                          resolveRefresh();
-                                          api.state( 'processing' ).unbind( refreshOnceProcessingComplete );
-                                    }
-                              };
-                              api.state( 'processing' ).bind( refreshOnceProcessingComplete );
-                        }
-                  };
-                  _refresh_ = _.debounce( _refresh_, api.previewer.refreshBuffer );
-                  _refresh_( _params_ );
-                  return dfd.promise();
-            };
-      };//czr_override_refresh_for_skope
-})( wp.customize , jQuery, _ );
-( function ( api, $, _ ) {
-      if ( ! serverControlParams.isSkopOn )
-        return;
-
-      /**
-       * Get the dirty setting values.
-       * Overrides the default method introduced in 4.7
-       * !! This method only returns the dirties of the global skope !!
-       *
-       * @param {object} [options] Options.
-       * @param {boolean} [options.unsaved=false] Whether only values not saved yet into a changeset will be returned (differential changes).
-       * @returns {object} Dirty setting values.
-       */
-      api.dirtyValues = function dirtyValues( options ) {
-            return api.czr_skopeBase.getSkopeDirties( api.czr_skopeBase.getGlobalSkopeId(), options );
-      };
-
-})( wp.customize , jQuery, _ );
-( function ( api, $, _ ) {
-      if ( ! serverControlParams.isSkopOn || ! api.czr_isChangeSetOn() )
-        return;
-      var _original_requestChangesetUpdate = api.requestChangesetUpdate;
-
-      /**
-       * Request updates to the changeset.
-       * Always calls the original method when the first promise (the skope changeset save) has been executed.
-       * Returns the $ promise with the set of data from the original method
-       *
-       * @param {object} [changes] Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
-       *                           If not provided, then the changes will still be obtained from unsaved dirty settings.
-       * @returns {jQuery.Promise}
-       */
-      api.requestChangesetUpdate = function( changes ) {
-            var self = this,
-                dfd = $.Deferred(),
-                data,
-                _skopesToUpdate = [],
-                _promises = [],
-                _global_skope_changes = changes || {},
-                failedPromises = [],
-                _all_skopes_data_ = [],
-                _recursiveCallDeferred = $.Deferred();
-            if ( ! serverControlParams.isSkopOn ) {
-                  return _original_requestChangesetUpdate();
-            }
-            if ( 0 === api._lastSavedRevision || _.isEmpty( api.state( 'changesetStatus' )() ) ) {
-                  _global_skope_changes = _.extend( _global_skope_changes, {
-                        blogname : { dummy_change : 'dummy_change' }
-                  } );
-            }
-            _.each( api.czr_currentSkopesCollection(), function( _skp ) {
-                  if ( 'global' == _skp.skope )
-                    return;
-                  _skopesToUpdate.push( _skp.id );
-            } );
-
-            var _mayBeresolve = function( _index ) {
-                  if ( ! _.isUndefined( _skopesToUpdate[ _index + 1 ] ) || _promises.length != _skopesToUpdate.length )
-                    return;
-
-                  if ( _.isEmpty( failedPromises ) ) {
-                        _recursiveCallDeferred.resolve( _all_skopes_data_ );
-                  } else {
-                        var _buildResponse = function() {
-                                  var _failedResponse = [];
-                                  _.each( failedPromises, function( _r ) {
-                                        _failedResponse.push( api.czr_skopeBase.buildServerResponse( _r ) );
-                                  } );
-                                  return $.trim( _failedResponse.join( ' | ') );
-                        };
-                        _recursiveCallDeferred.reject( _buildResponse() );
-                  }
-                  return true;
-            };
-            var recursiveCall = function( _index ) {
-                  if ( _.isUndefined( _index ) || ( ( 0 * 0 ) == _index ) ) {
-                      api.state( 'processing' ).set( 1 );
-                  }
-
-                  _index = _index || 0;
-                  if ( _.isUndefined( _skopesToUpdate[_index] ) ) {
-                        api.consoleLog( 'Undefined Skope in changeset recursive call ', _index, _skopesToUpdate, _skopesToUpdate[_index] );
-                        return _recursiveCallDeferred.resolve( _all_skopes_data_ ).promise();
-                  }
-                  api._requestSkopeChangetsetUpdate( changes, _skopesToUpdate[_index] )
-                        .always( function() { _promises.push( _index ); } )
-                        .fail( function( response ) {
-                              failedPromises.push( response );
-                              api.consoleLog('CHANGESET UPDATE RECURSIVE FAIL FOR SKOPE : ', _skopesToUpdate[_index] );
-                              if (  ! _mayBeresolve( _index ) )
-                                recursiveCall( _index + 1 );
-                        } )
-                        .done( function( _skope_data_ ) {
-                              _all_skopes_data_.push( _skope_data_ );
-                              if (  ! _mayBeresolve( _index ) )
-                                recursiveCall( _index + 1 );
-                        } );
-
-                  return _recursiveCallDeferred.promise();
-            };
-            var _lastSavedRevisionBefore = api._lastSavedRevision;
-            _original_requestChangesetUpdate( _global_skope_changes )
-                  .fail( function( r ) {
-                        api.consoleLog( 'WP requestChangesetUpdateFail', r, api.czr_skopeBase.buildServerResponse(r) );
-                        api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
-                        api.state( 'processing' ).set( 0 );
-
-                        dfd.reject( r );
-                        r = api.czr_skopeBase.buildServerResponse(r);
-                        api.czr_serverNotification( { message: r, status : 'error' } );
-                  })
-                  .done( function( wp_original_response ) {
-                        if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
-                          dfd.resolve( wp_original_response );
-
-                        api._lastSavedRevision = _lastSavedRevisionBefore;
-                        recursiveCall()
-                              .always( function() {
-                                    api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
-                                    api.state( 'processing' ).set( 0 );
-                              })
-                              .fail( function( r ) {
-                                    dfd.reject( r );
-                                    api.consoleLog( 'CHANGESET UPDATE RECURSIVE PUSH FAIL', r , _all_skopes_data_ );
-                                    api.trigger( 'changeset-error', r );
-                                    api.czr_serverNotification( { message: r, status : 'error' } );
-                              } )
-                              .done( function() {
-                                    dfd.resolve( wp_original_response );
-                              });
-                  });
-
-            return dfd.promise();
-      };
-      api._requestSkopeChangetsetUpdate = function( changes, skope_id ) {
-            if ( _.isUndefined( skope_id ) || ! api.czr_skope.has( skope_id ) ) {
-                  throw new Error( 'In api._requestSkopeChangetsetUpdate() : a valid and registered skope_id must be provided' );
-            }
-
-            var deferred = new $.Deferred(),
-                request,
-                submittedChanges = {},
-                data;
-            skope_id = skope_id || api.czr_activeSkopeId();
-
-            if ( changes ) {
-                  _.extend( submittedChanges, changes );
-            }
-            _.each( api.czr_skopeBase.getSkopeDirties( skope_id ) , function( dirtyValue, settingId ) {
-                  if ( ! changes || null !== changes[ settingId ] ) {
-                        submittedChanges[ settingId ] = _.extend(
-                              {},
-                              submittedChanges[ settingId ] || {},
-                              { value: dirtyValue }
-                        );
-                  }
-            } );
-            if ( _.isEmpty( submittedChanges ) ) {
-                  deferred.resolve( {} );
-                  return deferred.promise();
-            }
-
-            if ( api._latestRevision <= api._lastSavedRevision ) {
-                  deferred.resolve( {} );
-                  return deferred.promise();
-            }
-            api.trigger( 'skope-changeset-save', submittedChanges );
-
-            var queryVars = {
-                  skope_id : skope_id,
-                  action : 'changeset_update',
-                  opt_name : api.czr_skope( skope_id ).opt_name
-            };
-            data = api.previewer.query( _.extend( queryVars, { excludeCustomizedSaved: true } ) );
-            delete data.customized; // Being sent in customize_changeset_data instead.
-            _.extend( data, {
-                  nonce: api.settings.nonce.save,
-                  customize_changeset_data: JSON.stringify( submittedChanges )
-            } );
-            wp.ajax.post( 'customize_skope_changeset_save', data )
-                  .done( function requestChangesetUpdateDone( _data_ ) {
-                        deferred.resolve( _data_ );
-                  } )
-                  .fail( function requestChangesetUpdateFail( _data_ ) {
-                        api.consoleLog('SKOPE CHANGESET FAIL FOR SKOPE ' + _data_.skope_id, _data_ );
-                        deferred.reject( _data_ );
-                  } )
-                  .always( function( _data_ ) {
-                        if ( _data_.setting_validities ) {
-                              api._handleSettingValidities( {
-                                    settingValidities: _data_.setting_validities
-                              } );
-                        }
-                  } );
-
-            return deferred.promise();
-      };
-})( wp.customize , jQuery, _ );
-( function ( api, $, _ ) {
-      api.Setting.prototype.initialize = function( id, value, options ) {
-            var setting = this;
-            api.Value.prototype.initialize.call( setting, value, options );
-
-            setting.id = id;
-            setting.transport = setting.transport || 'refresh';
-            setting._dirty = options.dirty || false;
-            setting.notifications = new api.Values({ defaultConstructor: api.Notification });
-            setting.bind( setting.preview );
-      };
-      api.Setting.prototype.preview = function( to, from , data ) {
-            var setting = this, transport, dfd = $.Deferred();
-
-            transport = setting.transport;
-
-            if ( serverControlParams.isSkopOn && api.czr_isPreviewerSkopeAware && 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
-                  this.previewer.refresh();
-                  return dfd.resolve( arguments ).promise();
-            }
-            if ( ! _.isUndefined( from ) && ! _.isEmpty( from ) && ! _.isNull( from ) ) {
-                  if ( _.isObject( data ) && true === data.not_preview_sent ) {
-                        return dfd.resolve( arguments ).promise();
-                  }
-            }
-            if ( _.has( data, 'silent' ) && false !== data.silent )
-              return dfd.resolve( arguments ).promise();
-            if ( 'postMessage' === transport && ! api.state( 'previewerAlive' ).get() ) {
-                  transport = 'refresh';
-            }
-
-            if ( 'postMessage' === transport ) {
-                  setting.previewer.send( 'pre_setting', {
-                        set_id : setting.id,
-                        data   : data,//<= { module_id : 'string', module : {} } which typically includes the module_id and the module model ( items, mod options )
-                        value  : to
-                  });
-                  setting.previewer.send( 'setting', [ setting.id, setting() ] );
-
-                  dfd.resolve( arguments );
-
-            } else if ( 'refresh' === transport ) {
-                  if ( serverControlParams.isSkopOn ) {
-                        setting.previewer.refresh().always( function() {
-                              dfd.resolve( arguments );
-                        });
-                  } else {
-                        setting.previewer.refresh();
-                        dfd.resolve( arguments );
-                  }
-            }
-
-            return dfd.promise();
-      };//api.Setting.prototype.preview
-})( wp.customize , jQuery, _ );
-( function ( api, $, _ ) {
-      /* monkey patch for the content height set */
-      if ( 'function' == typeof api.Section ) {
-            var _original_section_initialize = api.Section.prototype.initialize;
-            api.Section.prototype.initialize = function( id, options ) {
-                  _original_section_initialize.apply( this, [id, options] );
-                  var section = this;
-
-                  this.expanded.callbacks.add( function( _expanded ) {
-                    if ( ! _expanded )
-                      return;
-
-                  var container = section.container.closest( '.wp-full-overlay-sidebar-content' ),
-                        content = section.container.find( '.accordion-section-content' );
-                    _resizeContentHeight = function() {
-                      content.css( 'height', container.innerHeight() );
-                  };
-                    _resizeContentHeight();
-                    $( window ).on( 'resize.customizer-section', _.debounce( _resizeContentHeight, 110 ) );
-                  });
-            };
-      }
-})( wp.customize , jQuery, _ );
-(function (api, $, _) {
-api.CZR_Helpers = api.CZR_Helpers || {};
-api.CZR_Helpers = $.extend( api.CZR_Helpers, {
-      getControlSettingId : function( control_id, setting_type ) {
-            setting_type = 'default' || setting_type;
-            if ( ! api.control.has( control_id ) ) {
-                  api.consoleLog( 'getControlSettingId : The requested control_id is not registered in the api yet : ' + control_id );
-                  return control_id;
-            }
-            if ( ! _.has( api.control( control_id ), 'settings' ) || _.isEmpty( api.control( control_id ).settings ) )
-              return control_id;
-
-            if ( ! _.has( api.control( control_id ).settings, setting_type ) ) {
-                  api.consoleLog( 'getControlSettingId : The requested control_id does not have the requested setting type : ' + control_id + ' , ' + setting_type );
-                  return control_id;
-            }
-            if ( _.isUndefined( api.control( control_id ).settings[setting_type].id ) ) {
-                  api.consoleLog( 'getControlSettingId : The requested control_id has no setting id assigned : ' + control_id );
-                  return control_id;
-            }
-            return api.control( control_id ).settings[setting_type].id;
-      },
-
-
-
-      getDocSearchLink : function( text ) {
-            text = ! _.isString(text) ? '' : text;
-            var _searchtext = text.replace( / /g, '+'),
-                _url = [ serverControlParams.docURL, 'search?query=', _searchtext ].join('');
-            return [
-              '<a href="' + _url + '" title="' + serverControlParams.i18n.readDocumentation + '" target="_blank">',
-              ' ',
-              '<span class="fa fa-question-circle-o"></span>'
-            ].join('');
-      },
-
-
-      /*
-      * @return string
-      * simple helper to build the setting wp api ready id
-      */
-      build_setId : function ( setId ) {
-            if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
-              return setId;
-            if ( ! _.contains( serverControlParams.themeSettingList, setId ) )
-              return setId;
-
-            return -1 == setId.indexOf( serverControlParams.themeOptions ) ? [ serverControlParams.themeOptions +'[' , setId  , ']' ].join('') : setId;
-    },
-
-      /*
-      * @return string
-      * simple helper to extract the option name from a setting id
-      */
-      getOptionName : function(name) {
-            var self = this;
-            if ( -1 == name.indexOf(serverControlParams.themeOptions) )
-              return name;
-            return name.replace(/\[|\]/g, '').replace(serverControlParams.themeOptions, '');
-      },
-      hasPartRefresh : function( setId ) {
-            if ( ! _.has( api, 'czr_partials')  )
-              return;
-            return  _.contains( _.map( api.czr_partials(), function( partial, key ) {
-                  return _.contains( partial.settings, setId );
-            }), true );
-      },
-      getSectionControlIds : function( section_id ) {
-            section_id = section_id || api.czr_activeSectionId();
-            return ! api.section.has( section_id ) ?
-                  [] :
-                  _.map( api.section( section_id ).controls(), function( _ctrl ) {
-                        return _ctrl.id;
-                  });
-      },
-      getSectionSettingIds : function( section_id ) {
-            section_id = section_id || api.czr_activeSectionId();
-            if ( ! api.section.has( section_id) )
-              return;
-            var self = this,
-                _sec_settings = [],
-                _sec_controls = self.getSectionControlIds( section_id );
-
-            _.each( _sec_controls, function( ctrlId ) {
-                  _.each( api.control(ctrlId).settings, function( _instance, _k ) {
-                        _sec_settings.push( _instance.id );
-                  });
-            });
-            return _sec_settings;
-      },
-      capitalize : function( string ) {
-            if( ! _.isString(string) )
-              return string;
-            return string.charAt(0).toUpperCase() + string.slice(1);
-      },
-
-      truncate : function( string, n, useWordBoundary ){
-            if ( ! _.isString( string ) )
-              return '';
-            n = n || 20;
-            var isTooLong = string.length > n,
-                s_ = isTooLong ? string.substr(0,n-1) : string;
-                s_ = (useWordBoundary && isTooLong) ? s_.substr(0,s_.lastIndexOf(' ')) : s_;
-            return  isTooLong ? s_ + '...' : s_;
-      },
-      isMultiItemModule : function( module_type, moduleInst ) {
-            if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
-              return;
-            if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
-              module_type = moduleInst.module_type;
-            else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
-              return;
-            if ( ! _.has( api.czrModuleMap, module_type ) )
-              return;
-
-            return api.czrModuleMap[module_type].crud || api.czrModuleMap[module_type].multi_item || false;
-      },
-      isCrudModule : function( module_type, moduleInst ) {
-            if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
-              return;
-            if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
-              module_type = moduleInst.module_type;
-            else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
-              return;
-            if ( ! _.has( api.czrModuleMap, module_type ) )
-              return;
-
-            return api.czrModuleMap[module_type].crud || false;
-      },
-      hasModuleModOpt : function( module_type, moduleInst ) {
-            if ( _.isUndefined( module_type ) && ! _.isObject( moduleInst ) )
-              return;
-            if ( _.isObject( moduleInst ) && _.has( moduleInst, 'module_type' ) )
-              module_type = moduleInst.module_type;
-            else if ( _.isUndefined( module_type ) || _.isNull( module_type ) )
-              return;
-            if ( ! _.has( api.czrModuleMap, module_type ) )
-              return;
-
-            return api.czrModuleMap[module_type].has_mod_opt || false;
-      },
-      setupInputCollectionFromDOM : function() {
-            var inputParentInst = this;//<= because fired with .call( inputParentInst )
-            if ( ! _.isFunction( inputParentInst ) ) {
-                  throw new Error( 'setupInputCollectionFromDOM : inputParentInst is not valid.' );
-            }
-            var module = inputParentInst.module,
-                is_mod_opt = _.has( inputParentInst() , 'is_mod_opt' );
-            if ( _.has( inputParentInst, 'czr_Input') && ! _.isEmpty( inputParentInst.inputCollection() ) )
-              return;
-            inputParentInst.czr_Input = new api.Values();
-            inputParentInst.inputConstructor = is_mod_opt ? module.inputModOptConstructor : module.inputConstructor;
-
-            var _defaultInputParentModel = is_mod_opt ? inputParentInst.defaultModOptModel : inputParentInst.defaultItemModel;
-
-            if ( _.isEmpty( _defaultInputParentModel ) || _.isUndefined( _defaultInputParentModel ) ) {
-              throw new Error( 'No default model found in item or mod opt ' + inputParentInst.id + '.' );
-            }
-            var inputParentInst_model = $.extend( true, {}, inputParentInst() );
-
-            if ( ! _.isObject( inputParentInst_model ) )
-              inputParentInst_model = _defaultInputParentModel;
-            else
-              inputParentInst_model = $.extend( _defaultInputParentModel, inputParentInst_model );
-
-            var dom_inputParentInst_model = {};
-            $( '.' + module.control.css_attr.sub_set_wrapper, inputParentInst.container).each( function( _index ) {
-                  var _id = $(this).find('[data-type]').attr( 'data-type' ),
-                      _value = _.has( inputParentInst_model, _id ) ? inputParentInst_model[ _id ] : '';
-                  if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
-                        api.consoleLog( 'setupInputCollectionFromDOM : missing data-type for ' + module.id );
-                        return;
-                  }
-                  if ( ! _.has( inputParentInst_model, _id ) ) {
-                        throw new Error('The item or mod opt property : ' + _id + ' has been found in the DOM but not in the item or mod opt model : '+ inputParentInst.id + '. The input can not be instantiated.');
-                  }
-                  var _inputType      = $(this).attr( 'data-input-type' ),
-                      _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
-                      _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
-                  inputParentInst.czr_Input.add( _id, new inputParentInst.inputConstructor( _id, {
-                        id            : _id,
-                        type          : _inputType,
-                        transport     : _inputTransport,
-                        input_value   : _value,
-                        input_options : _inputOptions,//<= a module can define a specific set of option
-                        container     : $(this),
-                        input_parent  : inputParentInst,
-                        is_mod_opt    : is_mod_opt,
-                        module        : module
-                  } ) );
-                  inputParentInst.czr_Input( _id ).ready();
-                  dom_inputParentInst_model[ _id ] = _value;
-            });//each
-            inputParentInst.inputCollection( dom_inputParentInst_model );
-            return inputParentInst;
-      },
-      removeInputCollection : function() {
-            var inputParentInst = this;//<= because fired with .call( inputParentInst )
-            if ( ! _.isFunction( inputParentInst ) ) {
-                  throw new Error( 'removeInputCollection : inputParentInst is not valid.' );
-            }
-            if ( ! _.has( inputParentInst, 'czr_Input') )
-              return;
-            inputParentInst.czr_Input.each( function( _input ) {
-                  inputParentInst.czr_Input.remove( _input.id );
-            });
-            inputParentInst.inputCollection({});
-      },
-      refreshModuleControl : function( wpSetId ) {
-            var _constructor = api.controlConstructor.czr_module,
-                _control_type = api.control( wpSetId ).params.type,
-                _control_data = api.settings.controls[wpSetId];
-            $.when( api.control( wpSetId ).container.remove() ).done( function() {
-                  api.control.remove( wpSetId );
-                  api.control.add( wpSetId,  new _constructor( wpSetId, { params : _control_data, previewer : api.previewer }) );
-            });
-
-      },
-      hexToRgb : function( hex ) {
-            var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-            try {
-                  hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-                      return r + r + g + g + b + b;
-                  });
-            } catch( er ) {
-                  api.errorLog( 'Error in Helpers::hexToRgb : ' + er );
-                  return hex;
-            }
-
-            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec( hex );
-            result = result ? [
-                  parseInt(result[1], 16),//r
-                  parseInt(result[2], 16),//g
-                  parseInt(result[3], 16)//b
-            ] : [];
-            return 'rgb(' + result.join(',') + ')';
-      },
-
-      rgbToHex : function ( r, g, b ) {
-            var componentToHex = function(c) {
-                  var hex = c.toString(16);
-                  return hex.length == 1 ? "0" + hex : hex;
-            };
-            return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-      }
-
-});//$.extend
-})( wp.customize , jQuery, _);
-(function (api, $, _) {
-api.CZR_Helpers = api.CZR_Helpers || {};
-api.CZR_Helpers = $.extend( api.CZR_Helpers, {
-      addActions : function( event_map, new_events, instance ) {
-              var control = this;
-              instance = instance || control;
-              instance[event_map] = instance[event_map] || [];
-              new_event_map = _.clone( instance[event_map] );
-              instance[event_map] = _.union( new_event_map, ! _.isArray(new_events) ? [new_events] : new_events );
-      },
-
-      doActions : function( action, $dom_el, obj ) {
-              $dom_el.trigger( action, obj );
-      },
-      setupDOMListeners : function( event_map , args, instance ) {
-              var control = this,
-                  _defaultArgs = {
-                        model : {},
-                        dom_el : {}
-                  };
-
-              instance = instance || control;
-              if ( ! _.isArray( event_map ) ) {
-                    api.errorLog( 'setupDomListeners : event_map should be an array', args );
-                    return;
-              }
-              if ( ! _.isObject( args ) ) {
-                    api.errorLog( 'setupDomListeners : args should be an object', event_map );
-                    return;
-              }
-
-              args = _.extend( _defaultArgs, args );
-              if ( ! args.dom_el instanceof jQuery || 1 != args.dom_el.length ) {
-                    api.errorLog( 'setupDomListeners : dom element should be an existing dom element', args );
-                    return;
-              }
-              _.map( event_map , function( _event ) {
-                    if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
-                          api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
-                          return;
-                    }
-                    if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
-                          api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
-                          return;
-                    }
-                    args.dom_el.on( _event.trigger , _event.selector, function( e, event_params ) {
-                          e.stopPropagation();
-                          if ( api.utils.isKeydownButNotEnterEvent( e ) ) {
-                            return;
-                          }
-                          e.preventDefault(); // Keep this AFTER the key filter above
-                          var actionsParams = $.extend( true, {}, args );
-                          if ( _.has( actionsParams, 'model') && _.has( actionsParams.model, 'id') ) {
-                                if ( _.has( instance, 'get' ) )
-                                  actionsParams.model = instance();
-                                else
-                                  actionsParams.model = instance.getModel( actionsParams.model.id );
-                          }
-                          $.extend( actionsParams, { event : _event, dom_event : e } );
-                          $.extend( actionsParams, event_params );
-                          if ( ! _.has( actionsParams, 'event' ) || ! _.has( actionsParams.event, 'actions' ) ) {
-                                api.errorLog( 'executeEventActionChain : missing obj.event or obj.event.actions' );
-                                return;
-                          }
-                          try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
-                                api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
-                                api.errorLog( 'Error : ' + er );
-                          }
-                    });//.on()
-              });//_.map()
-      },//setupDomListeners
-      executeEventActionChain : function( args, instance ) {
-              var control = this;
-              if ( 'function' === typeof( args.event.actions ) )
-                return args.event.actions.call( instance, args );
-              if ( ! _.isArray( args.event.actions ) )
-                args.event.actions = [ args.event.actions ];
-              var _break = false;
-              _.map( args.event.actions, function( _cb ) {
-                    if ( _break )
-                      return;
-
-                    if ( 'function' != typeof( instance[ _cb ] ) ) {
-                          throw new Error( 'executeEventActionChain : the action : ' + _cb + ' has not been found when firing event : ' + args.event.selector );
-                    }
-                    var $_dom_el = ( _.has(args, 'dom_el') && -1 != args.dom_el.length ) ? args.dom_el : control.container;
-
-                    $_dom_el.trigger( 'before_' + _cb, _.omit( args, 'event' ) );
-                    var _cb_return = instance[ _cb ].call( instance, args );
-                    if ( false === _cb_return )
-                      _break = true;
-                    $_dom_el.trigger( 'after_' + _cb, _.omit( args, 'event' ) );
-              });//_.map
-      }
-});//$.extend
-})( wp.customize , jQuery, _);
-(function (api, $, _) {
-
-  api.czr_wpQueryDataReady = $.Deferred();
-  api.czr_wpQueryInfos = api.czr_wpQueryInfos || new api.Value();
-  api.czr_partials = api.czr_partials || new api.Value();
-  /*****************************************************************************
-  * CAPTURE PREVIEW INFORMATIONS ON REFRESH + REACT TO THEM
-  *****************************************************************************/
-  api.bind( 'ready', function() {
-        api.previewer.bind('houston-widget-settings', function(data) {
-              var _candidates = _.filter( data.registeredSidebars, function( sb ) {
-                return ! _.findWhere( _wpCustomizeWidgetsSettings.registeredSidebars, { id: sb.id } );
-              });
-
-              var _inactives = _.filter( data.registeredSidebars, function( sb ) {
-                return ! _.has( data.renderedSidebars, sb.id );
-              });
-
-              _inactives = _.map( _inactives, function(obj) {
-                return obj.id;
-              });
-
-              var _registered = _.map( data.registeredSidebars, function(obj) {
-                return obj.id;
-              });
-              api.czr_widgetZoneSettings = api.czr_widgetZoneSettings || new api.Value();//will store all widget zones data sent by preview as an observable object
-              api.czr_widgetZoneSettings.set( {
-                    actives :  data.renderedSidebars,
-                    inactives :  _inactives,
-                    registered :  _registered,
-                    candidates :  _candidates,
-                    available_locations :  data.availableWidgetLocations//built server side
-              } );
-
-        });
-
-        /* WP CONDITIONAL TAGS => stores and observes the WP conditional tags sent by the preview */
-        api.previewer.bind( 'czr-query-data-ready', function( data ) {
-              api.czr_wpQueryInfos( data );
-              if ( 'pending' == api.czr_wpQueryDataReady.state() ) {
-                    api.czr_wpQueryDataReady.resolve( data );
-              }
-        });
-        api.previewer.bind( 'czr-partial-refresh-data', function( data ) {
-              api.czr_partials.set( data );
-        });
-        api.previewer.bind( 'czr-partial-refresh-done', function( data ) {
-              if ( ! _.has( data, 'set_id' ) )
-                return;
-              var setId = api.CZR_Helpers.build_setId( data.set_id );
-              if ( ! api.has( setId ) )
-                return;
-              var ctrlId = api.CZR_Helpers.getControlSettingId( setId );
-              if ( ! api.control.has( ctrlId ) )
-                return;
-              api.control( ctrlId ).trigger( 'czr-partial-refresh-done' );
-        });
-  });//api.bind('ready')
-})( wp.customize , jQuery, _ );var CZRInputMths = CZRInputMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRInputMths , {
-    initialize: function( name, options ) {
-          if ( _.isUndefined( options.input_parent ) || _.isEmpty(options.input_parent) ) {
-            throw new Error('No input_parent assigned to input ' + options.id + '. Aborting');
-          }
-          if ( _.isUndefined(options.module ) ) {
-            throw new Error('No module assigned to input ' + options.id + '. Aborting');
-          }
-
-          api.Value.prototype.initialize.call( this, null, options );
-
-          var input = this;
-          $.extend( input, options || {} );
-          input.isReady = $.Deferred();
-          if ( ! _.isUndefined(options.input_value) ) {
-                input.set( options.input_value );
-          }
-          if ( api.czrInputMap && _.has( api.czrInputMap, input.type ) ) {
-                var _meth = api.czrInputMap[ input.type ];
-                if ( _.isFunction( input[_meth]) ) {
-                      input[_meth]( options.input_options || null );
-                }
-          } else {
-                api.consoleLog('Warning an input : ' + input.id + ' has no corresponding method defined in api.czrInputMap.');
-          }
-
-          var trigger_map = {
-                text : 'keyup',
-                textarea : 'keyup',
-                password : 'keyup',
-                color : 'colorpickerchange',
-                range : 'input propertychange'
-          };
-          input.input_event_map = [
-                  {
-                    trigger   : $.trim( ['change', trigger_map[input.type] || '' ].join(' ') ),//was 'propertychange change click keyup input',//colorpickerchange is a custom colorpicker event @see method setupColorPicker => otherwise we don't
-                    selector  : 'input[data-type], select[data-type], textarea[data-type]',
-                    name      : 'set_input_value',
-                    actions   : function( obj ) {
-                        if ( ! _.has( input.input_parent, 'syncElements') || ! _.has( input.input_parent.syncElements, input.id ) ) {
-                            throw new Error('WARNING : THE INPUT ' + input.id + ' HAS NO SYNCED ELEMENT.');
-                        }
-                    }//was 'updateInput'
-                  }
-          ];
-          input.visible = new api.Value( true );
-          input.isReady.done( function() {
-                input.visible.bind( function( visible ) {
-                      if ( visible )
-                        input.container.stop( true, true ).slideDown( 200 );
-                      else
-                        input.container.stop( true, true ).slideUp( 200 );
-                });
-          });
-          input.enabled = new api.Value( true );
-          input.isReady.done( function() {
-                input.enabled.bind( function( enabled ) {
-                      input.container.toggleClass( 'disabled', ! enabled );
-                });
-          });
-
-    },
-    ready : function() {
-            var input = this;
-            input.setupDOMListeners( input.input_event_map , { dom_el : input.container }, input );
-            input.callbacks.add( function() { return input.inputReact.apply( input, arguments ); } );
-            $.when( input.setupSynchronizer() ).done( function() {
-                  input.isReady.resolve( input );
-            } );
-
-    },
-    setupSynchronizer: function() {
-          var input       = this,
-              input_parent        = input.input_parent,
-              $_input_el  = input.container.find('[data-type]'),
-              is_textarea = input.container.find('[data-type]').is('textarea');
-          if ( is_textarea ) {
-            throw new Error('TO DO : THE TEXTAREA INPUT ARE NOT READY IN THE SYNCHRONIZER!');
-          }
-
-          var syncElement = new api.Element( $_input_el );
-          input_parent.syncElements = input_parent.syncElements || {};
-          input_parent.syncElements[input.id] = syncElement;//adds the input syncElement to the collection
-          syncElement.sync( input );//sync with the input instance
-          syncElement.set( input() );
-    },
-    inputReact : function( to, from, data ) {
-          var input = this,
-              _current_input_parent = input.input_parent(),
-              _new_model        = _.clone( _current_input_parent ),//initialize it to the current value
-              _isPreItemInput = input.is_preItemInput;
-          if ( ! input.enabled() )
-            return;
-          _new_model =  ( ! _.isObject(_new_model) || _.isEmpty(_new_model) ) ? {} : _new_model;
-          _new_model[ input.id ] = to;
-          input.input_parent.set( _new_model, {
-                input_changed     : input.id,
-                input_transport   : input.transport,
-                not_preview_sent  : 'postMessage' === input.transport//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
-          } );
-          if ( ! _isPreItemInput ) {
-                input.input_parent.trigger( input.id + ':changed', to );
-                if ( ! _.isEmpty( from ) || ! _.isUndefined( from ) && 'postMessage' === input.transport ) {
-                      input.module.sendInputToPreview( {
-                            input_id        : input.id,
-                            input_parent_id : input.input_parent.id,
-                            to              : to,
-                            from            : from
-                      } );
-                }
-          }
-    },
-
-
-    /*-----------------------------------------
-    SOME DEFAULT CALLBACKS
-    ------------------------------------------*/
-    setupColorPicker : function() {
-        var input  = this;
-
-        input.container.find('input').iris( {
-            palettes: true,
-            hide:false,
-            change : function( e, o ) {
-                  $(this).val( o.color.toString() ).trigger('colorpickerchange').trigger('change');
-            }
-        });
-    },
-
-    setupSelect : function() {
-        var input = this;
-        $('select', input.container ).not('.no-selecter-js')
-              .each( function() {
-                    $(this).selecter({
-                    });
-        });
-    },
-
-    setupIcheck : function( obj ) {
-            var input      = this;
-
-            $( 'input[type=checkbox]', input.container ).each( function(e) {
-                  if ( 0 !== $(this).closest('div[class^="icheckbox"]').length )
-                    return;
-
-                  $(this).iCheck({
-                        checkboxClass: 'icheckbox_flat-grey',
-                        checkedClass: 'checked',
-                        radioClass: 'iradio_flat-grey',
-                  })
-                  .on( 'ifChanged', function(e){
-                        $(this).val( false === $(this).is(':checked') ? 0 : 1 );
-                        $(e.currentTarget).trigger('change');
-                  });
-            });
-    },
-
-    setupStepper : function( obj ) {
-          var input      = this;
-          $('input[type="number"]',input.container ).each( function( e ) {
-                $(this).stepper();
-          });
-    },
-    setupRangeSlider : function( options ) {
-              var input = this,
-                  $handle,
-                  _updateHandle = function(el, val) {
-                        el.textContent = val + "%";
-                  };
-
-              $( input.container ).find('input').rangeslider( {
-                    polyfill: false,
-                    rangeClass: 'rangeslider',
-                    disabledClass: 'rangeslider--disabled',
-                    horizontalClass: 'rangeslider--horizontal',
-                    verticalClass: 'rangeslider--vertical',
-                    fillClass: 'rangeslider__fill',
-                    handleClass: 'rangeslider__handle',
-                    onInit: function() {
-                          $handle = $('.rangeslider__handle', this.$range);
-                          $('.rangeslider__handle', this.$range);
-                          _updateHandle( $handle[0], this.value );
-                    },
-              } ).on('input', function() {
-                    _updateHandle( $handle[0], this.value );
-              });
-        }
-});//$.extend
-})( wp.customize , jQuery, _ );var CZRInputMths = CZRInputMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRInputMths , {
-    setupImageUploader : function() {
-          var input        = this,
-              _model       = input();
-          input.attachment   = {};
-          if ( ! input.container )
-            return this;
-
-          this.tmplRendered = $.Deferred();
-          this.setupContentRendering( _model, {} );
-          this.tmplRendered.done( function(){
-            input.czrImgUploaderBinding();
-          });
-  },
-
-  setupContentRendering : function( to, from) {
-        var input = this, _attachment;
-        if ( ( input.attachment.id != to ) && from !== to ) {
-              if ( ! to ) {
-                    input.attachment = {};
-                    input.renderImageUploaderTemplate();
-              }
-              _attachment = wp.media.attachment( to );
-              if ( _.isObject( _attachment ) && _.has( _attachment, 'attributes' ) && _.has( _attachment.attributes, 'sizes' ) ) {
-                    input.attachment       = _attachment.attributes;
-                    input.renderImageUploaderTemplate();
-              } else {
-                    wp.media.attachment( to ).fetch().done( function() {
-                          input.attachment       = this.attributes;
-                          input.renderImageUploaderTemplate();
-                    });
-              }
-        }//Standard reaction, the image has been updated by the user or init
-        else if (  ! input.attachment.id || input.attachment.id === to ) {
-              input.renderImageUploaderTemplate();
-        }
-  },
-
-  czrImgUploaderBinding : function() {
-        var input = this;
-        _.bindAll( input, 'czrImgUploadRemoveFile', 'czrImgUploadOpenFrame', 'czrImgUploadSelect');
-        input.container.on( 'click keydown', '.upload-button', input.czrImgUploadOpenFrame );
-        input.container.on( 'click keydown', '.thumbnail-image img', input.czrImgUploadOpenFrame );
-        input.container.on( 'click keydown', '.remove-button', input.czrImgUploadRemoveFile );
-
-        input.bind( input.id + ':changed', function( to, from ){
-              input.tmplRendered = $.Deferred();
-              input.setupContentRendering(to,from);
-        });
-  },
-  /**
-  * Open the media modal.
-  */
-  czrImgUploadOpenFrame: function( event ) {
-        if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
-          return;
-        }
-
-        event.preventDefault();
-
-        if ( ! this.frame ) {
-          this.czrImgUploadInitFrame();
-        }
-
-        this.frame.open();
-  },
-
-  /**
-  * Create a media modal select frame, and store it so the instance can be reused when needed.
-  */
-  czrImgUploadInitFrame: function() {
-        var input = this,
-            button_labels = this.getUploaderLabels();
-
-        input.frame = wp.media({
-                button: {
-                      text: button_labels.frame_button
-                },
-                states: [
-                       new wp.media.controller.Library({
-                              title:     button_labels.frame_title,
-                              library:   wp.media.query({ type: 'image' }),
-                              multiple:  false,
-                              date:      false
-                       })
-                ]
-        });
-        input.frame.on( 'select', input.czrImgUploadSelect );
-  },
-
-  /**
-  * Called when the "Remove" link is clicked. Empties the setting.
-  *
-  * @param {object} event jQuery Event object
-  */
-  czrImgUploadRemoveFile: function( event ) {
-        var input = this;
-
-        if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
-          return;
-        }
-        event.preventDefault();
-        input.attachment = {};
-        input.set('');
-  },
-
-
-  /**
-  * Callback handler for when an attachment is selected in the media modal.
-  * Gets the selected image information, and sets it within the input.
-  */
-  czrImgUploadSelect: function() {
-        var node,
-            input = this,
-            attachment   = input.frame.state().get( 'selection' ).first().toJSON(),  // Get the attachment from the modal frame.
-            mejsSettings = window._wpmejsSettings || {};
-        input.attachment = attachment;
-        input.set(attachment.id);
-  },
-  renderImageUploaderTemplate: function() {
-        var input  = this;
-        if ( 0 === $( '#tmpl-czr-input-img-uploader-view-content' ).length )
-          return;
-
-        var view_template = wp.template('czr-input-img-uploader-view-content');
-        if ( ! view_template  || ! input.container )
-         return;
-
-        var $_view_el    = input.container.find('.' + input.module.control.css_attr.img_upload_container );
-
-        if ( ! $_view_el.length )
-          return;
-
-        var _template_params = {
-          button_labels : input.getUploaderLabels(),
-          settings      : input.id,
-          attachment    : input.attachment,
-          canUpload     : true
-        };
-
-        $_view_el.html( view_template( _template_params) );
-
-        input.tmplRendered.resolve();
-        input.container.trigger( input.id + ':content_rendered' );
-
-        return true;
-  },
-
-  getUploaderLabels : function() {
-        var _ts = serverControlParams.i18n,
-            _map = {
-            'select'      : _ts.select_image,
-            'change'      : _ts.change_image,
-            'remove'      : _ts.remove_image,
-            'default'     : _ts.default_image,
-            'placeholder' : _ts.placeholder_image,
-            'frame_title' : _ts.frame_title_image,
-            'frame_button': _ts.frame_button_image
-        };
-        _.each( _map, function( ts_string, key ) {
-              if ( _.isUndefined( ts_string ) ) {
-                    var input = this;
-                    api.errorLog( 'A translated string is missing ( ' + key + ' ) for the image uploader input in module : ' + input.module.id );
-                    return '';
-              }
-        });
-
-        return _map;
-  }
-});//$.extend
-})( wp.customize , jQuery, _ );/* Fix caching, select2 default one seems to not correctly work, or it doesn't what I think it should */
-var CZRInputMths = CZRInputMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRInputMths , {
-      setupContentPicker: function( wpObjectTypes ) {
-              var input  = this,
-              _event_map = [];
-
-              /* Dummy for the prototype purpose */
-              $.extend( {
-                    post : '',
-                    taxonomy : ''
-              }, _.isObject( wpObjectTypes ) ? wpObjectTypes : {} );
-
-              input.wpObjectTypes = wpObjectTypes;
-
-              /* Methodize this or use a template */
-              input.container.find('.czr-input').append('<select data-select-type="content-picker-select" class="js-example-basic-simple"></select>');
-              _event_map = [
-                    {
-                          trigger   : 'change',
-                          selector  : 'select[data-select-type]',
-                          name      : 'set_input_value',
-                          actions   : function( obj ){
-                                var $_changed_input   = $( obj.dom_event.currentTarget, obj.dom_el ),
-                                    _raw_val          = $( $_changed_input, obj.dom_el ).select2( 'data' ),
-                                    _val_candidate    = {},
-                                    _default          = {
-                                          id          : '',
-                                          type_label  : '',
-                                          title       : '',
-                                          object_type : '',
-                                          url         : ''
-                                    };
-
-                                _raw_val = _.isArray( _raw_val ) ? _raw_val[0] : _raw_val;
-                                if ( ! _.isObject( _raw_val ) || _.isEmpty( _raw_val ) ) {
-                                    api.errorLog( 'Content Picker Input : the picked value should be an object not empty.');
-                                    return;
-                                }
-                                _.each( _default, function( val, k ){
-                                      if ( '_custom_' !== _raw_val.id ) {
-                                            if ( ! _.has( _raw_val, k ) || _.isEmpty( _raw_val[ k ] ) ) {
-                                                  api.errorLog( 'content_picker : missing input param : ' + k );
-                                                  return;
-                                            }
-                                      }
-                                      _val_candidate[ k ] = _raw_val[ k ];
-                                } );
-                                input.set( _val_candidate );
-                          }
-                    }
-              ];
-
-              input.setupDOMListeners( _event_map , { dom_el : input.container }, input );
-              input.isReady.done( function() {
-                    input.setupContentSelecter();
-              });
-
-      },
-      setupContentSelecter : function() {
-              var input = this;
-              if ( ! _.isEmpty( input() ) ) {
-                    var _attributes = {
-                          value : input().id || '',
-                          title : input().title || '',
-                          selected : "selected"
-                    };
-                    input.container.find('select').append( $( '<option>', _attributes ) );
-              }
-
-              input.container.find( 'select' ).select2( {
-                    placeholder: {
-                          id: '-1', // the value of the option
-                          title: 'Select'
-                    },
-                    data : input.setupSelectedContents(),
-                    ajax: {
-                          url: serverControlParams.AjaxUrl,
-                          type: 'POST',
-                          dataType: 'json',
-                          delay: 250,
-                          debug: true,
-                          data: function ( params ) {
-                                var page = params.page ? params.page : 0;
-                                page = params.term ? params.page : page;
-                                return {
-                                      action          : params.term ? "search-available-content-items-customizer" : "load-available-content-items-customizer",
-                                      search          : params.term,
-                                      wp_customize    : 'on',
-                                      page            : page,
-                                      wp_object_types : JSON.stringify( input.wpObjectTypes ),
-                                      CZRCpNonce      : serverControlParams.CZRCpNonce
-                                };
-                          },
-                          /* transport: function (params, success, failure) {
-                            var $request = $.ajax(params);
-
-                            $request.then(success);
-                            $request.fail(failure);
-
-                            return $request;
-                          },*/
-                          processResults: function ( data, params ) {
-                                input.defaultContentPickerOption = input.defaultContentPickerOption || [];
-
-                                if ( ! data.success )
-                                  return { results: input.defaultContentPickerOption };
-
-
-                                var items   = data.data.items,
-                                    _results = [];
-
-                                _.each( items, function( item ) {
-                                      _results.push({
-                                            id          : item.id,
-                                            title       : item.title,
-                                            type_label  : item.type_label,
-                                            object_type : item.object,
-                                            url         : item.url
-                                      });
-                                });
-                                return {
-                                      results: _results,
-                                      pagination: { more: data.data.items.length >= 10 }//<= the pagination boolean param can be tricky => here set to >= 10 because we query 10 + add a custom link item on the first query
-                                };
-                          },
-                    },//ajax
-                    templateSelection: input.czrFormatContentSelected,
-                    templateResult: input.czrFormatContentSelected,
-                    escapeMarkup: function ( markup ) { return markup; },
-             });//select2 setup
-      },
-      czrFormatContentSelected: function ( item ) {
-              if ( item.loading ) return item.text;
-              var markup = "<div class='content-picker-item clearfix'>" +
-                "<div class='content-item-bar'>" +
-                  "<span class='czr-picker-item-title'>" + item.title + "</span>";
-
-              if ( item.type_label ) {
-                markup += "<span class='czr-picker-item-type'>" + item.type_label + "</span>";
-              }
-
-              markup += "</div></div>";
-
-              return markup;
-      },
-
-      setupSelectedContents : function() {
-            var input = this,
-               _model = input();
-
-            return _model;
-      }
-});//$.extend
-})( wp.customize , jQuery, _ );var CZRInputMths = CZRInputMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRInputMths , {
-      setupTextEditor : function() {
-            var input        = this,
-                _model       = input();
-            if ( ! input.container ) {
-                throw new Error( 'The input container is not set for WP text editor in module.' + input.module.id );
-            }
-
-            if ( ! input.czrRenderInputTextEditorTemplate() )
-              return;
-
-            input.editor       = tinyMCE( 'czr-customize-content_editor' );
-            input.textarea     = $( '#czr-customize-content_editor' );
-            input.editorPane   = $( '#czr-customize-content_editor-pane' );
-            input.dragbar      = $( '#czr-customize-content_editor-dragbar' );
-            input.editorFrame  = $( '#czr-customize-content_editor_ifr' );
-            input.mceTools     = $( '#wp-czr-customize-content_editor-tools' );
-            input.mceToolbar   = input.editorPane.find( '.mce-toolbar-grp' );
-            input.mceStatusbar = input.editorPane.find( '.mce-statusbar' );
-
-            input.preview      = $( '#customize-preview' );
-            input.collapse     = $( '.collapse-sidebar' );
-
-            input.textpreview  = input.container.find('textarea');
-            input.toggleButton = input.container.find('button.text_editor-button');
-            input.editorExpanded   = new api.Value( false );
-            input.czrUpdateTextPreview();
-            input.czrSetToggleButtonText( input.editorExpanded() );
-
-            input.czrTextEditorBinding();
-
-            input.czrResizeEditorOnUserRequest();
-      },
-
-      czrTextEditorBinding : function() {
-              var input = this,
-                  editor = input.editor,
-                  textarea = input.textarea,
-                  toggleButton = input.toggleButton,
-                  editorExpanded = input.editorExpanded,
-                  editorPane   = input.editorPane;
-
-
-              input.bind( input.id + ':changed', input.czrUpdateTextPreview );
-
-              _.bindAll( input, 'czrOnVisualEditorChange', 'czrOnTextEditorChange', 'czrResizeEditorOnWindowResize' );
-
-              toggleButton.on( 'click', function() {
-                    input.editorExpanded.set( ! input.editorExpanded() );
-                    if ( input.editorExpanded() ) {
-                      editor.focus();
-                    }
-              });
-              input.module.czr_ModuleState.bind(
-                function( state ) {
-                  if ( 'expanded' != state )
-                    input.editorExpanded.set( false );
-              });
-
-              input.editorExpanded.bind( function (expanded) {
-
-                    api.consoleLog('in input.editorExpanded', expanded, input() );
-                    /*
-                    * Ensure only the latest input is bound
-                    */
-                    if ( editor.locker && editor.locker !== input ) {
-                        editor.locker.editorExpanded.set(false);
-                        editor.locker = null;
-                    }if ( ! editor.locker || editor.locker === input ) {
-                        $(document.body).toggleClass('czr-customize-content_editor-pane-open', expanded);
-                        editor.locker = input;
-                    }
-                    input.czrSetToggleButtonText( expanded );
-
-                    if ( expanded ) {
-                        editor.setContent( wp.editor.autop( input() ) );
-                        editor.on( 'input change keyup', input.czrOnVisualEditorChange );
-                        textarea.on( 'input', input.czrOnTextEditorChange );
-                        input.czrResizeEditor( window.innerHeight - editorPane.height() );
-                        $( window ).on('resize', input.czrResizeEditorOnWindowResize );
-
-                    } else {
-                        editor.off( 'input change keyup', input.czrOnVisualEditorChange );
-                        textarea.off( 'input', input.czrOnTextEditorChange );
-                        $( window ).off('resize', input.czrResizeEditorOnWindowResize );
-                        input.czrResizeReset();
-                    }
-              } );
-      },
-
-      czrOnVisualEditorChange : function() {
-              var input = this,
-                  editor = input.editor,
-                  value;
-
-              value = wp.editor.removep( editor.getContent() );
-              input.set(value);
-      },
-
-      czrOnTextEditorChange : function() {
-              var input = this,
-                  textarea = input.textarea,
-                  value;
-
-              value = textarea.val();
-              input.set(value);
-      },
-      czrUpdateTextPreview: function() {
-              var input   = this,
-                  input_model = input(),
-                  value;
-              value = input_model.replace(/(<([^>]+)>)/ig,"");
-              if ( value.length > 30 )
-                value = value.substring(0, 34) + '...';
-
-              input.textpreview.val( value );
-      },
-      czrRenderInputTextEditorTemplate: function() {
-              var input  = this;
-              if ( 0 === $( '#tmpl-czr-input-text_editor-view-content' ).length ) {
-                  throw new Error('Missing js template for text editor input in module : ' + input.module.id );
-              }
-
-              var view_template = wp.template('czr-input-text_editor-view-content'),
-                      $_view_el = input.container.find('input');
-              if ( ! view_template  || ! input.container )
-                return;
-
-              api.consoleLog('Model injected in text editor tmpl : ', input() );
-
-              $_view_el.after( view_template( input() ) );
-
-              return true;
-      },
-      czrIsEditorExpanded : function() {
-              return $( document.body ).hasClass('czr-customize-content_editor-pane-open');
-      },
-      czrResizeReset  : function() {
-              var input = this,
-                  preview = input.preview,
-                  collapse = input.collapse,
-                  sectionContent = input.container.closest('ul.accordion-section-content');
-
-              sectionContent.css( 'padding-bottom', '' );
-              preview.css( 'bottom', '' );
-              collapse.css( 'bottom', '' );
-      },
-      czrResizeEditor : function( position ) {
-              var windowHeight = window.innerHeight,
-                  windowWidth = window.innerWidth,
-                  minScroll = 40,
-                  maxScroll = 1,
-                  mobileWidth = 782,
-                  collapseMinSpacing = 56,
-                  collapseBottomOutsideEditor = 8,
-                  collapseBottomInsideEditor = 4,
-                  args = {},
-                  input = this,
-                  sectionContent = input.container.closest('ul.accordion-section-content'),
-                  mceTools = input.mceTools,
-                  mceToolbar = input.mceToolbar,
-                  mceStatusbar = input.mceStatusbar,
-                  preview      = input.preview,
-                  collapse     = input.collapse,
-                  editorPane   = input.editorPane,
-                  editorFrame  = input.editorFrame;
-
-              if ( ! input.editorExpanded() ) {
-                return;
-              }
-
-              if ( ! _.isNaN( position ) ) {
-                resizeHeight = windowHeight - position;
-              }
-
-              args.height = resizeHeight;
-              args.components = mceTools.outerHeight() + mceToolbar.outerHeight() + mceStatusbar.outerHeight();
-
-              if ( resizeHeight < minScroll ) {
-                args.height = minScroll;
-              }
-
-              if ( resizeHeight > windowHeight - maxScroll ) {
-                args.height = windowHeight - maxScroll;
-              }
-
-              if ( windowHeight < editorPane.outerHeight() ) {
-                args.height = windowHeight;
-              }
-
-              preview.css( 'bottom', args.height );
-              editorPane.css( 'height', args.height );
-              editorFrame.css( 'height', args.height - args.components );
-              collapse.css( 'bottom', args.height + collapseBottomOutsideEditor );
-
-              if ( collapseMinSpacing > windowHeight - args.height ) {
-                collapse.css( 'bottom', mceStatusbar.outerHeight() + collapseBottomInsideEditor );
-              }
-
-              if ( windowWidth <= mobileWidth ) {
-                sectionContent.css( 'padding-bottom', args.height );
-              } else {
-                sectionContent.css( 'padding-bottom', '' );
-              }
-      },
-      czrResizeEditorOnWindowResize : function() {
-              var input = this,
-                  resizeDelay = 50,
-                  editorPane   = input.editorPane;
-
-              if ( ! input.editorExpanded() ) {
-                return;
-              }
-
-              _.delay( function() {
-                input.czrResizeEditor( window.innerHeight - editorPane.height() );
-              }, resizeDelay );
-
-      },
-      czrResizeEditorOnUserRequest : function() {
-              var input = this,
-                  dragbar = input.dragbar,
-                  editorFrame = input.editorFrame;
-
-              dragbar.on( 'mousedown', function() {
-                if ( ! input.editorExpanded() )
-                  return;
-
-                $( document ).on( 'mousemove.czr-customize-content_editor', function( event ) {
-                    event.preventDefault();
-                    $( document.body ).addClass( 'czr-customize-content_editor-pane-resize' );
-                    editorFrame.css( 'pointer-events', 'none' );
-                    input.czrResizeEditor( event.pageY );
-                  } );
-                } );
-
-              dragbar.on( 'mouseup', function() {
-                if ( ! input.editorExpanded() )
-                  return;
-
-                $( document ).off( 'mousemove.czr-customize-content_editor' );
-                $( document.body ).removeClass( 'czr-customize-content_editor-pane-resize' );
-                editorFrame.css( 'pointer-events', '' );
-              } );
-
-      },
-      czrSetToggleButtonText : function( $_expanded ) {
-              var input = this;
-
-              input.toggleButton.text( serverControlParams.i18n.mods.textEditor[ ! $_expanded ? 'Edit' : 'Close Editor' ] );
-      }
-});//$.extend
-})( wp.customize , jQuery, _ );//extends api.Value
-
-var CZRItemMths = CZRItemMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRItemMths , {
-      initialize: function( id, options ) {
-            if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
-              throw new Error('No module assigned to item ' + id + '. Aborting');
-            }
-
-            var item = this;
-            api.Value.prototype.initialize.call( item, null, options );
-            item.isReady = $.Deferred();
-            item.embedded = $.Deferred();
-            item.container = null;//will store the item $ dom element
-            item.contentContainer = null;//will store the item content $ dom element
-            item.inputCollection = new api.Value({});
-            item.viewState = new api.Value( 'closed' );
-            item.removeDialogVisible = new api.Value( false );
-            $.extend( item, options || {} );
-            item.defaultItemModel = _.clone( options.defaultItemModel ) || { id : '', title : '' };
-            var _initial_model = $.extend( item.defaultItemModel, options.initial_item_model );
-            item.set( _initial_model );
-            item.userEventMap = new api.Value( [
-                  {
-                        trigger   : 'click keydown',
-                        selector  : [ '.' + item.module.control.css_attr.display_alert_btn, '.' + item.module.control.css_attr.cancel_alert_btn ].join(','),
-                        name      : 'toggle_remove_alert',
-                        actions   : function() {
-                              var _isVisible = this.removeDialogVisible();
-                              this.module.closeRemoveDialogs();
-                              this.removeDialogVisible( ! _isVisible );
-                        }
-                  },
-                  {
-                        trigger   : 'click keydown',
-                        selector  : '.' + item.module.control.css_attr.remove_view_btn,
-                        name      : 'remove_item',
-                        actions   : ['removeItem']
-                  },
-                  {
-                        trigger   : 'click keydown',
-                        selector  : [ '.' + item.module.control.css_attr.edit_view_btn, '.' + item.module.control.css_attr.item_title ].join(','),
-                        name      : 'edit_view',
-                        actions   : [ 'setViewVisibility' ]
-                  },
-                  {
-                        trigger   : 'click keydown',
-                        selector  : '.tabs nav li',
-                        name      : 'tab_nav',
-                        actions   : function( args ) {
-                              this.module.toggleTabVisibility.call( this, args );
-                        }
-                  }
-            ]);
-            item.isReady.done( function() {
-                  item.module.updateItemsCollection( { item : item() } );
-                  item.callbacks.add( function() { return item.itemReact.apply(item, arguments ); } );
-                  item.bind( 'contentRendered', function() {
-                        if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) ) {
-                              try {
-                                    api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
-                                    item.module.setupTabNav.call( item );
-                              } catch( er ) {
-                                    api.errorLog( 'In item.isReady.done : ' + er );
-                              }
-                        }
-                  });
-                  item.bind( 'contentRemoved', function() {
-                        if ( _.has(item, 'czr_Input') )
-                          api.CZR_Helpers.removeInputCollection.call( item );
-                  });
-                  item.mayBeRenderItemWrapper();
-                  item.embedded.done( function() {
-                        item.itemWrapperViewSetup( _initial_model );
-                  });
-            });//item.isReady.done()
-
-      },//initialize
-      ready : function() {
-            this.isReady.resolve();
-      },
-      itemReact : function( to, from, data ) {
-            var item = this,
-                module = item.module;
-
-            data = data || {};
-            module.updateItemsCollection( { item : to, data : data } ).done( function() {
-                  item.writeItemViewTitle( to, data );
-            });
-      }
-});//$.extend
-})( wp.customize , jQuery, _ );//extends api.CZRBaseControl
-
-var CZRItemMths = CZRItemMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRItemMths , {
-      _sendItem : function( to, from ) {
-            var item = this,
-                module = item.module,
-                _changed_props = [];
-            _.each( from, function( _val, _key ) {
-                  if ( _val != to[_key] )
-                    _changed_props.push(_key);
-            });
-
-            _.each( _changed_props, function( _prop ) {
-                  module.control.previewer.send( 'sub_setting', {
-                        set_id : module.control.id,
-                        id : to.id,
-                        changed_prop : _prop,
-                        value : to[_prop]
-                  });
-                  module.trigger('item_sent', { item : to , dom_el: item.container, changed_prop : _prop } );
-            });
-      },
-      removeItem : function() {
-              var item = this,
-                  module = this.module,
-                  _new_collection = _.clone( module.itemCollection() );
-              module.trigger('pre_item_dom_remove', item() );
-              item._destroyView();
-              _new_collection = _.without( _new_collection, _.findWhere( _new_collection, {id: item.id }) );
-              module.itemCollection.set( _new_collection );
-              module.trigger('pre_item_api_remove', item() );
-
-              var _item_ = $.extend( true, {}, item() );
-              module.czr_Item.remove( item.id );
-              module.trigger( 'item-removed', _item_ );
-      },
-      getModel : function(id) {
-              return this();
-      }
-
-});//$.extend
-})( wp.customize , jQuery, _ );
-var CZRItemMths = CZRItemMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRItemMths , {
-      mayBeRenderItemWrapper : function() {
-            var item = this;
-
-            if ( 'pending' != item.embedded.state() )
-              return;
-
-            $.when( item.renderItemWrapper() ).done( function( $_container ) {
-                  item.container = $_container;
-                  if ( _.isUndefined(item.container) || ! item.container.length ) {
-                      throw new Error( 'In mayBeRenderItemWrapper the Item view has not been rendered : ' + item.id );
-                  } else {
-                      item.embedded.resolve();
-                  }
-            });
-      },
-      itemWrapperViewSetup : function( item_model ) {
-            var item = this,
-                module = this.module;
-
-            item_model = item() || item.initial_item_model;//could not be set yet
-            item.writeItemViewTitle();
-            var _updateItemContentDeferred = function( $_content, to, from ) {
-                  if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                      item.trigger( 'contentRendered' );
-                      item.contentContainer = $_content;
-                      item.toggleItemExpansion( to, from );
-                  }
-                  else {
-                      throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
-                  }
-            };
-
-            if ( item.module.isMultiItem() ) {
-                  item.viewState.callbacks.add( function( to, from ) {
-                        var _isExpanded = -1 !== to.indexOf( 'expanded' );
-                        if ( module.hasModOpt() && _isExpanded ) {
-                              api.czr_ModOptVisible( false );
-                        }
-
-                        if ( _isExpanded ) {
-                              if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
-                                    item.toggleItemExpansion(to, from );
-                              } else {
-                                    $.when( item.renderItemContent( item() || item.initial_item_model ) ).done( function( $_item_content ) {
-                                          _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
-                                          _updateItemContentDeferred( $_item_content, to, from );
-                                    });
-                              }
-                        } else {
-                              item.toggleItemExpansion( to, from ).done( function() {
-                                    if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
-                                          item.trigger( 'beforeContenRemoved' );
-                                          $( '.' + module.control.css_attr.item_content, item.container ).children().each( function() {
-                                                $(this).remove();
-                                          });
-                                          $( '.' + module.control.css_attr.item_content, item.container ).html('');
-                                          item.contentContainer = null;
-                                          item.trigger( 'contentRemoved' );
-                                    }
-                              });
-                        }
-                  });
-            } else {
-                  item.viewState.callbacks.add( function( to, from ) {
-                        item.toggleItemExpansion.apply(item, arguments );
-                  });
-                  $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
-                        _updateItemContentDeferred( $_item_content, true );
-                  });
-            }
-            api.CZR_Helpers.setupDOMListeners(
-                  item.userEventMap(),//actions to execute
-                  { model:item_model, dom_el:item.container },//model + dom scope
-                  item //instance where to look for the cb methods
-            );
-            item.removeDialogVisible.bind( function( visible ) {
-                  var module = item.module,
-                      $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, item.container ).first();
-                  if ( visible )
-                    module.closeAllItems();
-                  if ( visible && module.hasModOpt() ) {
-                        api.czr_ModOptVisible( false );
-                  }
-                  if ( visible && _.has( module, 'preItem' ) ) {
-                        module.preItemExpanded(false);
-                  }
-                  $('.' + module.control.css_attr.remove_alert_wrapper, item.container ).not( $_alert_el ).each( function() {
-                        if ( $(this).hasClass( 'open' ) ) {
-                              $(this).slideToggle( {
-                                    duration : 200,
-                                    done : function() {
-                                          $(this).toggleClass('open' , false );
-                                          $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass( 'active' , false );
-                                    }
-                              } );
-                        }
-                  });
-                  if ( visible ) {
-                        if ( ! wp.template( module.AlertPart )  || ! item.container ) {
-                              api.consoleLog( 'No removal alert template available for items in module :' + module.id );
-                              return;
-                        }
-
-                        $_alert_el.html( wp.template( module.AlertPart )( { title : ( item().title || item.id ) } ) );
-                  }
-                  var _slideComplete = function( visible ) {
-                        $_alert_el.toggleClass( 'open' , visible );
-                        item.container.find('.' + module.control.css_attr.display_alert_btn ).toggleClass( 'active', visible );
-                        if ( visible )
-                          module._adjustScrollExpandedBlock( item.container );
-                  };
-                  if ( visible )
-                    $_alert_el.stop( true, true ).slideDown( 200, function() { _slideComplete( visible ); } );
-                  else
-                    $_alert_el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
-            });//item.removeDialogVisible.bind()
-      },//itemWrapperViewSetup
-      renderItemWrapper : function( item_model ) {
-            var item = this,
-                module = item.module;
-
-            item_model = item_model || item();
-            $_view_el = $('<li>', { class : module.control.css_attr.single_item, 'data-id' : item_model.id,  id : item_model.id } );
-            module.itemsWrapper.append( $_view_el );
-            if ( module.isMultiItem() ) {
-                  var _template_selector = module.getTemplateEl( 'rudItemPart', item_model );
-                  if ( 0 === $( '#tmpl-' + _template_selector ).length ) {
-                      throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateEl( 'rudItemPart', item_model ) );
-                  }
-                  $_view_el.append( $( wp.template( _template_selector )( item_model ) ) );
-            }
-            $_view_el.append( $( '<div/>', { class: module.control.css_attr.item_content } ) );
-
-            return $_view_el;
-      },
-      renderItemContent : function( item_model ) {
-              var item = this,
-                  module = this.module;
-
-              item_model = item_model || item();
-              if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) ).length ) {
-                  throw new Error('No item content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) );
-              }
-
-              var  item_content_template = wp.template( module.getTemplateEl( 'itemInputList', item_model ) );
-              if ( ! item_content_template )
-                return this;
-              $( item_content_template( item_model )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
-
-              return $( $( item_content_template( item_model )), item.container );
-      },
-      writeItemViewTitle : function( item_model ) {
-            var item = this,
-                module = item.module,
-                _model = item_model || item(),
-                _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
-
-            _title = api.CZR_Helpers.truncate( _title, 20 );
-            $( '.' + module.control.css_attr.item_title , item.container ).text( _title );
-            api.CZR_Helpers.doActions('after_writeViewTitle', item.container , _model, item );
-      },
-      setViewVisibility : function( obj, is_added_by_user ) {
-              var item = this,
-                  module = this.module;
-              if ( is_added_by_user ) {
-                    item.viewState.set( 'expanded_noscroll' );
-              } else {
-                    module.closeAllItems( item.id );
-                    if ( _.has(module, 'preItem') ) {
-                      module.preItemExpanded.set(false);
-                    }
-                    item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
-              }
-      },
-
-
-      _getViewState : function() {
-              return -1 == this.viewState().indexOf('expanded') ? 'closed' : 'expanded';
-      },
-      toggleItemExpansion : function( status, from, duration ) {
-            var visible = 'closed' != status,
-                item = this,
-                module = this.module,
-                $el = $( '.' + module.control.css_attr.item_content , item.container ).first(),
-                dfd = $.Deferred(),
-                _slideComplete = function( visible ) {
-                      item.container.toggleClass( 'open' , visible );
-                      if ( visible )
-                        module.closeRemoveDialogs();
-                      var $_edit_icon = $el.siblings().find('.' + module.control.css_attr.edit_view_btn );
-
-                      $_edit_icon.toggleClass('active' , visible );
-                      if ( visible )
-                        $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.i18n.close );
-                      else
-                        $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.i18n.edit );
-                      if ( 'expanded' == status )
-                        module._adjustScrollExpandedBlock( item.container );
-
-                      dfd.resolve();
-                };
-
-            if ( visible )
-              $el.stop( true, true ).slideDown( duration || 200, function() { _slideComplete( visible ); } );
-            else
-              $el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
-
-            return dfd.promise();
-      },
-      _destroyView : function ( duration ) {
-              this.container.fadeOut( {
-                  duration : duration ||400,
-                  done : function() {
-                    $(this).remove();
-                  }
-              });
-      }
-});//$.extend
-})( wp.customize , jQuery, _ );//extends api.Value
-
-var CZRModOptMths = CZRModOptMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRModOptMths , {
-      initialize: function( options ) {
-            if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
-              throw new Error('No module assigned to modOpt.');
-            }
-
-            var modOpt = this;
-            api.Value.prototype.initialize.call( modOpt, null, options );
-            modOpt.isReady = $.Deferred();
-            modOpt.container = null;//will store the modOpt $ dom element
-            modOpt.inputCollection = new api.Value({});
-            $.extend( modOpt, options || {} );
-            modOpt.defaultModOptModel = _.clone( options.defaultModOptModel ) || { is_mod_opt : true };
-            var _initial_model = $.extend( modOpt.defaultModOptModel, options.initial_modOpt_model );
-            var ctrl = modOpt.module.control;
-            modOpt.set( _initial_model );
-            api.czr_ModOptVisible = new api.Value( false );
-            api.czr_ModOptVisible.bind( function( visible, from, args ) {
-                  args = args || {};
-                  if ( visible ) {
-                        modOpt.module.closeRemoveDialogs().closeAllItems();
-
-                        modOpt.modOptWrapperViewSetup( _initial_model ).done( function( $_container ) {
-                              modOpt.container = $_container;
-                              try {
-                                    api.CZR_Helpers.setupInputCollectionFromDOM.call( modOpt ).toggleModPanelView( visible );
-                              } catch(e) {
-                                    api.consoleLog(e);
-                              }
-                              if ( args.module && args.focus ) {
-                                    _.delay( function() {
-                                          if ( _.isNull(  args.module.czr_ModOpt.container ) || ! args.module.czr_ModOpt.container.find('[data-tab-id="' + args.focus + '"] a').length )
-                                            return;
-                                          args.module.czr_ModOpt.container.find('[data-tab-id="' + args.focus + '"] a').trigger('click');
-                                    }, 200 );
-                              }
-                        });
-
-                  } else {
-                        modOpt.toggleModPanelView( visible ).done( function() {
-                              if ( false !== modOpt.container.length ) {
-                                    $.when( modOpt.container.remove() ).done( function() {
-                                          api.CZR_Helpers.removeInputCollection.call( modOpt );
-                                    });
-                              } else {
-                                    api.CZR_Helpers.removeInputCollection.call( modOpt );
-                              }
-                              modOpt.container = null;
-                        });
-                  }
-            } );
-            modOpt.isReady.done( function() {
-                  if( ! $( '.' + ctrl.css_attr.edit_modopt_icon, ctrl.container ).length ) {
-                        $.when( ctrl.container
-                              .find('.customize-control-title').first()//was.find('.customize-control-title')
-                              .append( $( '<span/>', {
-                                    class : [ ctrl.css_attr.edit_modopt_icon, 'fa fa-cog' ].join(' '),
-                                    title : serverControlParams.i18n['Settings']
-                              } ) ) )
-                        .done( function(){
-                              $( '.' + ctrl.css_attr.edit_modopt_icon, ctrl.container ).fadeIn( 400 );
-                        });
-                  }
-                  api.CZR_Helpers.setupDOMListeners(
-                        [
-                              {
-                                    trigger   : 'click keydown',
-                                    selector  : '.' + ctrl.css_attr.edit_modopt_icon,
-                                    name      : 'toggle_mod_option',
-                                    actions   : function() {
-                                          api.czr_ModOptVisible( ! api.czr_ModOptVisible() );
-                                    }
-                              }
-                        ],//actions to execute
-                        { dom_el: ctrl.container },//dom scope
-                        modOpt //instance where to look for the cb methods
-                  );
-            });//modOpt.isReady.done()
-
-      },//initialize
-      ready : function() {
-            this.isReady.resolve();
-      }
-});//$.extend
-})( wp.customize , jQuery, _ );//extends api.CZRBaseControl
-
-var CZRModOptMths = CZRModOptMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRModOptMths , {
-      modOptWrapperViewSetup : function( modOpt_model ) {
-              var modOpt = this,
-                  module = this.module,
-                  dfd = $.Deferred(),
-                  _setupDOMListeners = function( $_container ) {
-                        api.CZR_Helpers.setupDOMListeners(
-                             [
-                                    {
-                                          trigger   : 'click keydown',
-                                          selector  : '.' + module.control.css_attr.close_modopt_icon,
-                                          name      : 'close_mod_option',
-                                          actions   : function() {
-                                                api.czr_ModOptVisible( false );
-                                          }
-                                    },
-                                    {
-                                          trigger   : 'click keydown',
-                                          selector  : '.tabs nav li',
-                                          name      : 'tab_nav',
-                                          actions   : function( args ) {
-                                                this.module.toggleTabVisibility.call( this, args );
-                                          }
-                                    }
-                              ],//actions to execute
-                              { dom_el: $_container },//model + dom scope
-                              modOpt //instance where to look for the cb methods
-                        );
-                  };
-
-              modOpt_model = modOpt() || modOpt.initial_modOpt_model;//could not be set yet
-              $.when( modOpt.renderModOptContent( modOpt_model ) )
-                    .done( function( $_container ) {
-                          if ( ! _.isUndefined( $_container ) && false !== $_container.length ) {
-                                _setupDOMListeners( $_container );
-                                dfd.resolve( $_container );
-                          }
-                          else {
-                                throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
-                          }
-                    })
-                    .then( function() {
-                          modOpt.module.setupTabNav.call( modOpt );
-                    });
-
-              return dfd.promise();
-      },
-      renderModOptContent : function( modOpt_model ) {
-              var modOpt = this,
-                  module = this.module;
-
-              modOpt_model = modOpt_model || modOpt();
-              if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) ).length ) {
-                    api.errorLog('renderModOptContent : No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) );
-                    return;
-              }
-              var  modOpt_content_template = wp.template( module.getTemplateEl( 'modOptInputList', modOpt_model ) );
-              if ( ! modOpt_content_template )
-                return this;
-
-              var _ctrlLabel = '';
-              try {
-                    _ctrlLabel = [ serverControlParams.i18n['Options for'], module.control.params.label ].join(' ');
-              } catch( er ) {
-                    api.errorLog( 'In renderModOptContent : ' + er );
-                    _ctrlLabel = serverControlParams.i18n['Settings'];
-              }
-
-              $('#widgets-left').after( $( '<div/>', {
-                    class : module.control.css_attr.mod_opt_wrapper,
-                    html : [
-                          [ '<h2 class="mod-opt-title">', _ctrlLabel , '</h2>' ].join(''),
-                          '<span class="fa fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
-                    ].join('')
-              } ) );
-              $( '.' + module.control.css_attr.mod_opt_wrapper ).append( $( modOpt_content_template( modOpt_model ) ) );
-
-              return $( '.' + module.control.css_attr.mod_opt_wrapper );
-      },
-
-
-
-      toggleModPanelView : function( visible ) {
-            var modOpt = this,
-                module = this.module,
-                ctrl = module.control,
-                dfd = $.Deferred();
-
-            module.control.container.toggleClass( 'czr-modopt-visible', visible );
-            $('body').toggleClass('czr-editing-modopt', visible );
-            _.delay( function() {
-                  dfd.resolve();
-            }, 200 );
-            return dfd.promise();
-      }
-});//$.extend
-})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
-var CZRModuleMths = CZRModuleMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRModuleMths, {
-      initialize: function( id, constructorOptions ) {
-            if ( _.isUndefined(constructorOptions.control) || _.isEmpty(constructorOptions.control) ) {
-                throw new Error('No control assigned to module ' + id );
-            }
-            var module = this;
-            api.Value.prototype.initialize.call( this, null, constructorOptions );
-            module.isReady = $.Deferred();
-            $.extend( module, constructorOptions || {} );
-            $.extend( module, {
-                  crudModulePart : 'czr-crud-module-part',//create, read, update, delete
-                  rudItemPart : 'czr-rud-item-part',//read, update, delete
-                  ruItemPart : 'czr-ru-item-part',//read, update
-                  itemInputList : '',//is specific for each crud module
-                  modOptInputList : '',//is specific for each module
-                  AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
-
-            } );
-            module.embedded = $.Deferred();
-            module.itemsWrapper = '';//will store the $ item container
-            if ( ! module.isInSektion() ) {
-                  module.container = $( module.control.selector );
-                  module.embedded.resolve();
-            }
-            module.embedded.done( function() {
-                  $.when( module.renderModuleParts() ).done(function( $_module_items_wrapper ){
-                        if ( false === $_module_items_wrapper.length ) {
-                            throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
-                        }
-                        module.itemsWrapper = $_module_items_wrapper;
-                  });
-            });
-
-            /*-----------------------------------------------
-            * MODULE OPTIONS
-            ------------------------------------------------*/
-            module.defaultAPImodOptModel = {
-                  initial_modOpt_model : {},
-                  defaultModOptModel : {},
-                  control : {},//control instance
-                  module : {}//module instance
-            };
-            module.defaultModOptModel = {};
-            module.modOptConstructor = api.CZRModOpt;
-
-            /*-----------------------------------------------
-            * ITEMS
-            ------------------------------------------------*/
-            module.itemCollection = new api.Value( [] );
-            module.defaultAPIitemModel = {
-                  id : '',
-                  initial_item_model : {},
-                  defaultItemModel : {},
-                  control : {},//control instance
-                  module : {},//module instance
-                  is_added_by_user : false
-            };
-            module.defaultItemModel = { id : '', title : '' };
-            module.itemConstructor = api.CZRItem;
-            module.czr_Item = new api.Values();
-
-
-            /*-----------------------------------------------
-            * SET THE DEFAULT INPUT CONSTRUCTOR AND INPUT OPTIONS
-            ------------------------------------------------*/
-            module.inputConstructor = api.CZRInput;//constructor for the items input
-            if ( module.hasModOpt() ) {
-                  module.inputModOptConstructor = api.CZRInput;//constructor for the modOpt input
-            }
-            module.inputOptions = {};//<= can be set by each module specifically
-
-
-            /*-----------------------------------------------
-            * FIRE ON isReady
-            ------------------------------------------------*/
-            module.isReady.done( function() {
-                  module.isDirty = new api.Value( constructorOptions.dirty || false );
-                  module.initializeModuleModel( constructorOptions )
-                        .done( function( initialModuleValue ) {
-                              module.set( initialModuleValue );
-                        })
-                        .fail( function( response ){ api.consoleLog( 'Module : ' + module.id + ' initialize module model failed : ', response ); })
-                        .always( function( initialModuleValue ) {
-                              module.callbacks.add( function() { return module.moduleReact.apply( module, arguments ); } );
-                              if (  ! module.control.isModuleRegistered( module.id ) ) {
-                                  module.control.updateModulesCollection( { module : constructorOptions, is_registered : false } );
-                              }
-
-                              module.bind('items-collection-populated', function( collection ) {
-                                    module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply( module, arguments ); } );
-                                    if ( module.isMultiItem() ) {
-                                          module._makeItemsSortable();
-                                    }
-                              });
-                              if ( ! module.isInSektion() )
-                                module.populateSavedItemCollection();
-                              if ( module.hasModOpt() ) {
-                                  module.instantiateModOpt();
-                              }
-                        });
-            });//module.isReady.done()
-      },
-      ready : function() {
-            var module = this;
-            module.isReady.resolve();
-      },
-      initializeModuleModel : function( constructorOptions ) {
-            var module = this, dfd = $.Deferred();
-            if ( ! module.isMultiItem() && ! module.isCrud() ) {
-                  if ( _.isEmpty( constructorOptions.items ) ) {
-                        var def = _.clone( module.defaultItemModel );
-                        constructorOptions.items = [ $.extend( def, { id : module.id } ) ];
-                  }
-            }
-            return dfd.resolve( constructorOptions ).promise();
-      },
-      itemCollectionReact : function( to, from, data ) {
-            var module = this,
-                _current_model = module(),
-                _new_model = $.extend( true, {}, _current_model );
-            _new_model.items = to;
-            module.isDirty.set(true);
-            module.set( _new_model, data || {} );
-      },
-      moduleReact : function( to, from, data ) {
-            var module            = this,
-                control           = module.control,
-                isItemUpdate    = ( _.size( from.items ) == _.size( to.items ) ) && ! _.isEmpty( _.difference( to.items, from.items ) ),
-                isColumnUpdate  = to.column_id != from.column_id,
-                refreshPreview    = function() {
-                      module.control.previewer.refresh();
-                };
-            control.updateModulesCollection( {
-                  module : $.extend( true, {}, to ),
-                  data : data//useful to pass contextual info when a change happens
-            } );
-      },
-      getModuleSection : function() {
-            return this.section;
-      },
-      isInSektion : function() {
-            var module = this;
-            return _.has( module, 'sektion_id' );
-      },
-      isMultiItem : function() {
-            return api.CZR_Helpers.isMultiItemModule( null, this );
-      },
-      isCrud : function() {
-            return api.CZR_Helpers.isCrudModule( null, this );
-      },
-
-      hasModOpt : function() {
-            return api.CZR_Helpers.hasModuleModOpt( null, this );
-      },
-      instantiateModOpt : function() {
-            var module = this;
-            var modOpt_candidate = module.prepareModOptForAPI( module().modOpt || {} );
-            module.czr_ModOpt = new module.modOptConstructor( modOpt_candidate );
-            module.czr_ModOpt.ready();
-            module.czr_ModOpt.callbacks.add( function( to, from, data ) {
-                  var _current_model = module(),
-                      _new_model = $.extend( true, {}, _current_model );
-                  _new_model.modOpt = to;
-                  module.isDirty(true);
-                  module( _new_model, data );
-            });
-      },
-      prepareModOptForAPI : function( modOpt_candidate ) {
-            var module = this,
-                api_ready_modOpt = {};
-            modOpt_candidate = _.isObject( modOpt_candidate ) ? modOpt_candidate : {};
-
-            _.each( module.defaultAPImodOptModel, function( _value, _key ) {
-                  var _candidate_val = modOpt_candidate[_key];
-                  switch( _key ) {
-                        case 'initial_modOpt_model' :
-                            _.each( module.getDefaultModOptModel() , function( _value, _property ) {
-                                  if ( ! _.has( modOpt_candidate, _property) )
-                                     modOpt_candidate[_property] = _value;
-                            });
-                            api_ready_modOpt[_key] = modOpt_candidate;
-
-                        break;
-                        case  'defaultModOptModel' :
-                            api_ready_modOpt[_key] = _.clone( module.defaultModOptModel );
-                        break;
-                        case  'control' :
-                            api_ready_modOpt[_key] = module.control;
-                        break;
-                        case  'module' :
-                            api_ready_modOpt[_key] = module;
-                        break;
-                  }//switch
-            });
-            return api_ready_modOpt;
-      },
-      getDefaultModOptModel : function( id ) {
-            var module = this;
-            return $.extend( _.clone( module.defaultModOptModel ), { is_mod_opt : true } );
-      },
-      sendInputToPreview : function( args ) {
-            var module = this;
-            args = _.extend(
-              {
-                    input_id        : '',
-                    input_parent_id : '',//<= can be the mod opt or an item
-                    to              : null,
-                    from            : null
-              } , args );
-
-            if ( _.isEqual( args.to, args.from ) )
-              return;
-            module.control.previewer.send( 'czr_input', {
-                  set_id        : api.CZR_Helpers.getControlSettingId( module.control.id ),
-                  module_id     : module.id,//<= will allow us to target the right dom element on front end
-                  module        : { items : $.extend( true, {}, module().items ) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
-                  input_parent_id : args.input_parent_id,//<= can be the mod opt or the item
-                  input_id      : args.input_id,
-                  value         : args.to,
-                  isPartialRefresh : args.isPartialRefresh//<= let us know if it is a full wrapper refresh or a single input update ( true when fired from sendModuleInputsToPreview )
-            });
-            module.trigger( 'input_sent', { input : args.to , dom_el: module.container } );
-      },
-      sendModuleInputsToPreview : function( args ) {
-            var module = this,
-                _sendInputData = function() {
-                      var inputParent = this,//this is the input parent : item or modOpt
-                          inputParentModel = $.extend( true, {}, inputParent() );
-                      inputParentModel = _.omit( inputParentModel, 'id' );
-
-                      _.each( inputParentModel, function( inputVal, inputId ) {
-                            module.sendInputToPreview( {
-                                  input_id : inputId,
-                                  input_parent_id : inputParent.id,
-                                  to : inputVal,
-                                  from : null,
-                                  isPartialRefresh : args.isPartialRefresh
-                            });
-                      });
-                };
-
-            module.czr_Item.each( function( _itm_ ) {
-                  _sendInputData.call( _itm_ );
-            });
-
-            if ( module.hasModOpt() ) {
-                  _sendInputData.call( module.czr_ModOpt );
-            }
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
-
-var CZRModuleMths = CZRModuleMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRModuleMths, {
-      populateSavedItemCollection : function() {
-              var module = this, _saved_items = [];
-              if ( ! _.isArray( module().items ) ) {
-                    api.errorLog( 'populateSavedItemCollection : The saved items collection must be an array in module :' + module.id );
-                    return;
-              }
-              _.each( module().items, function( item_candidate , key ) {
-                    if ( _.has( item_candidate, 'id') && ! _.has( item_candidate, 'is_mod_opt' ) ) {
-                          _saved_items.push( item_candidate );
-                    }
-              });
-              _.each( _saved_items, function( item_candidate , key ) {
-                    try { module.instantiateItem( item_candidate ).ready(); } catch( er ) {
-                          api.errorLog( 'populateSavedItemCollection : ' + er );
-                    }
-              });
-              _.each( _saved_items, function( _item ) {
-                    if ( _.isUndefined( _.findWhere( module.itemCollection(), _item.id ) ) ) {
-                          throw new Error( 'populateSavedItemCollection : The saved items have not been properly populated in module : ' + module.id );
-                    }
-              });
-
-              module.trigger( 'items-collection-populated' );
-      },
-
-
-      instantiateItem : function( item, is_added_by_user ) {
-              var module = this;
-              item_candidate = module.prepareItemForAPI( item );
-              if ( ! _.has( item_candidate, 'id' ) ) {
-                throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
-              }
-              if ( module.czr_Item.has( item_candidate.id ) ) {
-                  throw new Error('CZRModule::instantiateItem() : the following item id ' + item_candidate.id + ' already exists in module.czr_Item() for module ' + this.id  );
-              }
-              module.czr_Item.add( item_candidate.id, new module.itemConstructor( item_candidate.id, item_candidate ) );
-
-              if ( ! module.czr_Item.has( item_candidate.id ) ) {
-                  throw new Error('CZRModule::instantiateItem() : instantiation failed for item id ' + item_candidate.id + ' for module ' + this.id  );
-              }
-              return module.czr_Item( item_candidate.id );
-      },
-      prepareItemForAPI : function( item_candidate ) {
-              var module = this,
-                  api_ready_item = {};
-              item_candidate = _.isObject( item_candidate ) ? item_candidate : {};
-
-              _.each( module.defaultAPIitemModel, function( _value, _key ) {
-                    var _candidate_val = item_candidate[_key];
-                    switch( _key ) {
-                          case 'id' :
-                              if ( _.isEmpty( _candidate_val ) ) {
-                                  api_ready_item[_key] = module.generateItemId( module.module_type );
-                              } else {
-                                  api_ready_item[_key] = _candidate_val;
-                              }
-                          break;
-                          case 'initial_item_model' :
-                              _.each( module.getDefaultItemModel() , function( _value, _property ) {
-                                    if ( ! _.has( item_candidate, _property) )
-                                       item_candidate[_property] = _value;
-                              });
-                              api_ready_item[_key] = item_candidate;
-
-                          break;
-                          case  'defaultItemModel' :
-                              api_ready_item[_key] = _.clone( module.defaultItemModel );
-                          break;
-                          case  'control' :
-                              api_ready_item[_key] = module.control;
-                          break;
-                          case  'module' :
-                              api_ready_item[_key] = module;
-                          break;
-                          case 'is_added_by_user' :
-                              api_ready_item[_key] =  _.isBoolean( _candidate_val ) ? _candidate_val : false;
-                          break;
-                    }//switch
-              });
-              if ( ! _.has( api_ready_item, 'id' ) ) {
-                    api_ready_item.id = module.generateItemId( module.module_type );
-              }
-              api_ready_item.initial_item_model.id = api_ready_item.id;
-
-              return api_ready_item;
-      },
-      generateItemId : function( module_type, key, i ) {
-              i = i || 1;
-              if ( i > 100 ) {
-                    throw new Error( 'Infinite loop when generating of a module id.' );
-              }
-              var module = this;
-              key = key || module._getNextItemKeyInCollection();
-              var id_candidate = module_type + '_' + key;
-              if ( ! _.has(module, 'itemCollection') || ! _.isArray( module.itemCollection() ) ) {
-                    throw new Error('The item collection does not exist or is not properly set in module : ' + module.id );
-              }
-              if ( module.isItemRegistered( id_candidate ) ) {
-                key++; i++;
-                return module.generateItemId( module_type, key, i );
-              }
-              return id_candidate;
-      },
-      _getNextItemKeyInCollection : function() {
-              var module = this,
-                _maxItem = {},
-                _next_key = 0;
-              if ( _.isEmpty( module.itemCollection() ) )
-                return _next_key;
-              if ( _.isArray( module.itemCollection() ) && 1 === _.size( module.itemCollection() ) ) {
-                    _maxItem = module.itemCollection()[0];
-              } else {
-                    _maxItem = _.max( module.itemCollection(), function( _item ) {
-                          if ( ! _.isNumber( _item.id.replace(/[^\/\d]/g,'') ) )
-                            return 0;
-                          return parseInt( _item.id.replace( /[^\/\d]/g, '' ), 10 );
-                    });
-              }
-              if ( ! _.isUndefined( _maxItem ) && _.isNumber( _maxItem.id.replace(/[^\/\d]/g,'') ) ) {
-                    _next_key = parseInt( _maxItem.id.replace(/[^\/\d]/g,''), 10 ) + 1;
-              }
-              return _next_key;
-      },
-      isItemRegistered : function( id_candidate ) {
-            var module = this;
-            return ! _.isUndefined( _.findWhere( module.itemCollection(), { id : id_candidate}) );
-      },
-      updateItemsCollection : function( args ) {
-              var module = this,
-                  _current_collection = module.itemCollection(),
-                  _new_collection = _.clone(_current_collection),
-                  dfd = $.Deferred();
-              if ( _.has( args, 'collection' ) ) {
-                    module.itemCollection.set( args.collection );
-                    return;
-              }
-
-              if ( ! _.has( args, 'item' ) ) {
-                  throw new Error('updateItemsCollection, no item provided ' + module.control.id + '. Aborting');
-              }
-              args = _.extend( { data : {} }, args );
-
-              var item = _.clone( args.item );
-              if ( _.findWhere( _new_collection, { id : item.id } ) ) {
-                    _.each( _current_collection , function( _item, _ind ) {
-                          if ( _item.id != item.id )
-                            return;
-                          _new_collection[_ind] = item;
-                    });
-              }
-              else {
-                  _new_collection.push(item);
-              }
-              module.itemCollection.set( _new_collection, args.data );
-              return dfd.resolve( { collection : _new_collection, data : args.data } ).promise();
-      },
-      _getSortedDOMItemCollection : function( ) {
-              var module = this,
-                  _old_collection = _.clone( module.itemCollection() ),
-                  _new_collection = [],
-                  dfd = $.Deferred();
-              $( '.' + module.control.css_attr.single_item, module.container ).each( function( _index ) {
-                    var _item = _.findWhere( _old_collection, {id: $(this).attr('data-id') });
-                    if ( ! _item )
-                      return;
-
-                    _new_collection[_index] = _item;
-              });
-
-              if ( _old_collection.length != _new_collection.length ) {
-                  throw new Error('There was a problem when re-building the item collection from the DOM in module : ' + module.id );
-              }
-              return dfd.resolve( _new_collection ).promise();
-      },
-      refreshItemCollection : function() {
-            var module = this;
-            module.czr_Item.each( function( _itm ) {
-                  $.when( module.czr_Item( _itm.id ).container.remove() ).done( function() {
-                        module.czr_Item.remove( _itm.id );
-                  });
-            });
-            module.itemCollection = new api.Value( [] );
-            module.populateSavedItemCollection();
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
-
-var CZRModuleMths = CZRModuleMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRModuleMths, {
-      getDefaultItemModel : function( id ) {
-              var module = this;
-              return $.extend( _.clone( module.defaultItemModel ), { id : id || '' } );
-      },
-      _initNewItem : function( _item , _next_key ) {
-              var module = this,
-                  _new_item = { id : '' },
-                  _id;
-              _next_key = 'undefined' != typeof(_next_key) ? _next_key : _.size( module.itemCollection() );
-
-              if ( _.isNumber(_next_key) ) {
-                _id = module.module_type + '_' + _next_key;
-              }
-              else {
-                _id = _next_key;
-                _next_key = 0;
-              }
-
-              if ( _item && ! _.isEmpty( _item) )
-                _new_item = $.extend( _item, { id : _id } );
-              else
-                _new_item = this.getDefaultItemModel( _id );
-              if ( _.has(_new_item, 'id') && module._isItemIdPossible(_id) ) {
-                    _.map( module.getDefaultItemModel() , function( value, property ){
-                          if ( ! _.has(_new_item, property) )
-                            _new_item[property] = value;
-                    });
-
-                return _new_item;
-              }
-              return module._initNewItem( _new_item, _next_key + 1);
-      }
-});//$.extend
-})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
-
-var CZRModuleMths = CZRModuleMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRModuleMths, {
-      renderModuleParts : function() {
-              var module = this,
-                  $_moduleContentEl = module.isInSektion() ? $( module.container ).find('.czr-mod-content') : $( module.container );
-              if ( module.isCrud() ) {
-                    if ( 0 === $( '#tmpl-' + module.crudModulePart ).length ) {
-                      throw new Error('No crud Module Part template for module ' + module.id + '. The template script id should be : #tmpl-' + module.crudModulePart );
-                    }
-                    $_moduleContentEl.append( $( wp.template( module.crudModulePart )( {} ) ) );
-              }
-              var $_module_items_wrapper = $(
-                '<ul/>',
-                {
-                  class : [
-                    module.control.css_attr.items_wrapper,
-                    module.module_type,
-                    module.isMultiItem() ? 'multi-item-mod' : 'mono-item-mod',
-                    module.isCrud() ? 'crud-mod' : 'not-crud-mod'
-                  ].join(' ')
-                }
-              );
-
-              $_moduleContentEl.append($_module_items_wrapper);
-
-              return $( $_module_items_wrapper, $_moduleContentEl );
-      },
-      getTemplateEl : function( type, item_model ) {
-              var module = this, _el;
-              switch(type) {
-                    case 'rudItemPart' :
-                      _el = module.rudItemPart;
-                      break;
-                    case 'ruItemPart' :
-                      _el = module.ruItemPart;
-                      break;
-                    case 'modOptInputList' :
-                      _el = module.modOptInputList;
-                      break;
-                    case 'itemInputList' :
-                      _el = module.itemInputList;
-                      break;
-              }
-              if ( _.isEmpty(_el) ) {
-                   throw new Error('No valid template has been found in getTemplateEl() ' + module.id + '. Aborting');
-              } else {
-                  return _el;
-              }
-      },
-      getViewEl : function( id ) {
-              var module = this;
-              return $( '[data-id = "' + id + '"]', module.container );
-      },
-      closeAllItems : function( id ) {
-              var module = this,
-                  _current_collection = _.clone( module.itemCollection() ),
-                  _filtered_collection = _.filter( _current_collection , function( mod) { return mod.id != id; } );
-
-              _.each( _filtered_collection, function( _item ) {
-                    if ( module.czr_Item.has(_item.id) && 'expanded' == module.czr_Item(_item.id)._getViewState(_item.id) )
-                      module.czr_Item( _item.id ).viewState.set( 'closed' ); // => will fire the cb toggleItemExpansion
-              } );
-              return this;
-      },
-      _adjustScrollExpandedBlock : function( $_block_el, adjust ) {
-              if ( ! $_block_el.length || _.isUndefined( this.getModuleSection() ) )
-                return;
-              var module = this,
-                   $_moduleSection = $( '.accordion-section-content', module.section.container ),//was api.section( control.section() )
-                  _currentScrollTopVal = $_moduleSection.scrollTop(),
-                  _scrollDownVal,
-                  _adjust = adjust || 90;
-
-              setTimeout( function() {
-                    if ( ( $_block_el.offset().top + $_block_el.height() + _adjust ) > $(window.top).height() ) {
-                        _scrollDownVal = $_block_el.offset().top + $_block_el.height() + _adjust - $(window.top).height();
-                        if ( _scrollDownVal > 0 ) {
-                            $_moduleSection.animate({
-                                scrollTop:  _currentScrollTopVal + _scrollDownVal
-                            }, 500);
-                        }
-                    }
-              }, 50);
-      },
-      closeRemoveDialogs : function() {
-              var module = this;
-              if ( ! _.isArray( module.itemCollection() ) )
-                return;
-
-              module.czr_Item.each( function( _item_ ) {
-                    _item_.removeDialogVisible( false );
-              });
-              return this;
-      },
-      _makeItemsSortable : function(obj) {
-              if ( wp.media.isTouchDevice || ! $.fn.sortable )
-                return;
-              var module = this;
-              $( '.' + module.control.css_attr.items_wrapper, module.container ).sortable( {
-                    handle: '.' + module.control.css_attr.item_sort_handle,
-                    start: function() {
-                          if ( _.has(api, 'czrModulePanelState' ) )
-                            api.czrModulePanelState.set(false);
-                          if ( _.has(api, 'czrSekSettingsPanelState' ) )
-                            api.czrSekSettingsPanelState.set(false);
-                    },
-                    update: function( event, ui ) {
-                          var _sortedCollectionReact = function() {
-                                if ( _.has(module, 'preItem') ) {
-                                      module.preItemExpanded.set(false);
-                                }
-
-                                module.closeAllItems().closeRemoveDialogs();
-                                var refreshPreview = function() {
-                                      api.previewer.refresh();
-                                };
-                                if ( 'postMessage' == api(module.control.id).transport  && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
-                                      refreshPreview = _.debounce( refreshPreview, 500 );//500ms are enough
-                                      refreshPreview();
-                                }
-
-                                module.trigger( 'item-collection-sorted' );
-                          };
-                          module._getSortedDOMItemCollection()
-                                .done( function( _collection_ ) {
-                                      module.itemCollection.set( _collection_ );
-                                })
-                                .then( function() {
-                                      _sortedCollectionReact();
-                                });
-                    }//update
-                  }
-              );
-        },
-
-
-
-      /*-----------------------------------------------
-      * TABS NAVIGATION IN ITEMS AND MODOPT
-      ------------------------------------------------*/
-      toggleTabVisibility : function( args ) {
-            var inputParent = this,
-                tabs = $( inputParent.container ).find('li'),
-                content_items = $( inputParent.container ).find('section'),
-                tabIdSwitchedTo = $( args.dom_event.currentTarget, args.dom_el ).attr('data-tab-id');
-
-            $( '.tabs nav li', inputParent.container ).each( function() {
-                  $(this).removeClass('tab-current').addClass('tab-inactive');
-            });
-            $( inputParent.container ).find('li[data-tab-id="' + tabIdSwitchedTo + '"]').addClass('tab-current').removeClass('tab-inactive');
-
-            $( 'section', inputParent.container ).each( function() {
-                    $(this).removeClass('content-current');
-            });
-            $( inputParent.container ).find('section[id="' + tabIdSwitchedTo + '"]').addClass('content-current');
-      },
-      setupTabNav : function() {
-            var inputParent = this,
-                preProcessTabs = function() {
-                      var dfd = $.Deferred(),
-                          $tabs = $( '.tabs nav li', inputParent.container );
-
-                      $tabs.each( function() {
-                            $(this).removeClass('tab-current').addClass('tab-inactive');
-                      });
-                      $tabs.first().addClass( 'tab-current' ).removeClass('tab-inactive');
-                      $( 'section', inputParent.container ).first().addClass( 'content-current' );
-                      var _nb = $tabs.length;
-                      $tabs.each( function() {
-                            $(this).addClass( _nb > 0 ? 'cols-' + _nb : '' );
-                      });
-                      return dfd.resolve().promise();
-                };
-            setTimeout(
-                  function() {
-                        preProcessTabs().done( function() {
-                              $('.tabs', inputParent.container ).fadeIn( 450 );
-                        });
-                  },
-                  20//<= introducing a small delay to let jQuery do its preprocessing job
-            );
-      }
-});//$.extend
-})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
-
-var CZRDynModuleMths = CZRDynModuleMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRDynModuleMths, {
-      initialize: function( id, options ) {
-              var module = this;
-              api.CZRModule.prototype.initialize.call( module, id, options );
-              $.extend( module, {
-                  itemPreAddEl : ''//is specific for each crud module
-              } );
-
-              module.preItemsWrapper = '';//will store the pre items wrapper
-              module.itemAddedMessage = serverControlParams.i18n.successMessage;
-              module.userEventMap = new api.Value( [
-                    {
-                        trigger   : 'click keydown',
-                        selector  : [ '.' + module.control.css_attr.open_pre_add_btn, '.' + module.control.css_attr.cancel_pre_add_btn ].join(','),
-                        name      : 'pre_add_item',
-                        actions   : [ 'closeAllItems', 'closeRemoveDialogs', 'renderPreItemView','setPreItemViewVisibility' ],
-                    },
-                    {
-                        trigger   : 'click keydown',
-                        selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
-                        name      : 'add_item',
-                        actions   : [ 'closeRemoveDialogs', 'closeAllItems', 'addItem' ],
-                    }
-              ]);//module.userEventMap
-      },
-      ready : function() {
-              var module = this;
-              module.setupDOMListeners( module.userEventMap() , { dom_el : module.container } );
-              module.preItem = new api.Value( module.getDefaultItemModel() );
-              module.preItemEmbedded = $.Deferred();//was module.czr_preItem.create('item_content');
-              module.preItemEmbedded.done( function( $preWrapper ) {
-                    module.preItemsWrapper = $preWrapper;
-                    module.setupPreItemInputCollection();
-              });
-              module.preItemExpanded = new api.Value(false);
-              module.preItemExpanded.callbacks.add( function( to, from ) {
-                    module._togglePreItemViewExpansion( to );
-              });
-
-              api.CZRModule.prototype.ready.call( module );//fires the parent
-      },//ready()
-      setupPreItemInputCollection : function() {
-              var module = this;
-              module.preItem.czr_Input = new api.Values();
-              $('.' + module.control.css_attr.pre_add_wrapper, module.container)
-                    .find( '.' + module.control.css_attr.sub_set_wrapper)
-                    .each( function( _index ) {
-                          var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index;
-                          module.preItem.czr_Input.add( _id, new module.inputConstructor( _id, {//api.CZRInput;
-                                id : _id,
-                                type : $(this).attr('data-input-type'),
-                                container : $(this),
-                                input_parent : module.preItem,
-                                module : module,
-                                is_preItemInput : true
-                          } ) );
-                          module.preItem.czr_Input(_id).ready();
-                    });//each
-      },
-      addItem : function(obj) {
-              var module = this,
-                  item = module.preItem(),
-                  collapsePreItem = function() {
-                        module.preItemExpanded.set(false);
-                        module._resetPreItemInputs();
-                  },
-                  dfd = $.Deferred();
-
-              if ( _.isEmpty(item) || ! _.isObject(item) ) {
-                    api.errorLog( 'addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
-                    return dfd.resolve().promise();
-              }
-              collapsePreItem = _.debounce( collapsePreItem, 200 );
-              module.instantiateItem( item, true ).ready(); //true == Added by user
-              ( function() {
-                    return $.Deferred( function() {
-                          var _dfd_ = this;
-                          module.czr_Item( item.id ).isReady.then( function() {
-                                collapsePreItem();
-
-                                module.trigger('item-added', item );
-                                if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
-                                  module.control.previewer.refresh().done( function() {
-                                        _dfd_.resolve();
-                                  });
-                                } else {
-                                        _dfd_.resolve();
-                                }
-                          });
-                    }).promise();
-              })().done( function() {
-                      module.czr_Item( item.id ).viewState( 'expanded' );
-              }).always( function() {
-                      dfd.resolve();
-              });
-              return dfd.promise();
-      },
-
-      _resetPreItemInputs : function() {
-              var module = this;
-              module.preItem.set( module.getDefaultItemModel() );
-              module.preItem.czr_Input.each( function( input_instance ) {
-                    var _input_id = input_instance.id;
-                    if ( ! _.has( module.getDefaultItemModel(), _input_id ) )
-                      return;
-                    input_instance.set( module.getDefaultItemModel()._input_id );
-              });
-      }
-});//$.extend
-})( wp.customize , jQuery, _ );//MULTI CONTROL CLASS
-
-var CZRDynModuleMths = CZRDynModuleMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRDynModuleMths, {
-      renderPreItemView : function( obj ) {
-              var module = this;
-              if ( 'pending' != module.preItemEmbedded.state() ) //was ! _.isEmpty( module.czr_preItem('item_content')() ) )
-                return;
-              if ( ! _.has(module, 'itemPreAddEl') ||  0 === $( '#tmpl-' + module.itemPreAddEl ).length )
-                return this;
-              var pre_add_template = wp.template( module.itemPreAddEl );
-              if ( ! pre_add_template  || ! module.container )
-                return this;
-
-              var $_pre_add_el = $('.' + module.control.css_attr.pre_add_item_content, module.container );
-              $_pre_add_el.prepend( pre_add_template() );
-              module.preItemEmbedded.resolve( $_pre_add_el );
-      },
-      _getPreItemView : function() {
-              var module = this;
-              return $('.' +  module.control.css_attr.pre_add_item_content, module.container );
-      },
-      setPreItemViewVisibility : function(obj) {
-              var module = this;
-              module.preItemExpanded.set( ! module.preItemExpanded() );
-      },
-      _togglePreItemViewExpansion : function( _is_expanded ) {
-              var module = this,
-                $_pre_add_el = $( '.' +  module.control.css_attr.pre_add_item_content, module.container );
-              $_pre_add_el.slideToggle( {
-                    duration : 200,
-                    done : function() {
-                          var $_btn = $( '.' +  module.control.css_attr.open_pre_add_btn, module.container );
-
-                          $(this).toggleClass('open' , _is_expanded );
-                          if ( _is_expanded )
-                            $_btn.find('.fa').removeClass('fa-plus-square').addClass('fa-minus-square');
-                          else
-                            $_btn.find('.fa').removeClass('fa-minus-square').addClass('fa-plus-square');
-                          $_btn.toggleClass( 'active', _is_expanded );
-                          $( module.container ).toggleClass(  module.control.css_attr.adding_new, _is_expanded );
-                          module._adjustScrollExpandedBlock( $(this), 120 );
-                  }//done
-              } );
-      },
-
-
-      toggleSuccessMessage : function( status ) {
-              var module = this,
-                  _message = module.itemAddedMessage,
-                  $_pre_add_wrapper = $('.' + module.control.css_attr.pre_add_wrapper, module.container );
-                  $_success_wrapper = $('.' + module.control.css_attr.pre_add_success, module.container );
-
-              if ( 'on' == status ) {
-                  $_success_wrapper.find('p').text(_message);
-                  $_success_wrapper.css('z-index', 1000001 )
-                    .css('height', $_pre_add_wrapper.height() + 'px' )
-                    .css('line-height', $_pre_add_wrapper.height() + 'px');
-              } else {
-                  $_success_wrapper.attr('style','');
-              }
-              module.container.toggleClass('czr-model-added', 'on' == status );
-              return this;
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
+//extends api.CZRDynModule
 var CZRSocialModuleMths = CZRSocialModuleMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSocialModuleMths, {
       initialize: function( id, options ) {
               var module = this;
+              //run the parent initialize
               api.CZRDynModule.prototype.initialize.call( module, id, options );
+
+              //extend the module with new template Selectors
               $.extend( module, {
                     itemPreAddEl : 'czr-module-social-pre-add-view-content',
                     itemInputList : 'czr-module-social-item-content',
@@ -8291,13 +7281,19 @@ $.extend( CZRSocialModuleMths, {
                 'youtube-play',
                 'youtube-square'
               ];
+              //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
               module.inputConstructor = api.CZRInput.extend( module.CZRSocialsInputMths || {} );
+              //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
               module.itemConstructor = api.CZRItem.extend( module.CZRSocialsItem || {} );
+
+              //declares a default ModOpt model
               this.defaultModOptModel = {
                   is_mod_opt : true,
                   module_id : module.id,
                   'social-size' : serverControlParams.social_el_params.defaultSocialSize || 14
               };
+
+              //declares a default model
               this.defaultItemModel = {
                     id : '',
                     title : '' ,
@@ -8306,18 +7302,26 @@ $.extend( CZRSocialModuleMths, {
                     'social-color' : serverControlParams.social_el_params.defaultSocialColor,
                     'social-target' : 1
               };
+
+              //overrides the default success message
               this.itemAddedMessage = serverControlParams.i18n.socialLinkAdded;
+
+              //fired ready :
+              //1) on section expansion
+              //2) or in the case of a module embedded in a regular control, if the module section is already opened => typically when skope is enabled
               if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
                     module.ready();
               }
 
               api.section( module.control.section() ).expanded.bind(function(to) {
+                    //set module ready on section expansion
                     if ( 'resolved' != module.isReady.state() ) {
                           module.ready();
                     }
               });
 
               module.isReady.then( function() {
+                    //specific update for the item preModel on social-icon change
                     module.preItem.bind( function( to, from ) {
                           if ( ! _.has(to, 'social-icon') )
                             return;
@@ -8327,9 +7331,17 @@ $.extend( CZRSocialModuleMths, {
                     });
               });
       },//initialize
+
+
+      //ACTIONS ON ICON CHANGE
+      //Fired on 'social-icon:changed'
+      //Don't fire in pre item case
+      //@item_instance an be the preItem or an already created item
       updateItemModel : function( item_instance, is_preItem ) {
               var item = item_instance;
               is_preItem = is_preItem || false;
+
+              //check if we are in the pre Item case => if so, the social-icon might be empty
               if ( ! _.has( item(), 'social-icon') || _.isEmpty( item()['social-icon'] ) )
                 return;
 
@@ -8340,6 +7352,8 @@ $.extend( CZRSocialModuleMths, {
               _new_color  = serverControlParams.social_el_params.defaultSocialColor;
               if ( ! is_preItem && item.czr_Input.has( 'social-color' ) )
                 _new_color = item.czr_Input('social-color')();
+
+              //add text follow us... to the title
               _new_title = [ serverControlParams.i18n.followUs, _new_title].join(' ');
 
               if ( is_preItem ) {
@@ -8347,6 +7361,7 @@ $.extend( CZRSocialModuleMths, {
                     item.set( _new_model );
               } else {
                     item.czr_Input('title').set( _new_title );
+                    //item.czr_Input('social-link').set( '' );
                     if ( item.czr_Input('social-color') ) { //optional
                       item.czr_Input('social-color').set( _new_color );
                     }
@@ -8375,11 +7390,18 @@ $.extend( CZRSocialModuleMths, {
                         module       = input.module,
                         socialList   = module.social_icons,
                         _model       = item(),
+                        //check if we are in the pre Item case => if so, the id is empty
                         is_preItem   = _.isEmpty( _model.id );
+
+                    //=> add the select text in the pre Item case
                     if ( is_preItem ) {
                           socialList = _.union( [ serverControlParams.i18n.selectSocialIcon ], socialList );
                     }
+
+                    //generates the options
                     _.each( socialList , function( icon_name, k ) {
+                          // in the pre Item case the first select element is the notice "Select a social icon"
+                          // doesn't need the fa-* class
                           var _value = ( is_preItem && 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
                               _attributes = {
                                     value : _value,
@@ -8398,6 +7420,8 @@ $.extend( CZRSocialModuleMths, {
                           );
                           return $state;
                     }
+
+                    //fire select2
                     $( 'select[data-type="social-icon"]', input.container ).select2( {
                             templateResult: addIcon,
                             templateSelection: addIcon
@@ -8415,6 +7439,10 @@ $.extend( CZRSocialModuleMths, {
                               hide:false,
                               defaultColor : serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)',
                               change : function( e, o ) {
+                                    //if the input val is not updated here, it's not detected right away.
+                                    //weird
+                                    //is there a "change complete" kind of event for iris ?
+                                    //hack to reset the color to default...@todo => use another color picker.
                                     if ( _.has( o, 'color') && 16777215 == o.color._color )
                                       $(this).val( serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)' );
                                     else
@@ -8423,6 +7451,9 @@ $.extend( CZRSocialModuleMths, {
                                     $(this).trigger('colorpickerchange').trigger('change');
                               }
                     });
+
+                    //when the picker opens, it might be below the visible viewport.
+                    //No built-in event available to react on this in the wpColorPicker unfortunately
                     $el.closest('div').on('click keydown', function() {
                           module._adjustScrollExpandedBlock( input.container );
                     });
@@ -8439,9 +7470,13 @@ $.extend( CZRSocialModuleMths, {
 
 
       CZRSocialsItem : {
+              //Fired if the item has been instantiated
+              //The item.callbacks are declared.
               ready : function() {
                     var item = this;
                     api.CZRItem.prototype.ready.call( item );
+
+                    //update the item model on social-icon change
                     item.bind('social-icon:changed', function(){
                           item.module.updateItemModel( item );
                     });
@@ -8459,6 +7494,9 @@ $.extend( CZRSocialModuleMths, {
 
                       return '<div><span class="fa ' + icon + '" style="color:' + color + '"></span> ' + title + '</div>';
               },
+
+              //overrides the default parent method by a custom one
+              //at this stage, the model passed in the obj is up to date
               writeItemViewTitle : function( model ) {
                       var item = this,
                           module     = item.module,
@@ -8480,17 +7518,26 @@ $.extend( CZRWidgetAreaModuleMths, {
               var module = this;
 
               api.CZRDynModule.prototype.initialize.call( this, id, constructorOptions );
+
+              //extend the module with new template Selectors
               $.extend( module, {
                     itemPreAddEl : 'czr-module-widgets-pre-add-view-content',
                     itemInputList : 'czr-module-widgets-item-input-list',
                     itemInputListReduced : 'czr-module-widgets-item-input-list-reduced',
                     ruItemPart : 'czr-module-widgets-ru-item-part'
               } );
+
+              //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
               module.inputConstructor = api.CZRInput.extend( module.CZRWZonesInputMths || {} );
+              //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
               module.itemConstructor = api.CZRItem.extend( module.CZRWZonesItem || {} );
 
               module.serverParams = serverControlParams.widget_area_el_params || {};
+
+              //add a shortcut to the server side json properties
               module.contexts = _.has( module.serverParams , 'sidebar_contexts') ? module.serverParams.sidebar_contexts : {};
+
+              //context match map
               module.context_match_map = {
                       is_404 : '404',
                       is_category : 'archive-category',
@@ -8502,6 +7549,8 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
               module.locations = _.has( module.serverParams , 'sidebar_locations') ? module.serverParams.sidebar_locations : {};
+
+              //declares a default model
               module.defaultItemModel = {
                       id : '',
                       title : serverControlParams.i18n.widgetZone,
@@ -8509,7 +7558,12 @@ $.extend( CZRWidgetAreaModuleMths, {
                       locations : [ module.serverParams.defaultWidgetLocation ],
                       description : ''
               };
+
+              //overrides the default success message
               this.itemAddedMessage = serverControlParams.i18n.widgetZoneAdded;
+
+              //Observe and react to sidebar insights from the preview frame
+              // SIDEBAR INSIGHTS => stores and observes the sidebars and widgets settings sent by the preview */
               if ( ! _.has( api, 'sidebar_insights' ) ) {
                     api.sidebar_insights = new api.Values();
                     api.sidebar_insights.create('candidates');//will store the sidebar candidates on preview refresh
@@ -8521,6 +7575,13 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
               this.listenToSidebarInsights();
+
+              //React on 'houston-widget-settings'
+              //actives :  data.renderedSidebars,
+              // inactives :  _inactives,
+              // registered :  _registered,
+              // candidates :  _candidates,
+              // available_locations :  data.availableWidgetLocations//built server side
               api.czr_widgetZoneSettings = api.czr_widgetZoneSettings || new api.Value();
               api.czr_widgetZoneSettings.bind( function( updated_data_sent_from_preview , from ) {
                       module.isReady.then( function() {
@@ -8529,10 +7590,20 @@ $.extend( CZRWidgetAreaModuleMths, {
                             });
                       });
               });
+
+
+
+
+              //AVAILABLE LOCATIONS FOR THE PRE MODEL
+              //1) add an observable value to module.preItem to handle the alert visibility
               module.preItem_location_alert_view_state = new api.Value( 'closed');
+              //2) add state listeners
               module.preItem_location_alert_view_state.callbacks.add( function( to, from ) {
                         module._toggleLocationAlertExpansion( module.container, to );
               });
+
+
+              //REACT ON ADD / REMOVE ITEMS
               module.bind( 'item-added', function( model ) {
                       module.addWidgetSidebar( model );
               });
@@ -8540,29 +7611,57 @@ $.extend( CZRWidgetAreaModuleMths, {
               module.bind( 'pre_item_api_remove' , function(model) {
                       module.removeWidgetSidebar( model );
               });
+
+
+              //records the top margin value of the widgets panel on each expansion
               var fixTopMargin = new api.Values();
               fixTopMargin.create('fixed_for_current_session');
               fixTopMargin.create('value');
 
               api.section(module.serverParams.dynWidgetSection).fixTopMargin = fixTopMargin;
               api.section(module.serverParams.dynWidgetSection).fixTopMargin('fixed_for_current_session').set(false);
+
+
+              //setup reactions on widget section expansion
+              //change the expanded behaviour for the widget zone section
+              //api.section(module.serverParams.dynWidgetSection).expanded.callbacks.add( function() { return module.widgetSectionReact.apply(module, arguments ); } );
+
+              //bind actions on widget panel expansion and widget zone section expansion
+              //Fire the module
               api.panel('widgets').expanded.callbacks.add( function(to, from) {
                     module.widgetPanelReact();//setup some visual adjustments, must be ran each time panel is closed or expanded
+
+                    //Fire the module if not done already
                     if ( 'resolved' == module.isReady.state() )
                       return;
                     module.ready();
               });
       },//initialize
+
+
+
+
+      //When the control is embedded on the page, this method is fired in api.CZRBaseModuleControl:ready()
+      //=> right after the module is instantiated.
       ready : function() {
               var module = this;
               api.CZRDynModule.prototype.ready.call( module );
+
+              //add state listener on pre Item view
               module.preItemExpanded.callbacks.add( function( to, from ) {
                     if ( ! to )
                       return;
+                    //refresh the location list
                     module.preItem.czr_Input('locations')._setupLocationSelect( true );//true for refresh
+                    //refresh the location alert message
                     module.preItem.czr_Input('locations').mayBeDisplayModelAlert();
               });
       },
+
+
+
+      //overrides parent method
+      //adds the default widget zones in the items
       initializeModuleModel : function( constructorOptions ) {
                   var module = this, dfd = $.Deferred();
                   constructorOptions.items = _.union( _.has( module.serverParams, 'default_zones' ) ? module.serverParams.default_zones : [], constructorOptions.items );
@@ -8594,6 +7693,13 @@ $.extend( CZRWidgetAreaModuleMths, {
 
                     api.CZRInput.prototype.ready.call( input);
             },
+
+
+
+            //////////////////////////////////////////////////
+            ///SETUP SELECTS
+            //////////////////////////////////////////////////
+            //setup select on view_rendered|item_content_event_map
             setupSelect : function() {
                     var input      = this;
                     if ( 'locations' == this.id )
@@ -8602,11 +7708,15 @@ $.extend( CZRWidgetAreaModuleMths, {
                       this._setupContextSelect();
 
             },
+
+            //helper
             _setupContextSelect : function() {
                     var input      = this,
                         input_contexts = input(),
                         item = input.input_parent,
                         module     = input.module;
+
+                    //generates the contexts options
                     _.each( module.contexts, function( title, key ) {
                           var _attributes = {
                                 value : key,
@@ -8617,14 +7727,22 @@ $.extend( CZRWidgetAreaModuleMths, {
 
                           $( 'select[data-type="contexts"]', input.container ).append( $('<option>', _attributes) );
                     });
+                    //fire select2
                     $( 'select[data-type="contexts"]', input.container ).select2();
             },
+
+
+            //helper
+            //the refresh param is a bool
             _setupLocationSelect : function(refresh ) {
                     var input      = this,
                         input_locations = input(),
                         item = input.input_parent,
                         module     = input.module,
                         available_locs = api.sidebar_insights('available_locations')();
+
+                    //generates the locations options
+                    //append them if not set yet
                     if ( ! $( 'select[data-type="locations"]', input.container ).children().length ) {
                           _.each( module.locations, function( title, key ) {
                                 var _attributes = {
@@ -8651,15 +7769,22 @@ $.extend( CZRWidgetAreaModuleMths, {
                     if ( refresh ) {
                           $( 'select[data-type="locations"]', input.container ).select2( 'destroy' );
                     }
+
+                    //fire select2
                     $( 'select[data-type="locations"]', input.container ).select2( {
                       templateResult: setAvailability,
                       templateSelection: setAvailability
                     });
             },
+
+            //fired on view event map : 'locations:changed'
+            //@param obj { dom_el: $() , model : {} )
             mayBeDisplayModelAlert : function() {
                     var input      = this,
                         item = input.input_parent,
                         module     = input.module;
+
+                    //check if we are in the pre Item case => if so, the locations might be empty
                     if ( ! _.has( item(), 'locations') || _.isEmpty( item().locations ) )
                       return;
 
@@ -8668,6 +7793,8 @@ $.extend( CZRWidgetAreaModuleMths, {
                         _unavailable = _.filter( _selected_locations, function( loc ) {
                           return ! _.contains(available_locs, loc);
                         });
+
+                    //check if we are in the pre Item case => if so, the id is empty
                     if ( ! _.has( item(), 'id' ) || _.isEmpty( item().id ) ) {
                           module.preItem_location_alert_view_state.set( ! _.isEmpty( _unavailable ) ? 'expanded' : 'closed' );
                     } else {
@@ -8694,30 +7821,53 @@ $.extend( CZRWidgetAreaModuleMths, {
             initialize : function( id, options ) {
                     var item = this,
                         module = item.module;
+
+                    //Add some observable values for this item
                     item.czr_itemLocationAlert = new api.Value();
 
                     api.CZRItem.prototype.initialize.call( item, null, options );
             },
+
+
+
+            //extend parent setupview
             itemWrapperViewSetup : function() {
                     var item = this,
                         module = item.module;
 
                     api.CZRItem.prototype.itemWrapperViewSetup.call(item);
+
+                    /// ALERT FOR NOT AVAILABLE LOCATION
                     item.czr_itemLocationAlert.set('closed');
+
+                    //add a state listener on expansion change
                     item.czr_itemLocationAlert.callbacks.add( function( to, from ) {
                           module._toggleLocationAlertExpansion( item.container , to );
                     });
+
+                    //update item title
                     item.writeSubtitleInfos(item());
+
+                    //this is fired just after the itemWrapperViewSetupApiListeners
+                    //=> add a callback to refresh the availability status of the locations in the select location picker
+                    //add a state listener on expansion change
                     item.viewState.callbacks.add( function( to, from ) {
                           if ( -1 == to.indexOf('expanded') )//can take the expanded_noscroll value !
                             return;
+                          //don't try to invoke the input instances before the content is actually rendered
+                          //=> there might be cases when the content rendering is debounced...
                           item.bind('contentRendered', function() {
+                                //refresh the location list
                                 item.czr_Input('locations')._setupLocationSelect( true );//true for refresh
+                                //refresh the location alert message
                                 item.czr_Input('locations').mayBeDisplayModelAlert();
                           });
 
                     });
             },
+
+
+            //extend parent listener
             itemReact : function(to, from) {
                     var item = this;
                     api.CZRItem.prototype.itemReact.call(item, to, from);
@@ -8725,6 +7875,11 @@ $.extend( CZRWidgetAreaModuleMths, {
                     item.writeSubtitleInfos(to);
                     item.updateSectionTitle(to).setModelUpdateTimer();
             },
+
+
+
+            //Fired in setupItemListeners. Reacts to model change.
+            //Write html informations under the title : location(s) and context(s)
             writeSubtitleInfos : function(model) {
                     var item = this,
                         module = item.module,
@@ -8735,6 +7890,8 @@ $.extend( CZRWidgetAreaModuleMths, {
 
                     if ( ! item.container.length )
                       return this;
+
+                    //generate the locations and the contexts text from the json data if exists
                     _model.locations =_.isString(_model.locations) ? [_model.locations] : _model.locations;
                     _.each( _model.locations, function( loc ) {
                           if ( _.has( module.locations , loc ) )
@@ -8743,7 +7900,11 @@ $.extend( CZRWidgetAreaModuleMths, {
                             _locations.push(loc);
                       }
                     );
+
+                    //build the context list
                     _model.contexts =_.isString(_model.contexts) ? [_model.contexts] : _model.contexts;
+
+                    //all contexts cases ?
                     if ( item._hasModelAllContexts( model ) ) {
                       _contexts.push(module.contexts._all_);
                     } else {
@@ -8755,12 +7916,20 @@ $.extend( CZRWidgetAreaModuleMths, {
                             }
                       );
                     }
+
+                    //Translated strings
                     var _locationText = serverControlParams.i18n.locations,
                         _contextText = serverControlParams.i18n.contexts,
                         _notsetText = serverControlParams.i18n.notset;
 
                     _locations = _.isEmpty( _locations ) ? '<span style="font-weight: bold;">' + _notsetText + '</span>' : _locations.join(', ');
                     _contexts = _.isEmpty( _contexts ) ? '<span style="font-weight: bold;">' + _notsetText + '</span>' : _contexts.join(', ');
+
+                    //write the description if builtin
+                    //else, write the dynamic location
+                    // if ( _.has(_model, 'description') && _.has(_model, 'is_builtin') )
+                    //   _html =  _model.description + ' <strong>|</strong> <u>Contexts</u> : ' + _contexts;
+                    // else
 
                     _html = '<u>' + _locationText + '</u> : ' + _locations + ' <strong>|</strong> <u>' + _contextText + '</u> : ' + _contexts;
 
@@ -8776,17 +7945,46 @@ $.extend( CZRWidgetAreaModuleMths, {
 
                     return this;
             },//writeSubtitleInfos
+
+
+
+            ////Fired in setupItemListeners
             updateSectionTitle : function(model) {
                     var _sidebar_id = 'sidebar-widgets-' + model.id,
                         _new_title  = model.title;
+                    //does this section exists ?
                     if ( ! api.section.has(_sidebar_id) )
                       return this;
+
+                    //update the section title
                     $('.accordion-section-title', api.section(_sidebar_id).container ).text(_new_title);
+
+                    //update the top title ( visible when inside the expanded section )
                     $('.customize-section-title h3', api.section(_sidebar_id).container ).html(
                       '<span class="customize-action">' + api.section(_sidebar_id).params.customizeAction + '</span>' + _new_title
                     );
+                    // $('.customize-section-title h3', api.section(_sidebar_id).container )
+                    //   .append('<span>', {
+                    //       class: 'customize-section-back',
+                    //       html: api.section(_sidebar_id).params.customizeAction
+                    //     } )
+                    //   .append(_new_title);
+
+                    //remove and re-instanciate
+                    //=> works for the section but the controls are not activated anymore.
+                    //Should be easy to fix but useless to go further here. Jquery does the job.
+                    // var _params = _.clone( api.section(_sidebar_id).params );
+                    // _params.title = _new_title;
+                    // api.section(_sidebar_id).container.remove();
+                    // api.section.remove(_sidebar_id);
+                    // api.section.add( _sidebar_id, new api.sectionConstructor[_params.type]( _params.id ,{ params : _params } ) );
                     return this;
             },
+
+
+            //fired on model_update
+            //Don't hammer the preview with too many refreshs
+            //2 seconds delay
             setModelUpdateTimer : function() {
                     var item = this,
                         module = item.module;
@@ -8796,10 +7994,15 @@ $.extend( CZRWidgetAreaModuleMths, {
                         this,
                         'modelUpdateTimer',
                         setTimeout( function() {
+                            //refresh preview
                             module.control.refreshPreview();
                         } , 1000)
                     );//$.data
             },
+
+
+            //@return bool
+            //takes the model unique id
             _hasModelAllContexts : function( model ) {
                     var item = this,
                         module = item.module,
@@ -8812,8 +8015,13 @@ $.extend( CZRWidgetAreaModuleMths, {
 
                     if ( _.contains( model.contexts, '_all_') )
                       return true;
+
+                    //case when model does not have _all_ but all the others
                     return _.isEmpty( _.difference( _.without(moduleContexts, '_all_') , model.contexts ) );
             },
+
+            //@param contexts = array of contexts
+            //api.czr_wpQueryInfos is refreshed on each preview refresh
             _getMatchingContexts : function( defaults ) {
                     var module = this,
                         _current = api.czr_wpQueryInfos().conditional_tags || {},
@@ -8822,10 +8030,83 @@ $.extend( CZRWidgetAreaModuleMths, {
                     return _.isEmpty( _matched ) ? defaults : _matched;
             }
       },//CZRWZonesItem
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      //DEPRECATED : THE CONTROLS TO SYNCHRONIZE HAVE BEEN REMOVED
+
+      //fired on model_added_by_user and from the timer method
+      //1) model_added, before renderItemWrapper action
+      //    when a new model is manually added ( isTrigger is undefined )
+      //    => refresh the select options of the other controls using this collection
+      //2) model_updated, before updateCollection
+      // addControlOptions : function(obj) {
+      //   var _controls = _.where( api.settings.controls, {section:"sidebars_select_sec"});
+      //   _.map( _controls, function( _control ) {
+      //       var $_select = api.control( _control.settings.default ).container.find('select');
+
+      //       //if this option has already been added, simply updates its attributes
+      //       if ( 1 === $_select.find('option[value="' + obj.model.id + '"]').length ) {
+      //         $_select.find('option[value="' + obj.model.id + '"]').html(obj.model.title);
+      //         $_select.selecter("destroy").selecter();
+      //       } else {
+      //         $_select.append( $('<option>', {value: obj.model.id, html:obj.model.title } ) ).selecter("destroy").selecter();
+      //       }
+      //   });//map
+      // },
+
+      //fired on model_removed
+      // removeControlOptions : function(obj) {
+      //   var _controls = _.where( api.settings.controls, {section:"sidebars_select_sec"});
+
+      //   _.map( _controls, function( _control ) {
+      //       var $_select = api.control( _control.settings.default ).container.find('select');
+
+      //       if ( ! $_select.find('option[value="' + obj.model.id + '"]').length )
+      //         return;
+
+      //       $( 'option[value="' + obj.model.id +'"]', $_select).remove();
+      //       $_select.selecter("destroy").selecter();
+      //   });//map
+      // },
+
+
+
+
+
+
+
+
+
+
+
+
+      /////////////////////////////////////////
+      /// ADD / REMOVE WIDGET ZONES
+      ////////////////////////////////////////
+      //fired on model_added_by_user
+      //
+      //can also be called statically when a dynamic sidebar is added in the preview
+      //in this case the parameter are the sidebar data with id and name
       addWidgetSidebar : function( model, sidebar_data ) {
             if ( ! _.isObject(model) && _.isEmpty(sidebar_data) ) {
                   throw new Error('No valid input were provided to add a new Widget Zone.');
             }
+
+
+            //ADD the new sidebar to the existing collection
+            //Clone the serverControlParams.defaultWidgetSidebar sidebar
             var module = this,
                 _model        = ! _.isEmpty(model) ? _.clone(model) : sidebar_data,
                 _new_sidebar  = _.isEmpty(model) ? sidebar_data : $.extend(
@@ -8835,7 +8116,15 @@ $.extend( CZRWidgetAreaModuleMths, {
                             id : _model.id
                       }
                 );
+
+            //Add it to the backbone collection
             api.Widgets.registeredSidebars.add( _new_sidebar );
+
+            //test if added:
+            //api.Widgets.registeredSidebars('czr_sidebars_8');
+
+
+            //ADD the sidebar section
             var _params = $.extend(
                     _.clone( api.section( "sidebar-widgets-" + module.serverParams.defaultWidgetSidebar ).params ),
                     {
@@ -8844,12 +8133,18 @@ $.extend( CZRWidgetAreaModuleMths, {
                           sidebarId: _new_sidebar.id,
                           title: _new_sidebar.name,
                           description : 'undefined' != typeof(sidebar_data) ? sidebar_data.description : api.section( "sidebar-widgets-" + module.serverParams.defaultWidgetSidebar ).params.description,
+                          //always set the new priority to the maximum + 1 ( module.serverParams.dynWidgetSection is excluded from this calculation because it must always be at the bottom )
                           priority: _.max( _.omit( api.settings.sections, module.serverParams.dynWidgetSection), function(sec){ return sec.instanceNumber; }).priority + 1,
                     }
             );
 
             api.section.add( _params.id, new api.sectionConstructor[ _params.type ]( _params.id ,{ params : _params } ) );
+
+            //add it to the static collection of settings
             api.settings.sections[ _params.id ] = _params.id;
+
+            //ADD A SETTING
+            //Clone the module.serverParams.defaultWidgetSidebar sidebar widget area setting
             var _new_set_id = 'sidebars_widgets['+_model.id+']',
                 _new_set    = $.extend(
                       _.clone( api.settings.settings['sidebars_widgets[' + module.serverParams.defaultWidgetSidebar + ']'] ),
@@ -8857,58 +8152,101 @@ $.extend( CZRWidgetAreaModuleMths, {
                             value:[]
                       }
                 );
+
+            //add it to the static collection of settings
             api.settings.settings[ _new_set_id ] = _new_set;
+
+            //instanciate it
             api.create( _new_set_id, _new_set_id, _new_set.value, {
                     transport: _new_set.transport,
                     previewer: api.previewer,
                     dirty: false
             } );
+
+
+
+            //ADD A CONTROL
             var _cloned_control = $.extend(
                       _.clone( api.settings.controls['sidebars_widgets[' + module.serverParams.defaultWidgetSidebar + ']'] ),
                       {
                         settings : { default : _new_set_id }
                   }),
                 _new_control = {};
+
+
+            //replace  serverControlParams.defaultWidgetSidebar  by the new sidebar id
             _.each( _cloned_control, function( param, key ) {
                     if ( 'string' == typeof(param) ) {
                       param = param.replace( module.serverParams.defaultWidgetSidebar , _model.id );
                     }
                     _new_control[key] = param;
             });
+
+            //set the instance number (no sure if needed)
             _new_control.instanceNumber = _.max(api.settings.controls, function(con){ return con.instanceNumber; }).instanceNumber + 1;
+
+            //add it to the static collection of controls
             api.settings.controls[_new_set_id] = _new_control;
+
+            //instanciate it
             api.control.add( _new_set_id, new api.controlConstructor[ _new_control.type ]( _new_set_id, {
                     params: _new_control,
                     previewer: api.previewer
             } ) );
+
+
+            //say it to the control container
+            //only if we are in an instanciated object => because this method can be accessed statically
             if ( _.has(this, 'container') )
               this.container.trigger( 'widget_zone_created', { model : _model, section_id : "sidebar-widgets-" + _model.id , setting_id : _new_set_id });
       },//addWidgetSidebar
+
+
+      //fired on "after_modelRemoved"
       removeWidgetSidebar : function( model ) {
             var module = this;
             if ( ! _.isObject(model) || _.isEmpty(model) ) {
                   throw new Error('No valid data were provided to remove a Widget Zone.');
             }
+
+            //Remove this sidebar from the backbone collection
             api.Widgets.registeredSidebars.remove( model.id );
+
+            //remove the section from the api values and the DOM if exists
             if ( api.section.has("sidebar-widgets-" + model.id) ) {
+                    //Remove the section container from the DOM
                     api.section("sidebar-widgets-" + model.id).container.remove();
+                    //Remove the sidebar section from the api
                     api.section.remove( "sidebar-widgets-" + model.id );
+                    //Remove this section from the static collection
                     delete api.settings.sections[ "sidebar-widgets-" + model.id ];
             }
+
+            //remove the setting from the api if exists
             if ( api.has('sidebars_widgets['+model.id+']') ) {
+                    //Remove this setting from the api
                     api.remove( 'sidebars_widgets['+model.id+']' );
+                    //Remove this setting from the static collection
                     delete api.settings.settings['sidebars_widgets['+model.id+']'];
             }
+
+            //remove the widget control of this sidebar from the api and the DOM if exists
             if ( api.control.has('sidebars_widgets['+model.id+']') ) {
+                    //Remove the control container from the DOM
                     api.control( 'sidebars_widgets['+model.id+']' ).container.remove();
+                    //Remove this control from the api
                     api.control.remove( 'sidebars_widgets['+model.id+']' );
+                    //Remove it to the static collection of controls
                     delete api.settings.controls['sidebars_widgets['+model.id+']'];
             }
+
+            //refresh
             var _refresh = function() {
               api.previewer.refresh();
             };
             _refresh = _.debounce( _refresh, 500 );
             $.when( _refresh() ).done( function() {
+                  //say it
                   module.trigger( 'widget_zone_removed',
                         {
                               model : model,
@@ -8918,8 +8256,24 @@ $.extend( CZRWidgetAreaModuleMths, {
                   );
             });
       },
+
+
+
+
+
+
+
+
+
+
+
+      /////////////////////////////////////////
+      /// SET EXPANSION CALLBACKS FOR WIDGET PANEL AND WIDGET ZONE CREATION SECTION
+      ////////////////////////////////////////
+      //cb of : api.panel('widgets').expanded.callbacks.add
       widgetPanelReact : function() {
             var module = this;
+            //will be used for adjustments
             var _top_margin = api.panel('widgets').container.find( '.control-panel-content' ).css('margin-top');
 
             api.section(module.serverParams.dynWidgetSection).fixTopMargin('value').set( _top_margin );
@@ -8930,13 +8284,21 @@ $.extend( CZRWidgetAreaModuleMths, {
                     _section_content.css( 'margin-top', '' );
                     _panel_content.css('margin-top', api.section(module.serverParams.dynWidgetSection).fixTopMargin('value')() );
               };
+
+            // Fix the top margin after reflow.
             api.bind( 'pane-contents-reflowed', _.debounce( function() {
                   _set_margins();
             }, 150 ) );
+
+            //Close all views on widget panel expansion/clos
             module.closeAllItems().closeRemoveDialogs();
+            //Close preItem dialog box if exists
             if ( _.has( module, 'preItemExpanded' ) )
               module.preItemExpanded.set(false);
       },//widgetPanelReact()
+
+
+      //cb of api.section(module.serverParams.dynWidgetSection).expanded.callbacks
       widgetSectionReact : function( to, from ) {
             var module = this,
                 section =  api.section(module.serverParams.dynWidgetSection),
@@ -8951,6 +8313,7 @@ $.extend( CZRWidgetAreaModuleMths, {
             if ( to ) {
                   overlay.removeClass( 'section-open' );
                   content.css( 'height', 'auto' );
+                  //section.container.removeClass( 'open' );
                   sectionTitle.attr( 'tabindex', '0' );
                   content.css( 'margin-top', '' );
                   container.scrollTop( 0 );
@@ -8960,8 +8323,21 @@ $.extend( CZRWidgetAreaModuleMths, {
 
             content.slideToggle();
       },
+
+
+
+
+
+
+
+      /////////////////////////////////////////
+      /// LISTEN TO SIDEBAR INSIGHTS FROM THE PREVIEW FRAME
+      /// REACT TO THEM
+      ////////////////////////////////////////
       listenToSidebarInsights : function() {
             var module = this;
+
+            //VISIBILITY BASED ON THE SIDEBAR INSIGHTS
             api.sidebar_insights('registered').callbacks.add( function( _registered_zones ) {
                     var _current_collection = _.clone( module.itemCollection() );
                     _.each( _current_collection, function( _model ) {
@@ -8971,6 +8347,8 @@ $.extend( CZRWidgetAreaModuleMths, {
                           module.getViewEl(_model.id).css('display' , _.contains( _registered_zones, _model.id ) ? 'block' : 'none' );
                     });
             });
+
+            //OPACITY SIDEBAR INSIGHTS BASED
             api.sidebar_insights('inactives').callbacks.add( function( _inactives_zones ) {
                     var _current_collection = _.clone( module.itemCollection() );
                     _.each( _current_collection, function( _model ) {
@@ -8992,20 +8370,41 @@ $.extend( CZRWidgetAreaModuleMths, {
                           }
                     });
             });
+
+            //WIDGET SIDEBAR CREATION BASED ON SIDEBAR INSIGHTS
+            //react to a new register candidate(s) on preview refresh
             api.sidebar_insights('candidates').callbacks.add( function(_candidates) {
                   if ( ! _.isArray(_candidates) )
                     return;
                   _.each( _candidates, function( _sidebar ) {
                         if ( ! _.isObject(_sidebar) )
                           return;
+                        //add this widget sidebar and the related setting and control.
+                        //Only if not added already
                         if ( api.section.has("sidebar-widgets-" +_sidebar.id ) )
                           return;
+
+                        //access the registration method statically
                         module.addWidgetSidebar( {}, _sidebar );
+                        //activate it if so
                         if ( _.has( api.sidebar_insights('actives')(), _sidebar.id ) && api.section.has("sidebar-widgets-" +_sidebar.id ) )
                           api.section( "sidebar-widgets-" +_sidebar.id ).activate();
                   });
             });
       },//listenToSidebarInsights()
+
+
+
+
+
+
+
+      /////////////////////////////////////////
+      /// OVERRIDEN METHODS
+      ////////////////////////////////////////
+      //fired in toggleItemExpansion()
+      //has to be overridden for the widget zones control because this control is embedded directly in a panel and not in a section
+      //therefore the module to animate the scrollTop is not the section container but $('.wp-full-overlay-sidebar-content')
       _adjustScrollExpandedBlock : function( $_block_el, adjust ) {
             if ( ! $_block_el.length )
               return;
@@ -9022,6 +8421,11 @@ $.extend( CZRWidgetAreaModuleMths, {
                   }
             }, 50);
       },
+
+
+
+      //overrides the parent class default model getter
+      //=> add a dynamic title
       getDefaultItemModel : function( id ) {
               var module = this,
                   _current_collection = module.itemCollection(),
@@ -9029,10 +8433,25 @@ $.extend( CZRWidgetAreaModuleMths, {
                   _default_contexts = _default.contexts;
               return $.extend( _default, {
                   title : 'Widget Zone ' +  ( _.size(_current_collection)*1 + 1 )
+                  //contexts : module._getMatchingContexts( _default_contexts )
                 });
       },
+
+
+
+      //overrides parent
+      //called before rendering a view. Fired in module::renderItemWrapper()
+      //can be overridden to set a specific view template depending on the model properties
+      //@return string
+      //@type can be
+      //Read Update Delete (rud...)
+      //Read Update (ru)
+      //...
+      //@item_model is an object describing the current item model
       getTemplateEl : function( type, item_model ) {
               var module = this, _el;
+              //force view-content type to ru-item-part if the model is a built-in (primary, secondary, footer-1, ...)
+              //=> user can't delete a built-in model.
               if ( 'rudItemPart' == type ) {
                   type = ( _.has(item_model, 'is_builtin') && item_model.is_builtin ) ? 'ruItemPart' : type;
               } else if ( 'itemInputList' == type ) {
@@ -9082,17 +8501,26 @@ $.extend( CZRWidgetAreaModuleMths, {
       }
 });//$.extend()
 })( wp.customize , jQuery, _ );
+//extends api.CZRModule
 var CZRBodyBgModuleMths = CZRBodyBgModuleMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRBodyBgModuleMths, {
       initialize: function( id, options ) {
             var module = this;
+            //run the parent initialize
             api.CZRModule.prototype.initialize.call( module, id, options );
+
+            //extend the module with new template Selectors
             $.extend( module, {
                   itemInputList : 'czr-module-bodybg-item-content'
             } );
+
+            //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
             module.inputConstructor = api.CZRInput.extend( module.CZRBodyBgInputMths || {} );
+            //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
             module.itemConstructor = api.CZRItem.extend( module.CZBodyBgItemMths || {} );
+
+            //declares a default model
             module.defaultItemModel = {
                   'background-color' : '#eaeaea',
                   'background-image' : '',
@@ -9102,6 +8530,9 @@ $.extend( CZRBodyBgModuleMths, {
                   'background-size' : 'cover'
             };
             api.consoleLog('New module instantiated : ', module.id );
+            //fired ready :
+            //1) on section expansion
+            //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled
             if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
                   module.ready();
             }
@@ -9115,6 +8546,10 @@ $.extend( CZRBodyBgModuleMths, {
 
 
       CZRBodyBgInputMths : {
+            //////////////////////////////////////////////////
+            ///SETUP SELECTS
+            //////////////////////////////////////////////////
+            //setup select on view_rendered|item_content_event_map
             setupSelect : function() {
                   var input         = this,
                       _id_param_map = {
@@ -9135,6 +8570,7 @@ $.extend( CZRBodyBgModuleMths, {
                   options = serverParams[ _id_param_map[input.id] ];
                   if ( _.isEmpty(options) )
                     return;
+                  //generates the options
                   _.each( options, function( title, key ) {
                         var _attributes = {
                               value : key,
@@ -9145,12 +8581,15 @@ $.extend( CZRBodyBgModuleMths, {
 
                         $( 'select[data-type]', input.container ).append( $('<option>', _attributes) );
                   });
+                  //fire select2
                   $( 'select[data-type]', input.container ).select2();
             }
       },
 
 
       CZBodyBgItemMths : {
+            //Fired if the item has been instantiated
+            //The item.callbacks are declared.
             ready : function() {
                   var item = this;
                   api.CZRItem.prototype.ready.call( item );
@@ -9165,6 +8604,7 @@ $.extend( CZRBodyBgModuleMths, {
                                           });
                                     };
                                     set_visibilities( input_instance() );
+                                    //update the item model on 'background-image' change
                                     item.bind('background-image:changed', function(){
                                           set_visibilities( item.czr_Input('background-image')() );
                                     });
@@ -9178,6 +8618,14 @@ $.extend( CZRBodyBgModuleMths, {
 });//$.extend
 })( wp.customize , jQuery, _ );
 (function ( api, $, _ ) {
+//provides a description of each module
+      //=> will determine :
+      //1) how to initialize the module model. If not crud, then the initial item(s) model shall be provided
+      //2) which js template(s) to use : if crud, the module template shall include the add new and pre-item elements.
+      //   , if crud, the item shall be removable
+      //3) how to render : if multi item, the item content is rendered when user click on edit button.
+      //    If not multi item, the single item content is rendered as soon as the item wrapper is rendered.
+      //4) some DOM behaviour. For example, a multi item shall be sortable.
       api.czrModuleMap = api.czrModuleMap || {};
       $.extend( api.czrModuleMap, {
             czr_widget_areas_module : {
@@ -9199,898 +8647,7 @@ $.extend( CZRBodyBgModuleMths, {
                   name : 'Slider'
             }
       });
-})( wp.customize, jQuery, _ );//BASE CONTROL CLASS
-
-var CZRBaseControlMths = CZRBaseControlMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRBaseControlMths, {
-      initialize: function( id, options ) {
-            var control = this;
-            control.css_attr = _.has( serverControlParams , 'css_attr') ? serverControlParams.css_attr : {};
-            api.Control.prototype.initialize.call( control, id, options );
-            control.bind( 'czr-partial-refresh-done', function() {
-                  if ( _.has( control, 'czr_moduleCollection' ) ) {
-                        _.each( control.czr_moduleCollection(), function( _mod_ ) {
-                              if ( ! control.czr_Module( _mod_.id ) )
-                                return;
-
-                              control.czr_Module( _mod_.id ).sendModuleInputsToPreview( { isPartialRefresh : true } );
-                        });
-                  }
-            });
-      },
-      refreshPreview : function( obj ) {
-            this.previewer.refresh();
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
-var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRBaseModuleControlMths, {
-      initialize: function( id, options ) {
-              var control = this;
-
-              control.czr_Module = new api.Values();
-              control.czr_moduleCollection = new api.Value();
-              control.czr_moduleCollection.set([]);
-              control.moduleCollectionReady = $.Deferred();
-              control.moduleCollectionReady.done( function( obj ) {
-                    if ( ! control.isMultiModuleControl( options.params ) ) {
-                    }
-                    control.czr_moduleCollection.callbacks.add( function() { return control.moduleCollectionReact.apply( control, arguments ); } );
-              } );
-              if ( control.isMultiModuleControl( options.params ) ) {
-                    control.syncSektionModule = new api.Value();
-              }
-
-              api.CZRBaseControl.prototype.initialize.call( control, id, options );
-              api.section( control.section() ).expanded.bind(function(to) {
-                    control.czr_Module.each( function( _mod ){
-                          _mod.closeAllItems().closeRemoveDialogs();
-                          if ( _.has( _mod, 'preItem' ) ) {
-                                _mod.preItemExpanded(false);
-                          }
-                    });
-              });
-
-      },
-      ready : function() {
-              var control = this;
-              if ( control.isMultiModuleControl() ) {
-                    control.syncSektionModule.bind( function( sektion_module_instance, from) {
-                          if ( 'resolved' == control.moduleCollectionReady.state() )
-                            return;
-                          control.registerModulesOnInit( sektion_module_instance );
-                          control.moduleCollectionReady.resolve();
-                    });
-              } else {
-                    var single_module = {};
-                    _.each( control.getSavedModules() , function( _mod, _key ) {
-                          single_module = _mod;
-                          try { control.instantiateModule( _mod, {} ); } catch( er ) {
-                                api.errorLog( 'Failed to instantiate module ' + _mod.id + ' ' + er );
-                                return;
-                          }
-                          control.container.attr('data-module', _mod.id );
-                    });
-                    control.moduleCollectionReady.resolve( single_module );
-              }
-              control.bind( 'user-module-candidate', function( _module ) {
-                    var module;
-                    try {
-                          module = control.instantiateModule( _module, {} ); //module, constructor
-                    } catch( er ) {
-                          api.errorLog( 'Failed to instantiate module ' + _module.id + ' ' + er );
-                          return;
-                    }
-                    module.ready( _module.is_added_by_user );
-              });
-      },
-      getDefaultModuleApiModel : function() {
-              var commonAPIModel = {
-                    id : '',//module.id,
-                    module_type : '',//module.module_type,
-                    modOpt : {},//the module modOpt property, typically high level properties that area applied to all items of the module
-                    items   : [],//$.extend( true, {}, module.items ),
-                    crud : false,
-                    multi_item : false,
-                    sortable : false,//<= a module can be multi-item but not necessarily sortable
-                    control : {},//control,
-              };
-              if ( ! this.isMultiModuleControl() ) {
-                  return $.extend( commonAPIModel, {
-                      section : ''//id of the control section
-                  } );
-              } else {
-                  return $.extend( commonAPIModel, {
-                      column_id : '',//a string like col_7
-                      sektion : {},// => the sektion instance
-                      sektion_id : '',
-                      is_added_by_user : false,
-                      dirty : false
-                  } );
-              }
-      },
-      getDefaultModuleDBModel : function() {
-              var commonDBModel = {
-                    items   : [],//$.extend( true, {}, module.items ),
-              };
-              if ( this.isMultiModuleControl() ) {
-                  return $.extend( commonDBModel, {
-                      id : '',
-                      module_type : '',
-                      column_id : '',
-                      sektion_id : '',
-                      dirty : false
-                  } );
-              } else {
-                  return commonDBModel;
-              }
-      },
-      isMultiModuleControl : function( params ) {
-              return 'czr_multi_module' == ( params || this.params ).type;
-      },
-      getSyncCollectionControl : function() {
-            var control = this;
-            if ( _.isUndefined( control.params.syncCollection ) ) {
-                throw new Error( 'Control ' + control.id + ' has no synchronized sektion control defined.');
-            }
-            return api.control( api.CZR_Helpers.build_setId( control.params.syncCollection ) );
-      },
-      getSavedModules : function() {
-              var control = this,
-                  _savedModulesCandidates = [],
-                  _module_type = control.params.module_type,
-                  _raw_saved_module_val = [],
-                  _saved_items = [],
-                  _saved_modOpt = {};
-              if ( control.isMultiModuleControl() ) {
-                  _savedModulesCandidates = $.extend( true, [], api( control.id )() );//deep clone
-              } else {
-                  if ( api.CZR_Helpers.isMultiItemModule( _module_type ) && ! _.isEmpty( api( control.id )() ) && ! _.isObject( api( control.id )() ) ) {
-                      api.consoleLog('Module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
-                  }
-                  _raw_saved_module_val = _.isArray( api( control.id )() ) ? api( control.id )() : [ api( control.id )() ];
-
-                  _.each( _raw_saved_module_val, function( item_or_mod_opt_candidate , key ) {
-                        if ( api.CZR_Helpers.hasModuleModOpt( _module_type ) && 0*0 === key ) {
-                              if ( _.has( item_or_mod_opt_candidate, 'id') ) {
-                                    api.consoleLog( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no mod_opt defined while it should.' );
-                              } else {
-                                    _saved_modOpt = item_or_mod_opt_candidate;
-                              }
-                        }
-                        if ( _.has( item_or_mod_opt_candidate, 'id') && ! _.has( item_or_mod_opt_candidate, 'is_mod_opt' ) ) {
-                              _saved_items.push( item_or_mod_opt_candidate );
-                        }
-                  });
-                  _savedModulesCandidates.push(
-                        {
-                              id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
-                              module_type : control.params.module_type,
-                              section : control.section(),
-                              modOpt : $.extend( true, {} , _saved_modOpt ),//disconnect with a deep cloning
-                              items : $.extend( true, [] , _saved_items )//disconnect with a deep cloning
-                        }
-                  );
-              }
-              return _savedModulesCandidates;
-      },
-      isModuleRegistered : function( id_candidate ) {
-            var control = this;
-            return ! _.isUndefined( _.findWhere( control.czr_moduleCollection(), { id : id_candidate}) );
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
-var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRBaseModuleControlMths, {
-      instantiateModule : function( module, constructor ) {
-              if ( ! _.has( module,'id') ) {
-                throw new Error('CZRModule::instantiateModule() : a module has no id and could not be added in the collection of : ' + this.id +'. Aborted.' );
-              }
-              var control = this;
-              if ( _.isUndefined(constructor) || _.isEmpty(constructor) ) {
-                  constructor = control.getModuleConstructor( module );
-              }
-              if ( ! _.isEmpty( module.id ) && control.czr_Module.has( module.id ) ) {
-                    throw new Error('The module id already exists in the collection in control : ' + control.id );
-              }
-
-              var module_api_ready = control.prepareModuleForAPI( module );
-              control.czr_Module.add( module_api_ready.id, new constructor( module_api_ready.id, module_api_ready ) );
-
-              if ( ! control.czr_Module.has( module_api_ready.id ) ) {
-                  throw new Error('instantiateModule() : instantiation failed for module id ' + module_api_ready.id + ' in control ' + control.id  );
-              }
-              return control.czr_Module(module_api_ready.id);
-      },
-      getModuleConstructor : function( module ) {
-              var control = this,
-                  parentConstructor = {},
-                  constructor = {};
-
-              if ( ! _.has( module, 'module_type' ) ) {
-                  throw new Error('CZRModule::getModuleConstructor : no module type found for module ' + module.id );
-              }
-              if ( ! _.has( api.czrModuleMap, module.module_type ) ) {
-                  throw new Error('Module type ' + module.module_type + ' is not listed in the module map api.czrModuleMap.' );
-              }
-
-              var _mthds = api.czrModuleMap[ module.module_type ].mthds,
-                  _is_crud = api.czrModuleMap[ module.module_type ].crud,
-                  _base_constructor = _is_crud ? api.CZRDynModule : api.CZRModule;
-              if ( ! _.isEmpty( module.sektion_id ) ) {
-                  parentConstructor = _base_constructor.extend( _mthds );
-                  constructor = parentConstructor.extend( control.getMultiModuleExtender( parentConstructor ) );
-              } else {
-                  constructor = _base_constructor.extend( _mthds );
-              }
-
-              if ( _.isUndefined(constructor) || _.isEmpty(constructor) || ! constructor ) {
-                  throw new Error('CZRModule::getModuleConstructor : no constructor found for module type : ' + module.module_type +'.' );
-              }
-              return constructor;
-      },
-      prepareModuleForAPI : function( module_candidate ) {
-            if ( ! _.isObject( module_candidate ) ) {
-                throw new Error('prepareModuleForAPI : a module must be an object to be instantiated.');
-            }
-
-            var control = this,
-                api_ready_module = {};
-
-            _.each( control.getDefaultModuleApiModel() , function( _value, _key ) {
-                  var _candidate_val = module_candidate[_key];
-                  switch( _key ) {
-                        case 'id' :
-                              if ( _.isEmpty( _candidate_val ) ) {
-                                    api_ready_module[_key] = control.generateModuleId( module_candidate.module_type );
-                              } else {
-                                    api_ready_module[_key] = _candidate_val;
-                              }
-                        break;
-                        case 'module_type' :
-                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module type must a string not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case 'items' :
-                              if ( ! _.isArray( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : a module item list must be an array');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case 'modOpt' :
-                              if ( ! _.isObject( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : a module modOpt property must be an object');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case 'crud' :
-                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
-                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : the module param "crud" must be a boolean');
-                              }
-                              api_ready_module[_key] = _candidate_val || false;
-                        break;
-                        case 'multi_item' :
-                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
-                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : the module param "multi_item" must be a boolean');
-                              }
-                              api_ready_module[_key] = _candidate_val || false;
-                        break;
-                        case 'sortable' :
-                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].sortable || api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
-                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : the module param "sortable" must be a boolean');
-                              }
-                              api_ready_module[_key] = _candidate_val || false;
-                        break;
-                        case  'control' :
-                              api_ready_module[_key] = control;//this
-                        break;
-                        case  'section' :
-                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module section must be a string not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case  'column_id' :
-                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module column id must a string not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case  'sektion' :
-                              if ( ! _.isObject( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module sektion must be an object not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case  'sektion_id' :
-                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module sektion id must be a string not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case 'is_added_by_user' :
-                              if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : the module param "is_added_by_user" must be a boolean');
-                              }
-                            api_ready_module[_key] = _candidate_val || false;
-                        break;
-                        case 'dirty' :
-                              api_ready_module[_key] = _candidate_val || false;
-                        break;
-                  }//switch
-            });
-            return api_ready_module;
-      },
-      generateModuleId : function( module_type, key, i ) {
-              i = i || 1;
-              if ( i > 100 ) {
-                    throw new Error('Infinite loop when generating of a module id.');
-              }
-              var control = this;
-              key = key || control._getNextModuleKeyInCollection();
-              var id_candidate = module_type + '_' + key;
-              if ( ! _.has(control, 'czr_moduleCollection') || ! _.isArray( control.czr_moduleCollection() ) ) {
-                    throw new Error('The module collection does not exist or is not properly set in control : ' + control.id );
-              }
-              if ( control.isModuleRegistered( id_candidate ) ) {
-                key++; i++;
-                return control.generateModuleId( module_type, key, i );
-              }
-
-              return id_candidate;
-      },
-      _getNextModuleKeyInCollection : function() {
-              var control = this,
-                _max_mod_key = {},
-                _next_key = 0;
-              if ( ! _.isEmpty( control.czr_moduleCollection() ) ) {
-                  _max_mod_key = _.max( control.czr_moduleCollection(), function( _mod ) {
-                      return parseInt( _mod.id.replace(/[^\/\d]/g,''), 10 );
-                  });
-                  _next_key = parseInt( _max_mod_key.id.replace(/[^\/\d]/g,''), 10 ) + 1;
-              }
-              return _next_key;
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
-var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRBaseModuleControlMths, {
-      registerModulesOnInit : function( sektion_module_instance ) {
-              var control = this,
-                  _orphan_mods = [];
-
-              _.each( control.getSavedModules() , function( _mod, _key ) {
-                      if ( ! sektion_module_instance.czr_Item.has( _mod.sektion_id ) ) {
-                            api.errorLog( 'Warning Module ' + _mod.id + ' is orphan : it has no sektion to be embedded to. It Must be removed.');
-                            _orphan_mods.push(_mod);
-                            return;
-                      }
-
-                      var _sektion = sektion_module_instance.czr_Item( _mod.sektion_id );
-
-                      if ( _.isUndefined( _sektion ) ) {
-                            throw new Error( 'sektion instance missing. Impossible to instantiate module : ' + _mod.id );
-                      }
-                      $.extend( _mod, {sektion : _sektion} );
-                      control.updateModulesCollection( {module : _mod } );
-              });
-              control.moduleCollectionReady.then( function() {
-                    if ( ! _.isEmpty( _orphan_mods ) ) {
-                        control.moduleCollectionReact( control.czr_moduleCollection(), [], { orphans_module_removal : _orphan_mods } );
-                    }
-              });
-      },
-      updateModulesCollection : function( obj ) {
-              var control = this,
-                  _current_collection = control.czr_moduleCollection(),
-                  _new_collection = $.extend( true, [], _current_collection);
-              if ( _.has( obj, 'collection' ) ) {
-                    control.czr_moduleCollection.set( obj.collection, obj.data || {} );
-                    return;
-              }
-
-              if ( ! _.has(obj, 'module') ) {
-                throw new Error('updateModulesCollection, no module provided ' + control.id + '. Aborting');
-              }
-              var module_api_ready = control.prepareModuleForAPI( _.clone( obj.module ) );
-              if ( _.findWhere( _new_collection, { id : module_api_ready.id } ) ) {
-                    _.each( _current_collection , function( _elt, _ind ) {
-                          if ( _elt.id != module_api_ready.id )
-                            return;
-                          _new_collection[_ind] = module_api_ready;
-                    });
-              }
-              else {
-                    _new_collection.push( module_api_ready );
-              }
-              var _params = {};
-              if ( _.has( obj, 'data') ) {
-                  _params = $.extend( true, {}, obj.data );
-                  $.extend( _params, { module : module_api_ready } );
-              }
-              control.czr_moduleCollection.set( _new_collection, _params );
-      },
-      moduleCollectionReact : function( to, from, data ) {
-            var control = this,
-                is_module_added = _.size(to) > _.size(from),
-                is_module_removed = _.size(from) > _.size(to),
-                is_module_update = _.size(from) == _.size(to);
-                is_collection_sorted = false;
-            if ( is_module_removed ) {
-                  var _to_remove = _.filter( from, function( _mod ){
-                      return _.isUndefined( _.findWhere( to, { id : _mod.id } ) );
-                  });
-                  _to_remove = _to_remove[0];
-                  control.czr_Module.remove( _to_remove.id );
-            }
-            if ( _.isObject( data  ) && _.has( data, 'module' ) ) {
-                  data.module_id = data.module.id;
-                  data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
-            }
-            if ( ! control.isMultiModuleControl() && is_module_added ) {
-                  return;
-            }
-            else {
-                  api( this.id )
-                        .set( control.filterModuleCollectionBeforeAjax( to ), data );
-            }
-      },
-      filterModuleCollectionBeforeAjax : function( collection ) {
-              var control = this,
-                  _filtered_collection = $.extend( true, [], collection ),
-                  _to_return;
-
-              _.each( collection , function( _mod, _key ) {
-                    var db_ready_mod = $.extend( true, {}, _mod );
-                    _filtered_collection[_key] = control.prepareModuleForDB( db_ready_mod );
-              });
-              if ( control.isMultiModuleControl() ) {
-                    return _filtered_collection;
-              } else {
-                    if ( _.size( collection ) > 1 ) {
-                      throw new Error('There should not be several modules in the collection of control : ' + control.id );
-                    }
-                    if ( ! _.isArray( collection ) || _.isEmpty( collection ) || ! _.has( collection[0], 'items' ) ) {
-                      throw new Error('The setting value could not be populated in control : ' + control.id );
-                    }
-                    var module_id = collection[0].id;
-
-                    if ( ! control.czr_Module.has( module_id ) ) {
-                       throw new Error('The single module control (' + control.id + ') has no module registered with the id ' + module_id  );
-                    }
-                    var module_instance = control.czr_Module( module_id );
-                    if ( ! _.isArray( module_instance().items ) ) {
-                      throw new Error('The module ' + module_id + ' should be an array in control : ' + control.id );
-                    }
-                    _to_return = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
-                    return module_instance.hasModOpt() ? _.union( [ module_instance().modOpt ] , _to_return ) : _to_return;
-              }
-      },
-      prepareModuleForDB : function ( module_db_candidate ) {
-            if ( ! _.isObject( module_db_candidate ) ) {
-                throw new Error('MultiModule Control::prepareModuleForDB : a module must be an object. Aborting.');
-            }
-            var control = this,
-                db_ready_module = {};
-
-            _.each( control.getDefaultModuleDBModel() , function( _value, _key ) {
-                  if ( ! _.has( module_db_candidate, _key ) ) {
-                      throw new Error('MultiModule Control::prepareModuleForDB : a module is missing the property : ' + _key + ' . Aborting.');
-                  }
-
-                  var _candidate_val = module_db_candidate[ _key ];
-                  switch( _key ) {
-                        case 'items' :
-                          if ( ! _.isArray( _candidate_val )  ) {
-                              throw new Error('prepareModuleForDB : a module item list must be an array');
-                          }
-                          db_ready_module[ _key ] = _candidate_val;
-                        break;
-                        case 'id' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareModuleForDB : a module id must a string not empty');
-                          }
-                          db_ready_module[ _key ] = _candidate_val;
-                        break;
-                        case 'module_type' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareModuleForDB : a module type must a string not empty');
-                          }
-                          db_ready_module[ _key ] = _candidate_val;
-                        break;
-                        case  'column_id' :
-                          if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                              throw new Error('prepareModuleForDB : a module column id must a string not empty');
-                          }
-                          db_ready_module[ _key ] = _candidate_val;
-                        break;
-                        case  'sektion_id' :
-                          if ( ! _.isObject( module_db_candidate.sektion ) || ! _.has( module_db_candidate.sektion, 'id' ) ) {
-                              throw new Error('prepareModuleForDB : a module sektion must be an object with an id.');
-                          }
-                          db_ready_module[ _key ] = module_db_candidate.sektion.id;
-                        break;
-                        case 'dirty' :
-                          if ( control.czr_Module.has( module_db_candidate.id ) )
-                              db_ready_module[ _key ] = control.czr_Module( module_db_candidate.id ).isDirty();
-                          else
-                              db_ready_module[ _key ] = _candidate_val;
-                          if ( ! _.isBoolean( db_ready_module[ _key ] ) ) {
-                              throw new Error('prepareModuleForDB : a module dirty state must be a boolean.');
-                          }
-                        break;
-                  }//switch
-            });
-            return db_ready_module;
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
-var CZRMultiModuleControlMths = CZRMultiModuleControlMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRMultiModuleControlMths, {
-      initialize: function( id, options ) {
-              var control = this;
-              api.consoleLog('IN MULTI MODULE INITIALIZE ? ', options );
-              api(id).callbacks.add( function() { return control.syncColumn.apply( control, arguments ); } );
-
-              api.CZRBaseModuleControl.prototype.initialize.call( control, id, options );
-      },
-
-
-      ready : function() {
-            var control = this;
-            api.consoleLog('MODULE-COLLECTION CONTROL READY', this.id );
-            api.CZRBaseModuleControl.prototype.ready.apply( control, arguments);
-      },
-      syncColumn : function( to, from, data ) {
-            api.consoleLog('IN SYNC COLUMN', to, from, data );
-            if ( ! _.isUndefined(data) && data.silent )
-              return;
-            api.consoleLog('IN SYNXXX', api.control('hu_theme_options[module-collection]').syncSektionModule()(), this.syncSektionModule()(), this.id );
-            if ( _.has( data, 'orphans_module_removal' ) )
-              return;
-            var control = api.control( this.id );
-            var added_mod = _.filter( to, function( _mod, _key ){
-                return ! _.findWhere( from, { id : _mod.id } );
-            } );
-            if ( ! _.isEmpty( added_mod ) ) {
-                  api.consoleLog('ADDED MODULE?', added_mod );
-                  _.each( added_mod, function( _mod ) {
-                          control.syncSektionModule().czr_Column( _mod.column_id ).updateColumnModuleCollection( { module : _mod } );
-                  });
-            }
-            var removed_mod = _.filter( from, function( _mod, _key ){
-                return ! _.findWhere( to, { id : _mod.id } );
-            } );
-            if ( ! _.isEmpty( removed_mod ) ) {
-                  _.each( removed_mod, function( _mod ) {
-                          control.syncSektionModule().czr_Column( _mod.column_id ).removeModuleFromColumnCollection( _mod );
-                  });
-            }
-            if ( _.size(from) == _.size(to) && _.has( data, 'module') && _.has( data, 'source_column') && _.has( data, 'target_column') ) {
-                    $.when( control.syncSektionModule().moveModuleFromTo( data.module, data.source_column, data.target_column ) ).done( function() {
-                          control.syncSektionModule().control.trigger('module-moved', { module : data.module, source_column: data.source_column, target_column :data.target_column });
-                    } );
-            }
-            control.trigger( 'columns-synchronized', to );
-      },
-      removeModule : function( module ) {
-            var control = this;
-            if ( control.czr_Module.has( module.id ) && 'resolved' == control.czr_Module( module.id ).embedded.state() )
-                control.czr_Module( module.id ).container.remove();
-            control.removeModuleFromCollection( module );
-      },
-
-
-      removeModuleFromCollection : function( module ) {
-            var control = this,
-                _current_collection = control.czr_moduleCollection(),
-                _new_collection = $.extend( true, [], _current_collection);
-
-            _new_collection = _.filter( _new_collection, function( _mod ) {
-                  return _mod.id != module.id;
-            } );
-            control.czr_moduleCollection.set( _new_collection );
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
-var CZRMultiModuleControlMths = CZRMultiModuleControlMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRMultiModuleControlMths, {
-      getMultiModuleExtender : function( parentConstructor ) {
-            var control = this;
-            $.extend( control.CZRModuleExtended, {
-                  initialize: function( id, constructorOptions ) {
-                        var module = this;
-                        parentConstructor.prototype.initialize.call( module, id, constructorOptions );
-
-                        api.consoleLog('MODULE INSTANTIATED : ', module.id );
-                        $.extend( module, {
-                              singleModuleWrapper : 'czr-single-module-wrapper',
-                              sektionModuleTitle : 'czr-module-sektion-title-part',
-                              ruModuleEl : 'czr-ru-module-sektion-content'
-                        } );
-                        module.czr_ModuleState = new api.Value( false );
-                        module.isReady.done( function() {
-                              module.setupModuleView();
-                        });
-                        module.moduleTitleEmbedded = $.Deferred();
-                        module.modColumn = new api.Value();
-                        module.modColumn.set( constructorOptions.column_id );
-                        module.modColumn.bind( function( to, from ) {
-                              api.consoleLog('MODULE ' + module.id + ' HAS BEEN MOVED TO COLUMN', to, module() );
-                              var _current_model = module(),
-                                  _new_model = $.extend( true, {}, _current_model );
-
-                              _new_model.column_id = to;
-                              module.set( _new_model, { target_column : to, source_column : from } );
-                        } );
-                  },
-                  ready : function( is_added_by_user ) {
-                          var module = this;
-                           api.consoleLog('MODULE READY IN EXTENDED MODULE CLASS : ', module.id );
-                          $.when( module.renderModuleWrapper( is_added_by_user ) ).done( function( $_module_container ) {
-                                if ( _.isUndefined($_module_container) || false === $_module_container.length ) {
-                                    throw new Error( 'Module container has not been embedded for module :' + module.id );
-                                }
-                                module.container = $_module_container;
-                                module.embedded.resolve();
-                          } );
-                          parentConstructor.prototype.ready.call( module );
-                  }
-
-            });
-            return control.CZRModuleExtended;
-      },
-      CZRModuleExtended  : {
-            renderModuleWrapper : function( is_added_by_user ) {
-                    var module = this;
-                    if ( 'resolved' == module.embedded.state() )
-                      return module.container;
-                    if ( 0 === $( '#tmpl-' + module.singleModuleWrapper ).length ) {
-                      throw new Error('No template for module ' + module.id + '. The template script id should be : #tmpl-' + module.singleModuleWrapper );
-                    }
-
-                    var module_wrapper_tmpl = wp.template( module.singleModuleWrapper ),
-                        tmpl_data = {
-                            id : module.id,
-                            type : module.module_type
-                        },
-                        $_module_el = $(  module_wrapper_tmpl( tmpl_data ) );
-                    if ( is_added_by_user ) {
-                        $.when( $( '.czr-module-collection-wrapper' , module._getColumn().container ).find( '.czr-module-candidate').after( $_module_el ) ).
-                          done( function() {
-                            $( '.czr-module-collection-wrapper' , module._getColumn().container ).find( '.czr-module-candidate').remove();
-                          });
-                    } else {
-                        $( '.czr-module-collection-wrapper' , module._getColumn().container).append( $_module_el );
-                    }
-
-                    return $_module_el;
-            },
-
-
-
-
-
-            setupModuleView : function() {
-                    var module = this;
-
-                    module.view_event_map = [
-                            {
-                              trigger   : 'click keydown',
-                              selector  : [ '.czr-remove-mod', '.' + module.control.css_attr.cancel_alert_btn ].join(','),
-                              name      : 'toggle_remove_alert',
-                              actions   : ['toggleModuleRemoveAlert']
-                            },
-                            {
-                              trigger   : 'click keydown',
-                              selector  : '.' + module.control.css_attr.remove_view_btn,
-                              name      : 'remove_module',
-                              actions   : ['removeModule']
-                            },
-                            {
-                              trigger   : 'click keydown',
-                              selector  : '.czr-edit-mod',
-                              name      : 'edit_module',
-                              actions   : ['setModuleViewVisibility', 'sendEditModule']
-                            },
-                            {
-                              trigger   : 'click keydown',
-                              selector  : '.czr-module-back',
-                              name      : 'back_to_column',
-                              actions   : ['setModuleViewVisibility']
-                            },
-                            {
-                              trigger   : 'mouseenter',
-                              selector  : '.czr-mod-header',
-                              name      : 'hovering_module',
-                              actions   : function( obj ) {
-                                    module.control.previewer.send( 'start_hovering_module', {
-                                          id : module.id
-                                    });
-                              }
-                            },
-                            {
-                              trigger   : 'mouseleave',
-                              selector  : '.czr-mod-header',
-                              name      : 'hovering_module',
-                              actions   : function( obj ) {
-                                  module.control.previewer.send( 'stop_hovering_module', {
-                                        id : module.id
-                                  });
-                              }
-                            }
-                    ];
-                    module.embedded.done( function() {
-                          module.czr_ModuleState.callbacks.add( function() { return module.setupModuleViewStateListeners.apply(module, arguments ); } );
-                          api.CZR_Helpers.setupDOMListeners(
-                                module.view_event_map,//actions to execute
-                                { module : { id : module.id } , dom_el:module.container },//model + dom scope
-                                module //instance where to look for the cb methods
-                          );//listeners for the view wrapper
-                    });
-            },
-            setModuleViewVisibility : function( obj, is_added_by_user ) {
-                  var module = this;
-
-                  module.czr_ModuleState( ! module.czr_ModuleState() );
-                  api.czrModulePanelState.set(false);
-                  api.czrSekSettingsPanelState.set(false);
-                  module.control.syncSektionModule().closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
-            },
-            sendEditModule : function( obj ) {
-                  var module = this;
-                  module.control.previewer.send( 'edit_module', {
-                        id : module.id
-                  });
-            },
-            setupModuleViewStateListeners : function( expanded ) {
-                  var module = this;
-                  api.czr_isModuleExpanded = api.czr_isModuleExpanded || new api.Value();
-
-                  if ( expanded )
-                    api.czr_isModuleExpanded( module );
-                  else
-                    api.czr_isModuleExpanded( false );
-                  $.when( module.toggleModuleViewExpansion( expanded ) ).done( function() {
-                        if ( expanded ) {
-                              module.renderModuleTitle();
-                              module.populateSavedItemCollection();
-                        }
-                        else {
-                              module.czr_Item.each ( function( item ) {
-                                    item.viewState.set('closed');
-                                    item._destroyView( 0 );
-                                    module.czr_Item.remove( item.id );
-                              } );
-                        }
-                  });
-            },
-
-
-            renderModuleTitle : function() {
-                  var module = this;
-                  if( 'resolved' == module.moduleTitleEmbedded.state() )
-                    return;
-                  if ( 0 === $( '#tmpl-' + module.sektionModuleTitle ).length ) {
-                    throw new Error('No sektion title Module Part template for module ' + module.id + '. The template script id should be : #tmpl-' + module.sektionModuleTitle );
-                  }
-                  $.when( $( module.container ).find('.czr-mod-content').prepend(
-                        $( wp.template( module.sektionModuleTitle )( { id : module.id } ) )
-                  ) ).done( function() {
-                        module.moduleTitleEmbedded.resolve();
-                  });
-            },
-            toggleModuleViewExpansion : function( expanded, duration ) {
-                  var module = this;
-                  $( '.czr-mod-content' , module.container ).slideToggle( {
-                      duration : duration || 200,
-                      done : function() {
-                            var $_overlay = module.container.closest( '.wp-full-overlay' ),
-                                $_backBtn = module.container.find( '.czr-module-back' ),
-                                $_modTitle = module.container.find('.czr-module-title');
-
-                            module.container.toggleClass('open' , expanded );
-                            $_overlay.toggleClass('czr-module-open', expanded );
-                            $_modTitle.attr( 'tabindex', expanded ? '-1' : '0' );
-                            $_backBtn.attr( 'tabindex', expanded ? '0' : '-1' );
-
-                            if( expanded ) {
-                                $_backBtn.focus();
-                            } else {
-                                $_modTitle.focus();
-                            }
-                            if ( expanded )
-                              module._adjustScrollExpandedBlock( module.container );
-                      }//done callback
-                    } );
-            },
-
-
-
-
-
-
-
-
-
-            toggleModuleRemoveAlert : function( obj ) {
-                    var module = this,
-                        control = this.control,
-                        $_alert_el = $( '.' + module.control.css_attr.remove_alert_wrapper, module.container ).first(),
-                        $_clicked = obj.dom_event,
-                        $_column_container = control.syncSektionModule().czr_Column( module.column_id ).container;
-                    if ( _.has(module, 'preItem') ) {
-                        control.syncSektionModule().preItemExpanded.set( false );
-                    }
-                    $('.' + module.control.css_attr.remove_alert_wrapper, $_column_container ).not($_alert_el).each( function() {
-                          if ( $(this).hasClass('open') ) {
-                                $(this).slideToggle( {
-                                      duration : 200,
-                                      done : function() {
-                                            $(this).toggleClass('open' , false );
-                                            $(this).siblings().find('.' + module.control.css_attr.display_alert_btn).toggleClass('active' , false );
-                                      }
-                                } );
-                          }
-                    });
-                    if ( ! wp.template( module.AlertPart )  || ! module.container ) {
-                        throw new Error( 'No removal alert template available for module :' + module.id );
-                    }
-
-                    $_alert_el.html( wp.template( module.AlertPart )( { title : ( module().title || module.id ) } ) );
-                    $_alert_el.slideToggle( {
-                          duration : 200,
-                          done : function() {
-                                var _is_open = ! $(this).hasClass('open') && $(this).is(':visible');
-                                $(this).toggleClass('open' , _is_open );
-                                $( obj.dom_el ).find('.' + module.control.css_attr.display_alert_btn).toggleClass( 'active', _is_open );
-                                if ( _is_open )
-                                  module._adjustScrollExpandedBlock( module.container );
-                          }
-                    } );
-            },
-            removeModule : function( obj ) {
-                  this.control.removeModule( obj.module );
-            },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            _getColumn : function() {
-                    var module = this;
-                    return module.control.syncSektionModule().czr_Column( module.modColumn() );
-            },
-
-            _getSektion : function() {
-
-            }
-      }
-});//$.extend//CZRBaseControlMths
-})( wp.customize , jQuery, _ );
+})( wp.customize, jQuery, _ );
 var CZRMultiplePickerMths = CZRMultiplePickerMths || {};
 /* Multiple Picker */
 /**
@@ -10111,8 +8668,11 @@ $.extend( CZRMultiplePickerMths , {
             });
 
             function czrEscapeMarkup(obj) {
+                  //trim dashes
                   return obj.text.replace(/\u2013|\u2014/g, "");
             }
+
+            //handle case when all choices become unselected
             _select.on('change', function(e){
                   if ( 0 === $(this).find("option:selected").length )
                     control.setting.set([]);
@@ -10124,6 +8684,7 @@ var CZRCroppedImageMths = CZRCroppedImageMths || {};
 
 (function (api, $, _) {
       /* IMAGE UPLOADER CONTROL IN THE CUSTOMIZER */
+      //CroppedImageControl is not available before wp 4.3
       if ( 'function' != typeof wp.media.controller.Cropper  || 'function' != typeof api.CroppedImageControl  )
         return;
 
@@ -10214,6 +8775,7 @@ var CZRCroppedImageMths = CZRCroppedImageMths || {};
             onSelect: function() {
                   var attachment = this.frame.state().get( 'selection' ).first().toJSON();
                   if ( ! ( attachment.mime && attachment.mime.indexOf("image") > -1 ) ){
+                        //Todo: better error handling, show some message?
                         this.frame.trigger( 'content:error' );
                         return;
                   }
@@ -10246,6 +8808,7 @@ $.extend( CZRUploadMths, {
             this.uploader = $.extend({
                   container: this.container,
                   browser:   this.container.find('.czr-upload'),
+                  //dropzone:  this.container.find('.upload-dropzone'),
                   success:   this.success,
                   plupload:  {},
                   params:    {}
@@ -10312,6 +8875,11 @@ $.extend( CZRLayoutSelectMths , {
                   );
                   return $state;
             }
+
+            //destroy selected if set
+            //$_select.selecter("destroy");
+
+            //fire select2
             $_select.select2( {
                   templateResult: addImg,
                   templateSelection: addImg,
@@ -10320,75 +8888,6 @@ $.extend( CZRLayoutSelectMths , {
       },
 });//$.extend
 })( wp.customize , jQuery, _ );
-( function ( api, $, _ ) {
-      $.extend( CZRBaseControlMths, api.Events );
-      $.extend( api.Control.prototype, api.Events );//ensures that the default WP control constructor is extended as well
-      $.extend( CZRModuleMths, api.Events );
-      $.extend( CZRItemMths, api.Events );
-      $.extend( CZRModOptMths, api.Events );
-      $.extend( CZRSkopeBaseMths, api.Events );
-      $.extend( CZRSkopeMths, api.Events );
-      $.extend( CZRBaseControlMths, api.CZR_Helpers );
-      $.extend( CZRInputMths, api.CZR_Helpers );
-      $.extend( CZRModuleMths, api.CZR_Helpers );
-      $.extend( CZRSkopeMths, api.CZR_Helpers );
-      api.CZR_skopeBase             = api.Class.extend( CZRSkopeBaseMths );
-      api.CZR_skopeSave             = api.Class.extend( CZRSkopeSaveMths );
-      api.CZR_skopeReset            = api.Class.extend( CZRSkopeResetMths );
-      api.CZR_skope                 = api.Value.extend( CZRSkopeMths ); //=> used as constructor when creating the collection of skopes
-      if ( _.has(api, 'HeaderTool') ) {
-            api.czr_HeaderTool = $.extend(  true, {}, api.HeaderTool );
-      }
-      api.CZRInput                  = api.Value.extend( CZRInputMths );
-      api.CZRItem                   = api.Value.extend( CZRItemMths );
-      api.CZRModOpt                 = api.Value.extend( CZRModOptMths );
-      api.CZRModule                 = api.Value.extend( CZRModuleMths );
-      api.CZRDynModule              = api.CZRModule.extend( CZRDynModuleMths );
-      if ( ! _.isUndefined( window.CZRColumnMths ) ) {
-            api.CZRColumn           = api.Value.extend( CZRColumnMths );
-      }
-      api.CZRBaseControl            = api.Control.extend( CZRBaseControlMths );
-      api.CZRBaseModuleControl      = api.CZRBaseControl.extend( CZRBaseModuleControlMths );
-      api.CZRMultiModuleControl     = api.CZRBaseModuleControl.extend( CZRMultiModuleControlMths );
-
-      api.CZRUploadControl          = api.Control.extend( CZRUploadMths );
-      api.CZRLayoutControl          = api.Control.extend( CZRLayoutSelectMths );
-      api.CZRMultiplePickerControl  = api.Control.extend( CZRMultiplePickerMths );
-
-
-
-      $.extend( api.controlConstructor, {
-            czr_upload     : api.CZRUploadControl,
-
-            czr_module : api.CZRBaseModuleControl,
-            czr_multi_module : api.CZRMultiModuleControl,
-
-            czr_multiple_picker : api.CZRMultiplePickerControl,
-            czr_layouts    : api.CZRLayoutControl
-      });
-
-      if ( 'function' == typeof api.CroppedImageControl ) {
-            api.CZRCroppedImageControl   = api.CroppedImageControl.extend( CZRCroppedImageMths );
-
-            $.extend( api.controlConstructor, {
-                  czr_cropped_image : api.CZRCroppedImageControl
-            });
-      }
-      api.czrInputMap = api.czrInputMap || {};
-      $.extend( api.czrInputMap, {
-            text      : '',
-            textarea  : '',
-            check     : 'setupIcheck',
-            select    : 'setupSelect',
-            number    : 'setupStepper',
-            upload    : 'setupImageUploader',
-            color     : 'setupColorPicker',
-            content_picker : 'setupContentPicker',
-            text_editor    : 'setupTextEditor',
-            password : '',
-            range_slider : 'setupRangeSlider'
-      });
-})( wp.customize, jQuery, _ );
 ( function (api, $, _) {
       var $_nav_section_container,
           i18n = serverControlParams.i18n || {};
@@ -10399,6 +8898,11 @@ $.extend( CZRLayoutSelectMths , {
             if ( _.has( api, 'czr_ctrlDependencies') )
               return;
             if ( serverControlParams.isSkopOn ) {
+                  // If skope is on, we need to wait for the initial setup to be finished
+                  // otherwise, we might refer to not instantiated skopes when processing silent updates further in the code
+                  //Skope is ready when :
+                  //1) the initial skopes collection has been populated
+                  //2) the initial skope has been switched to
                   if ( 'resolved' != api.czr_skopeReady.state() ) {
                         api.czr_skopeReady.done( function() {
                               api.czr_ctrlDependencies = new api.CZR_ctrlDependencies();
@@ -10425,6 +8929,8 @@ $.extend( CZRLayoutSelectMths , {
                           actions : null,
                           onSectionExpand : true
                     };
+
+                    //store the default control dependencies
                     this.dominiDeps = _.extend( this.dominiDeps, this._getControlDeps() );
                     if ( ! _.isArray( self.dominiDeps ) ) {
                         throw new Error('Visibilities : the dominos dependency array is not an array.');
@@ -10438,7 +8944,15 @@ $.extend( CZRLayoutSelectMths , {
                                 }
                           }
                     });
+
+
+                    //@param target_source is an object :
+                    // {
+                    //    target : section_id to awake
+                    //    source : section_id from which the request for awaking has been done
+                    // }
                     api.bind( 'awaken-section', function( target_source ) {
+                          //if skope on ( serverControlParams.isSkopOn ), then defer the visibility awakening after the silent updates
                           if ( serverControlParams.isSkopOn && _.has( api ,'czr_skopeBase' ) ) {
                                 api.czr_skopeBase.processSilentUpdates( {
                                       candidates : {},
@@ -10459,8 +8973,17 @@ $.extend( CZRLayoutSelectMths , {
                                 }
                           }
                     });
+
+                    //FAVICON SPECIFICS
+                    //@todo => move to the theme ?
+                    //favicon note on load and on change(since wp 4.3)
                     this._handleFaviconNote();
               },
+
+
+              //Process the visibility callbacks for the controls of a target targetSectionId
+              //@param targetSectionId : string
+              //@param sourceSectionId : string, the section from which the request has been done
               setServiDependencies : function( targetSectionId, sourceSectionId, refresh ) {
                     var self = this, params, dfd = $.Deferred();
 
@@ -10469,9 +8992,16 @@ $.extend( CZRLayoutSelectMths , {
                     if ( _.isUndefined( targetSectionId ) || ! api.section.has( targetSectionId ) ) {
                           throw new Error( 'Control Dependencies : the targetSectionId is missing or not registered : ' + targetSectionId );
                     }
+
+                    //Assign a visibility state deferred to the target section
                     api.section( targetSectionId ).czr_ctrlDependenciesReady = api.section( targetSectionId ).czr_ctrlDependenciesReady || $.Deferred();
+
+                    //Bail here if this section has already been setup for ctrl dependencies
                     if ( ! refresh && 'resolved' == api.section( targetSectionId ).czr_ctrlDependenciesReady.state() )
                       return dfd.resolve().promise();
+
+                    //FIND DOMINI IN THE TARGET SECTION
+                    //=> setup their callbacks
                     _.each( self.dominiDeps , function( params ) {
                           if ( ! _.has( params, 'dominus' ) || ! _.isString( params.dominus ) || _.isEmpty( params.dominus ) ) {
                                 throw new Error( 'Control Dependencies : a dominus control id must be a not empty string.');
@@ -10483,6 +9013,8 @@ $.extend( CZRLayoutSelectMths , {
 
                           if ( api.control( wpDominusId ).section() != targetSectionId )
                             return;
+
+                          //Attempt to normalize the params
                           params = self._prepareDominusParams( params );
                           if ( _.isEmpty(params) )
                             return;
@@ -10496,6 +9028,10 @@ $.extend( CZRLayoutSelectMths , {
                                       dfd.resolve();
                                 });
                     });
+
+
+                    //EXTERNAL DOMINI : AWAKE THE SECTIONS
+                    //check if any control of the current section is the servus of a dominus located in another section
                     var _secCtrls = api.CZR_Helpers.getSectionControlIds( targetSectionId ),
                         _getServusDomini = function( shortServudId ) {
                               var _dominiIds = [];
@@ -10506,6 +9042,7 @@ $.extend( CZRLayoutSelectMths , {
                                     }
 
                                     if ( _.contains( params.servi , shortServudId ) && ! _.contains( _dominiIds , params.dominus ) ) {
+                                          //Attempt to normalize the params
                                           params = self._prepareDominusParams( params );
                                           if ( _.isEmpty(params) )
                                             return;
@@ -10516,29 +9053,50 @@ $.extend( CZRLayoutSelectMths , {
                               return ! _.isArray( _dominiIds ) ? [] : _dominiIds;
                         },
                         _servusDominiIds = [];
+
+                    //Build the domini array
                     _.each( _secCtrls, function( servusCandidateId ) {
                           if ( _.isEmpty( _getServusDomini( servusCandidateId ) ) )
                             return;
 
                           _servusDominiIds = _.union( _servusDominiIds, _getServusDomini( servusCandidateId ) );
                     });
+
+                    //let's loop on the domini ids and check if we need to "awake" an external section
                     _.each( _servusDominiIds, function( shortDominusId ){
 
                           var wpDominusId = api.CZR_Helpers.build_setId( shortDominusId );
+                          //This dominus must be located in another section
                           if ( api.control( wpDominusId ).section() == targetSectionId )
                               return;
+                          //The dominus section can't be the current source if set. => otherwise potential infinite loop scenario.
                           if ( sourceSectionId == api.control( wpDominusId ).section() )
                               return;
+                          //inform the api that a section has to be awaken
+                          //=> first silently update the section controls if skope on
+                          //=> then fire the visibilities
                           api.trigger( 'awaken-section', {
                                 target : api.control( wpDominusId ).section(),
                                 source : targetSectionId
                           } );
                     } );
+
+                    //This section has been setup for ctrl dependencies
                     dfd.always( function() {
                           api.section( targetSectionId ).czr_ctrlDependenciesReady.resolve();
                     });
                     return dfd.promise();
               },
+
+
+              //This method fires a callback when a control is registered in the api.
+              //If the control is registered, then it fires the callback when it is embedded
+              //If the control is embedeed, it fires the callback
+              //=> typical use case : a control can be both removed from the API and the DOM, and then added back on skope switch
+              //
+              //@param wpCtrlId : string name of the control as registered in the WP API
+              //@param callback : fn callback to fire
+              //@param args : [] or callback arguments
               _deferCallbackForControl : function( wpCrtlId, callback, args ) {
                     var dfd = $.Deferred();
                     if ( _.isEmpty(wpCrtlId) || ! _.isString(wpCrtlId) ) {
@@ -10586,10 +9144,15 @@ $.extend( CZRLayoutSelectMths , {
                         dominusSetInst = api( wpDominusId ),
                         dfd = $.Deferred(),
                         hasProcessed = false;
+
+                    //loop on the dominus servi and apply + bind the visibility cb
                     _.each( dominusParams.servi , function( servusShortSetId ) {
                             if ( ! api.control.has( api.CZR_Helpers.build_setId( servusShortSetId ) ) ) {
                                 return;
                             }
+                            //set visibility when control is embedded
+                            //or when control is added to the api
+                            //=> solves the problem of visibility callbacks lost when control are re-rendered
                             var _fireDominusCallbacks = function( dominusSetVal, servusShortSetId, dominusParams, refresh ) {
                                       var _toFire = [],
                                           _args = arguments;
@@ -10617,10 +9180,19 @@ $.extend( CZRLayoutSelectMths , {
                                             .fail( function() { dfd.reject(); })
                                             .done( function() { dfd.resolve(); });
                                 };
+
+
+                            //APPLY THE DEPENDENCIES
                             _deferCallbacks();
+
+                            //BIND THE DOMINUS SETTING INSTANCE
+                            //store the visibility bound state
                             if ( ! _.has( dominusSetInst, 'czr_visibilityServi' ) )
                                 dominusSetInst.czr_visibilityServi = new api.Value( [] );
+
+                            //Maybe bind to react on setting _dirty change
                             var _currentDependantBound = dominusSetInst.czr_visibilityServi();
+                            //Make sure a dependant visibility action is bound only once for a setting id to another setting control id
                             if ( ! _.contains( _currentDependantBound, servusShortSetId ) ) {
                                   dominusSetInst.bind( function( dominusSetVal ) {
                                       _deferCallbacks( dominusSetVal );
@@ -10632,13 +9204,22 @@ $.extend( CZRLayoutSelectMths , {
                       return dfd.resolve().promise();
                     return dfd.promise();
               },
+
+
+
+              //@return void()
               _setVisibility : function ( dominusSetVal, servusShortSetId, dominusParams, refresh ) {
                     var wpServusSetId = api.CZR_Helpers.build_setId( servusShortSetId ),
                         visibility = dominusParams.visibility( dominusSetVal, servusShortSetId, dominusParams.dominus );
 
                     refresh = refresh || false;
+                    //Allows us to filter between visibility callbacks and other actions
+                    //a non visibility callback shall return null
                     if ( ! _.isBoolean( visibility ) || ( 'unchanged' == visibility && ! refresh ) )
                       return;
+
+                    //when skope is enabled, we might be doing a silent update
+                    //=> this method should be bailed if so
                     var _doVisibilitiesWhenPossible = function() {
                             if ( api.state.has( 'silent-update-processing' ) && api.state( 'silent-update-processing' )() )
                               return;
@@ -10690,9 +9271,21 @@ $.extend( CZRLayoutSelectMths , {
               _getControlDeps : function() {
                 return {};
               },
+
+
+              //@return a visibility ready object of param describing the dependencies between a dominus and its servi.
+              //this.defaultDominusParams = {
+              //       dominus : '',
+              //       servi : [],
+              //       visibility : fn() {},
+              //       actions : fn() {},
+              //       onSectionExpand : true
+              // };
               _prepareDominusParams : function( params_candidate ) {
                     var self = this,
                         _ready_params = {};
+
+                    //Check mandatory conditions
                     if ( ! _.isObject( params_candidate ) ) {
                           api.errorLog( 'Visibilities : a dominus param definition must be an object.');
                           return _ready_params;
@@ -10755,15 +9348,25 @@ $.extend( CZRLayoutSelectMths , {
               _handleFaviconNote : function() {
                     var self = this,
                         _fav_setId = api.CZR_Helpers.build_setId( serverControlParams.faviconOptionName );
+                    //do nothing if (||)
+                    //1) WP version < 4.3 where site icon has been introduced
+                    //2) User had not defined a favicon
+                    //3) User has already set WP site icon
                     if ( ! api.has('site_icon') || ! api.control('site_icon') || ( api.has( _fav_setId ) && 0 === + api( _fav_setId )() ) || + api('site_icon')() > 0 )
                       return;
 
                     var _oldDes     = api.control('site_icon').params.description;
                         _newDes     = ['<strong>' , i18n.faviconNote || '' , '</strong><br/><br/>' ].join('') + _oldDes;
+
+                    //on api ready
                     self._printFaviconNote(_newDes );
+
+                    //on site icon change
                     api('site_icon').callbacks.add( function(to) {
                       if ( +to > 0 ) {
+                        //reset the description to default
                         api.control('site_icon').container.find('.description').text(_oldDes);
+                        //reset the previous favicon setting
                         if ( api.has( _fav_setId ) )
                           api( _fav_setId ).set("");
                       }
@@ -10772,15 +9375,34 @@ $.extend( CZRLayoutSelectMths , {
                       }
                     });
               },
+
+              //Add a note to the WP control description if user has already defined a favicon
               _printFaviconNote : function( _newDes ) {
                     api.control('site_icon').container.find('.description').html(_newDes);
               }
         }
       );//api.Class.extend() //api.CZR_ctrlDependencies
 })( wp.customize, jQuery, _);
+//DOM READY :
+//1) FIRE SPECIFIC INPUT PLUGINS
+//2) ADD SOME COOL STUFFS
+//3) SPECIFIC CONTROLS ACTIONS
 ( function ( wp, $ ) {
       $( function($) {
             var api = wp.customize || api;
+
+            //WHAT IS HAPPENING IN THE MESSENGER
+            // $(window.parent).on( 'message', function(e, o) {
+            //   api.consoleLog('SENT STUFFS', JSON.parse( e.originalEvent.data), e );
+            // });
+            // $( window ).on( 'message', function(e, o) {
+            //   api.consoleLog('INCOMING MESSAGE', JSON.parse( e.originalEvent.data), e );
+            // });
+            // $(window.document).bind("ajaxSend", function(e, o){
+            //    api.consoleLog('AJAX SEND', e, arguments );
+            // }).bind("ajaxComplete", function(e, o){
+            //    api.consoleLog('AJAX COMPLETE', e, o);
+            // });
 
             /* RECENTER CURRENT SECTIONS */
             $('.accordion-section').not('.control-panel').click( function () {
@@ -10789,6 +9411,7 @@ $.extend( CZRLayoutSelectMths , {
 
             function _recenter_current_section( section ) {
                   var $siblings               = section.siblings( '.open' );
+                  //check if clicked element is above or below sibling with offset.top
                   if ( 0 !== $siblings.length &&  $siblings.offset().top < 0 ) {
                         $('.wp-full-overlay-sidebar-content').animate({
                               scrollTop:  - $('#customize-theme-controls').offset().top - $siblings.height() + section.offset().top + $('.wp-full-overlay-sidebar-content').offset().top
@@ -10801,18 +9424,23 @@ $.extend( CZRLayoutSelectMths , {
             api.czrSetupCheckbox = function( controlId, refresh ) {
                   var _ctrl = api.control( controlId );
                   $('input[type=checkbox]', _ctrl.container ).each( function() {
+                        //Exclude font customizer
                         if ( 'tc_font_customizer_settings' == _ctrl.params.section )
                           return;
+                        //first fix the checked / unchecked status
                         if ( 0 === $(this).val() || '0' == $(this).val() || 'off' == $(this).val() || _.isEmpty($(this).val() ) ) {
                               $(this).prop('checked', false);
                         } else {
                               $(this).prop('checked', true);
                         }
+
+                        //then render icheck if not done already
                         if ( 0 !== $(this).closest('div[class^="icheckbox"]').length )
                           return;
 
                         $(this).iCheck({
                               checkboxClass: 'icheckbox_flat-grey',
+                              //checkedClass: 'checked',
                               radioClass: 'iradio_flat-grey',
                         })
                         .on( 'ifChanged', function(e){
@@ -10824,10 +9452,15 @@ $.extend( CZRLayoutSelectMths , {
 
             /* SELECT INPUT */
             api.czrSetupSelect = function(controlId, refresh) {
+                  //Exclude no-selecter-js
                   $('select[data-customize-setting-link]', api.control(controlId).container )
                         .not('.no-selecter-js')
                         .each( function() {
                               $(this).selecter({
+                              //triggers a change event on the view, passing the newly selected value + index as parameters.
+                              // callback : function(value, index) {
+                              //   self.triggerSettingChange( window.event || {} , value, index); // first param is a null event.
+                              // }
                               });
                         });
             };//api.czrSetupSelect()
@@ -10835,8 +9468,11 @@ $.extend( CZRLayoutSelectMths , {
 
             /* NUMBER INPUT */
             api.czrSetupStepper = function( controlId, refresh ) {
+                  //Exclude no-selecter-js
                   var _ctrl = api.control( controlId );
                   $('input[type="number"]', _ctrl.container ).each( function() {
+                        //Exclude font customizer steppers
+                        //the font customizer plugin has its own way to instantiate the stepper, with custom attributes previously set to the input like step, min, etc...
                         if ( 'tc_font_customizer_settings' != _ctrl.params.section ) {
                             $(this).stepper();
                         }
@@ -10846,6 +9482,7 @@ $.extend( CZRLayoutSelectMths , {
             api.control.each(function(control){
                   if ( ! _.has(control,'id') )
                     return;
+                  //exclude widget controls and menu controls for checkboxes
                   if ( 'widget_' != control.id.substring(0, 'widget_'.length ) && 'nav_menu' != control.id.substring( 0, 'nav_menu'.length ) ) {
                         api.czrSetupCheckbox(control.id);
                   }
@@ -10869,6 +9506,8 @@ $.extend( CZRLayoutSelectMths , {
                                           event.preventDefault();
                                     })
                                     .on( 'click.customize-controls-home', function() {
+                                          //event.preventDefault();
+                                          //close everything
                                           if ( api.section.has( api.czr_activeSectionId() ) ) {
                                                 api.section( api.czr_activeSectionId() ).expanded( false );
                                           } else {
@@ -10893,13 +9532,21 @@ var CZRFeaturedPageModuleMths = CZRFeaturedPageModuleMths || {};
 $.extend( CZRFeaturedPageModuleMths, {
       initialize: function( id, options ) {
             var module = this;
+            //run the parent initialize
             api.CZRDynModule.prototype.initialize.call( module, id, options );
+
+            //extend the module with new template Selectors
             $.extend( module, {
                   itemPreAddEl : 'czr-module-fp-pre-add-view-content',
                   itemInputList : 'czr-module-fp-view-content'
             } );
+
+            //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
             module.inputConstructor = api.CZRInput.extend( module.CZRFeaturedPagesInputMths || {} );
+            //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
             module.itemConstructor = api.CZRItem.extend( module.CZRFeaturedPagesItem || {} );
+
+            //declares a default model
             this.defaultItemModel = {
                   id : '',
                   title : '' ,
@@ -10908,6 +9555,8 @@ $.extend( CZRFeaturedPageModuleMths, {
                   'fp-text'  : '',
                   'fp-image' : '',
             };
+
+            //overrides the default success message
             this.itemAddedMessage = serverControlParams.i18n.featuredPageAdded;
             api.section( module.control.section() ).expanded.bind(function(to) {
                   if ( 'resolved' == module.isReady.state() )
@@ -10915,6 +9564,15 @@ $.extend( CZRFeaturedPageModuleMths, {
                   module.ready();
             });
       },//initialize
+
+
+
+
+
+      //@override
+      // wait for the ajax result!
+      //the item is manually added.
+      //We should have a pre Item
       addItem : function(obj) {
             var module     = this,
                 item       = module.preItem,
@@ -10929,6 +9587,10 @@ $.extend( CZRFeaturedPageModuleMths, {
               return;
 
             _fp_post = _fp_post[0];
+
+            //AJAX ACTIONS ON ADD ITEM
+            //when a new featured page is added, update the model (text, featured image ) base on the selected post
+            //The parent method is called on ajaxrequest.done()
             var done_callback =  function( _to_update ) {
                   item.set( $.extend( item_model, _to_update) );
                   api.CZRDynModule.prototype.addItem.call( module, obj );
@@ -10946,31 +9608,45 @@ $.extend( CZRFeaturedPageModuleMths, {
       CZRFeaturedPagesInputMths : {
             ready : function() {
                     var input = this;
+                    //update the item model on fp-post change
                     input.bind( 'fp-post:changed', function(){
                       input.updateItemModel();
                     });
+                    //update the item title on fp-title change
                     input.bind( 'fp-title:changed', function(){
                       input.updateItemTitle();
                     });
 
                     api.CZRInput.prototype.ready.call( input );
             },
+            //override czr img uploader input constructor
+            //we need this otherwise we cannot add the buttons to the input container
+            //when the input model is not, as the template will be rendered before the ready
+            //method is called
             setupImageUploader:  function(){
                     var input = this;
+                    //temporary
                     input.container.bind( 'fp-image:content_rendered', function(){
                       input.addResetDefaultButton();
                     });
+
+                    //see add a reset to default image button
                     input.container.on('click keydown', '.default-fpimage-button', function(){
                       input.setThumbnailAjax();
                     });
 
                     api.CZRInput.prototype.setupImageUploader.call( input );
             },
+            //ACTIONS ON fp-title change
+            //Fired on 'fp-title:changed'
+            //Don't fire in pre item case
             updateItemModel : function( _new_val ) {
 
                     var input = this,
                         item = this.input_parent,
                         is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput;
+
+                    //check if we are in the pre Item case => if so, the fp-post might be empty
                     if ( ! _.has( item(), 'fp-post') || _.isEmpty( item()['fp-post'] ) )
                       return;
 
@@ -10989,6 +9665,7 @@ $.extend( CZRFeaturedPageModuleMths, {
                                 item.czr_Input( id ).set( value );
                             });
                           };
+                          //pass the fp-title so it gets updated after the ajax callback
                           var request = item.setContentAjaxInfo( _fp_post.id, {'fp-title' : _new_title}, done_callback );
                     }
             },
@@ -11021,10 +9698,14 @@ $.extend( CZRFeaturedPageModuleMths, {
                     _post_id = _fp_post.id;
 
                     $('.fpimage-reset-messages p').hide();
+
+                    //AJAX STUFF
+                    //retrieve some ajax info
                     request = wp.ajax.post( 'get-fp-post-tb', {
                             'wp_customize': 'on',
                             'id'          : _post_id,
                             'CZRFPNonce'  : serverControlParams.CZRFPNonce
+                            //nonce needed USE 1 for everything?
                     });
 
 
@@ -11071,11 +9752,16 @@ $.extend( CZRFeaturedPageModuleMths, {
 
       CZRFeaturedPagesItem : {
             setContentAjaxInfo : function( _post_id, _additional_inputs, done_callback ) {
+                    //called be called from the input and from the item
                     var _to_update         = _additional_inputs || {};
+
+                    //AJAX STUFF
+                    //retrieve some ajax info
                     request = wp.ajax.post( 'get-fp-post', {
                           'wp_customize': 'on',
                           'id'          : _post_id,
                           'CZRFPNonce'  : serverControlParams.CZRFPNonce
+                          //nonce needed USE 1 for everything?
                     });
 
                     request.done( function( data ){
@@ -11096,6 +9782,9 @@ $.extend( CZRFeaturedPageModuleMths, {
 
                     return request;
             },
+
+            //overrides the default parent method by a custom one
+            //at this stage, the model passed in the obj is up to date
             writeItemViewTitle : function( model ) {
                   var item = this,
                             module  = item.module,
@@ -11108,15 +9797,21 @@ $.extend( CZRFeaturedPageModuleMths, {
       }
 });//extend
 })( wp.customize , jQuery, _ );
+//extends api.CZRModule
 var CZRTextModuleMths = CZRTextModuleMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRTextModuleMths, {
   initialize: function( id, options ) {
         var module = this;
+        //run the parent initialize
         api.CZRModule.prototype.initialize.call( module, id, options );
+
+        //extend the module with new template Selectors
         $.extend( module, {
               itemInputList : 'czr-module-text-view-content',
         } );
+
+        //declares a default model
         module.defaultItemModel = {
               id : '',
               text : ''
@@ -11132,7 +9827,11 @@ $.extend( CZRSlideModuleMths, {
             var module = this;
 
             module.initialConstrucOptions = $.extend( true, {}, constructorOptions );//detach from the original obj
+
+            //run the parent initialize
             api.CZRDynModule.prototype.initialize.call( module, id, constructorOptions );
+
+            //extend the module with new template Selectors
             $.extend( module, {
                   itemPreAddEl : 'czr-module-slide-pre-item-input-list',
                   itemInputList : 'czr-module-slide-item-input-list',
@@ -11140,24 +9839,58 @@ $.extend( CZRSlideModuleMths, {
             } );
 
             this.sliderSkins = serverControlParams.slideModuleParams.sliderSkins;//light, dark
+
+            //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUTS
             module.inputConstructor = api.CZRInput.extend( module.CZRSliderItemInputCtor || {} );
             module.inputModOptConstructor = api.CZRInput.extend( module.CZRSliderModOptInputCtor || {} );
+
+            //SET THE CONTENT PICKER OPTIONS
             $.extend( module.inputOptions, {
                   'content_picker' : {
                         post : '',//['page'],<= all post types
                         taxonomy : ''//'_none_'//<= all taxonomy types
                   }
             });
+
+            //EXTEND THE DEFAULT CONSTRUCTORS FOR ITEMS AND MODOPTS
             module.itemConstructor = api.CZRItem.extend( module.CZRSliderItemCtor || {} );
             module.modOptConstructor = api.CZRModOpt.extend( module.CZRSliderModOptCtor || {} );
+
+            //declares a default ModOpt model
+            //this.defaultModOptModel = {
+            //     is_mod_opt : true,
+            //     module_id : module.id,
+            //     'slider-speed' : 6,
+            //     'lazyload' : 1,
+            //     'slider-height' : 100
+            // };
             this.defaultModOptModel = _.extend(
                   serverControlParams.slideModuleParams.defaultModOpt,
                   {
                         module_id : module.id
                   }
             );
+
+
+            //declares a default Item model
+            // this.defaultItemModel = {
+            //     id : '',
+            //     title : '',
+            //     'slide-background' : '',
+            //     'slide-title'      : '',
+            //     'slide-subtitle'   : '',
+            //     'slide-cta'         : '',
+            //     'slide-link'       : '',
+            //     'slide-custom-link'  : ''
+            // };
+            //The server model includes the slide-src property that is created when rendering the slide in the front tmpl
             this.defaultItemModel = _.omit( serverControlParams.slideModuleParams.defaultSlideMod, 'slide-src');
+
+            //overrides the default success message
             this.itemAddedMessage = serverControlParams.i18n.mods.slider['New Slide created ! Scroll down to edit it.'];
+            //fired ready :
+            //1) on section expansion
+            //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled
             if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
                module.ready();
             }
@@ -11166,9 +9899,21 @@ $.extend( CZRSlideModuleMths, {
                     return;
                   module.ready();
             });
+
+            // module.czr_wpQueryInfos = api.czr_wpQueryInfos();
+            // if ( 'resolved' == api.czr_wpQueryDataReady.state() ) {
+            //     module.czr_wpQueryInfos( api.czr_wpQueryInfos() );
+            // } else {
+            //     api.czr_wpQueryDataReady.done( function() {
+            //           module.czr_wpQueryInfos( api.czr_wpQueryInfos() );
+            //     });
+            // }
             module.isReady.then( function() {
                   var _refreshModuleModel = function( query_data ) {
                         var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                        //module.refreshItemCollection();
+
+                        //initialize
                         module.initializeModuleModel( module.initialConstrucOptions, query_data )
                               .done( function( newModuleValue ) {
                                     module.set( newModuleValue, { silent : true } );
@@ -11178,13 +9923,20 @@ $.extend( CZRSlideModuleMths, {
 
                               });
                   };
+
+                  //Fired on module ready and skope ready
+                  //Fired on skope switch
                   var _toggleModuleItemVisibility = function() {
                         var $preItemBtn = $('.' + module.control.css_attr.open_pre_add_btn, module.container ),
                             $preItemWrapper = $('.' + module.control.css_attr.pre_add_wrapper, module.container),
                             _isLocal = 'local' == api.czr_skope( api.czr_activeSkopeId() )().skope;
+
+                        //HIDE THE ITEM CREATION WHEN NOT LOCAL
                         $preItemBtn.toggle( _isLocal );
                         $preItemWrapper.toggle( _isLocal );
                         module.itemsWrapper.toggle( _isLocal );
+
+                        //DISPLAY A NOTICE WHEN NOT LOCAL
                         if ( ! _isLocal ) {
                               var _localSkopeId = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
                               if ( ! module.control.container.find( '.slide-mod-skope-notice').length ) {
@@ -11209,9 +9961,20 @@ $.extend( CZRSlideModuleMths, {
                         }
 
                   };
+
+                  //Refresh the module default item based on the query infos if the associated setting has no value yet
                   api.czr_wpQueryInfos.bind( function( query_data ) {
                         _refreshModuleModel( query_data );
                   } );
+
+                  //On skope switch
+                  //1) refresh module model, set items to empty if not local
+                  //2) hide the item and pre-item container if not local
+                  // {
+                  //       current_skope_id    : to,
+                  //       previous_skope_id   : from,
+                  //       updated_setting_ids : _updatedSetIds || []
+                  // }
                   api.bind( 'skope-switched-done', function( params ) {
                         _refreshModuleModel( api.czr_wpQueryInfos() );
                         _.delay( function() {
@@ -11219,10 +9982,17 @@ $.extend( CZRSlideModuleMths, {
                         }, 200 );
 
                   });
+
+                  //ACTIONS ON SKOPE READY
+                  //1) Hide items and pre-items if skope is not local
+                  //2) set the item and modopt refresh button state, and set their state according to the module changes
                   api.czr_skopeReady.then( function() {
+                        //ITEMS AND PRE ITEMS
                         _.delay( function() {
                               _toggleModuleItemVisibility();
                         }, 200 );
+
+                        //UPDATE REFRESH BUTTONS STATE ON MODULE CHANGES
                         module.callbacks.add( function( to, from ) {
                               module.czr_Item.each( function( _itm_ ){
                                     if ( 'expanded' != _itm_.viewState() )
@@ -11243,22 +10013,66 @@ $.extend( CZRSlideModuleMths, {
                         });
                   });
             });//module.isReady
+
+            //REFRESH ITEM TITLES
             var _refreshItemsTitles = function() {
                   module.czr_Item.each( function( _itm_ ){
                         _itm_.writeItemViewTitle();
                   });
             };
+            //Always write the title on :
+            //- module model initialized => typically when the query data has been set and is used to set a default item
+            //- item collection sorted
+            //- on item removed
+            //module.bind( 'module-model-initialized', _refreshItemsTitles );
             module.bind( 'item-collection-sorted', _refreshItemsTitles );
             module.bind( 'item-removed', _refreshItemsTitles );
       },//initialize
+
+
+      //Overrides the default method.
+      // Fired on module.isReady.done()
+      // Fired on api.czr_wpQueryInfos changes
+      // => this method is always fired by the parent constructor
+
+      //The job of this pre-processing method is to create a contextual item based on what the server send with 'czr-query-data-ready'
+      //This method is fired in the initialize module method
+      //and then on each query_data update, if the associated setting has not been set yet, it is fired to get the default contextual item
+      //1) image : if post / page, the featured image
+      //2) title : several cases @see : hu_set_hph_title()
+      //3) subtitle : no subtitle except for home page : the site tagline
       initializeModuleModel : function( constructorOptions, new_data ) {
             var module = this,
                 dfd = $.Deferred();
+
+            //Wait for the control to be registered when switching skope
             api.control.when( module.control.id, function() {
                   var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+
+                  //bail if the setting id is not registered
                   if ( ! api.has( _setId ) )
                     return dfd.resolve( constructorOptions ).promise();
+
+                  // console.log('api.control.has( module.control.id ); ', api.control.has( module.control.id ) );
+                  // console.log('module.initialConstrucOptions', module.initialConstrucOptions );
+                  // console.log('api( _setId )()', _setId, api( _setId )());
+                  //Bail if the skope is not local
+                  //Make sure to reset the items to [] if the current item is_default
+                  // if ( api.czr_skope.has( api.czr_activeSkopeId() ) ) {
+                  //     console.log( 'SKOPE ?', api.czr_activeSkopeId(), api.czr_skope( api.czr_activeSkopeId() )().skope );
+                  //     console.log( api.czr_isSkopOn() );
+                  // }
+
+                  //WHEN SKOPE IS READY
                   api.czr_skopeReady.then( function() {
+                        //IF NOT LOCAL SKOPE
+                            //Empties the items
+                            //+ return the current option
+
+
+                            //IF LOCAL
+                            //If inheriting from a parent, then let's set the default item
+                            //if setting is dirty in local skope, let's return the ctor options.
                             var _isLocal = api.czr_skope.has( api.czr_activeSkopeId() ) && 'local' ==  api.czr_skope( api.czr_activeSkopeId() )().skope;
                                 _isLocalAndDirty = _isLocal && module._isSettingDirty();
 
@@ -11269,6 +10083,12 @@ $.extend( CZRSlideModuleMths, {
                                   _newCtorOptions.items = [];
                                   return dfd.resolve( _newCtorOptions ).promise();
                             }
+
+
+                            //If the setting is not set, then we can set the default item based on the query data
+                            // if ( ! _.isEmpty( constructorOptions.items ) )
+                            //   return dfd.resolve( constructorOptions ).promise();
+                            //Always get the query data from the freshest source
                             api.czr_wpQueryDataReady.then( function( data ) {
                                   data = api.czr_wpQueryInfos() || data;//always get the latest query infos
                                   var _query_data, _default;
@@ -11292,6 +10112,8 @@ $.extend( CZRSlideModuleMths, {
                             });
                         });//api.control.when()
                   });//api.czr_skopeReady()
+
+            //Make sure this is resolved, even when the control is not registered back for some reasons
             _.delay( function() {
                   if ( ! api.control.has( module.control.id ) ) {
                         api.errorLog( 'Slide Module : initializeModuleModel, the control has not been registered after too long.');
@@ -11304,6 +10126,12 @@ $.extend( CZRSlideModuleMths, {
       _getServerDefaultSlideItem : function() {
 
       },
+
+
+      ///////////////////////////////////////////////////////////////////
+      /// MODULE SPECIFIC INPUTS METHOD USED FOR BOTH ITEMS AND MOD OPTS
+      //////////////////////////////////////////
+      //this is an item or a modOpt
       slideModSetupSelect : function() {
             if ( 'skin' != this.id && 'slide-skin' != this.id )
               return;
@@ -11313,6 +10141,8 @@ $.extend( CZRSlideModuleMths, {
                 module     = input.module,
                 _sliderSkins  = module.sliderSkins,//{}
                 _model = input_parent();
+
+            //generates the options
             _.each( _sliderSkins , function( _layout_name , _k ) {
                   var _attributes = {
                             value : _k,
@@ -11325,6 +10155,10 @@ $.extend( CZRSlideModuleMths, {
             });
             $( 'select[data-type="' + input.id + '"]', input.container ).selecter();
       },
+
+
+      //Save color as rgb
+      //this can be an item or a mod opt
       slideModSetupColorPicker : function() {
           var input  = this,
               input_parent = input.input_parent,
@@ -11334,16 +10168,28 @@ $.extend( CZRSlideModuleMths, {
                 palettes: true,
                 hide:false,
                 change : function( e, o ) {
+                      //if the input val is not updated here, it's not detected right away.
+                      //weird
+                      //is there a "change complete" kind of event for iris ?
+                      //$(this).val($(this).wpColorPicker('color'));
+                      //input.container.find('[data-type]').trigger('colorpickerchange');
 
                       var _rgb = api.CZR_Helpers.hexToRgb( o.color.toString() ),
                           _isCorrectRgb = _.isString( _rgb ) && -1 !== _rgb.indexOf('rgb(');
 
                       if ( ! _isCorrectRgb )
                         _rgb = "rgb(34,34,34)";//force to dark skin if incorrect
+
+                      //synchronizes with the original input
                       $(this).val( _rgb ).trigger('colorpickerchange').trigger('change');
                 }
           });
       },
+
+
+      //////////////////////////////////////////
+      /// MODULE HELPERS
+      //the slide-link value is an object which has always an id (post id) + other properties like title
       _isCustomLink : function( input_val ) {
             return _.isObject( input_val ) && '_custom_' === input_val.id;
       },
@@ -11365,14 +10211,21 @@ $.extend( CZRSlideModuleMths, {
 var CZRSlideModuleMths = CZRSlideModuleMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSlideModuleMths, {
+
+      ///////////////////////////////////////////////////////////
+      /// INPUT CONSTRUCTORS
+      //////////////////////////////////////////
       CZRSliderItemInputCtor : {
             ready : function() {
                   var input = this;
+                  //update the item title on slide-title change
                   if ( 'slide-title' === input.id ) {
                         input.bind( function( to ) {
                               input.updateItemTitle( to );
                         });
                   }
+
+                  //add the custom link option to the content picker
                   if ( 'slide-link' == input.id ) {
                         input.defaultContentPickerOption = [{
                               id          : '_custom_',
@@ -11385,18 +10238,31 @@ $.extend( CZRSlideModuleMths, {
 
                   api.CZRInput.prototype.ready.call( input);
             },
+
+            //overrides the default method
             setupSelect : function() {
                   return this.module.slideModSetupSelect.call( this );
             },
+
+            //Save color as rgb
             setupColorPicker : function() {
                   return this.module.slideModSetupColorPicker.call( this );
             },
+
+            //ACTIONS ON czr_input('slide-title') change
+            //Don't fire in pre item case
+            //@return void
             updateItemTitle : function( _new_title ) {
                   var input = this,
                       item = input.input_parent,
                       is_preItemInput = _.has( input, 'is_preItemInput' ) && input.is_preItemInput,
                       _new_model  = $.extend( true, {}, item() );
+                  // if ( is_preItemInput )
+                  //   return;
                   $.extend( _new_model, { title : _new_title } );
+
+                  //This is listened to by module.czr_Item( item.id ).itemReact
+                  //the object passed is needed to avoid a refresh
                   item.set(
                         _new_model,
                         {
@@ -11413,6 +10279,7 @@ $.extend( CZRSlideModuleMths, {
       CZRSliderModOptInputCtor : {
             ready : function() {
                   var input = this;
+                  //add the custom link option to the content picker
                   if ( 'fixed-link' == input.id ) {
                         input.defaultContentPickerOption = [{
                               id          : '_custom_',
@@ -11425,9 +10292,13 @@ $.extend( CZRSlideModuleMths, {
 
                   api.CZRInput.prototype.ready.call( input);
             },
+
+            //overrides the default method
             setupSelect : function() {
                   return this.module.slideModSetupSelect.call( this );
             },
+
+            //Save color as rgb
             setupColorPicker : function() {
                   return this.module.slideModSetupColorPicker.call( this );
             },
@@ -11439,26 +10310,46 @@ var CZRSlideModuleMths = CZRSlideModuleMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSlideModuleMths, {
       CZRSliderItemCtor : {
+              //overrides the parent ready
               ready : function() {
                     var item = this,
                         module = item.module;
+                    //wait for the input collection to be populated,
+                    //and then set the input visibility dependencies
                     item.inputCollection.bind( function( col ) {
                           if( _.isEmpty( col ) )
                             return;
                           try { item.setInputVisibilityDeps(); } catch( er ) {
                                 api.errorLog( 'item.setInputVisibilityDeps() : ' + er );
                           }
+
+                          //typically, hides the caption content input if user has selected a fixed content in the mod opts
                           item.setModOptDependantsVisibilities();
+
+                          //append a notice to the default slide about how to disable the metas in single post
                           if ( item().is_default && item._isSinglePost() ) {
                               item._printPostMetasNotice();
                           }
+
+                          //ITEM REFRESH AND FOCUS BTN
+                          //1) Set initial state
                           item.container.find('.refresh-button').prop( 'disabled', true );
+
+                          //2) listen to user actions
+                          //add DOM listeners
                           api.CZR_Helpers.setupDOMListeners(
                                 [     //toggle mod options
                                       {
                                             trigger   : 'click keydown',
                                             selector  : '.refresh-button',
                                             actions   : function( ev ) {
+                                                  //var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                                                  // if ( api.has( _setId ) ) {
+                                                  //       api( _setId ).previewer.send( 'setting', [ _setId, api( _setId )() ] );
+                                                  //       _.delay( function() {
+                                                  //             item.container.find('.refresh-button').prop( 'disabled', true );
+                                                  //       }, 250 );
+                                                  // }
                                                   api.previewer.refresh().done( function() {
                                                         _.delay( function() {
                                                               item.container.find('.refresh-button').prop( 'disabled', true );
@@ -11492,20 +10383,33 @@ $.extend( CZRSlideModuleMths, {
                                 });
                           }
                     });
+
+                    //fire the parent
                     api.CZRItem.prototype.ready.call( item );
               },
+
+
+              ////////////////////////////// SMALL HELPERS //////////////////
+              ///////////////////////////////////////////////////////////////////////////
+              //HELPER
+              //@return bool
               _isSinglePost : function() {
                     return api.czr_wpQueryInfos && api.czr_wpQueryInfos().conditional_tags && api.czr_wpQueryInfos().conditional_tags.is_single;
               },
+
+              //@return void()
               _printPostMetasNotice : function() {
                     var item = this;
+                    //add a DOM listeners
                     api.CZR_Helpers.setupDOMListeners(
                           [     //toggle mod options
                                 {
                                       trigger   : 'click keydown',
                                       selector  : '.open-post-metas-option',
                                       name      : 'toggle_mod_option',
+                                      //=> open the module option and focus on the caption content tab
                                       actions   : function() {
+                                            //expand the modopt panel and focus on a specific tab right after
                                             api.czr_ModOptVisible( true, { module : item.module, focus : 'section-topline-2' } );
                                       }
                                 }
@@ -11523,6 +10427,12 @@ $.extend( CZRSlideModuleMths, {
 
                     item.czr_Input('slide-title').container.prepend( $('<p/>', { html : _html_, class : 'czr-notice' } ) );
               },
+
+
+              //////////////////////////////FIXED CONTENT DEPENDENCIES //////////////////
+              ///////////////////////////////////////////////////////////////////////////
+              //@return void()
+              //Fired when module is ready
               setModOptDependantsVisibilities : function() {
                     var item = this,
                         module = item.module,
@@ -11533,17 +10443,22 @@ $.extend( CZRSlideModuleMths, {
                           if ( ! item.czr_Input.has( _inpt_id ) )
                             return;
                           var _input_ = item.czr_Input( _inpt_id );
+
+                          //Fire on init
                           _input_.enabled( ! module._isChecked( modOptModel['fixed-content'] ) );
                     });
 
                     if ( module._isChecked( modOptModel['fixed-content'] ) ) {
+                          //add a DOM listeners
                           api.CZR_Helpers.setupDOMListeners(
                                 [     //toggle mod options
                                       {
                                             trigger   : 'click keydown',
                                             selector  : '.open-mod-option',
                                             name      : 'toggle_mod_option',
+                                            //=> open the module option and focus on the caption content tab
                                             actions   : function() {
+                                                  //expand the modopt panel and focus on a specific tab right after
                                                   api.czr_ModOptVisible( true, { module : module, focus : 'section-topline-2' } );
                                             }
                                       }
@@ -11568,23 +10483,46 @@ $.extend( CZRSlideModuleMths, {
                     }
 
               },
+
+              //@params : { before : 'slide-title' }
               toggleDisabledNotice : function( params ) {
                     var item = this;
                     params = _.extend( { before : 'slide-title' }, params );
 
               },
+              ////////////////////////////// END OF FIXED CONTENT DEPENDENCIES //////////////////
+              ///////////////////////////////////////////////////////////////////////////
+
+
+
+              //Fired when the input collection is populated
+              //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
               setInputVisibilityDeps : function() {
                     var item = this,
                         module = item.module,
                         _isCustom = function( val ) {
                               return 'custom' == val;
                         };
+
+                    //Internal item dependencies
                     item.czr_Input.each( function( input ) {
                           switch( input.id ) {
+                                // case 'slide-title' :
+                                //       //Fire on init
+                                //       item.czr_Input('slide-subtitle').visible( ! _.isEmpty( input() ) );
+
+                                //       //React on change
+                                //       input.bind( function( to ) {
+                                //             item.czr_Input('slide-subtitle').visible( ! _.isEmpty( to ) );
+                                //       });
+                                // break;
 
                                 case 'slide-link-title' :
+                                      //Fire on init
                                       item.czr_Input('slide-link').visible( module._isChecked( input() ) || ! _.isEmpty( item.czr_Input('slide-cta')() ) );
                                       item.czr_Input('slide-link-target').visible( module._isChecked( input() ) || ! _.isEmpty( item.czr_Input('slide-cta')() ) );
+
+                                      //React on change
                                       input.bind( function( to ) {
                                             item.czr_Input('slide-link').visible( module._isChecked( to ) || ! _.isEmpty( item.czr_Input('slide-cta')() ) );
                                             item.czr_Input('slide-link-target').visible( module._isChecked( to ) || ! _.isEmpty( item.czr_Input('slide-cta')() ) );
@@ -11592,24 +10530,62 @@ $.extend( CZRSlideModuleMths, {
                                 break;
 
                                 case 'slide-cta' :
+                                      //Fire on init
                                       item.czr_Input('slide-link').visible( ! _.isEmpty( input() ) || module._isChecked( item.czr_Input('slide-link-title')() ) );
                                       item.czr_Input('slide-custom-link').visible( ! _.isEmpty( input() ) && module._isCustomLink( item.czr_Input('slide-link')() ) );
                                       item.czr_Input('slide-link-target').visible( ! _.isEmpty( input() ) || module._isChecked( item.czr_Input('slide-link-title')() ) );
+
+                                      //React on change
                                       input.bind( function( to ) {
                                             item.czr_Input('slide-link').visible( ! _.isEmpty( to ) || module._isChecked( item.czr_Input('slide-link-title')() ) );
                                             item.czr_Input('slide-custom-link').visible( ! _.isEmpty( to ) && module._isCustomLink( item.czr_Input('slide-link')() ) );
                                             item.czr_Input('slide-link-target').visible( ! _.isEmpty( to ) || module._isChecked( item.czr_Input('slide-link-title')() ) );
                                       });
                                 break;
+
+                                //the slide-link value is an object which has always an id (post id) + other properties like title
                                 case 'slide-link' :
+                                      //Fire on init
                                       item.czr_Input('slide-custom-link').visible( module._isCustomLink( input() ) );
+                                      //React on change
                                       input.bind( function( to ) {
                                             item.czr_Input('slide-custom-link').visible( module._isCustomLink( to ) );
                                       });
                                 break;
+
+                                // case 'slide-use-custom-skin' :
+                                //       //Fire on init
+                                //       item.czr_Input('slide-skin').visible( module._isChecked( input() ) );
+                                //       item.czr_Input('slide-skin-color').visible( module._isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                //       item.czr_Input('slide-opacity').visible( module._isChecked( input() ) );
+                                //       item.czr_Input('slide-text-color').visible( module._isChecked( input() ) && _isCustom( item.czr_Input('slide-skin')() ) );
+
+                                //       //React on change
+                                //       input.bind( function( to ) {
+                                //             item.czr_Input('slide-skin').visible( module._isChecked( to ) );
+                                //             item.czr_Input('slide-skin-color').visible( module._isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                //             item.czr_Input('slide-opacity').visible( module._isChecked( to ) );
+                                //             item.czr_Input('slide-text-color').visible( module._isChecked( to ) && _isCustom( item.czr_Input('slide-skin')() ) );
+                                //       });
+                                // break;
+
+                                // case 'slide-skin' :
+                                //       //Fire on init
+                                //       item.czr_Input('slide-skin-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+                                //       item.czr_Input('slide-text-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( input() ) );
+
+                                //       //React on change
+                                //       input.bind( function( to ) {
+                                //             item.czr_Input('slide-skin-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                //             item.czr_Input('slide-text-color').visible( module._isChecked( 'slide-use-custom-skin' ) && _isCustom( to ) );
+                                //       });
+                                // break;
                           }
                     });
               },
+
+              //overrides the default parent method by a custom one
+              //at this stage, the model passed in the obj is up to date
               writeItemViewTitle : function( model, data ) {
 
                     var item = this,
@@ -11620,24 +10596,41 @@ $.extend( CZRSlideModuleMths, {
                         _slideBg,
                         _src = 'not_set',
                         _areDataSet = ! _.isUndefined( data ) && _.isObject( data );
+
+                    //When shall we update the item title ?
+                    //=> when the slide title or the thumbnail have been updated
+                    //=> on module model initialized
                     if ( _areDataSet && data.input_changed && ! _.contains( ['slide-title', 'slide-background' ], data.input_changed ) )
                       return;
+
+                    //set title with index
                     if ( ! _.isEmpty( _model.title ) ) {
                           _title = _model.title;
                     } else {
+                          //find the current item index in the collection
                           var _index = _.findIndex( module.itemCollection(), function( _itm ) {
                                 return _itm.id === item.id;
                           });
                           _index = _.isUndefined( _index ) ? index : _index + 1;
                           _title = [ serverControlParams.i18n.mods.slider['Slide'], _index ].join( ' ' );
                     }
+
+                    //if the slide title is set, use it
                     _title = _.isEmpty( _model['slide-title'] ) ? _title : _model['slide-title'];
                     _title = api.CZR_Helpers.truncate( _title, 15 );
+
+                    //make sure the slide bg id is a number
                     _slideBg = ( _model['slide-background'] && _.isString( _model['slide-background'] ) ) ? parseInt( _model['slide-background'], 10 ) : _model['slide-background'];
+
+                    // _title = [
+                    //       '<div class="slide-thumb"></div>',
+                    //       '<div class="slide-title">' + _title + '</div>',,
+                    // ].join('');
 
                     var _getThumbSrc = function() {
                           return $.Deferred( function() {
                                 var dfd = this;
+                                //try to set the default src
                                 if ( serverControlParams.slideModuleParams && serverControlParams.slideModuleParams.defaultThumb ) {
                                       _src = serverControlParams.slideModuleParams.defaultThumb;
                                 }
@@ -11659,8 +10652,13 @@ $.extend( CZRSlideModuleMths, {
 
                     var $slideTitleEl = $( '.' + module.control.css_attr.item_title , item.container ).find('.slide-title'),
                         $slideThumbEl = $( '.' + module.control.css_attr.item_title , item.container ).find( '.slide-thumb');
+
+                    //TITLE
+                    //always write the title
                     if ( ! $slideTitleEl.length ) {
+                          //remove the default item title
                           $( '.' + module.control.css_attr.item_title , item.container ).html( '' );
+                          //write the new one
                           $( '.' + module.control.css_attr.item_title , item.container ).append( $( '<div/>',
                                 {
                                     class : 'slide-title',
@@ -11670,6 +10668,12 @@ $.extend( CZRSlideModuleMths, {
                     } else {
                           $slideTitleEl.html( _title );
                     }
+
+                    //THUMB
+                    //When shall we append the item thumb ?
+                    //=>IF the slide-thumb element is not set
+                    //=>OR in the case where data have been provided and the input_changed is 'slide-background'
+                    //=>OR if no data is provided ( we are in the initialize phase )
                     var _isBgChange = _areDataSet && data.input_changed && 'slide-background' === data.input_changed;
 
                     if ( 0 === $slideThumbEl.length ) {
@@ -11702,19 +10706,33 @@ $.extend( CZRSlideModuleMths, {
             ready: function() {
                   var modOpt = this,
                       module = modOpt.module;
+
+                  //wait for the input collection to be populated, and then set the input visibility dependencies
                   modOpt.inputCollection.bind( function( col ) {
                         if( _.isEmpty( col ) )
                           return;
                         try { modOpt.setModOptInputVisibilityDeps(); } catch( er ) {
                               api.errorLog( 'setModOptInputVisibilityDeps : ' + er );
                         }
+
+                        //MOD OPT REFRESH BTN
+                        //1) Set initial state
                         modOpt.container.find('.refresh-button').prop( 'disabled', true );
+                        //2) listen to user actions
+                        //add DOM listeners
                         api.CZR_Helpers.setupDOMListeners(
                               [     //toggle mod options
                                     {
                                           trigger   : 'click keydown',
                                           selector  : '.refresh-button',
                                           actions   : function( ev ) {
+                                                // var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
+                                                // if ( api.has( _setId ) ) {
+                                                //       api( _setId ).previewer.send( 'setting', [ _setId, api( _setId )() ] );
+                                                //       _.delay( function() {
+                                                //             modOpt.container.find('.refresh-button').prop( 'disabled', true );
+                                                //       }, 250 );
+                                                // }
                                                 api.previewer.refresh().done( function() {
                                                       _.delay( function() {
                                                             modOpt.container.find('.refresh-button').prop( 'disabled', true );
@@ -11727,8 +10745,14 @@ $.extend( CZRSlideModuleMths, {
                               modOpt //instance where to look for the cb methods
                         );//api.CZR_Helpers.setupDOMListeners()
                   });//modOpt.inputCollection()
+
+                  //fire the parent
                   api.CZRModOpt.prototype.ready.call( modOpt );
             },
+
+
+            //Fired when the input collection is populated
+            //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
             setModOptInputVisibilityDeps : function() {
                   var modOpt = this,
                       module = modOpt.module,
@@ -11738,6 +10762,24 @@ $.extend( CZRSlideModuleMths, {
 
                   modOpt.czr_Input.each( function( input ) {
                         switch( input.id ) {
+                              //DESIGN
+                              // case 'skin' :
+                              //       var _isCustom = function( val ) {
+                              //             return 'custom' == val;
+                              //       };
+
+                              //       //Fire on init
+                              //       modOpt.czr_Input('skin-custom-color').visible( _isCustom( input() ) );
+                              //       modOpt.czr_Input('text-custom-color').visible( _isCustom( input() ) );
+
+                              //       //React on change
+                              //       input.bind( function( to ) {
+                              //             modOpt.czr_Input('skin-custom-color').visible( _isCustom( to ) );
+                              //             modOpt.czr_Input('text-custom-color').visible( _isCustom( to ) );
+                              //       });
+                              // break;
+
+                              //CONTENT
                               case 'fixed-content' :
                                     var _modOptsDependants = [ 'fixed-title', 'fixed-subtitle', 'fixed-cta', 'fixed-link', 'fixed-link-target', 'fixed-custom-link' ],
                                         _setVisibility = function( _depId, _inputVal ) {
@@ -11761,9 +10803,14 @@ $.extend( CZRSlideModuleMths, {
 
                                               modOpt.czr_Input( _depId ).visible( _bool_ );
                                         };
+
+                                    //MOD OPTS
                                     _.each( _modOptsDependants, function( _inpt_id ) {
+                                          //Fire on init
                                           _setVisibility( _inpt_id, input() );
                                     });
+
+                                    //React on change
                                     input.bind( function( to ) {
                                           _.each( _modOptsDependants, function( _inpt_id ) {
                                                _setVisibility( _inpt_id, to );
@@ -11771,6 +10818,7 @@ $.extend( CZRSlideModuleMths, {
                                     });
                               break;
                               case 'fixed-cta' :
+                                      //Fire on init
                                       modOpt.czr_Input('fixed-link').visible(
                                             ! _.isEmpty( input() ) &&
                                             _isFixedContentOn()
@@ -11784,6 +10832,8 @@ $.extend( CZRSlideModuleMths, {
                                             ! _.isEmpty( input() ) &&
                                             _isFixedContentOn()
                                       );
+
+                                      //React on change
                                       input.bind( function( to ) {
                                             modOpt.czr_Input('fixed-link').visible(
                                                   ! _.isEmpty( to ) &&
@@ -11800,22 +10850,34 @@ $.extend( CZRSlideModuleMths, {
                                             );
                                       });
                                 break;
+
+                                //the slide-link value is an object which has always an id (post id) + other properties like title
                                 case 'fixed-link' :
+                                      //Fire on init
                                       modOpt.czr_Input('fixed-custom-link').visible( module._isCustomLink( input() ) && _isFixedContentOn() );
+                                      //React on change
                                       input.bind( function( to ) {
                                             modOpt.czr_Input('fixed-custom-link').visible( module._isCustomLink( to ) && _isFixedContentOn() );
                                       });
                                 break;
+
+                              //EFFECTS AND PERFORMANCES
                               case 'autoplay' :
+                                    //Fire on init
                                     modOpt.czr_Input('slider-speed').visible( module._isChecked( input() ) );
                                     modOpt.czr_Input('pause-on-hover').visible( module._isChecked( input() ) );
+
+                                    //React on change
                                     input.bind( function( to ) {
                                           modOpt.czr_Input('slider-speed').visible( module._isChecked( to ) );
                                           modOpt.czr_Input('pause-on-hover').visible( module._isChecked( to ) );
                                     });
                               break;
                               case 'parallax' :
+                                    //Fire on init
                                     modOpt.czr_Input('parallax-speed').visible( module._isChecked( input() ) );
+
+                                    //React on change
                                     input.bind( function( to ) {
                                           modOpt.czr_Input('parallax-speed').visible( module._isChecked( to ) );
                                     });
@@ -11825,9 +10887,14 @@ $.extend( CZRSlideModuleMths, {
                                         _setVis = function( _depId, _inputVal ) {
                                               modOpt.czr_Input( _depId ).visible( module._isChecked( _inputVal ) );
                                         };
+
+                                    //MOD OPTS
                                     _.each( _dts, function( _inpt_id ) {
+                                          //Fire on init
                                           _setVis( _inpt_id, input() );
                                     });
+
+                                    //React on change
                                     input.bind( function( to ) {
                                           _.each( _dts, function( _inpt_id ) {
                                                 _setVis( _inpt_id, to );
@@ -11849,14 +10916,46 @@ $.extend( CZRRelatedPostsModMths, {
             var module = this;
 
             module.initialConstrucOptions = $.extend( true, {}, constructorOptions );//detach from the original obj
+
+            //run the parent initialize
             api.CZRDynModule.prototype.initialize.call( module, id, constructorOptions );
+
+            //extend the module with new template Selectors
             $.extend( module, {
                   itemInputList : 'czr-module-related-posts-item-input-list',
             } );
+
+            // //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUTS
             module.inputConstructor = api.CZRInput.extend( module.CZRRelPostsItemInputCtor || {} );
+
+            // //EXTEND THE DEFAULT CONSTRUCTORS FOR ITEMS AND MODOPTS
             module.itemConstructor = api.CZRItem.extend( module.CZRRelPostsItemCtor || {} );
 
+            //declares a default Item model
+            // this.defaultItemModel = {
+            //hidden properties
+                // 'id'            => '',
+                // 'title'         => '',
+
+                // //design
+                // 'enable'        => true,
+                // 'col_number'    => 3,
+                // 'cell_height'   => 'thin',
+                // 'display_heading' => true,
+                // 'heading_text'   => __('You may also like...', 'hueman'),
+                // 'freescroll'    => true,
+
+                // //post filters
+                // 'post_number'   => 10,
+                // 'order_by'      => 'rand',//can take rand, comment_count, date
+                // 'related_by'    => 'categories'//can take : categories, tags, post_formats, all
+            // };
+
             this.defaultItemModel = serverControlParams.relatedPostsModuleParams.defaultModel;
+
+            //fired ready :
+            //1) on section expansion
+            //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled
             if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
                module.ready();
             }
@@ -11870,7 +10969,19 @@ $.extend( CZRRelatedPostsModMths, {
 
             });//module.isReady
       },//initialize
+
+
+
+
+
+      //////////////////////////////////////////////////////////
+      /// INPUT CONSTRUCTORS
+      //////////////////////////////////////////
       CZRRelPostsItemInputCtor : {
+            // ready : function() {
+            //       api.CZRInput.prototype.ready.call( input);
+            // },
+            //overrides the default method
             setupSelect : function() {
                   if ( 'order_by' != this.id && 'related_by' != this.id )
                     return;
@@ -11882,6 +10993,9 @@ $.extend( CZRRelatedPostsModMths, {
                       _model = input_parent();
 
                   switch( input.id ) {
+                        // case 'cell_height' :
+                        //       _selectOptions = serverControlParams.relatedPostsModuleParams.relPostsCellHeight;
+                        // break;
                         case 'order_by' :
                               _selectOptions = serverControlParams.relatedPostsModuleParams.relPostsOrderBy;
                         break;
@@ -11889,6 +11003,7 @@ $.extend( CZRRelatedPostsModMths, {
                               _selectOptions = serverControlParams.relatedPostsModuleParams.relPostsRelatedBy;
                         break;
                   }
+                  //generates the options
                   _.each( _selectOptions , function( _optName , _k ) {
                         var _attributes = {
                                   value : _k,
@@ -11902,10 +11017,19 @@ $.extend( CZRRelatedPostsModMths, {
                   $( 'select[data-type="' + input.id + '"]', input.container ).selecter();
             },
       },//CZRRelPostsItemInputCtor
+
+
+
+      //////////////////////////////////////////////////////////
+      /// ITEM CONSTRUCTOR
+      //////////////////////////////////////////
       CZRRelPostsItemCtor : {
+            //overrides the parent ready
             ready : function() {
                   var item = this,
                       module = item.module;
+                  //wait for the input collection to be populated,
+                  //and then set the input visibility dependencies
                   item.inputCollection.bind( function( col ) {
                         if( _.isEmpty( col ) )
                           return;
@@ -11913,19 +11037,29 @@ $.extend( CZRRelatedPostsModMths, {
                               api.errorLog( 'item.setInputVisibilityDeps() : ' + er );
                         }
                   });//item.inputCollection.bind()
+
+                  //fire the parent
                   api.CZRItem.prototype.ready.call( item );
             },
+
+
+            //Fired when the input collection is populated
+            //At this point, the inputs are all ready (input.isReady.state() === 'resolved') and we can use their visible Value ( set to true by default )
             setInputVisibilityDeps : function() {
                   var item = this,
                       module = item.module;
+
+                  //Internal item dependencies
                   item.czr_Input.each( function( input ) {
                         switch( input.id ) {
                               case 'enable' :
+                                    //Fire on init
                                     item.czr_Input.each( function( _inpt_ ) {
                                           if ( _inpt_.id == input.id )
                                             return;
                                           _inpt_.visible( module._isChecked( input() ) );
                                     });
+                                    //React on change
                                     input.bind( function( to ) {
                                           item.czr_Input.each( function( _inpt_ ) {
                                               if ( _inpt_.id == input.id )
@@ -11936,7 +11070,10 @@ $.extend( CZRRelatedPostsModMths, {
                               break;
 
                               case 'display_heading' :
+                                    //Fire on init
                                     item.czr_Input('heading_text').visible( module._isChecked( input() ) && module._isChecked( item.czr_Input('enable')() ) );
+
+                                    //React on change
                                     input.bind( function( to ) {
                                           item.czr_Input('heading_text').visible( module._isChecked( to ) && module._isChecked( item.czr_Input('enable')() ) );
                                     });
@@ -11945,6 +11082,11 @@ $.extend( CZRRelatedPostsModMths, {
                   });
             },
       },//CZRRelPostsItemCtor
+
+
+
+      //////////////////////////////////////////
+      /// MODULE HELPERS
 
       _isChecked : function( v ) {
             return 0 !== v && '0' !== v && false !== v && 'off' !== v;
@@ -11965,16 +11107,38 @@ var CZRTextEditorModuleMths = CZRTextEditorModuleMths || {};
 $.extend( CZRTextEditorModuleMths, {
   initialize: function( id, options ) {
           var module = this;
+          //run the parent initialize
           api.CZRModule.prototype.initialize.call( module, id, options );
+
+          //extend the module with new template Selectors
           $.extend( module, {
                 itemInputList : 'czr-module-text_editor-item-content'
           } );
+
+          //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
           module.inputConstructor = api.CZRInput.extend( module.CZRTextEditorInputMths || {} );
+          //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
           module.itemConstructor = api.CZRItem.extend( module.CZRTextEditorItem || {} );
+
+          //declares a default model
           this.defaultItemModel   = {
             id : '',
             text: ''
           };
+
+          // api.section( module.control.section() ).expanded.bind(function(to) {
+
+          //   // if ( false !== module.container.length ) {
+          //   //   //say it*/
+          //   //   module.container.append( $_module_el );
+          //   //   module.embedded.resolve();
+          //   // }
+
+          //   if ( 'resolved' == module.isReady.state() )
+          //     return;
+
+          //   module.ready();
+          // });
   },//initialize
 
 
@@ -11990,26 +11154,42 @@ $.extend( CZRTextEditorModuleMths, {
   },
 });//extend
 })( wp.customize , jQuery, _ );//extends api.CZRDynModule
+//This module populates the sektions setting.
+//The each sektion is composed of columns (=> columns on front end)
+//Each columns of modules ( => content module on front end like slider, text block, etc)
 
 var CZRSektionMths = CZRSektionMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSektionMths, {
       initialize: function( id, options ) {
             var module = this;
+            //run the parent initialize
             api.CZRDynModule.prototype.initialize.call( module, id, options );
+
+            //extend the module with new template Selectors
             $.extend( module, {
                   itemPreAddEl : 'czr-module-sektion-pre-add-view-content',
                   rudItemPart : 'czr-module-sektion-rud-item-part',
                   itemInputList : 'czr-module-sektion-view-content',
             } );
+
+            //SEKTIONS
+            //declares a default model (overrides parent module)
             module.defaultItemModel = {
                   id : '',
                   'sektion-layout' : 1,
                   columns : []
             };
+
+            //hook before a sektion is being remove from dom and api.
+            //=> remove modules and columns from DOM
+            //=> removes moduea and columns instances from API
             module.bind( 'pre_item_dom_remove', function( item ) {
                   module.removeSektion( item );
             });
+
+
+            //COLUMNS
             module.defaultDBColumnModel = {
                   id : '',
                   sektion_id : '',
@@ -12024,18 +11204,39 @@ $.extend( CZRSektionMths, {
                   control_id : '',
                   is_added_by_user : false
             };
+
+            //the column values
             module.czr_Column = new api.Values();
+            //stores the column collection
+            //set the initial value
             module.czr_columnCollection = new api.Value();
             module.czr_columnCollection.set([]);
+
+            //react to column collection changes
             module.czr_columnCollection.callbacks.add( function() { return module.columnCollectionReact.apply(module, arguments ); } );
+
+            //EXTEND THE DEFAULT CONSTRUCTORS FOR SEKTION ITEMS
             module.itemConstructor = api.CZRItem.extend( module.CZRSektionItem || {} );
+
+
+            //DRAGULA
+            // if ( ! _.has( module ,'dragInstance' ) )
+            //   module.initDragula();
             if ( ! _.has( module ,'modsDragInstance' ) )
               module.initModulesDragula();
+
+
+            //MODULE PANEL
             api.czrModulePanelState = api.czrModulePanelState || new api.Value( false );
             api.czrModulePanelEmbedded = api.czrModulePanelEmbedded || $.Deferred();
+
+            //EXTEND THE USER EVENT MAP
+            //=> adds the module list panel events
+            //=> adds the sektion setting panel events
             module.userEventMap.set( _.union(
                   module.userEventMap(),
                   [
+                        //module panel
                         {
                               trigger   : 'click keydown',
                               selector  : '.add-new-module',
@@ -12047,6 +11248,7 @@ $.extend( CZRSektionMths, {
                               selector  : '.' + module.control.css_attr.open_pre_add_btn,
                               name      : 'close_module_panel',
                               actions   : function() {
+                                    //close the module panel id needed
                                     api.czrModulePanelState(false);
                               },
                         }
@@ -12058,6 +11260,8 @@ $.extend( CZRSektionMths, {
             api.consoleLog('SEKTION MODULE INIT', module.control.params.czr_skope );
             if ( _.has( api, 'czr_activeSkopeId' ) )
               api.consoleLog('SEKTION MODULE INIT', api.czr_activeSkopeId() );
+
+            //api.czrModulePanelEmbedded.done( function() {
 
             api.czrModulePanelBinded = api.czrModulePanelBinded || $.Deferred();
             if ( 'pending' == api.czrModulePanelBinded.state() ) {
@@ -12073,8 +11277,23 @@ $.extend( CZRSektionMths, {
 
                               api.consoleLog('REACT TO MODULE PANEL STATE', expanded,  module.control.params.syncCollection, sek_module() );
                               api.consoleLog('WHEN DOES THIS ACTION OCCUR?', api.czrModulePanelBinded.state() );
+
+                              //api.consoleLog('IS EQUAL?', _.isEqual( module, api.control( synced_control_id ).syncSektionModule() ) );
+
+
+                              // if ( _.isEqual( module, api.control( synced_control_id ).syncSektionModule() ) )
+                              //   return;
+
+                              //DRAGULIZE
                               sek_module.modsDragInstance.containers.push( $('#czr-available-modules-list')[0]);
+
+                              // sek_module.modulePanelDragulized = sek_module.modulePanelDragulized || $.Deferred();
+                              // if ( expanded && 'pending' == sek_module.modulePanelDragulized.state() ) {
+                              //       sek_module.modsDragInstance.containers.push( $('#czr-available-modules-list')[0]);
+                              //       sek_module.modulePanelDragulized.resolve();
+                              // }
                         } else {
+                              //remove from draginstance
                               var _containers = $.extend( true, [], sek_module.modsDragInstance.containers );
                                   _containers =  _.filter( _containers, function( con) {
                                         return 'czr-available-modules-list' != $(con).attr('id');
@@ -12085,12 +11304,24 @@ $.extend( CZRSektionMths, {
 
                   });
                   api.czrModulePanelBinded.resolve();
+            //});
             }//if pending
+
+
+
+
+
+            //SEKTION SETTING PANEL
             api.czrSekSettingsPanelState = api.SekSettingsPanelState || new api.Value( false );
             api.czrSekSettingsPanelEmbedded = api.SekSettingsPanelEmbedded || $.Deferred();
+
+            //EXTEND THE USER EVENT MAP
+            //=> adds the module list panel events
+            //=> adds the sektion setting panel events
             module.userEventMap.set( _.union(
                   module.userEventMap(),
                   [
+                        //Sektion Settings
                         {
                               trigger   : 'click keydown',
                               selector  : '.czr-edit-sek-settings',
@@ -12102,6 +11333,7 @@ $.extend( CZRSektionMths, {
                               selector  : '.' + module.control.css_attr.open_pre_add_btn,
                               name      : 'close_sektion_panel',
                               actions   : function() {
+                                  //close the sektion settings panel if needed
                                   api.czrSekSettingsPanelState.set(false);
                               },
                         }
@@ -12110,6 +11342,12 @@ $.extend( CZRSektionMths, {
             api.czrSekSettingsPanelEmbedded.done( function() {
                   api.czrSekSettingsPanelState.callbacks.add( function() { return module.reactToSekSettingPanelState.apply(module, arguments ); } );
             });
+
+
+            // if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId()  ) {
+            //     api.consoleLog('SECTION EXPANDED CASE. WHAT IS THE CURRENT MODULE-COLLECTION?', api('hu_theme_options[module-collection]')(), module.isReady.state() );
+            //     _fire();
+            // }
             api.section( module.control.section() ).expanded.bind(function(to) {
                   api.consoleLog('FIRE SEKTION MODULE!', module.id );
                   module.fireSektionModule();
@@ -12123,9 +11361,21 @@ $.extend( CZRSektionMths, {
             var module = this;
             if ( 'resolved' == module.isReady.state() )
               return;
+            //unleash hell
             module.ready();
+            //provide the synchronized module-collection control with its synchronized sektions module instance
             module.control.getSyncCollectionControl().syncSektionModule.set( module );
       },
+
+
+
+      /////////////////////////////////////////////////////////////////////////
+      /// SEKTION
+      ////////////////////////////////////////////////////////////////////////
+      //the sekItem object looks like :
+      //id : ''
+      //columns : []
+      //sektion-layout : int
       removeSektion : function( sekItem ) {
             var module = this;
 
@@ -12133,8 +11383,12 @@ $.extend( CZRSektionMths, {
                   _.each( _col.modules, function( _mod ){
                         module.control.getSyncCollectionControl().removeModule( _mod );
                   });//_.each
+
+                  //remove column from DOM if it's been embedded
                   if ( module.czr_Column.has(_col.id) && 'resolved' == module.czr_Column( _col.id ).embedded.state() )
                       module.czr_Column( _col.id ).container.remove();
+
+                  //remove column from API
                   module.removeColumnFromCollection( _col );
             });//_.each
       },
@@ -12153,14 +11407,21 @@ $.extend( CZRSektionMths, {
       }
 });//extend
 })( wp.customize , jQuery, _ );//extends api.CZRDynModule
+//This module populates the sektions setting.
+//The each sektion is composed of columns (=> columns on front end)
+//Each columns of modules ( => content module on front end like slider, text block, etc)
 
 var CZRSektionMths = CZRSektionMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSektionMths, {
+      //extends api.CZRItem
       CZRSektionItem : {
               initialize: function(id, options ) {
                     var sekItem = this;
                     api.CZRItem.prototype.initialize.call( sekItem, null, options );
+
+                    //EXTEND THE USER EVENT MAP
+                    //=> adds the module list panel events
                     sekItem.userEventMap.set( _.union(
                           sekItem.userEventMap(),
                           [
@@ -12213,12 +11474,24 @@ $.extend( CZRSektionMths, {
                     }
 
                     sekItem.isReady.done( function() {
+
+                          //When fetched from DB, the column model looks like :
+                          //{
+                          //  id : '',//string
+                          //  sektion_id : '',//string
+                          //  modules : [],//collection of module id strings
+                          //}
+                          //=> we need to extend it with the sektion instance
+                          //=> make sure the columns are instantiated as well
                           if ( ! _.isEmpty( sekItem().columns ) ) {
                                 _.each( sekItem().columns , function( _column ) {
+                                      //instantiate the column and push it to the global column collection
                                       var column_candidate = $.extend( true, {}, _column );//create a deep clone
                                       module.instantiateColumn( $.extend( column_candidate, { sektion : sekItem } ) );
                                 });
                           } else {
+                                //the sektion has no columns yet. This is the case typically when a sektion has just been created
+                                // => instantiate new columns based on the sektion layout property.
                                 var _col_nb = parseInt( _sektion_model['sektion-layout'] || 1, 10 );
                                 for( i = 1; i < _col_nb + 1 ; i++ ) {
                                       var _default_column = $.extend( true, {}, module.defaultDBColumnModel ),
@@ -12234,12 +11507,40 @@ $.extend( CZRSektionMths, {
                     });//sekItem.isReady
 
               },
+
+
+              //OVERRIDES PARENT MODULE METHOD
+              //React to a single item change
+              //cb of module.czr_Item(item.id).callbacks
+              // itemInternalReact : function( to, from ) {
+              //   api.consoleLog('in item internal React overridden', to, from );
+              //       var sekItem = this,
+              //           sektion_candidate = $.extend(true, {}, to);
+              //       //we want to make sure that the item model is compliant with default model
+              //       sektion_candidate = sekItem.prepareSekItemForDB( sektion_candidate );
+              //       //Call the parent method => updates the collection
+              //       api.CZRItem.prototype.itemInternalReact.call( sekItem, sektion_candidate, from );
+              // },
+
+              //OVERRIDES PARENT MODULE METHOD
+              //React to a single item change
+              //cb of module.czr_Item(item.id).callbacks
               itemReact : function( to, from ) {
                     var sekItem = this,
                         sektion_candidate = $.extend(true, {}, to);
+                    //we want to make sure that the item model is compliant with default model
                     sektion_candidate = sekItem.prepareSekItemForDB( sektion_candidate );
+                    //Call the parent method => updates the collection
                     api.CZRItem.prototype.itemReact.call( sekItem, sektion_candidate );
               },
+
+
+              //the sektion item model must have only the property set in
+              //module.defaultItemModel = {
+              //       id : '',
+              //       'sektion-layout' : 1,
+              //       columns : []
+              // };
               prepareSekItemForDB : function( sektion_candidate ) {
                     var sekItem = this,
                         db_ready_sektItem = {};
@@ -12279,10 +11580,20 @@ $.extend( CZRSektionMths, {
       }//Sektion
 });//extend
 })( wp.customize , jQuery, _ );//extends api.CZRDynModule
+//This module populates the sektions setting.
+//The each sektion is composed of columns (=> columns on front end)
+//Each columns of modules ( => content module on front end like slider, text block, etc)
 
 var CZRSektionMths = CZRSektionMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSektionMths, {
+      //Each column shall be described by an object like the following one :
+      //module.defaultDBColumnModel = {
+      //       id : '',
+      //       sektion_id : '',
+      //       modules : [],
+      // };
+      // Fired in prepareSekItemForDB
       prepareColumnForDB : function( column_candidate ) {
             var module = this,
                 _db_ready_col = {};
@@ -12316,6 +11627,29 @@ $.extend( CZRSektionMths, {
             } );
             return _db_ready_col;
       },
+
+
+
+
+
+
+
+
+
+
+
+      /////////////////////////////////////////////////////////////////////////
+      /// COLUMN
+      ////////////////////////////////////////////////////////////////////////
+      //At this point, the column model has been fetched from DB, or manually added.
+      //It must look like
+      //{
+      //  id : '',//string
+      //  sektion : {},//sektion instance
+      //  sektion_id : '',//string
+      //  modules : [],//collection of module id strings
+      //}
+      //Fired in CZRSektionItem::initialize
       instantiateColumn : function( _column, is_added_by_user  ) {
             var module = this,
                 column_model = _.clone( _column );
@@ -12325,9 +11659,25 @@ $.extend( CZRSektionMths, {
             }
 
             column_model = module.prepareColumnForAPI( column_model );
+
+            //instanciate the column with the default constructor
+            //=> makes sure that the column is ready for instanciation
             module.czr_Column.add( column_model.id , new api.CZRColumn( column_model.id, column_model ) );
+
+            //the column is now ready and will listen to changes
             module.czr_Column(column_model.id).ready();
       },
+
+
+      //Let's make sure the column holds all the necessary properties before API instanciation.
+      // module.defaultAPIcolumnModel = {
+      //       id : '',
+      //       modules : [],
+      //       sektion : {}, //sektion instance
+      //       module_id : '',
+      //       control_id : '',
+      //       is_added_by_user : false
+      // };
       prepareColumnForAPI : function( column_candidate ) {
           var module = this,
               api_ready_column = {};
@@ -12371,12 +11721,20 @@ $.extend( CZRSektionMths, {
           });
           return api_ready_column;
       },
+
+
+
+
+      //@param obj can be { collection : []}, or { module : {} }
       updateColumnCollection : function( obj ) {
             var module = this,
                 _current_collection = module.czr_columnCollection();
                 _new_collection = $.extend( true, [] , _current_collection );
             api.consoleLog('in update column collection', module.id, module.czr_columnCollection() );
+            //if a collection is provided in the passed obj then simply refresh the collection
+            //=> typically used when reordering the collection module with sortable or when a column is removed
             if ( _.has( obj, 'collection' ) ) {
+                  //reset the collection
                   module.czr_columnCollection.set(obj.collection);
                   return;
             }
@@ -12389,16 +11747,22 @@ $.extend( CZRSektionMths, {
             if ( ! _.has(column, 'id') ) {
                   throw new Error('updateColumnCollection, no id provided for a column in module' + module.id + '. Aborting');
             }
+            //the module already exist in the collection
             if ( _.findWhere( _new_collection, { id : column.id } ) ) {
                   _.each( _current_collection , function( _elt, _ind ) {
                         if ( _elt.id != column.id )
                           return;
+
+                        //set the new val to the changed property
                         _new_collection[_ind] = column;
                   });
             }
+            //the module has to be added
             else {
                   _new_collection.push(column);
             }
+
+            //Inform the global column collection
             module.czr_columnCollection.set(_new_collection);
       },
 
@@ -12414,19 +11778,31 @@ $.extend( CZRSektionMths, {
 
             module.czr_columnCollection.set(_new_collection);
       },
+
+
+
+
+      //cb of control.czr_columnCollection.callbacks
+      //The job of this function is to set the column collection in their respective sektItems
       columnCollectionReact : function( to, from ) {
             var module = this,
                 is_column_added   = _.size(from) < _.size(to),
                 is_column_removed = _.size(from) > _.size(to),
                 isColumnUpdate  = _.size(from) == _.size(to),
+                //is_column_collection_sorted = _.isEmpty(_to_add) && _.isEmpty(_to_remove)  && ! isColumnUpdate,
                 _current_sek_model = {},
                 _new_sek_model = {};
+
+            //COLUMN UPDATE CASE
+            //parse the columns and find the one that has changed.
             if ( isColumnUpdate ) {
                   _.each( to, function( _col, _key ) {
                         if ( _.isEqual( _col, from[_key] ) )
                           return;
                         _current_sek_model = _col.sektion();
                         _new_sek_model = $.extend(true, {}, _current_sek_model);
+
+                        //find the column and update it
                         _.each( _current_sek_model.columns, function( _c, _k ){
                               if ( _c.id != _col.id )
                                 return;
@@ -12437,13 +11813,18 @@ $.extend( CZRSektionMths, {
 
                   } );//_.each
             }//end if column update
+
+
+            //NEW COLUMN CASE
             if ( is_column_added ) {
+                  //find the new column
                   var _new_column = _.filter( to, function( _col ){
                       return _.isUndefined( _.findWhere( from, { id : _col.id } ) );
                   });
 
                   _new_column = _new_column[0];
                   _current_sek_model = _new_column.sektion();
+                  //only add the column if the column does not exist in the sektion columns.
                   if ( _.isUndefined( _.findWhere( _current_sek_model.columns, {id : _new_column.id } ) ) ) {
                         _new_sek_model = $.extend(true, {}, _current_sek_model);
                         _new_sek_model.columns.push( _new_column );
@@ -12451,7 +11832,10 @@ $.extend( CZRSektionMths, {
                   }
 
             }//end if new column case
+
+            //COLUMN REMOVED
             if ( is_column_removed ) {
+                  //find the column to remove
                   var _to_remove = _.filter( from, function( _col ){
                       return _.isUndefined( _.findWhere( to, { id : _col.id } ) );
                   });
@@ -12459,15 +11843,34 @@ $.extend( CZRSektionMths, {
 
                   _current_sek_model = _to_remove.sektion();
                   _new_sek_model = $.extend(true, {}, _current_sek_model);//_.clone() is not enough there, we need a deep cloning.
+
+                  //remove the column from the sekItem model
                   _new_sek_model.columns = _.filter( _new_sek_model.columns, function( _col ) {
                         return _col.id != _to_remove.id;
                   } );
 
                   _to_remove.sektion.set( _new_sek_model );
+
+                  //remove the column instance from module
                   module.czr_Column.remove( _to_remove.id );
             }
+
+
+            //refreshes the preview frame  :
+            //1) only needed if transport is postMessage, because is triggered by wp otherwise
+            //2) only needed when : add, remove, sort item(s)
+            //module update case
+            // if ( 'postMessage' == api(control.id).transport && ! api.CZR_Helpers.hasPartRefresh( control.id ) ) {
+            //     if ( is_collection_sorted )
+            //         control.previewer.refresh();
+            // }
       },
+
+
+
+      //recursive
       generateColId : function( key, i ) {
+            //prevent a potential infinite loop
             i = i || 1;
             if ( i > 100 ) {
                   throw new Error('Infinite loop when generating of a column id.');
@@ -12477,19 +11880,30 @@ $.extend( CZRSektionMths, {
             key = key || module._getNextColKeyInCollection();
 
             var id_candidate = 'col_' + key;
+
+            //do we have a column collection value ?
             if ( ! _.has(module, 'czr_columnCollection') || ! _.isArray( module.czr_columnCollection() ) ) {
                   throw new Error('The column collection does not exist or is not properly set in module : ' + module.id );
             }
+            //make sure the column is not already instantiated
             if ( module.czr_Column.has( id_candidate ) ) {
               return module.generateColId( key++, i++ );
             }
 
             return id_candidate;
       },
+
+
+      //helper : return an int
+      //=> the next available id of the column collection
       _getNextColKeyInCollection : function() {
             var module = this,
                 _max_col_key = {},
                 _next_key = 0;
+
+            //get the initial key
+            //=> if we already have a collection, extract all keys, select the max and increment it.
+            //else, key is 0
             if ( ! _.isEmpty( module.czr_columnCollection() ) ) {
                 _max_col_key = _.max( module.czr_columnCollection(), function( _col ) {
                     return parseInt( _col.id.replace(/[^\/\d]/g,''), 10 );
@@ -12498,9 +11912,17 @@ $.extend( CZRSektionMths, {
             }
             return _next_key;
       },
+
+
+      //@return bool
       moduleExistsInOneColumnMax : function( module_id ) {
             return 2 > this.getModuleColumn( module_id ).length;
       },
+
+
+      //@return an array of columns
+      //=> a module can't be embedded in several columns at a time
+      //if the returned array has more than one item, it should trigger an Error.
       getModuleColumn : function( module_id ) {
             var module = this,
                 _mod_columns = [];
@@ -12512,31 +11934,59 @@ $.extend( CZRSektionMths, {
       }
 });//extend
 })( wp.customize , jQuery, _ );//extends api.CZRDynModule
+//This module populates the sektions setting.
+//The each sektion is composed of columns (=> columns on front end)
+//Each columns of modules ( => content module on front end like slider, text block, etc)
 
 var CZRSektionMths = CZRSektionMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSektionMths, {
+      /////////////////////////////////////////////////////////////////////////
+      /// DRAGULA
+      ////////////////////////////////////////////////////////////////////////
      initModulesDragula : function() {
             var module = this;
+
+            //instantiate dragula without container => they will be pushed on module instantiation
             module.modsDragInstance = dragula({
+                  // copySortSource : function() {
+                  //   api.consoleLog('copy sort source', arguments);
+                  // },
                   copy: function (el, source) {
                     return $(el).hasClass( 'czr-module-candidate' );
                   },
                   moves: function (el, source, handle, sibling) {
                       return _.contains( handle.className.split(' '), 'czr-mod-drag-handler' );
                   },
+                  // invalidTarget : function(el, handle) {
+                  //     api.consoleLog('invalidTarget', el, handle );
+                  //     return false;
+                  // },
                   accepts: function ( el, target, source, sibling ) {
+                      //disable drop in module panel
+                      // if ( $(target).hasClass('czr-available-modules-list') )
+                      //   return false;
+                      // if ( $(target).closest('.czr-single-item').hasClass('open') )
+                      //   return ! _.contains( target.className.split(' '), 'czr-dragula-fake-container' );
+                      //api.consoleLog('in accepts', target, $(target).attr('id') );
                       return ! _.isUndefined(target) && 'czr-available-modules-list' != $(target).attr('id') ;
                   },
                   isContainer : function( el ) {
+                    //api.consoleLog('isContainer?', el);
                     return false;
                   }
             });//dragula
+
+
+            //react to drag events
             module.modsDragInstance.on('drag', function( el, source ){
                     module.czr_Item.each( function( _sektion ){
                           _sektion.viewState.set( 'expanded' != _sektion.viewState() ? 'expanded_noscroll' : 'expanded' );
                     });
             }).on('dragend', function( el, source ){
+                    // module.czr_Item.each( function( _sektion ){
+                    //       _sektion.container.removeClass('czr-show-fake-container');
+                    // });
             }).on('drop', function(el, target, source, sibling ) {
                   var _dropped_module_id = $(el).attr('data-module-id'),
                       _dropped_module_type = $(el).attr('data-module-type'),
@@ -12558,6 +12008,18 @@ $.extend( CZRSektionMths, {
                       module.control.getSyncCollectionControl().czr_Module( _dropped_module_id ).modColumn.set( _target_col );
                   }
             });
+
+            //expand a closed sektion on over
+            // module.modsDragInstance.on('over', function( el, container, source ) {
+            //   api.consoleLog('OVERING', container );
+            //       if ( $(container).hasClass('czr-dragula-fake-container') ) {
+            //           //get the sekItem id
+            //           _target_sekId = $(container).closest('[data-id]').attr('data-id');
+            //           module.czr_Item(_target_sekId).viewState.set('expanded_noscroll');
+            //       }
+            // });
+
+            //make sure the scroll down is working
             var scroll = autoScroller([
                          module.control.container.closest('.accordion-section-content')[0]
                       ],
@@ -12567,11 +12029,29 @@ $.extend( CZRSektionMths, {
                         pixels: 100,
                         scrollWhenOutside: true,
                         autoScroll: function(){
+                            //Only scroll when the pointer is down, and there is a child being dragged.
                             return module.modsDragInstance.dragging;
                         }
                       }
             );
       },
+
+
+     //fired on DOM user action
+      //=> in the future, the module to instantiate will be stored in a pre module Value(), just like the pre Item idea
+      //
+      //Fired on column instanciation => to populate the saved module collection of this column
+      //the defautAPIModuleModel looks like :
+      //id : '',//module.id,
+      // module_type : '',//module.module_type,
+      // items   : [],//$.extend( true, {}, module.items ),
+      // crud : false,
+      // multi_item : false,
+      // control : {},//control,
+      // column_id : '',
+      // sektion : {},// => the sektion instance
+      // sektion_id : '',
+      // is_added_by_user : false,
       userAddedModule : function( column_id, module_type  ) {
             var module = this,
                 syncedCollectionControl = module.control.getSyncCollectionControl(),
@@ -12594,17 +12074,31 @@ $.extend( CZRSektionMths, {
 
       reorderModulesInColumn : function( col_id ) {
             var module = this,
+            //get the updated collection from the DOM and update the column module collection
                 _new_dom_module_collection = module.czr_Column( col_id  ).getColumnModuleCollectionFromDom( col_id  );
+
+            //close the module panel id needed
+            // if ( _.has( api, 'czrModulePanelState') )
+            //   api.czrModulePanelState(false);
 
             module.czr_Column( col_id ).updateColumnModuleCollection( { collection : _new_dom_module_collection } );
       },
+
+      //@param module obj
+      //@param source col string
+      //@param target column string
       moveModuleFromTo : function( moved_module, source_column, target_column ) {
             api.consoleLog( 'ALORS CE BUG?', this(), this.czr_columnCollection() );
             var module = this,
                 _new_dom_module_collection = module.czr_Column( target_column ).getColumnModuleCollectionFromDom( source_column );
+
+            //close the module panel id needed
             if ( _.has( api, 'czrModulePanelState') )
               api.czrModulePanelState(false);
+
+            //update the target column collection with the new collection read from the DOM
             module.czr_Column( target_column ).updateColumnModuleCollection( { collection : _new_dom_module_collection } );
+            //remove module from old column module collection
             module.czr_Column( source_column ).removeModuleFromColumnCollection( moved_module );
       }
 });//extend
@@ -12615,9 +12109,20 @@ var CZRSektionMths = CZRSektionMths || {};
 $.extend( CZRSektionMths, {
       toggleModuleListPanel : function( obj ) {
             var module = this;
+            // if ( 'pending' == api.czrModulePanelEmbedded.state() ) {
+            //     $.when( module.renderModulePanel() ).done( function(){
+            //         api.consoleLog('MODULE PANEL EMBEDDED!');
+            //         api.czrModulePanelEmbedded.resolve();
+            //     });
+            // }
+
+            //close the sek setting panel if needed
             api.czrSekSettingsPanelState.set(false);
 
             api.czrModulePanelState.set( ! api.czrModulePanelState() );
+
+
+            //close all sektions but the one from which the button has been clicked
             if ( ! api.czrModulePanelState() ) {
                 module.closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
             } else {
@@ -12626,8 +12131,11 @@ $.extend( CZRSektionMths, {
                 });
             }
       },
+
+      //fired once, on first expansion
       renderModulePanel : function() {
             var module = this;
+            //do we have template script?
             if ( 0 === $( '#tmpl-czr-available-modules' ).length ) {
               throw new Error('No template found to render the module panel list' );
             }
@@ -12645,34 +12153,78 @@ $.extend( CZRSektionMths, {
       }
 });//$.extend
 })( wp.customize , jQuery, _ );
+//extends api.Value
 var CZRColumnMths = CZRColumnMths || {};
 ( function ( api, $, _ ) {
+//extends api.Value
+//a column is instanciated with the typical set of options :
+// id : '',
+// modules : [],
+// sektion : {},//sektion instance
+// module_id : '',
+// control_id : '',
+// is_added_by_user : false
 $.extend( CZRColumnMths , {
       initialize: function( name, options ) {
             var column = this;
             api.Value.prototype.initialize.call( column, null, options );
+
+            //write the options as properties, name is included
             $.extend( column, options || {} );
 
             column.isReady = $.Deferred();
             column.embedded = $.Deferred();
+
+            //stores the column collection
+            //set the initial value
             column.czr_columnModuleCollection = new api.Value();
             column.czr_columnModuleCollection.set( column.modules );
+
+            //set the column instance value
             column.set( options );
+
+            //the modules are stored only with their id in a column
             column.defautModuleModelInColumn = { id : '' };
+
+            //api.consoleLog('column.sektion.contentRendered.state()', column.sektion.contentRendered.state() );
+
+            //defer the column rendering when the parent sektion content is rendered
             column.sektion.bind( 'contentRendered', function() {
+                  //render the column
                   column.container = column.render();
                   api.consoleLog('COLUMN CONTAINER?', column.container );
+                  //say it
                   column.embedded.resolve();
             });
+
+
+
+
+
+
+
+            //when column is embedded :
+            //=> setup the DOM event handler
             column.embedded.done(function() {
+                  //at this point, the question is : are the modules assigned to this column instantiated ?
+                  //if not => let's instantiate them. => this should not change the module collection czr_moduleCollection of the module-collection control
+                  //=> because they should already be registered in it
                   column.mayBeInstantiateColumnModules();
+
+                  //react to column value changes
                   column.callbacks.add( function() { return column.columnReact.apply(column, arguments ); } );
+
+                  //react to the column module collection changes
                   column.czr_columnModuleCollection.callbacks.add( function() { return column.columnModuleCollectionReact.apply( column, arguments ); } );
+
+                  //Setup the column event listeners
                   api.CZR_Helpers.setupDOMListeners(
                           column.column_event_map,//actions to execute
                           { dom_el : column.container },//dom scope
                           column//instance where to look for the cb methods
                   );
+
+                  //dragulize
                   var syncCollectionControl = api.control(column.control_id).getSyncCollectionControl();
                   api.consoleLog('////////////////////////////////////////////////////');
                   api.consoleLog('column.container?', column.container);
@@ -12682,25 +12234,51 @@ $.extend( CZRColumnMths , {
 
             });
       },
+
+
+
+      //overridable method
+      //Fired if column is instantiated.
       ready : function() {
             var column = this;
+            //=>allows us to use the following event base method : column.isReady.done( function() {} ):
             column.isReady.resolve();
+
+            //push it to the module collection
             column.sektion.module.updateColumnCollection( {column : column() });
       },
+
+      //fired on column embedded
       mayBeInstantiateColumnModules : function() {
             var column = this,
                 syncedCollectionControl = column.sektion.control.getSyncCollectionControl();
+
+            //when the module collection is synchronized, instantiate the module of this column
+            //=>fire ready when the module column is embedded
             $.when( syncedCollectionControl.moduleCollectionReady.promise() ).then(
                   function() {
                         _.each( column.czr_columnModuleCollection() , function( _mod ) {
+                                  //is this module already instantiated ?
                                   if ( syncedCollectionControl.czr_Module.has(_mod.id) )
                                     return;
+
+                                  //first let's try to get it from the collection
+                                  //var _module_candidate = _.findWhere( syncedCollectionControl.czr_moduleCollection() , { id : _mod.id } );
                                   $.when( _.findWhere( syncedCollectionControl.czr_moduleCollection() , { id : _mod.id } ) ).done( function( module_candidate ) {
                                         if ( _.isUndefined( module_candidate) ||_.isEmpty( module_candidate ) ) {
                                           throw new Error( 'Module ' + _mod.id + ' was not found in the module collection.');
                                         }
+                                        //we have a candidate. Let's instantiate it + fire ready()
                                         syncedCollectionControl.instantiateModule( module_candidate, {} ).ready();
                                   });
+
+
+                                  //push it to the collection of the sektions control
+                                  //@todo => shall we make sure that the module has actually been instatiated by the module-collection control?
+                                  // if ( ! syncedCollectionControl.czr_Module.has( _module_candidate.id ) )
+                                  //   return;
+
+                                  //column.updateColumnModuleCollection( { module : _module_candidate });
                         } );
                   },//done callback
                   function() {},//fail callback
@@ -12709,20 +12287,39 @@ $.extend( CZRColumnMths , {
                   }
             );//.then()
       },
+
+
+
+
+      //fired on parent section 'contentRendered'
       render : function() {
             var column   = this;
             $view     = $( wp.template('czr-sektion-column')( {id: column.id}) );
             $view.appendTo( $('.czr-column-wrapper', column.sektion.container ) );
             return $view;
       },
+
+
+      //cb of column.callbacks.add()
+      //the job is this callback is to inform the parent sektion collection that something happened
+      //typically, a module has been added
       columnReact : function( to ,from ) {
             var column = this;
             this.sektion.module.updateColumnCollection( {column : to });
       }
 });//$.extend
 })( wp.customize , jQuery, _ );
+//extends api.Value
 var CZRColumnMths = CZRColumnMths || {};
 ( function ( api, $, _ ) {
+//extends api.Value
+//a column is instanciated with the typical set of options :
+// id : '',
+// modules : [],
+// sektion : {},//sektion instance
+// module_id : '',
+// control_id : '',
+// is_added_by_user : false
 $.extend( CZRColumnMths , {
       updateColumnModuleCollection : function( obj ) {
               var column = this,
@@ -12730,7 +12327,11 @@ $.extend( CZRColumnMths , {
                   _new_collection = $.extend( true, [], _current_collection );
 
               api.consoleLog('column.czr_columnModuleCollection()', column.czr_columnModuleCollection() );
+
+              //if a collection is provided in the passed obj then simply refresh the collection
+              //=> typically used when reordering the collection module with sortable or when a column is removed
               if ( _.has( obj, 'collection' ) ) {
+                    //reset the collection
                     column.czr_columnModuleCollection.set(obj.collection);
                     return;
               }
@@ -12738,19 +12339,34 @@ $.extend( CZRColumnMths , {
               if ( ! _.has(obj, 'module') ) {
                 throw new Error('updateColumnModuleCollection, no module provided in column ' + column.id + '. Aborting');
               }
+
+              //1) The module id must be a not empty string
+              //2) The module shall not exist in another column
               var module_ready_for_column_api = column.prepareModuleForColumnAPI( _.clone(obj.module) );
+
+
+              //the module already exist in the collection
               if ( _.findWhere( _new_collection, { id : module_ready_for_column_api.id } ) ) {
                     _.each( _current_collection , function( _elt, _ind ) {
                             if ( _elt.id != module_ready_for_column_api.id )
                               return;
+
+                            //set the new val to the changed property
                             _new_collection[_ind] = module_ready_for_column_api;
                     });
               }
+              //otherwise,the module has to be added
               else {
                     _new_collection.push(module_ready_for_column_api);
               }
+
+              //set the collection
               column.czr_columnModuleCollection.set( _new_collection );
       },
+
+
+      //cb of : column.czr_columnModuleCollection.callbacks.add()
+      //the job of this method is to update the column instance value with a new collection of modules
       columnModuleCollectionReact : function( to, from ) {
               var column = this,
                   _current_column_model = column(),
@@ -12760,9 +12376,14 @@ $.extend( CZRColumnMths , {
               _.each( to , function( _mod, _key ) {
                   _new_module_collection[_key] = { id : _mod.id };
               });
+
+              //say it to the column instance
               _new_column_model.modules = _new_module_collection;
               column.set( _new_column_model );
       },
+
+      //remove a module base on the id
+      //Note that the module param can include various properties (depending on where this method is called from) that won't be used in this function
       removeModuleFromColumnCollection : function( module ) {
               var column = this,
                   _current_collection = column.czr_columnModuleCollection();
@@ -12771,8 +12392,12 @@ $.extend( CZRColumnMths , {
               _new_collection = _.filter( _new_collection, function( _mod ){
                   return _mod.id != module.id;
               } );
+              //set the collection
               column.czr_columnModuleCollection.set( _new_collection );
       },
+
+
+      //column.defautModuleModelInColumn = { id : '' };
       prepareModuleForColumnAPI : function( module_candidate ) {
               if ( ! _.isObject( module_candidate ) ) {
                   throw new Error('prepareModuleForColumnAPI : a module must be an object.');
@@ -12796,6 +12421,9 @@ $.extend( CZRColumnMths , {
               });//each
               return api_ready_module;
       },
+
+
+      //@param old_col_id is the column in which the module was embedded before being move to the current one
       getColumnModuleCollectionFromDom : function( old_col_id ) {
               var column = this,
                   $_moduleWrapper = $('.czr-module-collection-wrapper', column.container ),
@@ -12805,12 +12433,16 @@ $.extend( CZRColumnMths , {
               api.consoleLog('in GET COLUMN MODULE COLLECTION FROM DOM', old_col_id, $_moduleWrapper, column.container );
 
               $('.czr-single-module', $_moduleWrapper).each( function( _index ) {
+                    //If the current module el was already there
+                    //=> push it in the new collection and loop next
                     if ( ! _.isUndefined( _.findWhere( column.czr_columnModuleCollection(), { id: $(this).attr('data-module-id') } ) ) ) {
                           _new_collection[_index] = _.findWhere( column.czr_columnModuleCollection(), { id: $(this).attr('data-module-id') } );
                           return;
                     }
 
                     var _module_obj = _.findWhere( _previous_column_collection, { id: $(this).attr('data-module-id') } );
+
+                    //do we have a match in the existing collection ?
                     if ( ! _module_obj ) {
                         throw new Error('The module  : ' + $(this).attr('data-module-id') + ' was not found in the collection of its previous column ' + old_col_id );
                     }
@@ -12838,17 +12470,25 @@ $.extend( CZRSektionMths, {
                         api.errorLog( 'In toggleSekSettingsPanel : ' + er );
                   }
             }
+            //close the module panel if needed
             api.czrModulePanelState.set( false );
 
             api.czrSekSettingsPanelState.set( ! api.czrSekSettingsPanelState() );
+
+            //close all sektions but the one from which the button has been clicked
             module.closeAllOtherSektions( $(obj.dom_event.currentTarget, obj.dom_el ) );
       },
+
+      //cb of api.czrSekSettingsPanelState.callbacks
       reactToSekSettingPanelState : function( expanded ) {
            $('body').toggleClass('czr-editing-sektion', expanded );
       },
+
+      //fired once, on first expansion
       renderSekSettingsPanel : function() {
             var module = this,
                 _tmpl = '';
+            //do we have template script?
             if ( 0 === $( '#tmpl-czr-sektion-settings-panel' ).length ) {
                   throw new Error('No template found to render the sektion setting panel' );
             }
@@ -12859,10 +12499,27 @@ $.extend( CZRSektionMths, {
                   return;
             }
             $('#widgets-left').after( $( _tmpl ) );
+
+            // _.each( api.czrModuleMap, function( _data, _mod_type ) {
+            //         var $_mod_candidate = $('<li/>', {
+            //               class : 'czr-module-candidate',
+            //               'data-module-type' : _mod_type,
+            //               html : '<h3><span class="czr-mod-drag-handler fa fa-arrows-alt"></span>' + _data.name + '</h3>'
+            //         });
+            //         $('#czr-available-modules-list').append(  $_mod_candidate );
+            // });
       }
 });//$.extend
 })( wp.customize , jQuery, _ );
 (function ( api, $, _ ) {
+//provides a description of each module
+      //=> will determine :
+      //1) how to initialize the module model. If not crud, then the initial item(s) model shall be provided
+      //2) which js template(s) to use : if crud, the module template shall include the add new and pre-item elements.
+      //   , if crud, the item shall be removable
+      //3) how to render : if multi item, the item content is rendered when user click on edit button.
+      //    If not multi item, the single item content is rendered as soon as the item wrapper is rendered.
+      //4) some DOM behaviour. For example, a multi item shall be sortable.
       api.czrModuleMap = api.czrModuleMap || {};
       $.extend( api.czrModuleMap, {
             czr_sektion_module : {
