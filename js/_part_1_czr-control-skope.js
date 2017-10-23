@@ -893,7 +893,9 @@
       //this promise will be resolved when
       //1) the initial skopes collection has been populated
       //2) the initial skope has been switched to
-      api.czr_skopeReady = $.Deferred();
+      //
+      //OR if skope is disabled
+      //note : api.czr_skopeReady has been declared earlier, in the early helpers
       api.bind( 'ready' , function() {
             if ( serverControlParams.isSkopOn ) {
                   api.czr_isLoadingSkope  = new api.Value( false );

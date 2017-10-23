@@ -5,9 +5,15 @@
 //       queue: [],
 //       stack: []
 // };
-
 //var api = api || wp.customize, $ = $ || jQuery;
 ( function ( api, $, _ ) {
+      //The api.czr_skopeReady is used by some modules like the slider to fire actions
+      //if skope is disabled, we need to resolve it now.
+      api.czr_skopeReady = $.Deferred();
+      if ( _.isUndefined( serverControlParams.isSkopOn ) || ! serverControlParams.isSkopOn ) {
+            api.czr_skopeReady.resolve();
+      }
+
       //@return [] for console method
       //@bgCol @textCol are hex colors
       //@arguments : the original console arguments
@@ -57,7 +63,7 @@
       };
 
       api.czr_isSkopOn = function() {
-            return serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
+            return ! _.isUndefined ( serverControlParams.isSkopOn ) && serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
       };
 
       api.czr_isChangeSetOn = function() {

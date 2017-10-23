@@ -49,9 +49,15 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
 //       queue: [],
 //       stack: []
 // };
-
 //var api = api || wp.customize, $ = $ || jQuery;
 ( function ( api, $, _ ) {
+      //The api.czr_skopeReady is used by some modules like the slider to fire actions
+      //if skope is disabled, we need to resolve it now.
+      api.czr_skopeReady = $.Deferred();
+      if ( _.isUndefined( serverControlParams.isSkopOn ) || ! serverControlParams.isSkopOn ) {
+            api.czr_skopeReady.resolve();
+      }
+
       //@return [] for console method
       //@bgCol @textCol are hex colors
       //@arguments : the original console arguments
@@ -101,7 +107,7 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
       };
 
       api.czr_isSkopOn = function() {
-            return serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
+            return ! _.isUndefined ( serverControlParams.isSkopOn ) && serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
       };
 
       api.czr_isChangeSetOn = function() {
@@ -6545,7 +6551,9 @@ $.extend( CZRMultiModuleControlMths, {
       //this promise will be resolved when
       //1) the initial skopes collection has been populated
       //2) the initial skope has been switched to
-      api.czr_skopeReady = $.Deferred();
+      //
+      //OR if skope is disabled
+      //note : api.czr_skopeReady has been declared earlier, in the early helpers
       api.bind( 'ready' , function() {
             if ( serverControlParams.isSkopOn ) {
                   api.czr_isLoadingSkope  = new api.Value( false );
@@ -16013,12 +16021,17 @@ $.extend( CZRSlideModuleMths, {
                               });
                   };
 
-                  //Fired on module ready and skope ready
+                  //Fired on module ready and skope ready ( even when skope is deactivated )
                   //Fired on skope switch
                   var _toggleModuleItemVisibility = function() {
                         var $preItemBtn = $('.' + module.control.css_attr.open_pre_add_btn, module.container ),
                             $preItemWrapper = $('.' + module.control.css_attr.pre_add_wrapper, module.container),
+                            _isLocal = true;
+
+                        //skope might be deactivated by the user
+                        if ( api.czr_isSkopOn() ) {
                             _isLocal = 'local' == api.czr_skope( api.czr_activeSkopeId() )().skope;
+                        }
 
                         //HIDE THE ITEM CREATION WHEN NOT LOCAL
                         $preItemBtn.toggle( _isLocal );
@@ -16026,7 +16039,7 @@ $.extend( CZRSlideModuleMths, {
                         module.itemsWrapper.toggle( _isLocal );
 
                         //DISPLAY A NOTICE WHEN NOT LOCAL
-                        if ( ! _isLocal ) {
+                        if ( ! _isLocal && api.czr_isSkopOn() ) {
                               var _localSkopeId = _.findWhere( api.czr_currentSkopesCollection(), { skope : 'local' } ).id;
                               if ( ! module.control.container.find( '.slide-mod-skope-notice').length ) {
                                     module.control.container.append( $( '<div/>', {
@@ -16153,24 +16166,27 @@ $.extend( CZRSlideModuleMths, {
                   // }
 
                   //WHEN SKOPE IS READY
+                  //=> If skope is disabled, this promise will be resolved anyway
+                  // => that's why we need to re-check that skope is on below
                   api.czr_skopeReady.then( function() {
                         //IF NOT LOCAL SKOPE
                             //Empties the items
                             //+ return the current option
 
+                            if ( api.czr_isSkopOn() ) {
+                                  //IF LOCAL
+                                  //If inheriting from a parent, then let's set the default item
+                                  //if setting is dirty in local skope, let's return the ctor options.
+                                  var _isLocal = api.czr_skope.has( api.czr_activeSkopeId() ) && 'local' ==  api.czr_skope( api.czr_activeSkopeId() )().skope;
+                                      _isLocalAndDirty = _isLocal && module._isSettingDirty();
 
-                            //IF LOCAL
-                            //If inheriting from a parent, then let's set the default item
-                            //if setting is dirty in local skope, let's return the ctor options.
-                            var _isLocal = api.czr_skope.has( api.czr_activeSkopeId() ) && 'local' ==  api.czr_skope( api.czr_activeSkopeId() )().skope;
-                                _isLocalAndDirty = _isLocal && module._isSettingDirty();
-
-                            if ( _isLocalAndDirty ) {
-                                  return dfd.resolve( constructorOptions ).promise();
-                            } else if ( ! _isLocal ) {
-                                  var _newCtorOptions = $.extend( true, {}, constructorOptions );
-                                  _newCtorOptions.items = [];
-                                  return dfd.resolve( _newCtorOptions ).promise();
+                                  if ( _isLocalAndDirty ) {
+                                        return dfd.resolve( constructorOptions ).promise();
+                                  } else if ( ! _isLocal ) {
+                                        var _newCtorOptions = $.extend( true, {}, constructorOptions );
+                                        _newCtorOptions.items = [];
+                                        return dfd.resolve( _newCtorOptions ).promise();
+                                  }
                             }
 
 
@@ -16288,7 +16304,9 @@ $.extend( CZRSlideModuleMths, {
       },
 
       _isSettingDirty : function() {
-            if ( 'pending' == api.czr_skopeReady.state() )
+            if (  ! api.czr_isSkopOn() )
+              return true;
+            if ('pending' == api.czr_skopeReady.state() )
               return false;
             var module = this,
                 _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
