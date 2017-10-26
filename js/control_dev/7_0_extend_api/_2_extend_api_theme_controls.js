@@ -27,4 +27,10 @@
             });
       }
 
+      if ( 'function' == typeof api.CodeEditorControl ) {
+            $.extend( api.controlConstructor, {
+                  czr_code_editor : api.CodeEditorControl
+            });
+      }
+
 })( wp.customize, jQuery, _ );
