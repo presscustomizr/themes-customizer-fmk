@@ -149,16 +149,20 @@
       *****************************************************************************/
       if ( serverControlParams.isPro ) {
             _.each( [
-                  'tc_font_customizer_settings',//WFC
+                  //WFC
+                  'tc_font_customizer_settings',
 
-                  'header_image_sec',//hueman pro
-                  'content_blog_sec',//hueman pro
-                  'static_front_page',//hueman pro
-                  'content_single_sec',//hueman pro
+                  //hueman pro
+                  'header_image_sec',
+                  'content_blog_sec',
+                  'static_front_page',
+                  'content_single_sec',
 
-                  'tc_fpu',//customizr-pro
-                  'nav',//customizr-pro
-                  'post_lists_sec'//customizr-pro
+                  //customizr-pro
+                  'tc_fpu',
+                  'nav',
+                  'post_lists_sec',
+                  'custom_scripts_sec'
 
             ], function( _secId ) {
                   _.delay( function() {
@@ -170,12 +174,15 @@
                   }, 1000 );
             });
             _.each( [
-                  'hu-header-panel',//hueman pro
-                  'hu-content-panel',//hueman pro
+                  //hueman pro
+                  'hu-header-panel',
+                  'hu-content-panel',
 
-                  'tc-header-panel',//customizr-pro
-                  'tc-content-panel',//customizr-pro
-                  'tc-footer-panel'//customizr-pro
+                  //customizr-pro
+                  'tc-header-panel',
+                  'tc-content-panel',
+                  'tc-footer-panel',
+                  'tc-advanced-panel'
             ], function( _secId ) {
                   api.panel.when( _secId, function( _sec_ ) {
                         if ( 1 >= _sec_.headContainer.length ) {
@@ -2011,6 +2018,12 @@ $.extend( CZRLayoutSelectMths , {
 
             $.extend( api.controlConstructor, {
                   czr_cropped_image : api.CZRCroppedImageControl
+            });
+      }
+
+      if ( 'function' == typeof api.CodeEditorControl ) {
+            $.extend( api.controlConstructor, {
+                  czr_code_editor : api.CodeEditorControl
             });
       }
 
