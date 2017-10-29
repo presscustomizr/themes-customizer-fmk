@@ -162,6 +162,8 @@
                   'tc_fpu',
                   'nav',
                   'post_lists_sec',
+                  'galleries_sec',
+                  'footer_customizer_sec',
                   'custom_scripts_sec'
 
             ], function( _secId ) {
@@ -175,14 +177,14 @@
             });
             _.each( [
                   //hueman pro
-                  'hu-header-panel',
-                  'hu-content-panel',
+                  //'hu-header-panel',
+                  //'hu-content-panel',
 
                   //customizr-pro
-                  'tc-header-panel',
-                  'tc-content-panel',
-                  'tc-footer-panel',
-                  'tc-advanced-panel'
+                  //'tc-header-panel',
+                  //'tc-content-panel',
+                  //'tc-footer-panel',
+                  //'tc-advanced-panel'
             ], function( _secId ) {
                   api.panel.when( _secId, function( _sec_ ) {
                         if ( 1 >= _sec_.headContainer.length ) {
