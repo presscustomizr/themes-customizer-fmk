@@ -1,5 +1,5 @@
 /* WP SAVE BUTTON */
-.czr-api-dirty input#save {
+/*.czr-api-dirty input#save {
     background-color: #FFBD2E;
     border-color: #d99400;
     color: black;
@@ -14,7 +14,7 @@
 }
 .czr-api-dirty input#save:hover {
     background-color: #fcad06;
-}
+}*/
 
 /* FIX CUSTOMIZE INFO OVERLAPPING SKOPE SWITCHER */
 .czr-skop-on #customize-controls .customize-info.is-in-view, #customize-controls .customize-section-title.is-in-view {

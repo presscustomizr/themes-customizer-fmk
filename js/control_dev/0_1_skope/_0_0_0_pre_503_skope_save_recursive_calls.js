@@ -122,7 +122,9 @@ $.extend( CZRSkopeSaveMths, {
                                     dfd.reject( r );
                               })
                               .done( function( r ) {
-                                    self.cleanSkopeChangesetMetas().always( function() { _submitGlobal(); } );
+                                    self.cleanSkopeChangesetMetas().always( function() {
+                                          _submitGlobal();
+                                    } );
                               });
                   } else if ( params.saveGlobal && ! params.saveSkopes ) {
                           _submitGlobal();

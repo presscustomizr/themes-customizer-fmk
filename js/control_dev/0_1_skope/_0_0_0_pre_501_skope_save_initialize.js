@@ -4,11 +4,20 @@ var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
 $.extend( CZRSkopeSaveMths, {
       initialize: function() {
             var self = this;
-            this.changesetStatus    = 'publish';
+            //<@4.9compat>
+            //can take values : draft, future, publish, trash, ''
+            this.changesetStatus    = function() {
+                  return api.state.has( 'selectedChangesetStatus' ) ? api.state( 'selectedChangesetStatus' )() : 'publish';
+            };
+            this.selectedChangesetDate = function() {
+                  return api.state.has( 'selectedChangesetDate' ) ? api.state( 'selectedChangesetDate' )() : null;
+            };
+            //</@4.9compat>
             this.saveBtn            = $( '#save' );
       },
 
-
+      // No args are passed as of WP4.9
+      // @4.9compat
       save: function( args ) {
             var self        = this,
                 processing  = api.state( 'processing' ),
@@ -25,7 +34,7 @@ $.extend( CZRSkopeSaveMths, {
             self.saveArgs           = args;
 
             if ( args && args.status ) {
-                  self.changesetStatus = args.status;
+                  self.changesetStatus = function() { return args.status; };
             }
 
             if ( api.state( 'saving' )() ) {
@@ -44,6 +53,19 @@ $.extend( CZRSkopeSaveMths, {
                                   focusInvalidControl: true
                             } );
                       }
+
+                      //<@4.9compat>
+                      // Start a new changeset if the underlying changeset was published.
+                      if ( response && 'changeset_already_published' === response.code && response.next_changeset_uuid ) {
+                        api.settings.changeset.uuid = response.next_changeset_uuid;
+                        api.state( 'changesetStatus' ).set( '' );
+                        if ( api.settings.changeset.branching ) {
+                          parent.send( 'changeset-uuid', api.settings.changeset.uuid );
+                        }
+                        api.previewer.send( 'changeset-uuid', api.settings.changeset.uuid );
+                      }
+                      //</@4.9compat>
+
                       if ( 'pending' == state ) {
                             api.czr_serverNotification( { message: response, status : 'error' } );
                       } else {
@@ -95,6 +117,13 @@ $.extend( CZRSkopeSaveMths, {
                                               if ( api.czr_isChangeSetOn() ) {
                                                     var latestRevision = api._latestRevision;
                                                     api.state( 'changesetStatus' ).set( response.changeset_status );
+
+                                                    //<@4.9compat>
+                                                    if ( response.changeset_date ) {
+                                                      api.state( 'changesetDate' ).set( response.changeset_date );
+                                                    }
+                                                    //</@4.9compat>
+
                                                     if ( 'publish' === response.changeset_status ) {
                                                           // Mark all published as clean if they haven't been modified during the request.
                                                           api.each( function( setting ) {
@@ -111,8 +140,19 @@ $.extend( CZRSkopeSaveMths, {
 
                                                           api.state( 'changesetStatus' ).set( '' );
                                                           api.settings.changeset.uuid = response.next_changeset_uuid;
-                                                          parent.send( 'changeset-uuid', api.settings.changeset.uuid );
+                                                          //<@4.9compat>
+                                                          if ( api.settings.changeset.branching ) {
+                                                            parent.send( 'changeset-uuid', api.settings.changeset.uuid );
+                                                          }
+                                                          //</@4.9compat>
+                                                          else {
+                                                            parent.send( 'changeset-uuid', api.settings.changeset.uuid );
+                                                          }
                                                     }
+                                                    //<@4.9compat>
+                                                    // Prevent subsequent requestChangesetUpdate() calls from including the settings that have been saved.
+                                                    api._lastSavedRevision = Math.max( latestRevision, api._lastSavedRevision );
+                                                    //</@4.9compat>
                                               } else {
                                                     // Clear api setting dirty states
                                                     api.each( function ( value ) {

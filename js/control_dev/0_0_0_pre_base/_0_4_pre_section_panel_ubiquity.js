@@ -95,9 +95,19 @@
                   api.czr_activeSectionId( expanded ? section_id : '' );
             };
             api.section.each( function( _sec ) {
+                  //<@4.9compat>
+                  // Bail if is 'publish_setting' section
+                  if ( 'publish_settings' == _sec.id )
+                    return;
+                  //</@4.9compat>
                   _sec.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, _sec.id ); } );
             });
             api.section.bind( 'add', function( section_instance ) {
+                  //<@4.9compat>
+                  // Bail if is 'publish_setting' section
+                  if ( 'publish_settings' == section_instance.id )
+                    return;
+                  //</@4.9compat>
                   api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
                   section_instance.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, section_instance.id ); } );
             });

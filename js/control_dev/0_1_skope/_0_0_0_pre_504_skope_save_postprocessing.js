@@ -39,7 +39,8 @@ $.extend( CZRSkopeSaveMths, {
             var _notSyncedSettings    = [],
                 _sentSkopeCollection  = skopesServerData.czr_skopes;
 
-            api.consoleLog('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
+            //api.consoleLog('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
+            console.log('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
 
             _.each( saved_dirties, function( skp_data, _saved_opt_name ) {
                   _.each( skp_data, function( _val, _setId ) {
@@ -69,6 +70,7 @@ $.extend( CZRSkopeSaveMths, {
 
             if ( ! _.isEmpty( _notSyncedSettings ) ) {
                   api.consoleLog('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', _notSyncedSettings );
+                  console.log('_notSyncedSettings', _notSyncedSettings );
             } else {
                   api.consoleLog('ALL RIGHT, SERVER AND API ARE SYNCHRONIZED AFTER SAVE' );
             }

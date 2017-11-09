@@ -6,7 +6,7 @@
       //WP Changeset is requested for an update with an ajax query in the following situation :
       //1) before unloading the window
       //2) when focus removed from window.
-      //3) on schedule : every 60 000 ms. ( api.settings.timeouts.changesetAutoSave )
+      //3) on schedule : every 60 000 ms. ( api.settings.timeouts.changesetAutoSave ) <= set to 10 000 ms on api 'ready' for skope
       //
       //
       //But the update will only takes place if the current api.dirtyValues() are not empty. That's the problem we address with this override.
@@ -43,14 +43,20 @@
 
       /**
        * Request updates to the changeset.
-       * Always calls the original method when the first promise (the skope changeset save) has been executed.
-       * Returns the $ promise with the set of data from the original method
+       * @since 4.7.0
+       * @access public
        *
-       * @param {object} [changes] Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
-       *                           If not provided, then the changes will still be obtained from unsaved dirty settings.
-       * @returns {jQuery.Promise}
+       * @param {object}  [changes] - Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
+       *                             If not provided, then the changes will still be obtained from unsaved dirty settings.
+       * @param {object}  [args] - Additional options for the save request.
+       * @param {boolean} [args.autosave=false] - Whether changes will be stored in autosave revision if the changeset has been promoted from an auto-draft.
+       * @param {boolean} [args.force=false] - Send request to update even when there are no changes to submit. This can be used to request the latest status of the changeset on the server.
+       * @param {string}  [args.title] - Title to update in the changeset. Optional.
+       * @param {string}  [args.date] - Date to update in the changeset. Optional.
+       * @returns {jQuery.Promise} Promise resolving with the response data.
        */
-      api.requestChangesetUpdate = function( changes ) {
+      //@4.9compat : added _args_
+      api.requestChangesetUpdate = function( changes, _args_ ) {
             var self = this,
                 dfd = $.Deferred(),
                 data,
@@ -130,7 +136,8 @@
                   }
 
                   //_promises.push( self.getSubmitPromise( _skopesToUpdate[ _index ] ) );
-                  api._requestSkopeChangetsetUpdate( changes, _skopesToUpdate[_index] )
+                  ////@4.9compat : added _args_ param
+                  api._requestSkopeChangetsetUpdate( changes, _skopesToUpdate[_index], _args_ )
                         .always( function() { _promises.push( _index ); } )
                         .fail( function( response ) {
                               failedPromises.push( response );
@@ -156,7 +163,8 @@
             //=> otherwise some dirties might not be taken into account in the skope.
             //=> This can happen typically for a setting dirty both in global and other skope(s)
             var _lastSavedRevisionBefore = api._lastSavedRevision;
-            _original_requestChangesetUpdate( _global_skope_changes )
+            //@4.9 compat : added _args_ param
+            _original_requestChangesetUpdate( _global_skope_changes, _args_ )
                   .fail( function( r ) {
                         api.consoleLog( 'WP requestChangesetUpdateFail', r, api.czr_skopeBase.buildServerResponse(r) );
 
@@ -207,7 +215,9 @@
 
 
       //@update the changeset meta for a given skope
-      api._requestSkopeChangetsetUpdate = function( changes, skope_id ) {
+      //Adapted copy from the original api.requestChangesetUpdate()
+      //@4.9compat : added _args_ param
+      api._requestSkopeChangetsetUpdate = function( changes, skope_id, _args_ ) {
             if ( _.isUndefined( skope_id ) || ! api.czr_skope.has( skope_id ) ) {
                   throw new Error( 'In api._requestSkopeChangetsetUpdate() : a valid and registered skope_id must be provided' );
             }
@@ -215,10 +225,28 @@
             var deferred = new $.Deferred(),
                 request,
                 submittedChanges = {},
-                data;
+                data,
+                submittedArgs;
 
             //if no skope has been provided, then let's use the active one
             skope_id = skope_id || api.czr_activeSkopeId();
+
+            //<@4.9compat>
+            // Prevent attempting changeset update while request is being made.
+            // Disabled
+            // if ( 0 !== api.state( 'processing' ).get() ) {
+            //   deferred.reject( 'already_processing' );
+            //   return deferred.promise();
+            // }
+
+            //<@4.9compat>
+            submittedArgs = _.extend( {
+              title: null,
+              date: null,
+              autosave: false,
+              force: false
+            }, args );
+            //</@4.9compat>
 
             if ( changes ) {
                   _.extend( submittedChanges, changes );
@@ -236,11 +264,24 @@
                   }
             } );
 
+
+            //<@4.9compat>
             // Short-circuit when there are no pending changes.
-            if ( _.isEmpty( submittedChanges ) ) {
+            if ( ! submittedArgs.force && _.isEmpty( submittedChanges ) && null === submittedArgs.title && null === submittedArgs.date ) {
                   deferred.resolve( {} );
                   return deferred.promise();
             }
+
+            // A status would cause a revision to be made, and for this wp.customize.previewer.save() should be used. Status is also disallowed for revisions regardless.
+            if ( submittedArgs.status ) {
+              return deferred.reject( { code: 'illegal_status_in_changeset_update' } ).promise();
+            }
+
+            // Dates not being allowed for revisions are is a technical limitation of post revisions.
+            if ( submittedArgs.date && submittedArgs.autosave ) {
+              return deferred.reject( { code: 'illegal_autosave_with_date_gmt' } ).promise();
+            }
+            //</@4.9compat>
 
             if ( api._latestRevision <= api._lastSavedRevision ) {
                   deferred.resolve( {} );

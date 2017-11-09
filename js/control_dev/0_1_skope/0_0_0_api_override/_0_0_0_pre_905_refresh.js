@@ -54,7 +54,6 @@
                   signature:  'WP_CUSTOMIZER_SIGNATURE'//will be deprecated in 4.7
             });
 
-
             previewer.settingsModifiedWhileLoading = {};
             onSettingChange = function( setting ) {
                   previewer.settingsModifiedWhileLoading[ setting.id ] = true;
@@ -124,7 +123,7 @@
 
             // Note : the location param has been removed in WP 4.7
             previewer.loading.fail( function( reason, location ) {
-                  api.consoleLog('LOADING FAILED : ' , arguments );
+                  api.consoleLog('LOADING FAILED : ' ,  reason, location, arguments );
                   previewer.send( 'loading-failed' );
                   //Before WP 4.7 !!
                   if ( ! api.czr_isChangeSetOn() ) {

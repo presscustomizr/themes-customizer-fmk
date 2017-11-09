@@ -152,6 +152,11 @@ $.extend( CZRSkopeBaseMths, {
           //=> otherwise it might be to early. For example in autofocus request cases.
           api.czr_initialSkopeCollectionPopulated.then( function() {
                 api.section.when( active_sec_id , function( active_section ) {
+                      //<@4.9compat>
+                      // Bail if is opening the publish_setting section
+                      if ( 'publish_settings' == active_sec_id )
+                        return;
+                      //</@4.9compat>
                       active_section.deferred.embedded.then( function() {
                             try { _doReactActive( active_section, active_sec_id ); } catch( er ) {
                                   api.errorLog( 'activeSectionReact => _doReactActive : ' + er );

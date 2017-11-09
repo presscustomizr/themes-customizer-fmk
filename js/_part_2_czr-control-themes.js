@@ -118,9 +118,19 @@
                   api.czr_activeSectionId( expanded ? section_id : '' );
             };
             api.section.each( function( _sec ) {
+                  //<@4.9compat>
+                  // Bail if is 'publish_setting' section
+                  if ( 'publish_settings' == _sec.id )
+                    return;
+                  //</@4.9compat>
                   _sec.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, _sec.id ); } );
             });
             api.section.bind( 'add', function( section_instance ) {
+                  //<@4.9compat>
+                  // Bail if is 'publish_setting' section
+                  if ( 'publish_settings' == section_instance.id )
+                    return;
+                  //</@4.9compat>
                   api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
                   section_instance.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, section_instance.id ); } );
             });
@@ -2612,17 +2622,13 @@ $.extend( CZRLayoutSelectMths , {
             api.czrSetupStepper = function( controlId, refresh ) {
                   //Exclude no-selecter-js
                   var _ctrl = api.control( controlId );
-                  $('input[type="number"]', _ctrl.container ).each( function() {
-                        //Exclude font customizer steppers
-                        //the font customizer plugin has its own way to instantiate the stepper, with custom attributes previously set to the input like step, min, etc...
-                        if ( 'tc_font_customizer_settings' != _ctrl.params.section ) {
-                            $(this).stepper();
-                        }
-                  });
+                  $('input[type="number"]', _ctrl.container ).each( function() { $(this).stepper(); });
             };//api.czrSetupStepper()
 
-            api.control.each(function(control){
-                  if ( ! _.has(control,'id') )
+            // LOOP ON EACH CONTROL REGISTERED AND INSTANTIATE THE PLUGINS
+            // @todo => react on control added
+            api.control.each( function( control ){
+                  if ( ! _.has( control, 'id' ) )
                     return;
                   //exclude widget controls and menu controls for checkboxes
                   if ( 'widget_' != control.id.substring(0, 'widget_'.length ) && 'nav_menu' != control.id.substring( 0, 'nav_menu'.length ) ) {
@@ -2631,7 +2637,16 @@ $.extend( CZRLayoutSelectMths , {
                   if ( 'nav_menu_locations' != control.id.substring( 0, 'nav_menu_locations'.length ) ) {
                         api.czrSetupSelect(control.id);
                   }
-                  api.czrSetupStepper(control.id);
+
+                  // Stepper : exclude controls from specific sections
+                  var _exclude = [
+                       'publish_settings', //<= the outer section introduced in v4.9 to publish / saved draft / schedule
+                       'tc_font_customizer_settings' //the font customizer plugin has its own way to instantiate the stepper, with custom attributes previously set to the input like step, min, etc...
+                  ];
+
+                  if ( 0 < control.container.find( 'input[type="number"]' ).length && control.params && control.params.section && ! _.contains( _exclude,  control.params.section ) ) {
+                        api.czrSetupStepper(control.id);
+                  }
             });
 
 

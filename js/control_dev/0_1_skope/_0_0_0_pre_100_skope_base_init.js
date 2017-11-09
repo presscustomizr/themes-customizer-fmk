@@ -201,9 +201,13 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 //LISTEN TO THE API STATES => SET SAVE BUTTON STATE
                 //=> this value is set on control and skope reset
                 //+ set by wp
-                api.state.bind( 'change', function() {
-                      self.setSaveButtonStates();
-                });
+                //
+                //<@4.9compat>
+                // => deactivated for v4.9
+                // api.state.bind( 'change', function() {
+                //       self.setSaveButtonStates();
+                // });
+                //</@4.9compat>
 
                 //EMBED THE SKOPE WRAPPER
                 //=> WAIT FOR SKOPE TO BE READY api.czr_skopeReady.state == 'resolved'

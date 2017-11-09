@@ -52,7 +52,7 @@ $.extend( CZRSkopeSaveMths, {
 
 
 
-
+      // we do the WP 'customize_save' ajax request when skope is global => 'global' == query.skope
       submit : function( params ) {
             var self = this,
                 default_params = {
@@ -65,7 +65,11 @@ $.extend( CZRSkopeSaveMths, {
                 invalidSettings = [],
                 settingInvalidities = [],
                 modifiedWhileSaving = {},
-                invalidControls,
+                invalidControls = [],
+                //<@4.9compat>
+                invalidSettingLessControls = [],
+                errorCode = 'client_side_error',
+                //</@4.9compat>
                 submit_dfd = $.Deferred();
 
 
@@ -78,12 +82,19 @@ $.extend( CZRSkopeSaveMths, {
                   throw new Error( 'OVERRIDEN SAVE::submit : MISSING the_dirties');
             }
 
+            //<@4.9compat>
+            if ( _.has( api, 'notifications') ) {
+                  api.notifications.remove( errorCode );
+            }
+
+            //</@4.9compat>
+            //
             /*
              * Block saving if there are any settings that are marked as
              * invalid from the client (not from the server). Focus on
              * the control.
              */
-            if ( _.has( api, 'Notification') ) {
+            if ( _.has( api, 'notifications') ) {
                   api.each( function( setting ) {
                         setting.notifications.each( function( notification ) {
                               if ( 'error' === notification.type ) {
@@ -98,10 +109,38 @@ $.extend( CZRSkopeSaveMths, {
                               }
                         } );
                   } );
-                  invalidControls = api.findControlsForSettings( invalidSettings );
+
+                  //<@4.9compat>
+                  // Find all invalid setting less controls with notification type error.
+                  api.control.each( function( control ) {
+                    if ( ! control.setting || ! control.setting.id && control.active.get() ) {
+                      control.notifications.each( function( notification ) {
+                          if ( 'error' === notification.type ) {
+                            invalidSettingLessControls.push( [ control ] );
+                          }
+                      } );
+                    }
+                  } );
+                  invalidControls = _.union( invalidSettingLessControls, _.values( api.findControlsForSettings( invalidSettings ) ) );
+                  // was : invalidControls = api.findControlsForSettings( invalidSettings );
+                  //</@4.9compat>
+
+
                   if ( ! _.isEmpty( invalidControls ) ) {
                         _.values( invalidControls )[0][0].focus();
                         //api.unbind( 'change', captureSettingModifiedDuringSave );
+                        //
+                        //<@4.9compat>
+                        if ( invalidSettings.length && _.has( api, 'notifications') && api.l10n.saveBlockedError ) {
+                          api.notifications.add( new api.Notification( errorCode, {
+                            message: ( 1 === invalidSettings.length ? api.l10n.saveBlockedError.singular : api.l10n.saveBlockedError.plural ).replace( /%s/g, String( invalidSettings.length ) ),
+                            type: 'error',
+                            dismissible: true,
+                            saveFailure: true
+                          } ) );
+                        }
+                        //</@4.9compat>
+
                         return submit_dfd.rejectWith( self.previewer, [
                               { setting_invalidities: settingInvalidities }
                         ] ).promise();
@@ -129,9 +168,11 @@ $.extend( CZRSkopeSaveMths, {
              * Note that excludeCustomizedSaved is intentionally false so that the entire
              * set of customized data will be included if bypassed changeset update.
              */
+
             var query = $.extend( self.previewer.query( query_params ), {
                   nonce:  self.previewer.nonce.save,
-                  customize_changeset_status: self.changesetStatus,
+                  // since 4.9 => api.state( 'selectedChangesetStatus' )() => draft || future || publish || trash || ''
+                  customize_changeset_status: self.changesetStatus(),
                   customize_changeset_data : JSON.stringify( params.customize_changeset_data )
             } );
 
@@ -140,11 +181,20 @@ $.extend( CZRSkopeSaveMths, {
                   if ( self.saveArgs && self.saveArgs.date ) {
                     query.customize_changeset_date = self.saveArgs.date;
                   }
+                  //<@4.9compat>
+                  else if ( 'future' === self.changesetStatus() && self.selectedChangesetDate() ) {
+                    query.customize_changeset_date = self.selectedChangesetDate();
+                  }
+                  //</@4.9compat>
                   if ( self.saveArgs && self.saveArgs.title ) {
                     query.customize_changeset_title = self.saveArgs.title;
                   }
             }
 
+            //<@4.9compat>
+            // Allow plugins to modify the params included with the save request.
+            api.trigger( 'save-request-params', query );
+            //</@4.9compat>
 
 
             //api.consoleLog( 'in submit : ', params.skope_id, query, self.previewer.channel() );
@@ -166,7 +216,9 @@ $.extend( CZRSkopeSaveMths, {
             );
 
             // Disable save button during the save request.
+            //<@4.9compat> => shall we keep that ?
             self.saveBtn.prop( 'disabled', true );
+            //</@4.9compat>
 
             api.trigger( 'save', request );
 
@@ -176,7 +228,27 @@ $.extend( CZRSkopeSaveMths, {
             //       api.unbind( 'change', captureSettingModifiedDuringSave );
             // } );
 
+            //<@4.9compat>
+            // Remove notifications that were added due to save failures.
+            if ( _.has( api, 'notifications') ) {
+                  api.notifications.each( function( notification ) {
+                    if ( notification.saveFailure ) {
+                      api.notifications.remove( notification.code );
+                    }
+                  });
+            }
+            //</@4.9compat>
+
             request.fail( function ( response ) {
+                  //<@4.9compat>
+                  var notification, notificationArgs;
+                  notificationArgs = {
+                    type: 'error',
+                    dismissible: true,
+                    fromServer: true,
+                    saveFailure: true
+                  };
+                  //</@4.9compat>
                   api.consoleLog('SUBMIT REQUEST FAIL', params.skope_id, response );
                   if ( '0' === response ) {
                         response = 'not_logged_in';
@@ -194,6 +266,28 @@ $.extend( CZRSkopeSaveMths, {
                               self.previewer.preview.iframe.show();
                         } );
                   }
+                  //<@4.9compat>
+                  else if ( response.code ) {
+                    if ( 'not_future_date' === response.code && api.section.has( 'publish_settings' ) && api.section( 'publish_settings' ).active.get() && api.control.has( 'changeset_scheduled_date' ) ) {
+                      api.control( 'changeset_scheduled_date' ).toggleFutureDateNotification( true ).focus();
+                    } else if ( 'changeset_locked' !== response.code ) {
+                      notification = new api.Notification( response.code, _.extend( notificationArgs, {
+                        message: response.message
+                      } ) );
+                    }
+                  } else {
+                    notification = new api.Notification( 'unknown_error', _.extend( notificationArgs, {
+                      message: api.l10n.unknownRequestFail
+                    } ) );
+                  }
+                  //</@4.9compat>
+
+                  if ( notification ) {
+                    api.notifications.add( notification );
+                  }
+
+                  //the response.setting_validities is done in alwaysAfterSubmission @see save()
+
                   api.trigger( 'error', response );
                   submit_dfd.reject( response );
             } );

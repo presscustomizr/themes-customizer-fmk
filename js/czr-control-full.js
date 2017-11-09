@@ -5911,7 +5911,7 @@ $.extend( CZRMultiModuleControlMths, {
       api.bind( 'czr-skope-started', function() {
             //OVERRIDES WP
             api.previewer.save = function( args ) {
-                  return api.czr_skopeSave.save();
+                  return api.czr_skopeSave.save( args );
             };
       });//api.bind('ready')
 })( wp.customize , jQuery, _ );
@@ -6044,7 +6044,6 @@ $.extend( CZRMultiModuleControlMths, {
                   signature:  'WP_CUSTOMIZER_SIGNATURE'//will be deprecated in 4.7
             });
 
-
             previewer.settingsModifiedWhileLoading = {};
             onSettingChange = function( setting ) {
                   previewer.settingsModifiedWhileLoading[ setting.id ] = true;
@@ -6114,7 +6113,7 @@ $.extend( CZRMultiModuleControlMths, {
 
             // Note : the location param has been removed in WP 4.7
             previewer.loading.fail( function( reason, location ) {
-                  api.consoleLog('LOADING FAILED : ' , arguments );
+                  api.consoleLog('LOADING FAILED : ' ,  reason, location, arguments );
                   previewer.send( 'loading-failed' );
                   //Before WP 4.7 !!
                   if ( ! api.czr_isChangeSetOn() ) {
@@ -6254,7 +6253,7 @@ $.extend( CZRMultiModuleControlMths, {
       //WP Changeset is requested for an update with an ajax query in the following situation :
       //1) before unloading the window
       //2) when focus removed from window.
-      //3) on schedule : every 60 000 ms. ( api.settings.timeouts.changesetAutoSave )
+      //3) on schedule : every 60 000 ms. ( api.settings.timeouts.changesetAutoSave ) <= set to 10 000 ms on api 'ready' for skope
       //
       //
       //But the update will only takes place if the current api.dirtyValues() are not empty. That's the problem we address with this override.
@@ -6291,14 +6290,20 @@ $.extend( CZRMultiModuleControlMths, {
 
       /**
        * Request updates to the changeset.
-       * Always calls the original method when the first promise (the skope changeset save) has been executed.
-       * Returns the $ promise with the set of data from the original method
+       * @since 4.7.0
+       * @access public
        *
-       * @param {object} [changes] Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
-       *                           If not provided, then the changes will still be obtained from unsaved dirty settings.
-       * @returns {jQuery.Promise}
+       * @param {object}  [changes] - Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
+       *                             If not provided, then the changes will still be obtained from unsaved dirty settings.
+       * @param {object}  [args] - Additional options for the save request.
+       * @param {boolean} [args.autosave=false] - Whether changes will be stored in autosave revision if the changeset has been promoted from an auto-draft.
+       * @param {boolean} [args.force=false] - Send request to update even when there are no changes to submit. This can be used to request the latest status of the changeset on the server.
+       * @param {string}  [args.title] - Title to update in the changeset. Optional.
+       * @param {string}  [args.date] - Date to update in the changeset. Optional.
+       * @returns {jQuery.Promise} Promise resolving with the response data.
        */
-      api.requestChangesetUpdate = function( changes ) {
+      //@4.9compat : added _args_
+      api.requestChangesetUpdate = function( changes, _args_ ) {
             var self = this,
                 dfd = $.Deferred(),
                 data,
@@ -6378,7 +6383,8 @@ $.extend( CZRMultiModuleControlMths, {
                   }
 
                   //_promises.push( self.getSubmitPromise( _skopesToUpdate[ _index ] ) );
-                  api._requestSkopeChangetsetUpdate( changes, _skopesToUpdate[_index] )
+                  ////@4.9compat : added _args_ param
+                  api._requestSkopeChangetsetUpdate( changes, _skopesToUpdate[_index], _args_ )
                         .always( function() { _promises.push( _index ); } )
                         .fail( function( response ) {
                               failedPromises.push( response );
@@ -6404,7 +6410,8 @@ $.extend( CZRMultiModuleControlMths, {
             //=> otherwise some dirties might not be taken into account in the skope.
             //=> This can happen typically for a setting dirty both in global and other skope(s)
             var _lastSavedRevisionBefore = api._lastSavedRevision;
-            _original_requestChangesetUpdate( _global_skope_changes )
+            //@4.9 compat : added _args_ param
+            _original_requestChangesetUpdate( _global_skope_changes, _args_ )
                   .fail( function( r ) {
                         api.consoleLog( 'WP requestChangesetUpdateFail', r, api.czr_skopeBase.buildServerResponse(r) );
 
@@ -6455,7 +6462,9 @@ $.extend( CZRMultiModuleControlMths, {
 
 
       //@update the changeset meta for a given skope
-      api._requestSkopeChangetsetUpdate = function( changes, skope_id ) {
+      //Adapted copy from the original api.requestChangesetUpdate()
+      //@4.9compat : added _args_ param
+      api._requestSkopeChangetsetUpdate = function( changes, skope_id, _args_ ) {
             if ( _.isUndefined( skope_id ) || ! api.czr_skope.has( skope_id ) ) {
                   throw new Error( 'In api._requestSkopeChangetsetUpdate() : a valid and registered skope_id must be provided' );
             }
@@ -6463,10 +6472,28 @@ $.extend( CZRMultiModuleControlMths, {
             var deferred = new $.Deferred(),
                 request,
                 submittedChanges = {},
-                data;
+                data,
+                submittedArgs;
 
             //if no skope has been provided, then let's use the active one
             skope_id = skope_id || api.czr_activeSkopeId();
+
+            //<@4.9compat>
+            // Prevent attempting changeset update while request is being made.
+            // Disabled
+            // if ( 0 !== api.state( 'processing' ).get() ) {
+            //   deferred.reject( 'already_processing' );
+            //   return deferred.promise();
+            // }
+
+            //<@4.9compat>
+            submittedArgs = _.extend( {
+              title: null,
+              date: null,
+              autosave: false,
+              force: false
+            }, args );
+            //</@4.9compat>
 
             if ( changes ) {
                   _.extend( submittedChanges, changes );
@@ -6484,11 +6511,24 @@ $.extend( CZRMultiModuleControlMths, {
                   }
             } );
 
+
+            //<@4.9compat>
             // Short-circuit when there are no pending changes.
-            if ( _.isEmpty( submittedChanges ) ) {
+            if ( ! submittedArgs.force && _.isEmpty( submittedChanges ) && null === submittedArgs.title && null === submittedArgs.date ) {
                   deferred.resolve( {} );
                   return deferred.promise();
             }
+
+            // A status would cause a revision to be made, and for this wp.customize.previewer.save() should be used. Status is also disallowed for revisions regardless.
+            if ( submittedArgs.status ) {
+              return deferred.reject( { code: 'illegal_status_in_changeset_update' } ).promise();
+            }
+
+            // Dates not being allowed for revisions are is a technical limitation of post revisions.
+            if ( submittedArgs.date && submittedArgs.autosave ) {
+              return deferred.reject( { code: 'illegal_autosave_with_date_gmt' } ).promise();
+            }
+            //</@4.9compat>
 
             if ( api._latestRevision <= api._lastSavedRevision ) {
                   deferred.resolve( {} );
@@ -6920,9 +6960,13 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 //LISTEN TO THE API STATES => SET SAVE BUTTON STATE
                 //=> this value is set on control and skope reset
                 //+ set by wp
-                api.state.bind( 'change', function() {
-                      self.setSaveButtonStates();
-                });
+                //
+                //<@4.9compat>
+                // => deactivated for v4.9
+                // api.state.bind( 'change', function() {
+                //       self.setSaveButtonStates();
+                // });
+                //</@4.9compat>
 
                 //EMBED THE SKOPE WRAPPER
                 //=> WAIT FOR SKOPE TO BE READY api.czr_skopeReady.state == 'resolved'
@@ -8071,6 +8115,11 @@ $.extend( CZRSkopeBaseMths, {
           //=> otherwise it might be to early. For example in autofocus request cases.
           api.czr_initialSkopeCollectionPopulated.then( function() {
                 api.section.when( active_sec_id , function( active_section ) {
+                      //<@4.9compat>
+                      // Bail if is opening the publish_setting section
+                      if ( 'publish_settings' == active_sec_id )
+                        return;
+                      //</@4.9compat>
                       active_section.deferred.embedded.then( function() {
                             try { _doReactActive( active_section, active_sec_id ); } catch( er ) {
                                   api.errorLog( 'activeSectionReact => _doReactActive : ' + er );
@@ -11137,11 +11186,20 @@ var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
 $.extend( CZRSkopeSaveMths, {
       initialize: function() {
             var self = this;
-            this.changesetStatus    = 'publish';
+            //<@4.9compat>
+            //can take values : draft, future, publish, trash, ''
+            this.changesetStatus    = function() {
+                  return api.state.has( 'selectedChangesetStatus' ) ? api.state( 'selectedChangesetStatus' )() : 'publish';
+            };
+            this.selectedChangesetDate = function() {
+                  return api.state.has( 'selectedChangesetDate' ) ? api.state( 'selectedChangesetDate' )() : null;
+            };
+            //</@4.9compat>
             this.saveBtn            = $( '#save' );
       },
 
-
+      // No args are passed as of WP4.9
+      // @4.9compat
       save: function( args ) {
             var self        = this,
                 processing  = api.state( 'processing' ),
@@ -11158,7 +11216,7 @@ $.extend( CZRSkopeSaveMths, {
             self.saveArgs           = args;
 
             if ( args && args.status ) {
-                  self.changesetStatus = args.status;
+                  self.changesetStatus = function() { return args.status; };
             }
 
             if ( api.state( 'saving' )() ) {
@@ -11177,6 +11235,19 @@ $.extend( CZRSkopeSaveMths, {
                                   focusInvalidControl: true
                             } );
                       }
+
+                      //<@4.9compat>
+                      // Start a new changeset if the underlying changeset was published.
+                      if ( response && 'changeset_already_published' === response.code && response.next_changeset_uuid ) {
+                        api.settings.changeset.uuid = response.next_changeset_uuid;
+                        api.state( 'changesetStatus' ).set( '' );
+                        if ( api.settings.changeset.branching ) {
+                          parent.send( 'changeset-uuid', api.settings.changeset.uuid );
+                        }
+                        api.previewer.send( 'changeset-uuid', api.settings.changeset.uuid );
+                      }
+                      //</@4.9compat>
+
                       if ( 'pending' == state ) {
                             api.czr_serverNotification( { message: response, status : 'error' } );
                       } else {
@@ -11228,6 +11299,13 @@ $.extend( CZRSkopeSaveMths, {
                                               if ( api.czr_isChangeSetOn() ) {
                                                     var latestRevision = api._latestRevision;
                                                     api.state( 'changesetStatus' ).set( response.changeset_status );
+
+                                                    //<@4.9compat>
+                                                    if ( response.changeset_date ) {
+                                                      api.state( 'changesetDate' ).set( response.changeset_date );
+                                                    }
+                                                    //</@4.9compat>
+
                                                     if ( 'publish' === response.changeset_status ) {
                                                           // Mark all published as clean if they haven't been modified during the request.
                                                           api.each( function( setting ) {
@@ -11244,8 +11322,19 @@ $.extend( CZRSkopeSaveMths, {
 
                                                           api.state( 'changesetStatus' ).set( '' );
                                                           api.settings.changeset.uuid = response.next_changeset_uuid;
-                                                          parent.send( 'changeset-uuid', api.settings.changeset.uuid );
+                                                          //<@4.9compat>
+                                                          if ( api.settings.changeset.branching ) {
+                                                            parent.send( 'changeset-uuid', api.settings.changeset.uuid );
+                                                          }
+                                                          //</@4.9compat>
+                                                          else {
+                                                            parent.send( 'changeset-uuid', api.settings.changeset.uuid );
+                                                          }
                                                     }
+                                                    //<@4.9compat>
+                                                    // Prevent subsequent requestChangesetUpdate() calls from including the settings that have been saved.
+                                                    api._lastSavedRevision = Math.max( latestRevision, api._lastSavedRevision );
+                                                    //</@4.9compat>
                                               } else {
                                                     // Clear api setting dirty states
                                                     api.each( function ( value ) {
@@ -11348,7 +11437,7 @@ $.extend( CZRSkopeSaveMths, {
 
 
 
-
+      // we do the WP 'customize_save' ajax request when skope is global => 'global' == query.skope
       submit : function( params ) {
             var self = this,
                 default_params = {
@@ -11361,7 +11450,11 @@ $.extend( CZRSkopeSaveMths, {
                 invalidSettings = [],
                 settingInvalidities = [],
                 modifiedWhileSaving = {},
-                invalidControls,
+                invalidControls = [],
+                //<@4.9compat>
+                invalidSettingLessControls = [],
+                errorCode = 'client_side_error',
+                //</@4.9compat>
                 submit_dfd = $.Deferred();
 
 
@@ -11374,12 +11467,19 @@ $.extend( CZRSkopeSaveMths, {
                   throw new Error( 'OVERRIDEN SAVE::submit : MISSING the_dirties');
             }
 
+            //<@4.9compat>
+            if ( _.has( api, 'notifications') ) {
+                  api.notifications.remove( errorCode );
+            }
+
+            //</@4.9compat>
+            //
             /*
              * Block saving if there are any settings that are marked as
              * invalid from the client (not from the server). Focus on
              * the control.
              */
-            if ( _.has( api, 'Notification') ) {
+            if ( _.has( api, 'notifications') ) {
                   api.each( function( setting ) {
                         setting.notifications.each( function( notification ) {
                               if ( 'error' === notification.type ) {
@@ -11394,10 +11494,38 @@ $.extend( CZRSkopeSaveMths, {
                               }
                         } );
                   } );
-                  invalidControls = api.findControlsForSettings( invalidSettings );
+
+                  //<@4.9compat>
+                  // Find all invalid setting less controls with notification type error.
+                  api.control.each( function( control ) {
+                    if ( ! control.setting || ! control.setting.id && control.active.get() ) {
+                      control.notifications.each( function( notification ) {
+                          if ( 'error' === notification.type ) {
+                            invalidSettingLessControls.push( [ control ] );
+                          }
+                      } );
+                    }
+                  } );
+                  invalidControls = _.union( invalidSettingLessControls, _.values( api.findControlsForSettings( invalidSettings ) ) );
+                  // was : invalidControls = api.findControlsForSettings( invalidSettings );
+                  //</@4.9compat>
+
+
                   if ( ! _.isEmpty( invalidControls ) ) {
                         _.values( invalidControls )[0][0].focus();
                         //api.unbind( 'change', captureSettingModifiedDuringSave );
+                        //
+                        //<@4.9compat>
+                        if ( invalidSettings.length && _.has( api, 'notifications') && api.l10n.saveBlockedError ) {
+                          api.notifications.add( new api.Notification( errorCode, {
+                            message: ( 1 === invalidSettings.length ? api.l10n.saveBlockedError.singular : api.l10n.saveBlockedError.plural ).replace( /%s/g, String( invalidSettings.length ) ),
+                            type: 'error',
+                            dismissible: true,
+                            saveFailure: true
+                          } ) );
+                        }
+                        //</@4.9compat>
+
                         return submit_dfd.rejectWith( self.previewer, [
                               { setting_invalidities: settingInvalidities }
                         ] ).promise();
@@ -11425,9 +11553,11 @@ $.extend( CZRSkopeSaveMths, {
              * Note that excludeCustomizedSaved is intentionally false so that the entire
              * set of customized data will be included if bypassed changeset update.
              */
+
             var query = $.extend( self.previewer.query( query_params ), {
                   nonce:  self.previewer.nonce.save,
-                  customize_changeset_status: self.changesetStatus,
+                  // since 4.9 => api.state( 'selectedChangesetStatus' )() => draft || future || publish || trash || ''
+                  customize_changeset_status: self.changesetStatus(),
                   customize_changeset_data : JSON.stringify( params.customize_changeset_data )
             } );
 
@@ -11436,11 +11566,20 @@ $.extend( CZRSkopeSaveMths, {
                   if ( self.saveArgs && self.saveArgs.date ) {
                     query.customize_changeset_date = self.saveArgs.date;
                   }
+                  //<@4.9compat>
+                  else if ( 'future' === self.changesetStatus() && self.selectedChangesetDate() ) {
+                    query.customize_changeset_date = self.selectedChangesetDate();
+                  }
+                  //</@4.9compat>
                   if ( self.saveArgs && self.saveArgs.title ) {
                     query.customize_changeset_title = self.saveArgs.title;
                   }
             }
 
+            //<@4.9compat>
+            // Allow plugins to modify the params included with the save request.
+            api.trigger( 'save-request-params', query );
+            //</@4.9compat>
 
 
             //api.consoleLog( 'in submit : ', params.skope_id, query, self.previewer.channel() );
@@ -11462,7 +11601,9 @@ $.extend( CZRSkopeSaveMths, {
             );
 
             // Disable save button during the save request.
+            //<@4.9compat> => shall we keep that ?
             self.saveBtn.prop( 'disabled', true );
+            //</@4.9compat>
 
             api.trigger( 'save', request );
 
@@ -11472,7 +11613,27 @@ $.extend( CZRSkopeSaveMths, {
             //       api.unbind( 'change', captureSettingModifiedDuringSave );
             // } );
 
+            //<@4.9compat>
+            // Remove notifications that were added due to save failures.
+            if ( _.has( api, 'notifications') ) {
+                  api.notifications.each( function( notification ) {
+                    if ( notification.saveFailure ) {
+                      api.notifications.remove( notification.code );
+                    }
+                  });
+            }
+            //</@4.9compat>
+
             request.fail( function ( response ) {
+                  //<@4.9compat>
+                  var notification, notificationArgs;
+                  notificationArgs = {
+                    type: 'error',
+                    dismissible: true,
+                    fromServer: true,
+                    saveFailure: true
+                  };
+                  //</@4.9compat>
                   api.consoleLog('SUBMIT REQUEST FAIL', params.skope_id, response );
                   if ( '0' === response ) {
                         response = 'not_logged_in';
@@ -11490,6 +11651,28 @@ $.extend( CZRSkopeSaveMths, {
                               self.previewer.preview.iframe.show();
                         } );
                   }
+                  //<@4.9compat>
+                  else if ( response.code ) {
+                    if ( 'not_future_date' === response.code && api.section.has( 'publish_settings' ) && api.section( 'publish_settings' ).active.get() && api.control.has( 'changeset_scheduled_date' ) ) {
+                      api.control( 'changeset_scheduled_date' ).toggleFutureDateNotification( true ).focus();
+                    } else if ( 'changeset_locked' !== response.code ) {
+                      notification = new api.Notification( response.code, _.extend( notificationArgs, {
+                        message: response.message
+                      } ) );
+                    }
+                  } else {
+                    notification = new api.Notification( 'unknown_error', _.extend( notificationArgs, {
+                      message: api.l10n.unknownRequestFail
+                    } ) );
+                  }
+                  //</@4.9compat>
+
+                  if ( notification ) {
+                    api.notifications.add( notification );
+                  }
+
+                  //the response.setting_validities is done in alwaysAfterSubmission @see save()
+
                   api.trigger( 'error', response );
                   submit_dfd.reject( response );
             } );
@@ -11627,7 +11810,9 @@ $.extend( CZRSkopeSaveMths, {
                                     dfd.reject( r );
                               })
                               .done( function( r ) {
-                                    self.cleanSkopeChangesetMetas().always( function() { _submitGlobal(); } );
+                                    self.cleanSkopeChangesetMetas().always( function() {
+                                          _submitGlobal();
+                                    } );
                               });
                   } else if ( params.saveGlobal && ! params.saveSkopes ) {
                           _submitGlobal();
@@ -11794,7 +11979,8 @@ $.extend( CZRSkopeSaveMths, {
             var _notSyncedSettings    = [],
                 _sentSkopeCollection  = skopesServerData.czr_skopes;
 
-            api.consoleLog('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
+            //api.consoleLog('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
+            console.log('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
 
             _.each( saved_dirties, function( skp_data, _saved_opt_name ) {
                   _.each( skp_data, function( _val, _setId ) {
@@ -11824,6 +12010,7 @@ $.extend( CZRSkopeSaveMths, {
 
             if ( ! _.isEmpty( _notSyncedSettings ) ) {
                   api.consoleLog('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', _notSyncedSettings );
+                  console.log('_notSyncedSettings', _notSyncedSettings );
             } else {
                   api.consoleLog('ALL RIGHT, SERVER AND API ARE SYNCHRONIZED AFTER SAVE' );
             }
@@ -13088,9 +13275,19 @@ $.extend( CZRSkopeMths, {
                   api.czr_activeSectionId( expanded ? section_id : '' );
             };
             api.section.each( function( _sec ) {
+                  //<@4.9compat>
+                  // Bail if is 'publish_setting' section
+                  if ( 'publish_settings' == _sec.id )
+                    return;
+                  //</@4.9compat>
                   _sec.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, _sec.id ); } );
             });
             api.section.bind( 'add', function( section_instance ) {
+                  //<@4.9compat>
+                  // Bail if is 'publish_setting' section
+                  if ( 'publish_settings' == section_instance.id )
+                    return;
+                  //</@4.9compat>
                   api.trigger('czr-paint', { active_panel_id : section_instance.panel() } );
                   section_instance.expanded.bind( function( expanded ) { _storeCurrentSection( expanded, section_instance.id ); } );
             });
@@ -15582,17 +15779,13 @@ $.extend( CZRLayoutSelectMths , {
             api.czrSetupStepper = function( controlId, refresh ) {
                   //Exclude no-selecter-js
                   var _ctrl = api.control( controlId );
-                  $('input[type="number"]', _ctrl.container ).each( function() {
-                        //Exclude font customizer steppers
-                        //the font customizer plugin has its own way to instantiate the stepper, with custom attributes previously set to the input like step, min, etc...
-                        if ( 'tc_font_customizer_settings' != _ctrl.params.section ) {
-                            $(this).stepper();
-                        }
-                  });
+                  $('input[type="number"]', _ctrl.container ).each( function() { $(this).stepper(); });
             };//api.czrSetupStepper()
 
-            api.control.each(function(control){
-                  if ( ! _.has(control,'id') )
+            // LOOP ON EACH CONTROL REGISTERED AND INSTANTIATE THE PLUGINS
+            // @todo => react on control added
+            api.control.each( function( control ){
+                  if ( ! _.has( control, 'id' ) )
                     return;
                   //exclude widget controls and menu controls for checkboxes
                   if ( 'widget_' != control.id.substring(0, 'widget_'.length ) && 'nav_menu' != control.id.substring( 0, 'nav_menu'.length ) ) {
@@ -15601,7 +15794,16 @@ $.extend( CZRLayoutSelectMths , {
                   if ( 'nav_menu_locations' != control.id.substring( 0, 'nav_menu_locations'.length ) ) {
                         api.czrSetupSelect(control.id);
                   }
-                  api.czrSetupStepper(control.id);
+
+                  // Stepper : exclude controls from specific sections
+                  var _exclude = [
+                       'publish_settings', //<= the outer section introduced in v4.9 to publish / saved draft / schedule
+                       'tc_font_customizer_settings' //the font customizer plugin has its own way to instantiate the stepper, with custom attributes previously set to the input like step, min, etc...
+                  ];
+
+                  if ( 0 < control.container.find( 'input[type="number"]' ).length && control.params && control.params.section && ! _.contains( _exclude,  control.params.section ) ) {
+                        api.czrSetupStepper(control.id);
+                  }
             });
 
 
