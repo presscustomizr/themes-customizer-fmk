@@ -17,7 +17,7 @@ $.extend( CZRItemMths , {
             });
 
             _.each( _changed_props, function( _prop ) {
-                  module.control.previewer.send( 'sub_setting', {
+                  api.previewer.send( 'sub_setting', {
                         set_id : module.control.id,
                         id : to.id,
                         changed_prop : _prop,

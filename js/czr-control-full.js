@@ -271,7 +271,7 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
             //
             //If the input transport is specifically set to postMessage, then we don't want to send the 'setting' event to the preview
             //=> this will prevent any partial refresh to be triggered if the input control parent is defined has a partial refresh one.
-            //=> the input will be sent to preview with module.control.previewer.send( 'czr_input', {...} )
+            //=> the input will be sent to preview with api.previewer.send( 'czr_input', {...} )
             //
             //One exception : if the input transport is set to postMessage but the setting has not been set yet in the api (from is undefined, null, or empty) , we usually need to make an initial refresh
             //=> typically, the initial refresh can be needed to set the relevant module css id selector that will be used afterwards for the postMessage input preview
@@ -279,7 +279,7 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
             //If we are in an input postMessage situation, the not_preview_sent param has been set in the czr_Input.inputReact method
             //=> 1) We bail here
             //=> 2) and we will send a custom event to the preview looking like :
-            //module.control.previewer.send( 'czr_input', {
+            //api.previewer.send( 'czr_input', {
             //       set_id        : module.control.id,
             //       module        : { items : $.extend( true, {}, module().items) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
             //       module_id     : module.id,//<= will allow us to target the right dom element on front end
@@ -2154,7 +2154,7 @@ $.extend( CZRItemMths , {
             });
 
             _.each( _changed_props, function( _prop ) {
-                  module.control.previewer.send( 'sub_setting', {
+                  api.previewer.send( 'sub_setting', {
                         set_id : module.control.id,
                         id : to.id,
                         changed_prop : _prop,
@@ -3026,7 +3026,7 @@ $.extend( CZRModuleMths, {
                 isItemUpdate    = ( _.size( from.items ) == _.size( to.items ) ) && ! _.isEmpty( _.difference( to.items, from.items ) ),
                 isColumnUpdate  = to.column_id != from.column_id,
                 refreshPreview    = function() {
-                      module.control.previewer.refresh();
+                      api.previewer.refresh();
                 };
 
             //update the collection + pass data
@@ -3180,7 +3180,7 @@ $.extend( CZRModuleMths, {
               return;
 
             //This is listened to by the preview frame
-            module.control.previewer.send( 'czr_input', {
+            api.previewer.send( 'czr_input', {
                   set_id        : api.CZR_Helpers.getControlSettingId( module.control.id ),
                   module_id     : module.id,//<= will allow us to target the right dom element on front end
                   module        : { items : $.extend( true, {}, module().items ) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
@@ -4031,7 +4031,7 @@ $.extend( CZRDynModuleMths, {
                                 //must be a dom event not triggered
                                 //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
                                 if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
-                                  module.control.previewer.refresh().done( function() {
+                                  api.previewer.refresh().done( function() {
                                         _dfd_.resolve();
                                   });
                                 } else {
@@ -5315,7 +5315,7 @@ $.extend( CZRMultiModuleControlMths, {
                               selector  : '.czr-mod-header',
                               name      : 'hovering_module',
                               actions   : function( obj ) {
-                                    module.control.previewer.send( 'start_hovering_module', {
+                                    api.previewer.send( 'start_hovering_module', {
                                           id : module.id
                                     });
                               }
@@ -5325,7 +5325,7 @@ $.extend( CZRMultiModuleControlMths, {
                               selector  : '.czr-mod-header',
                               name      : 'hovering_module',
                               actions   : function( obj ) {
-                                  module.control.previewer.send( 'stop_hovering_module', {
+                                  api.previewer.send( 'stop_hovering_module', {
                                         id : module.id
                                   });
                               }
@@ -5375,7 +5375,7 @@ $.extend( CZRMultiModuleControlMths, {
             //fired on click
             sendEditModule : function( obj ) {
                   var module = this;
-                  module.control.previewer.send( 'edit_module', {
+                  api.previewer.send( 'edit_module', {
                         id : module.id
                   });
             },
@@ -11408,7 +11408,14 @@ $.extend( CZRSkopeSaveMths, {
 
             //////////////////////////////////SUBMIT THE ELIGIBLE SETTINGS OF EACH SKOPE ////////////////////////////
             //Ensure all revised settings (changes pending save) are also included, but not if marked for deletion in changes.
-            _.each( api.czr_skopeBase.getSkopeDirties( skope_id ) , function( dirtyValue, settingId ) {
+
+            // _.each( api.czr_skopeBase.getSkopeDirties( skope_id ) , function( dirtyValue, settingId ) {
+            //       submittedChanges[ settingId ] = _.extend(
+            //             { value: dirtyValue }
+            //       );
+            // } );
+
+            _.each( api.czr_skope( skope_id ).dirtyValues(), function( dirtyValue, settingId ) {
                   submittedChanges[ settingId ] = _.extend(
                         { value: dirtyValue }
                   );
@@ -11595,6 +11602,7 @@ $.extend( CZRSkopeSaveMths, {
              * will get re-validated, perhaps in the case of settings that are invalid
              * due to dependencies on other settings.
              */
+
             var request = wp.ajax.post(
                   'global' !== query.skope ? 'customize_skope_changeset_save' : 'customize_save',
                   query
@@ -11698,7 +11706,7 @@ $.extend( CZRSkopeSaveMths, {
       //@param params : { saveGlobal : true, saveSkopes : true }
       fireAllSubmission : function( params ) {
             var self = this,
-                dfd = $.Deferred(),
+                __main_deferred__ = $.Deferred(),
                 skopesToSave = [],
                 _recursiveCallDeferred = $.Deferred(),
                 _responses_ = {},
@@ -11785,7 +11793,7 @@ $.extend( CZRSkopeSaveMths, {
                         .fail( function( r ) {
                               api.consoleLog('GLOBAL SAVE SUBMIT FAIL', r );
                               r = api.czr_skopeBase.buildServerResponse( r );
-                              dfd.reject( r );
+                              __main_deferred__.reject( r );
                         })
                         .done( function( r ) {
                               //WE NEED TO BUILD A PROPER RESPONSE HERE
@@ -11794,7 +11802,7 @@ $.extend( CZRSkopeSaveMths, {
                               } else {
                                     _responses_ = $.extend( _responses_ , r );
                               }
-                              dfd.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
+                              __main_deferred__.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
                         });
             };
 
@@ -11807,7 +11815,7 @@ $.extend( CZRSkopeSaveMths, {
                         recursiveCall()
                               .fail( function( r ) {
                                     api.consoleLog('RECURSIVE SAVE CALL FAIL', r );
-                                    dfd.reject( r );
+                                    __main_deferred__.reject( r );
                               })
                               .done( function( r ) {
                                     self.cleanSkopeChangesetMetas().always( function() {
@@ -11820,7 +11828,7 @@ $.extend( CZRSkopeSaveMths, {
                           recursiveCall()
                               .fail( function( r ) {
                                     api.consoleLog('RECURSIVE SAVE CALL FAIL', r );
-                                    dfd.reject( r );
+                                    __main_deferred__.reject( r );
                               })
                               .done( function( r ) {
                                    //WE NEED TO BUILD A PROPER RESPONSE HERE
@@ -11829,14 +11837,18 @@ $.extend( CZRSkopeSaveMths, {
                                     } else {
                                           _responses_ = $.extend( _responses_ , r );
                                     }
+
+                                    // When publishing,
+                                    // let's send a request to the server to clean the temporary post metas used by $wp_customize->changeset_post_id(); during the draft changeset session
                                     self.cleanSkopeChangesetMetas().always( function() {
-                                          dfd.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
+                                          __main_deferred__.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
                                     });
+
                               });
                   }
             }//else
 
-            return dfd.promise();
+            return __main_deferred__.promise();
       },//fireAllSubmissions
 
 
@@ -11844,10 +11856,17 @@ $.extend( CZRSkopeSaveMths, {
       cleanSkopeChangesetMetas : function() {
             var self = this,
                 dfd = $.Deferred();
-                _query = $.extend(
-                      api.previewer.query(),
-                      { nonce:  api.previewer.nonce.save }
-                );
+            //<@4.9compat>
+            // => we only want to clean the temporary post metas when the changesetStatus is 'publish'.
+            // Not for a saved 'draft' or a scheduled 'future'.
+            if ( 'publish' != self.changesetStatus() ) {
+                  return dfd.resolve().promise();
+            }
+            //</@4.9compat>
+            var _query = $.extend(
+                  api.previewer.query(),
+                  { nonce:  api.previewer.nonce.save }
+            );
             wp.ajax.post( 'czr_clean_skope_changeset_metas_after_publish' , _query )
                   .always( function () { dfd.resolve(); })
                   .fail( function ( response ) { api.consoleLog( 'cleanSkopeChangesetMetas failed', _query, response ); })
@@ -17762,7 +17781,7 @@ $.extend( CZRSektionMths, {
                                       selector  : '.czr-item-header',
                                       name      : 'hovering_sek',
                                       actions   : function( obj ) {
-                                            sekItem.module.control.previewer.send( 'start_hovering_sek', {
+                                            api.previewer.send( 'start_hovering_sek', {
                                                   id : sekItem.id
                                             });
                                       }
@@ -17772,7 +17791,7 @@ $.extend( CZRSektionMths, {
                                       selector  : '.czr-item-header',
                                       name      : 'hovering_sek',
                                       actions   : function( obj ) {
-                                            sekItem.module.control.previewer.send( 'stop_hovering_sek', {
+                                            api.previewer.send( 'stop_hovering_sek', {
                                                   id : sekItem.id
                                             });
                                       }
@@ -17782,7 +17801,7 @@ $.extend( CZRSektionMths, {
                                       selector  : [ '.' + sekItem.module.control.css_attr.edit_view_btn, '.' + sekItem.module.control.css_attr.item_title ].join(','),
                                       name      : 'send_edit_view',
                                       actions   : function( obj ) {
-                                            sekItem.module.control.previewer.send( 'edit_sek', {
+                                            api.previewer.send( 'edit_sek', {
                                                   id : sekItem.id
                                             });
                                       },
@@ -18186,7 +18205,7 @@ $.extend( CZRSektionMths, {
             //module update case
             // if ( 'postMessage' == api(control.id).transport && ! api.CZR_Helpers.hasPartRefresh( control.id ) ) {
             //     if ( is_collection_sorted )
-            //         control.previewer.refresh();
+            //         api.previewer.refresh();
             // }
       },
 

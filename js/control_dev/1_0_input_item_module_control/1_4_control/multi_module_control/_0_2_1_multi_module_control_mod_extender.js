@@ -178,7 +178,7 @@ $.extend( CZRMultiModuleControlMths, {
                               selector  : '.czr-mod-header',
                               name      : 'hovering_module',
                               actions   : function( obj ) {
-                                    module.control.previewer.send( 'start_hovering_module', {
+                                    api.previewer.send( 'start_hovering_module', {
                                           id : module.id
                                     });
                               }
@@ -188,7 +188,7 @@ $.extend( CZRMultiModuleControlMths, {
                               selector  : '.czr-mod-header',
                               name      : 'hovering_module',
                               actions   : function( obj ) {
-                                  module.control.previewer.send( 'stop_hovering_module', {
+                                  api.previewer.send( 'stop_hovering_module', {
                                         id : module.id
                                   });
                               }
@@ -238,7 +238,7 @@ $.extend( CZRMultiModuleControlMths, {
             //fired on click
             sendEditModule : function( obj ) {
                   var module = this;
-                  module.control.previewer.send( 'edit_module', {
+                  api.previewer.send( 'edit_module', {
                         id : module.id
                   });
             },

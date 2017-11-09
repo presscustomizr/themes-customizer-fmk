@@ -45,7 +45,7 @@
             //
             //If the input transport is specifically set to postMessage, then we don't want to send the 'setting' event to the preview
             //=> this will prevent any partial refresh to be triggered if the input control parent is defined has a partial refresh one.
-            //=> the input will be sent to preview with module.control.previewer.send( 'czr_input', {...} )
+            //=> the input will be sent to preview with api.previewer.send( 'czr_input', {...} )
             //
             //One exception : if the input transport is set to postMessage but the setting has not been set yet in the api (from is undefined, null, or empty) , we usually need to make an initial refresh
             //=> typically, the initial refresh can be needed to set the relevant module css id selector that will be used afterwards for the postMessage input preview
@@ -53,7 +53,7 @@
             //If we are in an input postMessage situation, the not_preview_sent param has been set in the czr_Input.inputReact method
             //=> 1) We bail here
             //=> 2) and we will send a custom event to the preview looking like :
-            //module.control.previewer.send( 'czr_input', {
+            //api.previewer.send( 'czr_input', {
             //       set_id        : module.control.id,
             //       module        : { items : $.extend( true, {}, module().items) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },
             //       module_id     : module.id,//<= will allow us to target the right dom element on front end

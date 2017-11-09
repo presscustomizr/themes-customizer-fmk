@@ -228,7 +228,7 @@ $.extend( CZRModuleMths, {
                 isItemUpdate    = ( _.size( from.items ) == _.size( to.items ) ) && ! _.isEmpty( _.difference( to.items, from.items ) ),
                 isColumnUpdate  = to.column_id != from.column_id,
                 refreshPreview    = function() {
-                      module.control.previewer.refresh();
+                      api.previewer.refresh();
                 };
 
             //update the collection + pass data
@@ -382,7 +382,7 @@ $.extend( CZRModuleMths, {
               return;
 
             //This is listened to by the preview frame
-            module.control.previewer.send( 'czr_input', {
+            api.previewer.send( 'czr_input', {
                   set_id        : api.CZR_Helpers.getControlSettingId( module.control.id ),
                   module_id     : module.id,//<= will allow us to target the right dom element on front end
                   module        : { items : $.extend( true, {}, module().items ) , modOpt : module.hasModOpt() ?  $.extend( true, {}, module().modOpt ): {} },

@@ -30,7 +30,7 @@ $.extend( CZRSektionMths, {
                                       selector  : '.czr-item-header',
                                       name      : 'hovering_sek',
                                       actions   : function( obj ) {
-                                            sekItem.module.control.previewer.send( 'start_hovering_sek', {
+                                            api.previewer.send( 'start_hovering_sek', {
                                                   id : sekItem.id
                                             });
                                       }
@@ -40,7 +40,7 @@ $.extend( CZRSektionMths, {
                                       selector  : '.czr-item-header',
                                       name      : 'hovering_sek',
                                       actions   : function( obj ) {
-                                            sekItem.module.control.previewer.send( 'stop_hovering_sek', {
+                                            api.previewer.send( 'stop_hovering_sek', {
                                                   id : sekItem.id
                                             });
                                       }
@@ -50,7 +50,7 @@ $.extend( CZRSektionMths, {
                                       selector  : [ '.' + sekItem.module.control.css_attr.edit_view_btn, '.' + sekItem.module.control.css_attr.item_title ].join(','),
                                       name      : 'send_edit_view',
                                       actions   : function( obj ) {
-                                            sekItem.module.control.previewer.send( 'edit_sek', {
+                                            api.previewer.send( 'edit_sek', {
                                                   id : sekItem.id
                                             });
                                       },

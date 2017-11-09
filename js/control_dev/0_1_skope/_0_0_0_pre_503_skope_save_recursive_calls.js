@@ -10,7 +10,7 @@ $.extend( CZRSkopeSaveMths, {
       //@param params : { saveGlobal : true, saveSkopes : true }
       fireAllSubmission : function( params ) {
             var self = this,
-                dfd = $.Deferred(),
+                __main_deferred__ = $.Deferred(),
                 skopesToSave = [],
                 _recursiveCallDeferred = $.Deferred(),
                 _responses_ = {},
@@ -97,7 +97,7 @@ $.extend( CZRSkopeSaveMths, {
                         .fail( function( r ) {
                               api.consoleLog('GLOBAL SAVE SUBMIT FAIL', r );
                               r = api.czr_skopeBase.buildServerResponse( r );
-                              dfd.reject( r );
+                              __main_deferred__.reject( r );
                         })
                         .done( function( r ) {
                               //WE NEED TO BUILD A PROPER RESPONSE HERE
@@ -106,7 +106,7 @@ $.extend( CZRSkopeSaveMths, {
                               } else {
                                     _responses_ = $.extend( _responses_ , r );
                               }
-                              dfd.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
+                              __main_deferred__.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
                         });
             };
 
@@ -119,7 +119,7 @@ $.extend( CZRSkopeSaveMths, {
                         recursiveCall()
                               .fail( function( r ) {
                                     api.consoleLog('RECURSIVE SAVE CALL FAIL', r );
-                                    dfd.reject( r );
+                                    __main_deferred__.reject( r );
                               })
                               .done( function( r ) {
                                     self.cleanSkopeChangesetMetas().always( function() {
@@ -132,7 +132,7 @@ $.extend( CZRSkopeSaveMths, {
                           recursiveCall()
                               .fail( function( r ) {
                                     api.consoleLog('RECURSIVE SAVE CALL FAIL', r );
-                                    dfd.reject( r );
+                                    __main_deferred__.reject( r );
                               })
                               .done( function( r ) {
                                    //WE NEED TO BUILD A PROPER RESPONSE HERE
@@ -141,14 +141,18 @@ $.extend( CZRSkopeSaveMths, {
                                     } else {
                                           _responses_ = $.extend( _responses_ , r );
                                     }
+
+                                    // When publishing,
+                                    // let's send a request to the server to clean the temporary post metas used by $wp_customize->changeset_post_id(); during the draft changeset session
                                     self.cleanSkopeChangesetMetas().always( function() {
-                                          dfd.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
+                                          __main_deferred__.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
                                     });
+
                               });
                   }
             }//else
 
-            return dfd.promise();
+            return __main_deferred__.promise();
       },//fireAllSubmissions
 
 
@@ -156,10 +160,17 @@ $.extend( CZRSkopeSaveMths, {
       cleanSkopeChangesetMetas : function() {
             var self = this,
                 dfd = $.Deferred();
-                _query = $.extend(
-                      api.previewer.query(),
-                      { nonce:  api.previewer.nonce.save }
-                );
+            //<@4.9compat>
+            // => we only want to clean the temporary post metas when the changesetStatus is 'publish'.
+            // Not for a saved 'draft' or a scheduled 'future'.
+            if ( 'publish' != self.changesetStatus() ) {
+                  return dfd.resolve().promise();
+            }
+            //</@4.9compat>
+            var _query = $.extend(
+                  api.previewer.query(),
+                  { nonce:  api.previewer.nonce.save }
+            );
             wp.ajax.post( 'czr_clean_skope_changeset_metas_after_publish' , _query )
                   .always( function () { dfd.resolve(); })
                   .fail( function ( response ) { api.consoleLog( 'cleanSkopeChangesetMetas failed', _query, response ); })

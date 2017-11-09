@@ -147,7 +147,7 @@ $.extend( CZRDynModuleMths, {
                                 //must be a dom event not triggered
                                 //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
                                 if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
-                                  module.control.previewer.refresh().done( function() {
+                                  api.previewer.refresh().done( function() {
                                         _dfd_.resolve();
                                   });
                                 } else {

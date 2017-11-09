@@ -281,7 +281,7 @@ $.extend( CZRSektionMths, {
             //module update case
             // if ( 'postMessage' == api(control.id).transport && ! api.CZR_Helpers.hasPartRefresh( control.id ) ) {
             //     if ( is_collection_sorted )
-            //         control.previewer.refresh();
+            //         api.previewer.refresh();
             // }
       },
 

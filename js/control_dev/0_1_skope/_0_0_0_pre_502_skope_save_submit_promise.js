@@ -23,7 +23,14 @@ $.extend( CZRSkopeSaveMths, {
 
             //////////////////////////////////SUBMIT THE ELIGIBLE SETTINGS OF EACH SKOPE ////////////////////////////
             //Ensure all revised settings (changes pending save) are also included, but not if marked for deletion in changes.
-            _.each( api.czr_skopeBase.getSkopeDirties( skope_id ) , function( dirtyValue, settingId ) {
+
+            // _.each( api.czr_skopeBase.getSkopeDirties( skope_id ) , function( dirtyValue, settingId ) {
+            //       submittedChanges[ settingId ] = _.extend(
+            //             { value: dirtyValue }
+            //       );
+            // } );
+
+            _.each( api.czr_skope( skope_id ).dirtyValues(), function( dirtyValue, settingId ) {
                   submittedChanges[ settingId ] = _.extend(
                         { value: dirtyValue }
                   );
@@ -210,6 +217,7 @@ $.extend( CZRSkopeSaveMths, {
              * will get re-validated, perhaps in the case of settings that are invalid
              * due to dependencies on other settings.
              */
+
             var request = wp.ajax.post(
                   'global' !== query.skope ? 'customize_skope_changeset_save' : 'customize_save',
                   query
