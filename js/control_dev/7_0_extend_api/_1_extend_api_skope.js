@@ -6,7 +6,7 @@
       $.extend( CZRSkopeMths, api.Events );
       $.extend( CZRSkopeMths, api.CZR_Helpers );
       api.CZR_skopeBase             = api.Class.extend( CZRSkopeBaseMths );
-      api.CZR_skopeSave             = api.Class.extend( CZRSkopeSaveMths );
+      //api.CZR_skopeSave             = api.Class.extend( CZRSkopeSaveMths );
       api.CZR_skopeReset            = api.Class.extend( CZRSkopeResetMths );
       api.CZR_skope                 = api.Value.extend( CZRSkopeMths ); //=> used as constructor when creating the collection of skopes
 

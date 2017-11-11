@@ -27,27 +27,81 @@ $.extend( CZRSkopeBaseMths, {
           //Switch to global skope for not skoped panels
           var _switchBack = function( _title ) {
                 api.czr_activeSkopeId( self.getGlobalSkopeId() );
-                api.czr_serverNotification({
-                      status:'success',
-                      message : [ _title , 'can only be customized sitewide.' ].join(' ')
-                });
+                //<@4.9compat>
+                if ( ! _.isUndefined( api.notifications ) ) {
+                      api.notifications.add( new wp.customize.Notification( _title, {
+                            type: 'info',
+                            message: [ _title , 'is always customized sitewide.' ].join(' '),
+                            dismissible: true
+                      } ) );
+
+                      // Removed if not dismissed after 5 seconds
+                      _.delay( function() {
+                            if ( api.notifications.has( _title ) ) {
+                                  var _notif_ = api.notifications( _title );
+                                  if ( _notif_.parent ) {
+                                        _notif_.parent.remove( _notif_.code );
+                                  } else {
+                                        _notif_.container.remove();
+                                  }
+                            }
+                      }, 5000 );
+                }
+                //</@4.9compat>
+                else {
+                      api.czr_serverNotification({
+                            status:'success',
+                            message : [ _title , 'is always customized sitewide.' ].join(' ')
+                      });
+                }
                 return dfd.resolve().promise();
           };
+
+
           if ( self.isExcludedSidebarsWidgets() && 'widgets' == api.czr_activePanelId() && to != self.getGlobalSkopeId() ) {
-                api.czr_serverNotification({
-                      status:'success',
-                      message : [
-                            serverControlParams.i18n.skope['Widgets are created sitewide.']
-                      ].join(' ')
-                });
+                //<@4.9compat>
+                if ( ! _.isUndefined( api.notifications ) ) {
+                      api.notifications.add( new wp.customize.Notification( 'widgets_are_sidewide', {
+                            type: 'info',
+                            message: serverControlParams.i18n.skope['Widgets are created sitewide.'],
+                            dismissible: true
+                      } ) );
+
+                      // Removed if not dismissed after 5 seconds
+                      _.delay( function() {
+                            if ( api.notifications.has( 'widgets_are_sidewide' ) ) {
+                                  var _notif_ = api.notifications( 'widgets_are_sidewide' );
+                                  if ( _notif_.parent ) {
+                                        _notif_.parent.remove( _notif_.code );
+                                  } else {
+                                        _notif_.container.remove();
+                                  }
+                            }
+                      }, 5000 );
+                }
+                //</@4.9compat>
+                else {
+                      api.czr_serverNotification({
+                            status:'success',
+                            message : [
+                                  serverControlParams.i18n.skope['Widgets are created sitewide.']
+                            ].join(' ')
+                      });
+                }
+
                 //return dfd.resolve().promise();// _switchBack( api.panel( api.czr_activePanelId() ).params.title );
           }
+
           if ( self.isExcludedWPCustomCss() && 'custom_css' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
                 return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
           }
           if ( 'admin_sec' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
                 return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
           }
+          if ( 'tc_font_customizer_settings' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
+                return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
+          }
+
           if ( ( 'nav_menu' == api.czr_activeSectionId().substring( 0, 'nav_menu'.length ) || 'add_menu' == api.czr_activeSectionId() ) && to != self.getGlobalSkopeId() )  {
                 api.czr_serverNotification({
                       status:'success',

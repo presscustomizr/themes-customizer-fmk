@@ -48,11 +48,11 @@
        *
        * @param {object}  [changes] - Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
        *                             If not provided, then the changes will still be obtained from unsaved dirty settings.
-       * @param {object}  [args] - Additional options for the save request.
-       * @param {boolean} [args.autosave=false] - Whether changes will be stored in autosave revision if the changeset has been promoted from an auto-draft.
-       * @param {boolean} [args.force=false] - Send request to update even when there are no changes to submit. This can be used to request the latest status of the changeset on the server.
-       * @param {string}  [args.title] - Title to update in the changeset. Optional.
-       * @param {string}  [args.date] - Date to update in the changeset. Optional.
+       * @param {object}  [_args_] - Additional options for the save request.
+       * @param {boolean} [_args_.autosave=false] - Whether changes will be stored in autosave revision if the changeset has been promoted from an auto-draft.
+       * @param {boolean} [_args_.force=false] - Send request to update even when there are no changes to submit. This can be used to request the latest status of the changeset on the server.
+       * @param {string}  [_args_.title] - Title to update in the changeset. Optional.
+       * @param {string}  [_args_.date] - Date to update in the changeset. Optional.
        * @returns {jQuery.Promise} Promise resolving with the response data.
        */
       //@4.9compat : added _args_
@@ -71,7 +71,9 @@
                 //         dfd.resolve( data );
                 //     });
                 // };
-
+            //<@4.9compat>
+            _args_ = _args_ || {};
+            //</@4.9compat>
             //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
             //=> that's why we check it here again before doing anything else
             if ( ! serverControlParams.isSkopOn ) {
@@ -176,7 +178,34 @@
 
                         dfd.reject( r );
                         r = api.czr_skopeBase.buildServerResponse(r);
-                        api.czr_serverNotification( { message: r, status : 'error' } );
+
+                        //<@4.9compat>
+                        if ( ! _.isUndefined( api.notifications ) ) {
+                              api.notifications.add( new wp.customize.Notification( 'changeset_update_failed', {
+                                    type: 'error',
+                                    message: r,
+                                    dismissible: true
+                              } ) );
+
+                              // Removed if not dismissed after 5 seconds
+                              _.delay( function() {
+                                    if ( api.notifications.has( 'changeset_update_failed' ) ) {
+                                          var _notif_ = api.notifications( 'changeset_update_failed' );
+                                          if ( _notif_.parent ) {
+                                                _notif_.parent.remove( _notif_.code );
+                                          } else {
+                                                _notif_.container.remove();
+                                          }
+                                    }
+                              }, 5000 );
+                        }
+                        //</@4.9compat>
+                        else {
+                              api.czr_serverNotification({
+                                    status:'error',
+                                    message : r
+                              });
+                      }
                   })
                   .done( function( wp_original_response ) {
                         // $.when.apply( null, _promises ).then( function() {
@@ -245,7 +274,7 @@
               date: null,
               autosave: false,
               force: false
-            }, args );
+            }, _args_ );
             //</@4.9compat>
 
             if ( changes ) {
@@ -264,6 +293,11 @@
                   }
             } );
 
+            //  _.each( api.czr_skope( skope_id ).dirtyValues(), function( dirtyValue, settingId ) {
+            //       submittedChanges[ settingId ] = _.extend(
+            //             { value: dirtyValue }
+            //       );
+            // } );
 
             //<@4.9compat>
             // Short-circuit when there are no pending changes.
@@ -327,9 +361,10 @@
                         //api.trigger( 'changeset-error', _data_ );
                   } )
                   .always( function( _data_ ) {
-                        if ( _data_.setting_validities ) {
+                        if ( ! _.isUndefined( _data_ ) && _data_.setting_validities ) {
                               api._handleSettingValidities( {
-                                    settingValidities: _data_.setting_validities
+                                    settingValidities: _data_.setting_validities,
+                                    focusInvalidControl: true
                               } );
                         }
                   } );

@@ -16,7 +16,7 @@
                         toggleSkopeLoadPane( loading );
                   });
                   api.czr_skopeBase   = new api.CZR_skopeBase();
-                  api.czr_skopeSave   = new api.CZR_skopeSave();
+                  //api.czr_skopeSave   = new api.CZR_skopeSave();
                   api.czr_skopeReset  = new api.CZR_skopeReset();
 
                   api.trigger('czr-skope-started');

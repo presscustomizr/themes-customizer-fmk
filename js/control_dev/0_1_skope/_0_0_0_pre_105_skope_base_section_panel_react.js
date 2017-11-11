@@ -115,29 +115,73 @@ $.extend( CZRSkopeBaseMths, {
                     //Switch to global skope for not skoped sections
                     api.czr_skopeReady.then( function() {
                           var _switchBack = function( _title ) {
-                                api.czr_serverNotification({
-                                      status:'success',
-                                      message : [ _title, serverControlParams.i18n.skope['can only be customized sitewide.'] ].join(' ')
-                                });
+                                //<@4.9compat>
+                                if ( ! _.isUndefined( api.notifications ) ) {
+                                      api.notifications.add( new wp.customize.Notification( _title, {
+                                            type: 'info',
+                                            message: [ _title, serverControlParams.i18n.skope['is always customized sitewide.'] ].join(' '),
+                                            dismissible: true
+                                      } ) );
+
+                                      // Removed if not dismissed after 5 seconds
+                                      _.delay( function() {
+                                            if ( api.notifications.has( _title ) ) {
+                                                  var _notif_ = api.notifications( _title );
+                                                  if ( _notif_.parent ) {
+                                                        _notif_.parent.remove( _notif_.code );
+                                                  } else {
+                                                        _notif_.container.remove();
+                                                  }
+                                            }
+                                      }, 5000 );
+                                }
+                                //</@4.9compat>
+                                else {
+                                      api.czr_serverNotification({
+                                            status:'success',
+                                            message : [ _title, serverControlParams.i18n.skope['is always customized sitewide.'] ].join(' ')
+                                      });
+                                }
+
                                 api.czr_activeSkopeId( self.getGlobalSkopeId() );
                           };
                           //Switch to global skope for not skoped sections
                           if ( 'global' != api.czr_skope( api.czr_activeSkopeId() )().skope ) {
-                                if (
-                                  self.isExcludedWPCustomCss() &&
-                                  ( 'custom_css' == active_sec_id || 'admin_sec' == active_sec_id )
-                                ) {
+                                if ( self.isExcludedWPCustomCss() && 'custom_css' == active_sec_id ) {
+                                      _switchBack( api.section( active_sec_id ).params.title );
+                                }
+                                if ( _.contains( ['admin_sec', 'tc_font_customizer_settings' ], active_sec_id ) ) {
                                       _switchBack( api.section( active_sec_id ).params.title );
                                 }
 
                                 if ( 'nav_menu[' == active_sec_id.substring( 0, 'nav_menu['.length ) || 'add_menu' == active_sec_id ) {
-                                      api.czr_serverNotification({
-                                            status:'success',
-                                            message : [
-                                                  serverControlParams.i18n.skope['Menus are created sitewide.']
-                                            ].join(' ')
-                                      });
-                                      //_switchBack( api.section( active_sec_id ).params.title );
+                                      //<@4.9compat>
+                                      if ( ! _.isUndefined( api.notifications ) ) {
+                                            api.notifications.add( new wp.customize.Notification( 'nav_menus_sitewide', {
+                                                  type: 'info',
+                                                  message: serverControlParams.i18n.skope['Menus are created sitewide.'],
+                                                  dismissible: true
+                                            } ) );
+
+                                            // Removed if not dismissed after 5 seconds
+                                            _.delay( function() {
+                                                  if ( api.notifications.has( 'nav_menus_sitewide' ) ) {
+                                                        var _notif_ = api.notifications( 'nav_menus_sitewide' );
+                                                        if ( _notif_.parent ) {
+                                                              _notif_.parent.remove( _notif_.code );
+                                                        } else {
+                                                              _notif_.container.remove();
+                                                        }
+                                                  }
+                                            }, 5000 );
+                                      }
+                                      //</@4.9compat>
+                                      else {
+                                            api.czr_serverNotification({
+                                                  status:'success',
+                                                  message : serverControlParams.i18n.skope['Menus are created sitewide.']
+                                            });
+                                      }
                                 }
                           }
                     });
@@ -180,10 +224,34 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_initialSkopeCollectionPopulated.then( function() {
                 api.trigger('czr-paint', { active_panel_id : active_panel_id } );
                 var _switchBack = function( _title ) {
-                      api.czr_serverNotification({
-                            status:'success',
-                            message : [ _title, serverControlParams.i18n.skope['can only be customized sitewide.'] ].join(' ')
-                      });
+                      //<@4.9compat>
+                      if ( ! _.isUndefined( api.notifications ) ) {
+                            api.notifications.add( new wp.customize.Notification( _title, {
+                                  type: 'info',
+                                  message: [ _title, serverControlParams.i18n.skope['is always customized sitewide.'] ].join(' '),
+                                  dismissible: true
+                            } ) );
+
+                            // Removed if not dismissed after 5 seconds
+                            _.delay( function() {
+                                  if ( api.notifications.has( _title ) ) {
+                                        var _notif_ = api.notifications( _title );
+                                        if ( _notif_.parent ) {
+                                              _notif_.parent.remove( _notif_.code );
+                                        } else {
+                                              _notif_.container.remove();
+                                        }
+                                  }
+                            }, 5000 );
+                      }
+                      //</@4.9compat>
+                      else {
+                            api.czr_serverNotification({
+                                  status:'success',
+                                  message : [ _title, serverControlParams.i18n.skope['is always customized sitewide.'] ].join(' ')
+                            });
+                      }
+
                       api.czr_activeSkopeId( self.getGlobalSkopeId() );
                 };
 
@@ -191,12 +259,33 @@ $.extend( CZRSkopeBaseMths, {
                 api.czr_skopeReady.then( function() {
                       if ( 'global' != api.czr_skope( api.czr_activeSkopeId() )().skope ) {
                             if ( self.isExcludedSidebarsWidgets() && 'widgets' == active_panel_id ) {
-                                  api.czr_serverNotification({
-                                        status:'success',
-                                        message : [
-                                              serverControlParams.i18n.skope['Widgets are created sitewide.']
-                                        ].join(' ')
-                                  });
+                                  //<@4.9compat>
+                                  if ( ! _.isUndefined( api.notifications ) ) {
+                                        api.notifications.add( new wp.customize.Notification( 'widgets_are_sitewide', {
+                                              type: 'info',
+                                              message: serverControlParams.i18n.skope['Widgets are created sitewide.'],
+                                              dismissible: true
+                                        } ) );
+
+                                        // Removed if not dismissed after 5 seconds
+                                        _.delay( function() {
+                                              if ( api.notifications.has( 'widgets_are_sitewide' ) ) {
+                                                    var _notif_ = api.notifications( 'widgets_are_sitewide' );
+                                                    if ( _notif_.parent ) {
+                                                          _notif_.parent.remove( _notif_.code );
+                                                    } else {
+                                                          _notif_.container.remove();
+                                                    }
+                                              }
+                                        }, 5000 );
+                                  }
+                                  //</@4.9compat>
+                                  else {
+                                        api.czr_serverNotification({
+                                              status:'success',
+                                              message : serverControlParams.i18n.skope['Widgets are created sitewide.']
+                                        });
+                                  }
                                   //_switchBack( api.panel( active_panel_id ).params.title );
                             }
                       }

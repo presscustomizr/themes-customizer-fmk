@@ -251,10 +251,141 @@
 })( wp.customize , jQuery, _ );
 ( function ( api, $, _ ) {
       api.bind( 'czr-skope-started', function() {
-            //OVERRIDES WP
+            var _original_save = api.previewer.save, response;
+
+            // OVERRIDES WP
+            // Save the changesets for all skopes as post metas of the customize_changeset post
+            // Then fire the original save method
+            // => server side, if the changeset post status transitions to "publish", the skope metas attached to the customize_changeset post will be merged with the post metas of the skope post.
+            // This "publish" case is handled by add_action( 'transition_post_status', 'ha_publish_skope_changeset_metas', 0, 3 );
             api.previewer.save = function( args ) {
-                  return api.czr_skopeSave.save( args );
+                  //return api.czr_skopeSave.save( args );
+                  return api.requestChangesetUpdate()
+                              .always( function( _response_ ) {
+                                    response = _response_.response;
+                                    _original_save.apply( api.previewer,  args ).done( function() {
+                                          //<@4.9compat>
+                                          //api.state( 'selectedChangesetStatus' ) was introduced in 4.9
+                                          if ( api.state.has( 'selectedChangesetStatus' ) && 'publish' != api.state( 'selectedChangesetStatus' )() )
+                                            return;
+                                          //</@4.9compat>
+                                          api.previewer.refresh( { waitSkopeSynced : true } )
+                                                .fail( function( refresh_data ) {
+                                                      api.consoleLog('Refresh failed after a save action', refresh_data );
+                                                })
+                                                .done( function( refresh_data ) {
+                                                      //response can be undefined, always set them as an object with 'publish' changet_setstatus by default
+                                                      //because this will be used in various api events ( 'saved', ... ) that does not accept an undefined val.
+                                                      response = _.extend( { changeset_status : 'publish' },  response || {} );
+                                                      //POST PROCESS AFTER SAVE
+                                                      //Reset dirtyness
+                                                      //check if synchronized with server
+                                                      reactWhenSaveDone( refresh_data.skopesServerData );
+                                                });
+                                    });
+                              })
+                              .fail( function( _response_ ) {
+                                  response = _response_.response;
+                                  api.consoleLog( 'apiRequestChangesetUpdate failed => ', response );
+                              })
+                              .done( function( _response_ ) {});
             };
+
+            //Fired when all submissions are done and the preview has been refreshed
+            //@param {} skopesServerData looks like :
+            //{
+            //    czr_skopes : [
+            //        0 : { ... skope_model_0 ... },
+            //        1 : { ... skope_model_1 ... },
+            //        2 : { ... skope_model_2 ... }
+            //    ],
+            //    isChangesetDirty : boolean
+            //}
+            var reactWhenSaveDone = function( skopesServerData ) {
+                  var saved_dirties = {};
+                  skopesServerData = _.extend(
+                      {
+                            czr_skopes : [],
+                            isChangesetDirty : false
+                      },
+                      skopesServerData
+                  );
+
+                  //STORE THE SAVED DIRTIES AND RESET THEM FOR EACH SKOPE
+                  // store the saved dirties with their opt name ! important because we will need to match the data sent by the server, before the skope id is generated
+                  // (will be used as param to update the db val property of each saved skope)
+                  // AND THEN reset them for each skope
+                  _.each( api.czr_skopeCollection(), function( _skp_ ) {
+                        saved_dirties[ _skp_.opt_name ] = api.czr_skopeBase.getSkopeDirties( _skp_.id );
+                        api.czr_skope( _skp_.id ).dirtyValues( {} );
+                        api.czr_skope( _skp_.id ).changesetValues( {} );
+                  });
+
+
+                  //ARE THE SAVED DIRTIES AND THE UPDATED DB VALUES SENT BY SERVER SYNCHRONIZED ?
+                  // => let's check if the server sends the same saved values
+                  // => reset the czr_saveDirties to default.
+                  var _notSyncedSettings    = [],
+                      _sentSkopeCollection  = skopesServerData.czr_skopes;
+
+                  console.log('REACT WHEN SAVE DONE SERVER DATA', skopesServerData );
+                  //api.consoleLog('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
+                  console.log('REACT WHEN SAVE DONE SAVED DIRTIES', saved_dirties );
+
+                  _.each( saved_dirties, function( skp_data, _saved_opt_name ) {
+                        _.each( skp_data, function( _val, _setId ) {
+                              //first, let's check if the sent skopes have not changed ( typically, if a user has opened another page in the preview )
+                              if ( _.isUndefined( _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ) ) )
+                                return;
+                              //exclude ExcludedWPBuiltinSetting and not eligible theme settings from this check
+                              if ( ! api.czr_skopeBase.isSettingSkopeEligible( _setId ) )
+                                return;
+
+                              var sent_skope_db_values  = _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ).db,
+                                  sent_skope_level      = _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ).skope,
+                                  wpSetId               = api.CZR_Helpers.build_setId( _setId ),
+                                  shortSetId            = api.CZR_Helpers.getOptionName( _setId ),
+                                  sent_set_val          = sent_skope_db_values[wpSetId];
+
+                              //for the global skope, the server won't send the settings for which the value has been reset to default
+                              //skip this case too
+                              if ( _.isUndefined( sent_set_val ) && 'global' == sent_skope_level && _val === serverControlParams.defaultOptionsValues[shortSetId] )
+                                return;
+
+                              if ( _.isUndefined( sent_set_val ) || ! _.isEqual( sent_set_val, _val ) ) {
+                                    _notSyncedSettings.push( { opt_name : _saved_opt_name, setId : wpSetId, server_val : sent_set_val, api_val : _val } );
+                              }
+                        });
+                  });
+
+                  if ( ! _.isEmpty( _notSyncedSettings ) ) {
+                        api.consoleLog('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', _notSyncedSettings );
+                        console.log('_notSyncedSettings', _notSyncedSettings );
+                  } else {
+                        api.consoleLog('ALL RIGHT, SERVER AND API ARE SYNCHRONIZED AFTER SAVE' );
+                  }
+
+                  //SYNCHRONIZE THE API.SETTINGS.SETTINGS WITH THE SAVED VALUE FOR GLOBAL SKOPE
+                  //finally make sure the api.settings.settings values are always synchronized with the global skope instance
+                  api.czr_skopeBase.maybeSynchronizeGlobalSkope();
+
+                  //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
+                  api.czr_skopeBase.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
+
+                  //MAKE SURE TO COLLAPSE THE CONTROL NOTICES AFTER SAVED IF CURRENT SKOPE IS GLOBAL
+                  var _setupSectionCtrlNotices = function() {
+                        var sectionCtrls = api.CZR_Helpers.getSectionControlIds( api.czr_activeSectionId() );
+                        _.each( sectionCtrls, function( ctrlId ) {
+                              if ( ! api.has( ctrlId ) || _.isUndefined( api.control( ctrlId ) ) )
+                                return;
+                              var ctrl = api.control( ctrlId );
+                              if ( ! _.has( ctrl, 'czr_states' ) )
+                                return;
+                              ctrl.czr_states( 'noticeVisible' )( api.czr_skopeBase.isCtrlNoticeVisible( ctrlId ) );
+                        });
+                  };
+                  //_.delay( _setupSectionCtrlNotices, 500 );
+            };//reactWhenSaveDone()
       });//api.bind('ready')
 })( wp.customize , jQuery, _ );
 (function (api, $, _) {
@@ -637,11 +768,11 @@
        *
        * @param {object}  [changes] - Mapping of setting IDs to setting params each normally including a value property, or mapping to null.
        *                             If not provided, then the changes will still be obtained from unsaved dirty settings.
-       * @param {object}  [args] - Additional options for the save request.
-       * @param {boolean} [args.autosave=false] - Whether changes will be stored in autosave revision if the changeset has been promoted from an auto-draft.
-       * @param {boolean} [args.force=false] - Send request to update even when there are no changes to submit. This can be used to request the latest status of the changeset on the server.
-       * @param {string}  [args.title] - Title to update in the changeset. Optional.
-       * @param {string}  [args.date] - Date to update in the changeset. Optional.
+       * @param {object}  [_args_] - Additional options for the save request.
+       * @param {boolean} [_args_.autosave=false] - Whether changes will be stored in autosave revision if the changeset has been promoted from an auto-draft.
+       * @param {boolean} [_args_.force=false] - Send request to update even when there are no changes to submit. This can be used to request the latest status of the changeset on the server.
+       * @param {string}  [_args_.title] - Title to update in the changeset. Optional.
+       * @param {string}  [_args_.date] - Date to update in the changeset. Optional.
        * @returns {jQuery.Promise} Promise resolving with the response data.
        */
       //@4.9compat : added _args_
@@ -660,7 +791,9 @@
                 //         dfd.resolve( data );
                 //     });
                 // };
-
+            //<@4.9compat>
+            _args_ = _args_ || {};
+            //</@4.9compat>
             //if skope instantiation went wrong, serverControlParams.isSkopOn has been reset to false
             //=> that's why we check it here again before doing anything else
             if ( ! serverControlParams.isSkopOn ) {
@@ -765,7 +898,34 @@
 
                         dfd.reject( r );
                         r = api.czr_skopeBase.buildServerResponse(r);
-                        api.czr_serverNotification( { message: r, status : 'error' } );
+
+                        //<@4.9compat>
+                        if ( ! _.isUndefined( api.notifications ) ) {
+                              api.notifications.add( new wp.customize.Notification( 'changeset_update_failed', {
+                                    type: 'error',
+                                    message: r,
+                                    dismissible: true
+                              } ) );
+
+                              // Removed if not dismissed after 5 seconds
+                              _.delay( function() {
+                                    if ( api.notifications.has( 'changeset_update_failed' ) ) {
+                                          var _notif_ = api.notifications( 'changeset_update_failed' );
+                                          if ( _notif_.parent ) {
+                                                _notif_.parent.remove( _notif_.code );
+                                          } else {
+                                                _notif_.container.remove();
+                                          }
+                                    }
+                              }, 5000 );
+                        }
+                        //</@4.9compat>
+                        else {
+                              api.czr_serverNotification({
+                                    status:'error',
+                                    message : r
+                              });
+                      }
                   })
                   .done( function( wp_original_response ) {
                         // $.when.apply( null, _promises ).then( function() {
@@ -834,7 +994,7 @@
               date: null,
               autosave: false,
               force: false
-            }, args );
+            }, _args_ );
             //</@4.9compat>
 
             if ( changes ) {
@@ -853,6 +1013,11 @@
                   }
             } );
 
+            //  _.each( api.czr_skope( skope_id ).dirtyValues(), function( dirtyValue, settingId ) {
+            //       submittedChanges[ settingId ] = _.extend(
+            //             { value: dirtyValue }
+            //       );
+            // } );
 
             //<@4.9compat>
             // Short-circuit when there are no pending changes.
@@ -916,9 +1081,10 @@
                         //api.trigger( 'changeset-error', _data_ );
                   } )
                   .always( function( _data_ ) {
-                        if ( _data_.setting_validities ) {
+                        if ( ! _.isUndefined( _data_ ) && _data_.setting_validities ) {
                               api._handleSettingValidities( {
-                                    settingValidities: _data_.setting_validities
+                                    settingValidities: _data_.setting_validities,
+                                    focusInvalidControl: true
                               } );
                         }
                   } );
@@ -943,7 +1109,7 @@
                         toggleSkopeLoadPane( loading );
                   });
                   api.czr_skopeBase   = new api.CZR_skopeBase();
-                  api.czr_skopeSave   = new api.CZR_skopeSave();
+                  //api.czr_skopeSave   = new api.CZR_skopeSave();
                   api.czr_skopeReset  = new api.CZR_skopeReset();
 
                   api.trigger('czr-skope-started');
@@ -2420,29 +2586,73 @@ $.extend( CZRSkopeBaseMths, {
                     //Switch to global skope for not skoped sections
                     api.czr_skopeReady.then( function() {
                           var _switchBack = function( _title ) {
-                                api.czr_serverNotification({
-                                      status:'success',
-                                      message : [ _title, serverControlParams.i18n.skope['can only be customized sitewide.'] ].join(' ')
-                                });
+                                //<@4.9compat>
+                                if ( ! _.isUndefined( api.notifications ) ) {
+                                      api.notifications.add( new wp.customize.Notification( _title, {
+                                            type: 'info',
+                                            message: [ _title, serverControlParams.i18n.skope['is always customized sitewide.'] ].join(' '),
+                                            dismissible: true
+                                      } ) );
+
+                                      // Removed if not dismissed after 5 seconds
+                                      _.delay( function() {
+                                            if ( api.notifications.has( _title ) ) {
+                                                  var _notif_ = api.notifications( _title );
+                                                  if ( _notif_.parent ) {
+                                                        _notif_.parent.remove( _notif_.code );
+                                                  } else {
+                                                        _notif_.container.remove();
+                                                  }
+                                            }
+                                      }, 5000 );
+                                }
+                                //</@4.9compat>
+                                else {
+                                      api.czr_serverNotification({
+                                            status:'success',
+                                            message : [ _title, serverControlParams.i18n.skope['is always customized sitewide.'] ].join(' ')
+                                      });
+                                }
+
                                 api.czr_activeSkopeId( self.getGlobalSkopeId() );
                           };
                           //Switch to global skope for not skoped sections
                           if ( 'global' != api.czr_skope( api.czr_activeSkopeId() )().skope ) {
-                                if (
-                                  self.isExcludedWPCustomCss() &&
-                                  ( 'custom_css' == active_sec_id || 'admin_sec' == active_sec_id )
-                                ) {
+                                if ( self.isExcludedWPCustomCss() && 'custom_css' == active_sec_id ) {
+                                      _switchBack( api.section( active_sec_id ).params.title );
+                                }
+                                if ( _.contains( ['admin_sec', 'tc_font_customizer_settings' ], active_sec_id ) ) {
                                       _switchBack( api.section( active_sec_id ).params.title );
                                 }
 
                                 if ( 'nav_menu[' == active_sec_id.substring( 0, 'nav_menu['.length ) || 'add_menu' == active_sec_id ) {
-                                      api.czr_serverNotification({
-                                            status:'success',
-                                            message : [
-                                                  serverControlParams.i18n.skope['Menus are created sitewide.']
-                                            ].join(' ')
-                                      });
-                                      //_switchBack( api.section( active_sec_id ).params.title );
+                                      //<@4.9compat>
+                                      if ( ! _.isUndefined( api.notifications ) ) {
+                                            api.notifications.add( new wp.customize.Notification( 'nav_menus_sitewide', {
+                                                  type: 'info',
+                                                  message: serverControlParams.i18n.skope['Menus are created sitewide.'],
+                                                  dismissible: true
+                                            } ) );
+
+                                            // Removed if not dismissed after 5 seconds
+                                            _.delay( function() {
+                                                  if ( api.notifications.has( 'nav_menus_sitewide' ) ) {
+                                                        var _notif_ = api.notifications( 'nav_menus_sitewide' );
+                                                        if ( _notif_.parent ) {
+                                                              _notif_.parent.remove( _notif_.code );
+                                                        } else {
+                                                              _notif_.container.remove();
+                                                        }
+                                                  }
+                                            }, 5000 );
+                                      }
+                                      //</@4.9compat>
+                                      else {
+                                            api.czr_serverNotification({
+                                                  status:'success',
+                                                  message : serverControlParams.i18n.skope['Menus are created sitewide.']
+                                            });
+                                      }
                                 }
                           }
                     });
@@ -2485,10 +2695,34 @@ $.extend( CZRSkopeBaseMths, {
           api.czr_initialSkopeCollectionPopulated.then( function() {
                 api.trigger('czr-paint', { active_panel_id : active_panel_id } );
                 var _switchBack = function( _title ) {
-                      api.czr_serverNotification({
-                            status:'success',
-                            message : [ _title, serverControlParams.i18n.skope['can only be customized sitewide.'] ].join(' ')
-                      });
+                      //<@4.9compat>
+                      if ( ! _.isUndefined( api.notifications ) ) {
+                            api.notifications.add( new wp.customize.Notification( _title, {
+                                  type: 'info',
+                                  message: [ _title, serverControlParams.i18n.skope['is always customized sitewide.'] ].join(' '),
+                                  dismissible: true
+                            } ) );
+
+                            // Removed if not dismissed after 5 seconds
+                            _.delay( function() {
+                                  if ( api.notifications.has( _title ) ) {
+                                        var _notif_ = api.notifications( _title );
+                                        if ( _notif_.parent ) {
+                                              _notif_.parent.remove( _notif_.code );
+                                        } else {
+                                              _notif_.container.remove();
+                                        }
+                                  }
+                            }, 5000 );
+                      }
+                      //</@4.9compat>
+                      else {
+                            api.czr_serverNotification({
+                                  status:'success',
+                                  message : [ _title, serverControlParams.i18n.skope['is always customized sitewide.'] ].join(' ')
+                            });
+                      }
+
                       api.czr_activeSkopeId( self.getGlobalSkopeId() );
                 };
 
@@ -2496,12 +2730,33 @@ $.extend( CZRSkopeBaseMths, {
                 api.czr_skopeReady.then( function() {
                       if ( 'global' != api.czr_skope( api.czr_activeSkopeId() )().skope ) {
                             if ( self.isExcludedSidebarsWidgets() && 'widgets' == active_panel_id ) {
-                                  api.czr_serverNotification({
-                                        status:'success',
-                                        message : [
-                                              serverControlParams.i18n.skope['Widgets are created sitewide.']
-                                        ].join(' ')
-                                  });
+                                  //<@4.9compat>
+                                  if ( ! _.isUndefined( api.notifications ) ) {
+                                        api.notifications.add( new wp.customize.Notification( 'widgets_are_sitewide', {
+                                              type: 'info',
+                                              message: serverControlParams.i18n.skope['Widgets are created sitewide.'],
+                                              dismissible: true
+                                        } ) );
+
+                                        // Removed if not dismissed after 5 seconds
+                                        _.delay( function() {
+                                              if ( api.notifications.has( 'widgets_are_sitewide' ) ) {
+                                                    var _notif_ = api.notifications( 'widgets_are_sitewide' );
+                                                    if ( _notif_.parent ) {
+                                                          _notif_.parent.remove( _notif_.code );
+                                                    } else {
+                                                          _notif_.container.remove();
+                                                    }
+                                              }
+                                        }, 5000 );
+                                  }
+                                  //</@4.9compat>
+                                  else {
+                                        api.czr_serverNotification({
+                                              status:'success',
+                                              message : serverControlParams.i18n.skope['Widgets are created sitewide.']
+                                        });
+                                  }
                                   //_switchBack( api.panel( active_panel_id ).params.title );
                             }
                       }
@@ -3999,27 +4254,81 @@ $.extend( CZRSkopeBaseMths, {
           //Switch to global skope for not skoped panels
           var _switchBack = function( _title ) {
                 api.czr_activeSkopeId( self.getGlobalSkopeId() );
-                api.czr_serverNotification({
-                      status:'success',
-                      message : [ _title , 'can only be customized sitewide.' ].join(' ')
-                });
+                //<@4.9compat>
+                if ( ! _.isUndefined( api.notifications ) ) {
+                      api.notifications.add( new wp.customize.Notification( _title, {
+                            type: 'info',
+                            message: [ _title , 'is always customized sitewide.' ].join(' '),
+                            dismissible: true
+                      } ) );
+
+                      // Removed if not dismissed after 5 seconds
+                      _.delay( function() {
+                            if ( api.notifications.has( _title ) ) {
+                                  var _notif_ = api.notifications( _title );
+                                  if ( _notif_.parent ) {
+                                        _notif_.parent.remove( _notif_.code );
+                                  } else {
+                                        _notif_.container.remove();
+                                  }
+                            }
+                      }, 5000 );
+                }
+                //</@4.9compat>
+                else {
+                      api.czr_serverNotification({
+                            status:'success',
+                            message : [ _title , 'is always customized sitewide.' ].join(' ')
+                      });
+                }
                 return dfd.resolve().promise();
           };
+
+
           if ( self.isExcludedSidebarsWidgets() && 'widgets' == api.czr_activePanelId() && to != self.getGlobalSkopeId() ) {
-                api.czr_serverNotification({
-                      status:'success',
-                      message : [
-                            serverControlParams.i18n.skope['Widgets are created sitewide.']
-                      ].join(' ')
-                });
+                //<@4.9compat>
+                if ( ! _.isUndefined( api.notifications ) ) {
+                      api.notifications.add( new wp.customize.Notification( 'widgets_are_sidewide', {
+                            type: 'info',
+                            message: serverControlParams.i18n.skope['Widgets are created sitewide.'],
+                            dismissible: true
+                      } ) );
+
+                      // Removed if not dismissed after 5 seconds
+                      _.delay( function() {
+                            if ( api.notifications.has( 'widgets_are_sidewide' ) ) {
+                                  var _notif_ = api.notifications( 'widgets_are_sidewide' );
+                                  if ( _notif_.parent ) {
+                                        _notif_.parent.remove( _notif_.code );
+                                  } else {
+                                        _notif_.container.remove();
+                                  }
+                            }
+                      }, 5000 );
+                }
+                //</@4.9compat>
+                else {
+                      api.czr_serverNotification({
+                            status:'success',
+                            message : [
+                                  serverControlParams.i18n.skope['Widgets are created sitewide.']
+                            ].join(' ')
+                      });
+                }
+
                 //return dfd.resolve().promise();// _switchBack( api.panel( api.czr_activePanelId() ).params.title );
           }
+
           if ( self.isExcludedWPCustomCss() && 'custom_css' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
                 return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
           }
           if ( 'admin_sec' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
                 return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
           }
+          if ( 'tc_font_customizer_settings' == api.czr_activeSectionId() && to != self.getGlobalSkopeId() ) {
+                return _switchBack( api.section( api.czr_activeSectionId() ).params.title );
+          }
+
           if ( ( 'nav_menu' == api.czr_activeSectionId().substring( 0, 'nav_menu'.length ) || 'add_menu' == api.czr_activeSectionId() ) && to != self.getGlobalSkopeId() )  {
                 api.czr_serverNotification({
                       status:'success',
@@ -5523,882 +5832,6 @@ $.extend( CZRSkopeBaseMths, {
     }
 });//$.extend()
 })( wp.customize , jQuery, _ );
-var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRSkopeSaveMths, {
-      initialize: function() {
-            var self = this;
-            //<@4.9compat>
-            //can take values : draft, future, publish, trash, ''
-            this.changesetStatus    = function() {
-                  return api.state.has( 'selectedChangesetStatus' ) ? api.state( 'selectedChangesetStatus' )() : 'publish';
-            };
-            this.selectedChangesetDate = function() {
-                  return api.state.has( 'selectedChangesetDate' ) ? api.state( 'selectedChangesetDate' )() : null;
-            };
-            //</@4.9compat>
-            this.saveBtn            = $( '#save' );
-      },
-
-      // No args are passed as of WP4.9
-      // @4.9compat
-      save: function( args ) {
-            var self        = this,
-                processing  = api.state( 'processing' ),
-                submitWhenDoneProcessing,
-                parent      = new api.Messenger({
-                      url: api.settings.url.parent,
-                      channel: 'loader',
-                });//this has to be reinstantiated because not accessible from core
-
-            //reset some properties on each save call
-            self.globalSaveDeferred = $.Deferred();
-            self.previewer          = api.previewer;
-            self.globalSkopeId      = api.czr_skopeBase.getGlobalSkopeId();
-            self.saveArgs           = args;
-
-            if ( args && args.status ) {
-                  self.changesetStatus = function() { return args.status; };
-            }
-
-            if ( api.state( 'saving' )() ) {
-                  self.globalSaveDeferred.reject( 'already_saving' );
-            }
-
-            //api.state( 'processing' ).set( api.state( 'processing' ).get() + 1 );
-            var alwaysAfterSubmission = function( response, state ) {
-                      //WP default treatments
-                      api.state( 'saving' )( false );
-                      api.state( 'processing' ).set( 0 );
-                      self.saveBtn.prop( 'disabled', false );
-                      if ( ! _.isUndefined( response ) && response.setting_validities ) {
-                            api._handleSettingValidities( {
-                                  settingValidities: response.setting_validities,
-                                  focusInvalidControl: true
-                            } );
-                      }
-
-                      //<@4.9compat>
-                      // Start a new changeset if the underlying changeset was published.
-                      if ( response && 'changeset_already_published' === response.code && response.next_changeset_uuid ) {
-                        api.settings.changeset.uuid = response.next_changeset_uuid;
-                        api.state( 'changesetStatus' ).set( '' );
-                        if ( api.settings.changeset.branching ) {
-                          parent.send( 'changeset-uuid', api.settings.changeset.uuid );
-                        }
-                        api.previewer.send( 'changeset-uuid', api.settings.changeset.uuid );
-                      }
-                      //</@4.9compat>
-
-                      if ( 'pending' == state ) {
-                            api.czr_serverNotification( { message: response, status : 'error' } );
-                      } else {
-                            //api.czr_serverNotification( { message: 'Successfully published !' } );
-                      }
-                },
-                //params : { saveGlobal : true, saveSkopes : true }
-                resolveSave = function( params ) {
-                      var response, resolveSaveDfd = $.Deferred();
-                      // set saving state.
-                      // => will be set to false when all saved promises resolved
-                      api.state( 'saving' )( true );
-                      self.fireAllSubmission( params )
-                            .always( function( _response_ ) {
-                                  response = _response_.response;
-                                  alwaysAfterSubmission( response , this.state() );
-                            })
-                            .fail( function( _response_ ) {
-                                  response = _response_.response;
-                                  api.consoleLog('ALL SUBMISSIONS FAILED', response );
-                                  self.globalSaveDeferred.reject( response );
-                                  api.trigger( 'error', response );
-                                  resolveSaveDfd.resolve( _response_.hasNewMenu );
-                            })
-                            //_response_ = { response : response,  hasNewMenu : boolean }
-                            .done( function( _response_ ) {
-                                  response = _response_.response;
-                                  //api.previewer.refresh() method is resolved with an object looking like :
-                                  //{
-                                  //    previewer : api.previewer,
-                                  //    skopesServerData : {
-                                  //        czr_skopes : _wpCustomizeSettings.czr_skopes || [],
-                                  //        isChangesetDirty : boolean
-                                  //    },
-                                  // }
-                                  api.previewer.refresh( { waitSkopeSynced : true } )
-                                        .fail( function( refresh_data ) {
-                                              self.globalSaveDeferred.reject( self.previewer, [ response ] );
-                                              api.consoleLog('SAVE REFRESH FAIL', refresh_data );
-                                        })
-                                        .done( function( refresh_data ) {
-                                              api.previewer.send( 'saved', response );
-
-                                              //response can be undefined, always set them as an object with 'publish' changet_setstatus by default
-                                              //because this will be used in various api events ( 'saved', ... ) that does not accept an undefined val.
-                                              response = _.extend( { changeset_status : 'publish' },  response || {} );
-
-                                              //since 4.7 : if changeset is on, let's add stuff to the query object
-                                              if ( api.czr_isChangeSetOn() ) {
-                                                    var latestRevision = api._latestRevision;
-                                                    api.state( 'changesetStatus' ).set( response.changeset_status );
-
-                                                    //<@4.9compat>
-                                                    if ( response.changeset_date ) {
-                                                      api.state( 'changesetDate' ).set( response.changeset_date );
-                                                    }
-                                                    //</@4.9compat>
-
-                                                    if ( 'publish' === response.changeset_status ) {
-                                                          // Mark all published as clean if they haven't been modified during the request.
-                                                          api.each( function( setting ) {
-                                                                /*
-                                                                 * Note that the setting revision will be undefined in the case of setting
-                                                                 * values that are marked as dirty when the customizer is loaded, such as
-                                                                 * when applying starter content. All other dirty settings will have an
-                                                                 * associated revision due to their modification triggering a change event.
-                                                                 */
-                                                                if ( setting._dirty && ( _.isUndefined( api._latestSettingRevisions[ setting.id ] ) || api._latestSettingRevisions[ setting.id ] <= latestRevision ) ) {
-                                                                      setting._dirty = false;
-                                                                }
-                                                          } );
-
-                                                          api.state( 'changesetStatus' ).set( '' );
-                                                          api.settings.changeset.uuid = response.next_changeset_uuid;
-                                                          //<@4.9compat>
-                                                          if ( api.settings.changeset.branching ) {
-                                                            parent.send( 'changeset-uuid', api.settings.changeset.uuid );
-                                                          }
-                                                          //</@4.9compat>
-                                                          else {
-                                                            parent.send( 'changeset-uuid', api.settings.changeset.uuid );
-                                                          }
-                                                    }
-                                                    //<@4.9compat>
-                                                    // Prevent subsequent requestChangesetUpdate() calls from including the settings that have been saved.
-                                                    api._lastSavedRevision = Math.max( latestRevision, api._lastSavedRevision );
-                                                    //</@4.9compat>
-                                              } else {
-                                                    // Clear api setting dirty states
-                                                    api.each( function ( value ) {
-                                                          value._dirty = false;
-                                                    } );
-                                              }
-
-                                              //let's use the data sent back by the server on refresh
-                                              refresh_data = _.extend( {
-                                                          previewer : refresh_data.previewer || self.previewer,
-                                                          skopesServerData : refresh_data.skopesServerData || {},
-                                                    },
-                                                    refresh_data
-                                              );
-
-                                              //POST PROCESS AFTER SAVE
-                                              //Reset dirtyness
-                                              //check if synchronized with server
-                                              self.reactWhenSaveDone( refresh_data.skopesServerData );
-
-                                              //Resolve the general globalSaveDeferred
-                                              self.globalSaveDeferred.resolveWith( self.previewer, [ response ] );
-
-                                              api.trigger( 'saved', response || {} );
-                                              resolveSaveDfd.resolve( _response_.hasNewMenu );
-                                        });
-                            });
-                return resolveSaveDfd.promise();
-            };//resolveSave
-
-            if ( 0 === processing() ) {
-                  resolveSave().done( function( hasNewMenu ) {
-                        if ( hasNewMenu ) {
-                              resolveSave( { saveGlobal :false, saveSkopes : true } );
-                        }
-                  } );
-            } else {
-                  submitWhenDoneProcessing = function () {
-                        if ( 0 === processing() ) {
-                              api.state.unbind( 'change', submitWhenDoneProcessing );
-                              resolveSave();
-                        }
-                  };
-                  api.state.bind( 'change', submitWhenDoneProcessing );
-            }
-            return self.globalSaveDeferred.promise();
-      }//save
-});//$.extend
-})( wp.customize , jQuery, _ );
-var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRSkopeSaveMths, {
-      //@return a promise()
-      getSubmitPromise : function( skope_id ) {
-            var self = this,
-                dfd = $.Deferred(),
-                submittedChanges = {};
-
-            if ( _.isEmpty( skope_id ) || ! api.czr_skope.has( skope_id ) ) {
-                  api.consoleLog( 'getSubmitPromise : no skope id requested OR skope_id not registered : ' + skope_id );
-                  return dfd.resolve().promise();
-            }
-
-            var skopeObjectToSubmit = api.czr_skope( skope_id )();
-
-            // Resolve here if not dirty AND not global skope
-            // always submit the global skope, even if not dirty => required to properly clean the changeset post server side
-            if ( ! api.czr_skope( skope_id ).dirtyness() && skope_id !== self.globalSkopeId ) {
-                return dfd.resolve().promise();
-            }
-
-            //////////////////////////////////SUBMIT THE ELIGIBLE SETTINGS OF EACH SKOPE ////////////////////////////
-            //Ensure all revised settings (changes pending save) are also included, but not if marked for deletion in changes.
-
-            // _.each( api.czr_skopeBase.getSkopeDirties( skope_id ) , function( dirtyValue, settingId ) {
-            //       submittedChanges[ settingId ] = _.extend(
-            //             { value: dirtyValue }
-            //       );
-            // } );
-
-            _.each( api.czr_skope( skope_id ).dirtyValues(), function( dirtyValue, settingId ) {
-                  submittedChanges[ settingId ] = _.extend(
-                        { value: dirtyValue }
-                  );
-            } );
-
-            //a submit call returns a promise resolved when the db ajax query is done().
-            //api.consoleLog('submit request for skope : id, object, dirties : ', skope_id, skopeObjectToSubmit , api.czr_skopeBase.getSkopeDirties( skope_id ) );
-
-            this.submit(
-                  {
-                        skope_id : skope_id,
-                        customize_changeset_data : submittedChanges,//{}
-                        dyn_type : skopeObjectToSubmit.dyn_type
-                  })
-                  .done( function(_resp) {
-                        //api.consoleLog('GETSUBMIT DONE PROMISE FOR SKOPE : ', skope_id, _resp );
-                        dfd.resolve( _resp );
-                  } )
-                  .fail( function( _resp ) {
-                        api.consoleLog('GETSUBMIT FAILED PROMISE FOR SKOPE : ', skope_id, _resp );
-                        dfd.reject( _resp );
-                  } );
-
-            return dfd.promise();
-      },//getSubmitPromise
-
-
-
-      // we do the WP 'customize_save' ajax request when skope is global => 'global' == query.skope
-      submit : function( params ) {
-            var self = this,
-                default_params = {
-                      skope_id : null,
-                      the_dirties : {},
-                      customize_changeset_data : {},
-                      dyn_type : null,
-                      opt_name : null
-                },
-                invalidSettings = [],
-                settingInvalidities = [],
-                modifiedWhileSaving = {},
-                invalidControls = [],
-                //<@4.9compat>
-                invalidSettingLessControls = [],
-                errorCode = 'client_side_error',
-                //</@4.9compat>
-                submit_dfd = $.Deferred();
-
-
-            params = $.extend( default_params, params );
-
-            if ( _.isNull( params.skope_id ) ) {
-                  throw new Error( 'OVERRIDEN SAVE::submit : MISSING skope_id');
-            }
-            if ( _.isNull( params.the_dirties ) ) {
-                  throw new Error( 'OVERRIDEN SAVE::submit : MISSING the_dirties');
-            }
-
-            //<@4.9compat>
-            if ( _.has( api, 'notifications') ) {
-                  api.notifications.remove( errorCode );
-            }
-
-            //</@4.9compat>
-            //
-            /*
-             * Block saving if there are any settings that are marked as
-             * invalid from the client (not from the server). Focus on
-             * the control.
-             */
-            if ( _.has( api, 'notifications') ) {
-                  api.each( function( setting ) {
-                        setting.notifications.each( function( notification ) {
-                              if ( 'error' === notification.type ) {
-                                    api.consoleLog('NOTIFICATION ERROR on SUBMIT SAVE' , notification );
-                              }
-                              if ( 'error' === notification.type && ( ! notification.data || ! notification.data.from_server ) ) {
-                                    invalidSettings.push( setting.id );
-                                    if ( ! settingInvalidities[ setting.id ] ) {
-                                          settingInvalidities[ setting.id ] = {};
-                                    }
-                                    settingInvalidities[ setting.id ][ notification.code ] = notification;
-                              }
-                        } );
-                  } );
-
-                  //<@4.9compat>
-                  // Find all invalid setting less controls with notification type error.
-                  api.control.each( function( control ) {
-                    if ( ! control.setting || ! control.setting.id && control.active.get() ) {
-                      control.notifications.each( function( notification ) {
-                          if ( 'error' === notification.type ) {
-                            invalidSettingLessControls.push( [ control ] );
-                          }
-                      } );
-                    }
-                  } );
-                  invalidControls = _.union( invalidSettingLessControls, _.values( api.findControlsForSettings( invalidSettings ) ) );
-                  // was : invalidControls = api.findControlsForSettings( invalidSettings );
-                  //</@4.9compat>
-
-
-                  if ( ! _.isEmpty( invalidControls ) ) {
-                        _.values( invalidControls )[0][0].focus();
-                        //api.unbind( 'change', captureSettingModifiedDuringSave );
-                        //
-                        //<@4.9compat>
-                        if ( invalidSettings.length && _.has( api, 'notifications') && api.l10n.saveBlockedError ) {
-                          api.notifications.add( new api.Notification( errorCode, {
-                            message: ( 1 === invalidSettings.length ? api.l10n.saveBlockedError.singular : api.l10n.saveBlockedError.plural ).replace( /%s/g, String( invalidSettings.length ) ),
-                            type: 'error',
-                            dismissible: true,
-                            saveFailure: true
-                          } ) );
-                        }
-                        //</@4.9compat>
-
-                        return submit_dfd.rejectWith( self.previewer, [
-                              { setting_invalidities: settingInvalidities }
-                        ] ).promise();
-                  }
-            }
-
-
-
-            //BUILD THE QUERY OBJECT
-            //the skope save query takes parameters
-            var query_params = {
-                  skope_id : params.skope_id,
-                  action : 'save',
-                  the_dirties : params.the_dirties,
-                  dyn_type : params.dyn_type,
-                  opt_name : params.opt_name
-            };
-
-            //since 4.7 : if changeset is on, let's add stuff to the query params
-            if ( api.czr_isChangeSetOn() ) {
-                  $.extend( query_params, { excludeCustomizedSaved: false } );
-            }
-
-            /*
-             * Note that excludeCustomizedSaved is intentionally false so that the entire
-             * set of customized data will be included if bypassed changeset update.
-             */
-
-            var query = $.extend( self.previewer.query( query_params ), {
-                  nonce:  self.previewer.nonce.save,
-                  // since 4.9 => api.state( 'selectedChangesetStatus' )() => draft || future || publish || trash || ''
-                  customize_changeset_status: self.changesetStatus(),
-                  customize_changeset_data : JSON.stringify( params.customize_changeset_data )
-            } );
-
-            //since 4.7 : if changeset is on, let's add stuff to the query object
-            if ( api.czr_isChangeSetOn() ) {
-                  if ( self.saveArgs && self.saveArgs.date ) {
-                    query.customize_changeset_date = self.saveArgs.date;
-                  }
-                  //<@4.9compat>
-                  else if ( 'future' === self.changesetStatus() && self.selectedChangesetDate() ) {
-                    query.customize_changeset_date = self.selectedChangesetDate();
-                  }
-                  //</@4.9compat>
-                  if ( self.saveArgs && self.saveArgs.title ) {
-                    query.customize_changeset_title = self.saveArgs.title;
-                  }
-            }
-
-            //<@4.9compat>
-            // Allow plugins to modify the params included with the save request.
-            api.trigger( 'save-request-params', query );
-            //</@4.9compat>
-
-
-            //api.consoleLog( 'in submit : ', params.skope_id, query, self.previewer.channel() );
-
-            /*
-             * Note that the dirty customized values will have already been set in the
-             * changeset and so technically query.customized could be deleted. However,
-             * it is remaining here to make sure that any settings that got updated
-             * quietly which may have not triggered an update request will also get
-             * included in the values that get saved to the changeset. This will ensure
-             * that values that get injected via the saved event will be included in
-             * the changeset. This also ensures that setting values that were invalid
-             * will get re-validated, perhaps in the case of settings that are invalid
-             * due to dependencies on other settings.
-             */
-
-            var request = wp.ajax.post(
-                  'global' !== query.skope ? 'customize_skope_changeset_save' : 'customize_save',
-                  query
-            );
-
-            // Disable save button during the save request.
-            //<@4.9compat> => shall we keep that ?
-            self.saveBtn.prop( 'disabled', true );
-            //</@4.9compat>
-
-            api.trigger( 'save', request );
-
-            // request.always( function () {
-            //       api.state( 'saving' ).set( false );
-            //       self.saveBtn.prop( 'disabled', false );
-            //       api.unbind( 'change', captureSettingModifiedDuringSave );
-            // } );
-
-            //<@4.9compat>
-            // Remove notifications that were added due to save failures.
-            if ( _.has( api, 'notifications') ) {
-                  api.notifications.each( function( notification ) {
-                    if ( notification.saveFailure ) {
-                      api.notifications.remove( notification.code );
-                    }
-                  });
-            }
-            //</@4.9compat>
-
-            request.fail( function ( response ) {
-                  //<@4.9compat>
-                  var notification, notificationArgs;
-                  notificationArgs = {
-                    type: 'error',
-                    dismissible: true,
-                    fromServer: true,
-                    saveFailure: true
-                  };
-                  //</@4.9compat>
-                  api.consoleLog('SUBMIT REQUEST FAIL', params.skope_id, response );
-                  if ( '0' === response ) {
-                        response = 'not_logged_in';
-                  } else if ( '-1' === response ) {
-                        // Back-compat in case any other check_ajax_referer() call is dying
-                        response = 'invalid_nonce';
-                  }
-
-                  if ( 'invalid_nonce' === response ) {
-                        self.previewer.cheatin();
-                  } else if ( 'not_logged_in' === response ) {
-                        self.previewer.preview.iframe.hide();
-                        self.previewer.login().done( function() {
-                              self.previewer.save();
-                              self.previewer.preview.iframe.show();
-                        } );
-                  }
-                  //<@4.9compat>
-                  else if ( response.code ) {
-                    if ( 'not_future_date' === response.code && api.section.has( 'publish_settings' ) && api.section( 'publish_settings' ).active.get() && api.control.has( 'changeset_scheduled_date' ) ) {
-                      api.control( 'changeset_scheduled_date' ).toggleFutureDateNotification( true ).focus();
-                    } else if ( 'changeset_locked' !== response.code ) {
-                      notification = new api.Notification( response.code, _.extend( notificationArgs, {
-                        message: response.message
-                      } ) );
-                    }
-                  } else {
-                    notification = new api.Notification( 'unknown_error', _.extend( notificationArgs, {
-                      message: api.l10n.unknownRequestFail
-                    } ) );
-                  }
-                  //</@4.9compat>
-
-                  if ( notification ) {
-                    api.notifications.add( notification );
-                  }
-
-                  //the response.setting_validities is done in alwaysAfterSubmission @see save()
-
-                  api.trigger( 'error', response );
-                  submit_dfd.reject( response );
-            } );
-
-            request.done( function( response ) {
-                  //api.consoleLog('SUBMIT REQUEST DONE ?', params.skope_id, response );
-                  submit_dfd.resolve( response );
-            } );
-
-            //return the promise
-            return submit_dfd.promise();
-      }//submit()
-});//$.extend
-})( wp.customize , jQuery, _ );
-var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRSkopeSaveMths, {
-      //PROCESS SUBMISSIONS
-      //ALWAYS FIRE THE GLOBAL SKOPE WHEN ALL OTHER SKOPES HAVE BEEN DONE.
-      //=> BECAUSE WHEN SAVING THE GLOBAL SKOPE, THE CHANGESET POST STATUS WILL BE CHANGED TO 'publish' AND THEREFORE NOT ACCESSIBLE ANYMORE
-      //1) first all skopes but global, recursively
-      //2) then global => will publish the changeset. Server side, the changeset post will be trashed and the next uuid will be returned to the API
-      //@param params : { saveGlobal : true, saveSkopes : true }
-      fireAllSubmission : function( params ) {
-            var self = this,
-                __main_deferred__ = $.Deferred(),
-                skopesToSave = [],
-                _recursiveCallDeferred = $.Deferred(),
-                _responses_ = {},
-                _promises  = [],
-                failedPromises = [],
-                _defaultParams = {
-                    saveGlobal : true,
-                    saveSkopes : true
-                };
-            params = $.extend( _defaultParams, params );
-
-            // build the skope ids array to submit recursively
-            _.each( api.czr_skopeCollection(), function( _skp_ ) {
-                  if ( 'global' !== _skp_.skope ) {
-                        skopesToSave.push( _skp_.id );
-                  }
-            });
-
-            var _mayBeresolve = function( _index ) {
-                  if ( ! _.isUndefined( skopesToSave[ _index + 1 ] ) || _promises.length != skopesToSave.length )
-                    return;
-
-                  if ( _.isEmpty( failedPromises ) ) {
-                        _recursiveCallDeferred.resolve( _responses_ );
-                  } else {
-                        var _buildResponse = function() {
-                                  var _failedResponse = [];
-                                  _.each( failedPromises, function( _r ) {
-                                        _failedResponse.push( api.czr_skopeBase.buildServerResponse( _r ) );
-                                  } );
-                                  return $.trim( _failedResponse.join( ' | ') );
-                        };
-                        _recursiveCallDeferred.reject( _buildResponse() );
-                  }
-                  return true;
-            };
-
-
-            // recursive pushes for not global skopes
-            var recursiveCall = function( _index ) {
-                  _index = _index || 0;
-                  if ( _.isUndefined( skopesToSave[_index] ) ) {
-                        api.consoleLog( 'Undefined Skope in Save recursive call ', _index, _skopesToUpdate, _skopesToUpdate[_index] );
-                        _recursiveCallDeferred.resolve( _responses_ );
-                  }
-
-                  //_promises.push( self.getSubmitPromise( skopesToSave[ _index ] ) );
-                  self.getSubmitPromise( skopesToSave[ _index ] )
-                        .always( function() { _promises.push( _index ); } )
-                        .fail( function( response ) {
-                              failedPromises.push( response );
-                              api.consoleLog('RECURSIVE PUSH FAIL FOR SKOPE : ', skopesToSave[_index] );
-                              if (  ! _mayBeresolve( _index ) )
-                                recursiveCall( _index + 1 );
-                        } )
-                        .done( function( response ) {
-                              //api.consoleLog('RECURSIVE PUSH DONE FOR SKOPE : ', skopesToSave[_index] );
-                              response = response || {};
-
-                              //WE NEED TO BUILD A PROPER RESPONSE HERE
-                              if ( _.isEmpty( _responses_ ) ) {
-                                    _responses_ = response || {};
-                              } else {
-                                    _responses_ = $.extend( _responses_ , response );
-                              }
-                              if (  ! _mayBeresolve( _index ) )
-                                recursiveCall( _index + 1 );
-                        } );
-
-                  return _recursiveCallDeferred.promise();
-            };
-
-
-            //What do we have in the global dirties ?
-            var _globalHasNewMenu = false;
-            _.each( api.czr_skope('global__all_').dirtyValues(), function( _setDirtVal , _setId ) {
-                  if ( 'nav_menu[' != _setId.substring( 0, 'nav_menu['.length ) )
-                    return;
-                  _globalHasNewMenu = true;
-            } );
-
-            var _submitGlobal = function() {
-                  self.getSubmitPromise( self.globalSkopeId )
-                        .fail( function( r ) {
-                              api.consoleLog('GLOBAL SAVE SUBMIT FAIL', r );
-                              r = api.czr_skopeBase.buildServerResponse( r );
-                              __main_deferred__.reject( r );
-                        })
-                        .done( function( r ) {
-                              //WE NEED TO BUILD A PROPER RESPONSE HERE
-                              if ( _.isEmpty( _responses_ ) ) {
-                                    _responses_ = r || {};
-                              } else {
-                                    _responses_ = $.extend( _responses_ , r );
-                              }
-                              __main_deferred__.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
-                        });
-            };
-
-
-            if ( _globalHasNewMenu && params.saveGlobal ) {
-                  _submitGlobal();
-            } else {
-                  if ( params.saveGlobal && params.saveSkopes ) {
-                        // Unleash hell
-                        recursiveCall()
-                              .fail( function( r ) {
-                                    api.consoleLog('RECURSIVE SAVE CALL FAIL', r );
-                                    __main_deferred__.reject( r );
-                              })
-                              .done( function( r ) {
-                                    self.cleanSkopeChangesetMetas().always( function() {
-                                          _submitGlobal();
-                                    } );
-                              });
-                  } else if ( params.saveGlobal && ! params.saveSkopes ) {
-                          _submitGlobal();
-                  } else if ( ! params.saveGlobal && params.saveSkopes ) {
-                          recursiveCall()
-                              .fail( function( r ) {
-                                    api.consoleLog('RECURSIVE SAVE CALL FAIL', r );
-                                    __main_deferred__.reject( r );
-                              })
-                              .done( function( r ) {
-                                   //WE NEED TO BUILD A PROPER RESPONSE HERE
-                                    if ( _.isEmpty( _responses_ ) ) {
-                                          _responses_ = r || {};
-                                    } else {
-                                          _responses_ = $.extend( _responses_ , r );
-                                    }
-
-                                    // When publishing,
-                                    // let's send a request to the server to clean the temporary post metas used by $wp_customize->changeset_post_id(); during the draft changeset session
-                                    self.cleanSkopeChangesetMetas().always( function() {
-                                          __main_deferred__.resolve( { response : _responses_, hasNewMenu : _globalHasNewMenu } );
-                                    });
-
-                              });
-                  }
-            }//else
-
-            return __main_deferred__.promise();
-      },//fireAllSubmissions
-
-
-      //Fired when the skopes metas have been published
-      cleanSkopeChangesetMetas : function() {
-            var self = this,
-                dfd = $.Deferred();
-            //<@4.9compat>
-            // => we only want to clean the temporary post metas when the changesetStatus is 'publish'.
-            // Not for a saved 'draft' or a scheduled 'future'.
-            if ( 'publish' != self.changesetStatus() ) {
-                  return dfd.resolve().promise();
-            }
-            //</@4.9compat>
-            var _query = $.extend(
-                  api.previewer.query(),
-                  { nonce:  api.previewer.nonce.save }
-            );
-            wp.ajax.post( 'czr_clean_skope_changeset_metas_after_publish' , _query )
-                  .always( function () { dfd.resolve(); })
-                  .fail( function ( response ) { api.consoleLog( 'cleanSkopeChangesetMetas failed', _query, response ); })
-                  .done( function( response ) { api.consoleLog( 'cleanSkopeChangesetMetas done', _query, response ); });
-
-            return dfd.promise();
-      }
-});//$.extend
-})( wp.customize , jQuery, _ );
-
-
-
-
-
-
-
-
-///////////////////////////////////ALWAYS SUBMIT NOT YET REGISTERED WIDGETS TO GLOBAL OPTIONS
-// if ( ! api.czr_skopeBase.isExcludedSidebarsWidgets() ) {
-//       _.each( skopeObjectToSubmit, function( _skop ) {
-//             if ( _skop.id == globalSkopeId )
-//               return;
-//             var widget_dirties = {};
-//             var the_dirties = api.czr_skopeBase.getSkopeDirties( _skop.id );
-
-//             //loop on each skop dirties and check if there's a new widget not yet registered globally
-//             //if a match is found, add it to the widget_dirties, if not already added, and add it to the promises submission
-//             _.each( the_dirties, function( _val, _setId ) {
-//                   //must be a widget setting and not yet registered globally
-//                   if ( 'widget_' == _setId.substring(0, 7) && ! api.czr_skopeBase.isWidgetRegisteredGlobally( _setId ) ) {
-//                         if ( ! _.has( widget_dirties, _setId ) ) {
-//                               widget_dirties[ _setId ] = _val;
-//                         }
-//                   }
-//             });
-
-
-//             if ( ! _.isEmpty(widget_dirties) ) {
-//                   //each promise is a submit ajax query
-//                   promises.push( submit( {
-//                         skope_id : globalSkopeId,
-//                         the_dirties : widget_dirties,
-//                         dyn_type : 'wp_default_type'
-//                     } )
-//                   );
-//             }
-//       });
-// }
-
-
-
-
-
-
-
-//ARE THERE SKOPE EXCLUDED DIRTIES ?
-  //var _skopeExcludedDirties = api.czr_skopeBase.getSkopeExcludedDirties();
-
-  //////////////////////////////////SUBMIT EXCLUDED SETTINGS ////////////////////////////
-  ///@to do : do we need to check if we are not already in the global skope ?
-  // if ( ! _.isEmpty( _skopeExcludedDirties ) ) {
-  //       //each promise is a submit ajax query
-  //       promises.push( submit( {
-  //             skope_id : globalSkopeId,
-  //             the_dirties : _skopeExcludedDirties,
-  //             dyn_type : 'wp_default_type'
-  //           })
-  //       );
-  // }
-
-
-
-
-
-  ///////////////////////////////////ALWAYS SUBMIT GLOBAL SKOPE ELIGIBLE SETTINGS TO SPECIFIC GLOBAL OPTION
-  // _.each( skopeObjectToSubmit, function( _skop ) {
-  //       if ( _skop.skope != 'global' )
-  //             return;
-
-  //       if ( _.isUndefined( serverControlParams.globalSkopeOptName) ) {
-  //             throw new Error('serverControlParams.globalSkopeOptName MUST BE DEFINED TO SAVE THE GLOBAL SKOPE.');
-  //       }
-  //       //each promise is a submit ajax query
-  //       promises.push( submit( {
-  //             skope_id : globalSkopeId,
-  //             the_dirties : api.czr_skopeBase.getSkopeDirties( _skop.id ),
-  //             dyn_type : 'global_option',
-  //             opt_name : serverControlParams.globalSkopeOptName
-  //         } )
-  //       );
-  // });
-var CZRSkopeSaveMths = CZRSkopeSaveMths || {};
-( function ( api, $, _ ) {
-$.extend( CZRSkopeSaveMths, {
-      //Fired when all submissions are done and the preview has been refreshed
-      //@param {} skopesServerData looks like :
-      //{
-      //    czr_skopes : [
-      //        0 : { ... skope_model_0 ... },
-      //        1 : { ... skope_model_1 ... },
-      //        2 : { ... skope_model_2 ... }
-      //    ],
-      //    isChangesetDirty : boolean
-      //}
-      reactWhenSaveDone : function( skopesServerData ) {
-            var saved_dirties = {};
-            skopesServerData = _.extend(
-                {
-                      czr_skopes : [],
-                      isChangesetDirty : false
-                },
-                skopesServerData
-            );
-
-            //STORE THE SAVED DIRTIES AND RESET THEM FOR EACH SKOPE
-            // store the saved dirties with their opt name ! important because we will need to match the data sent by the server, before the skope id is generated
-            // (will be used as param to update the db val property of each saved skope)
-            // AND THEN reset them for each skope
-            _.each( api.czr_skopeCollection(), function( _skp_ ) {
-                  saved_dirties[ _skp_.opt_name ] = api.czr_skopeBase.getSkopeDirties( _skp_.id );
-                  api.czr_skope( _skp_.id ).dirtyValues( {} );
-                  api.czr_skope( _skp_.id ).changesetValues( {} );
-            });
-
-
-            //ARE THE SAVED DIRTIES AND THE UPDATED DB VALUES SENT BY SERVER SYNCHRONIZED ?
-            // => let's check if the server sends the same saved values
-            // => reset the czr_saveDirties to default.
-            var _notSyncedSettings    = [],
-                _sentSkopeCollection  = skopesServerData.czr_skopes;
-
-            //api.consoleLog('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
-            console.log('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
-
-            _.each( saved_dirties, function( skp_data, _saved_opt_name ) {
-                  _.each( skp_data, function( _val, _setId ) {
-                        //first, let's check if the sent skopes have not changed ( typically, if a user has opened another page in the preview )
-                        if ( _.isUndefined( _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ) ) )
-                          return;
-                        //exclude ExcludedWPBuiltinSetting and not eligible theme settings from this check
-                        if ( ! api.czr_skopeBase.isSettingSkopeEligible( _setId ) )
-                          return;
-
-                        var sent_skope_db_values  = _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ).db,
-                            sent_skope_level      = _.findWhere( _sentSkopeCollection, { opt_name : _saved_opt_name } ).skope,
-                            wpSetId               = api.CZR_Helpers.build_setId( _setId ),
-                            shortSetId            = api.CZR_Helpers.getOptionName( _setId ),
-                            sent_set_val          = sent_skope_db_values[wpSetId];
-
-                        //for the global skope, the server won't send the settings for which the value has been reset to default
-                        //skip this case too
-                        if ( _.isUndefined( sent_set_val ) && 'global' == sent_skope_level && _val === serverControlParams.defaultOptionsValues[shortSetId] )
-                          return;
-
-                        if ( _.isUndefined( sent_set_val ) || ! _.isEqual( sent_set_val, _val ) ) {
-                              _notSyncedSettings.push( { opt_name : _saved_opt_name, setId : wpSetId, server_val : sent_set_val, api_val : _val } );
-                        }
-                  });
-            });
-
-            if ( ! _.isEmpty( _notSyncedSettings ) ) {
-                  api.consoleLog('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', _notSyncedSettings );
-                  console.log('_notSyncedSettings', _notSyncedSettings );
-            } else {
-                  api.consoleLog('ALL RIGHT, SERVER AND API ARE SYNCHRONIZED AFTER SAVE' );
-            }
-
-            //SYNCHRONIZE THE API.SETTINGS.SETTINGS WITH THE SAVED VALUE FOR GLOBAL SKOPE
-            //finally make sure the api.settings.settings values are always synchronized with the global skope instance
-            api.czr_skopeBase.maybeSynchronizeGlobalSkope();
-
-            //UPDATE CURRENT SKOPE CONTROL NOTICES IN THE CURRENTLY EXPANDED SECTION
-            api.czr_skopeBase.updateCtrlSkpNot( api.CZR_Helpers.getSectionControlIds() );
-
-            //MAKE SURE TO COLLAPSE THE CONTROL NOTICES AFTER SAVED IF CURRENT SKOPE IS GLOBAL
-            var _setupSectionCtrlNotices = function() {
-                  var sectionCtrls = api.CZR_Helpers.getSectionControlIds( api.czr_activeSectionId() );
-                  _.each( sectionCtrls, function( ctrlId ) {
-                        if ( ! api.has( ctrlId ) || _.isUndefined( api.control( ctrlId ) ) )
-                          return;
-                        var ctrl = api.control( ctrlId );
-                        if ( ! _.has( ctrl, 'czr_states' ) )
-                          return;
-                        ctrl.czr_states( 'noticeVisible' )( api.czr_skopeBase.isCtrlNoticeVisible( ctrlId ) );
-                  });
-            };
-            //_.delay( _setupSectionCtrlNotices, 500 );
-      }
-});//$.extend
-})( wp.customize , jQuery, _ );
 var CZRSkopeResetMths = CZRSkopeResetMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRSkopeResetMths, {
@@ -7504,7 +6937,7 @@ $.extend( CZRSkopeMths, {
       $.extend( CZRSkopeMths, api.Events );
       $.extend( CZRSkopeMths, api.CZR_Helpers );
       api.CZR_skopeBase             = api.Class.extend( CZRSkopeBaseMths );
-      api.CZR_skopeSave             = api.Class.extend( CZRSkopeSaveMths );
+      //api.CZR_skopeSave             = api.Class.extend( CZRSkopeSaveMths );
       api.CZR_skopeReset            = api.Class.extend( CZRSkopeResetMths );
       api.CZR_skope                 = api.Value.extend( CZRSkopeMths ); //=> used as constructor when creating the collection of skopes
 
