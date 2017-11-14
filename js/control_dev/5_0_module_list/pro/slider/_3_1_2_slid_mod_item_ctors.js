@@ -36,6 +36,7 @@ $.extend( CZRSlideModuleMths, {
                                       {
                                             trigger   : 'click keydown',
                                             selector  : '.refresh-button',
+                                            name :      'slide-refresh-preview',
                                             actions   : function( ev ) {
                                                   //var _setId = api.CZR_Helpers.getControlSettingId( module.control.id );
                                                   // if ( api.has( _setId ) ) {
@@ -54,6 +55,7 @@ $.extend( CZRSlideModuleMths, {
                                       {
                                             trigger   : 'click keydown',
                                             selector  : '.focus-button',
+                                            name : 'slide-focus-action',
                                             actions   : function( ev ) {
                                                   api.previewer.send( 'slide_focus', {
                                                         module_id : item.module.id,
