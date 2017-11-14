@@ -260,7 +260,7 @@
             // This "publish" case is handled by add_action( 'transition_post_status', 'ha_publish_skope_changeset_metas', 0, 3 );
             api.previewer.save = function( args ) {
                   //return api.czr_skopeSave.save( args );
-                  return api.requestChangesetUpdate()
+                  return api.requestChangesetUpdate( {}, { autosave: true } )
                               .always( function( _response_ ) {
                                     response = _response_.response;
                                     _original_save.apply( api.previewer,  args ).done( function() {
@@ -288,7 +288,20 @@
                                   response = _response_.response;
                                   api.consoleLog( 'apiRequestChangesetUpdate failed => ', response );
                               })
-                              .done( function( _response_ ) {});
+                              .done( function( _response_ ) {
+                                  var _dirtyness_ = {};
+
+                                  _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                                        _.each( api.czr_skope( _skp.id ).dirtyValues(), function( _val, _setId ) {
+                                            _dirtyness_[_setId] = _val;
+                                        });
+                                  } );
+
+                                  if ( _.isEmpty( _dirtyness_ ) ) {
+                                        api.state( 'changesetStatus' ).set( 'auto-draft' == api.state( 'changesetStatus' )() ? '' : api.state( 'changesetStatus' )() );
+                                        api.state( 'saved' )(true);
+                                  }
+                              });
             };
 
             //Fired when all submissions are done and the preview has been refreshed
@@ -328,9 +341,7 @@
                   var _notSyncedSettings    = [],
                       _sentSkopeCollection  = skopesServerData.czr_skopes;
 
-                  console.log('REACT WHEN SAVE DONE SERVER DATA', skopesServerData );
-                  //api.consoleLog('REACT WHEN SAVE DONE', saved_dirties, _sentSkopeCollection );
-                  console.log('REACT WHEN SAVE DONE SAVED DIRTIES', saved_dirties );
+                  //api.consoleLog('REACT WHEN SAVE DONE', skopesServerData, saved_dirties, _sentSkopeCollection );;
 
                   _.each( saved_dirties, function( skp_data, _saved_opt_name ) {
                         _.each( skp_data, function( _val, _setId ) {
@@ -360,7 +371,6 @@
 
                   if ( ! _.isEmpty( _notSyncedSettings ) ) {
                         api.consoleLog('SOME SETTINGS HAVE NOT BEEN PROPERLY SAVED : ', _notSyncedSettings );
-                        console.log('_notSyncedSettings', _notSyncedSettings );
                   } else {
                         api.consoleLog('ALL RIGHT, SERVER AND API ARE SYNCHRONIZED AFTER SAVE' );
                   }
@@ -775,10 +785,10 @@
        * @param {string}  [_args_.date] - Date to update in the changeset. Optional.
        * @returns {jQuery.Promise} Promise resolving with the response data.
        */
-      //@4.9compat : added _args_
+      //@4.9compat : added _args_ => example : { autosave: true }
       api.requestChangesetUpdate = function( changes, _args_ ) {
             var self = this,
-                dfd = $.Deferred(),
+                _main_deferred_ = $.Deferred(),
                 data,
                 _skopesToUpdate = [],
                 _promises = [],
@@ -788,7 +798,7 @@
                 _recursiveCallDeferred = $.Deferred();
                 // _original = function( changes ) {
                 //     _original_requestChangesetUpdate(changes).then( function( data ) {
-                //         dfd.resolve( data );
+                //         _main_deferred_.resolve( data );
                 //     });
                 // };
             //<@4.9compat>
@@ -886,6 +896,7 @@
             //=> This can happen typically for a setting dirty both in global and other skope(s)
             var _lastSavedRevisionBefore = api._lastSavedRevision;
             //@4.9 compat : added _args_ param
+
             _original_requestChangesetUpdate( _global_skope_changes, _args_ )
                   .fail( function( r ) {
                         api.consoleLog( 'WP requestChangesetUpdateFail', r, api.czr_skopeBase.buildServerResponse(r) );
@@ -896,7 +907,7 @@
                         // Make sure that publishing a changeset waits for all changeset update requests to complete.
                         api.state( 'processing' ).set( 0 );
 
-                        dfd.reject( r );
+                        _main_deferred_.reject( r );
                         r = api.czr_skopeBase.buildServerResponse(r);
 
                         //<@4.9compat>
@@ -929,13 +940,13 @@
                   })
                   .done( function( wp_original_response ) {
                         // $.when.apply( null, _promises ).then( function() {
-                        //       dfd.resolve( wp_original_response );
+                        //       _main_deferred_.resolve( wp_original_response );
                         // });
                         //Restore the _lastSavedRevision index to its previous state to not miss any setting that could have been updated by WP for global.
 
                         //Bail if attempting to update the skope changesets before the initial collection has been populated
                         if ( 'pending' == api.czr_initialSkopeCollectionPopulated.state() )
-                          dfd.resolve( wp_original_response );
+                          _main_deferred_.resolve( wp_original_response );
 
                         api._lastSavedRevision = _lastSavedRevisionBefore;
                         recursiveCall()
@@ -943,22 +954,36 @@
                                     // Ensure that all settings updated subsequently will be included in the next changeset update request.
                                     api._lastSavedRevision = Math.max( api._latestRevision, api._lastSavedRevision );
 
-                                    //api.state( 'changesetStatus' ).set( _data_.changeset_status );
+                                    //<@4.9compat>
+                                    var _dirtyness_ = {};
+
+                                    _.each( api.czr_currentSkopesCollection(), function( _skp ) {
+                                          _.each( api.czr_skope( _skp.id ).dirtyValues(), function( _val, _setId ) {
+                                              _dirtyness_[_setId] = _val;
+                                          });
+                                    } );
+
+                                    if ( _.isEmpty( _dirtyness_ ) && _.isEqual( _global_skope_changes, { blogname : { dummy_change : 'dummy_change' } } ) ) {
+                                          api.state( 'changesetStatus' ).set( 'auto-draft' == api.state( 'changesetStatus' )() ? '' : api.state( 'changesetStatus' )() );
+                                          api.state( 'saved' )(true);
+                                    }
+                                    //</@4.9compat>
+
                                     // Make sure that publishing a changeset waits for all changeset update requests to complete.
                                     api.state( 'processing' ).set( 0 );
                               })
                               .fail( function( r ) {
-                                    dfd.reject( r );
+                                    _main_deferred_.reject( r );
                                     api.consoleLog( 'CHANGESET UPDATE RECURSIVE PUSH FAIL', r , _all_skopes_data_ );
                                     api.trigger( 'changeset-error', r );
                                     api.czr_serverNotification( { message: r, status : 'error' } );
                               } )
                               .done( function() {
-                                    dfd.resolve( wp_original_response );
+                                    _main_deferred_.resolve( wp_original_response );
                               });
                   });
 
-            return dfd.promise();
+            return _main_deferred_.promise();
       };
 
 
@@ -1012,6 +1037,7 @@
                         );
                   }
             } );
+
 
             //  _.each( api.czr_skope( skope_id ).dirtyValues(), function( dirtyValue, settingId ) {
             //       submittedChanges[ settingId ] = _.extend(
@@ -1422,8 +1448,8 @@ var CZRSkopeBaseMths = CZRSkopeBaseMths || {};
                 self.skope_colors = {
                       global : 'rgb(255, 255, 255)',
                       special_group : 'rgba(173, 213, 247, 0.55)',
-                      group  : 'rgba(39, 59, 88, 0.12)',// 'rgba(173, 213, 247, 0.55)',
-                      local  : 'rgba(39, 59, 88, 0.28)'// 'rgba(78, 122, 199, 0.35)'
+                      group  : 'rgba(120, 136, 158, 0.12)',// 'rgba(39, 59, 88, 0.12)',// 'rgba(173, 213, 247, 0.55)',
+                      local  : 'rgba(187, 211, 247, 0.28)', //rgba(39, 59, 88, 0.28)'// 'rgba(78, 122, 199, 0.35)'
                 };
                 //Deferred used to make sure the overridden api.previewer.query method has been taken into account
                 api.czr_isPreviewerSkopeAware   = $.Deferred();

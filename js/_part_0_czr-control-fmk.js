@@ -774,7 +774,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
 
               args = _.extend( _defaultArgs, args );
               // => we need an existing dom element
-              if ( ! args.dom_el instanceof jQuery || 1 != args.dom_el.length ) {
+              if ( ! args.dom_el instanceof jQuery || 1 > args.dom_el.length ) {
                     api.errorLog( 'setupDomListeners : dom element should be an existing dom element', args );
                     return;
               }
@@ -798,6 +798,32 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                           api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
                           return;
                     }
+
+                    // if ( ! _event.name && ! _.isEmpty( _event.name ) ) {
+                    //     api.errorLog('in setupDOMListeners : missing name', _event );
+                    // }
+
+                    // DON'T CREATE THE SAME LISTENERS MULTIPLE TIMES
+                    //Make sure that we add this listener only once to a particular dom element
+                    //A listener id is a combination of event name + selector
+                    //if not set, the name is a concatenation of trigger + selector
+                    var _name = ( _event.name && ! _.isEmpty( _event.name ) ) ? _event.name : [ _event.trigger, _event.selector ].join('');
+
+                    var _currentListenerCollection = args.dom_el.data( 'czr-listener-collection' );
+                    if ( ! _currentListenerCollection || ! _.isArray( _currentListenerCollection ) ) {
+                          _currentListenerCollection = [ _name ];
+                    } else {
+                          _currentListenerCollection = _.isArray( _currentListenerCollection ) ? _currentListenerCollection : [];
+                          if ( ! _.contains( _currentListenerCollection, _name ) ) {
+                                _currentListenerCollection.push( _name );
+                          } else {
+                                // api.errorLog('Dom listener already created for event : ', _name );
+                                return;
+                          }
+
+                    }
+                    // add this listener to the collection
+                    args.dom_el.data( 'czr-listener-collection' , _currentListenerCollection );
 
                     //LISTEN TO THE DOM => USES EVENT DELEGATION
                     args.dom_el.on( _event.trigger , _event.selector, function( e, event_params ) {
