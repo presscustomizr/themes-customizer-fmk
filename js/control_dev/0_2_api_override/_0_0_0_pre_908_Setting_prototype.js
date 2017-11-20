@@ -6,23 +6,23 @@
       //Changed the core to specify that the setting preview is actually a deferred callback
       //=> allows us to use syntax like :
       //api( setId ).set( new_value ).done( function() { execute actions when all the setting callbacks have been done })
-      api.Setting.prototype.initialize = function( id, value, options ) {
-            var setting = this;
-            api.Value.prototype.initialize.call( setting, value, options );
+      // api.Setting.prototype.initialize = function( id, value, options ) {
+      //       var setting = this;
+      //       api.Value.prototype.initialize.call( setting, value, options );
 
-            setting.id = id;
-            setting.transport = setting.transport || 'refresh';
-            setting._dirty = options.dirty || false;
-            setting.notifications = new api.Values({ defaultConstructor: api.Notification });
+      //       setting.id = id;
+      //       setting.transport = setting.transport || 'refresh';
+      //       setting._dirty = options.dirty || false;
+      //       setting.notifications = new api.Values({ defaultConstructor: api.Notification });
 
-            // Whenever the setting's value changes, refresh the preview.
-            setting.bind( setting.preview );
+      //       // Whenever the setting's value changes, refresh the preview.
+      //       setting.bind( setting.preview );
 
-            // the deferred can be used in moduleCollectionReact to execute actions after the module has been set.
-            // setting.bind( function( to, from , data ) {
-            //       return setting.preview( to, from , data );
-            // }, { deferred : true } );
-      };
+      //       // the deferred can be used in moduleCollectionReact to execute actions after the module has been set.
+      //       // setting.bind( function( to, from , data ) {
+      //       //       return setting.preview( to, from , data );
+      //       // }, { deferred : true } );
+      // };
 
 
       //var _old_preview = api.Setting.prototype.preview;
