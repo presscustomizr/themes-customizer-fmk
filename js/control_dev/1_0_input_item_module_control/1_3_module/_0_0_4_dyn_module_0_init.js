@@ -19,6 +19,11 @@ $.extend( CZRDynModuleMths, {
 
               module.preItemsWrapper = '';//will store the pre items wrapper
 
+              //PRE MODEL VIEW STATE
+              // => will control the rendering / destruction of the DOM view
+              // => the instantiation / destruction of the input Value collection
+              module.preItemExpanded = new api.Value( false );
+
               //EXTENDS THE DEFAULT MONO MODEL CONSTRUCTOR WITH NEW METHODS
               //=> like remove item
               //module.itemConstructor = api.CZRItem.extend( module.CZRItemDynamicMths || {} );
@@ -32,17 +37,27 @@ $.extend( CZRDynModuleMths, {
               module.userEventMap = new api.Value( [
                     //pre add new item : open the dialog box
                     {
-                        trigger   : 'click keydown',
-                        selector  : [ '.' + module.control.css_attr.open_pre_add_btn, '.' + module.control.css_attr.cancel_pre_add_btn ].join(','),
-                        name      : 'pre_add_item',
-                        actions   : [ 'closeAllItems', 'closeRemoveDialogs', 'renderPreItemView','setPreItemViewVisibility' ],
+                          trigger   : 'click keydown',
+                          selector  : [ '.' + module.control.css_attr.open_pre_add_btn, '.' + module.control.css_attr.cancel_pre_add_btn ].join(','),
+                          name      : 'pre_add_item',
+                          actions   : [
+                                'closeAllItems',
+                                'closeRemoveDialogs',
+                                // toggles the visibility of the Remove View Block
+                                // => will render or destroy the pre item view
+                                // @param : obj = { event : {}, item : {}, view : ${} }
+                                function(obj) {
+                                      var module = this;
+                                      module.preItemExpanded.set( ! module.preItemExpanded() );
+                                },
+                          ],
                     },
                     //add new item
                     {
-                        trigger   : 'click keydown',
-                        selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
-                        name      : 'add_item',
-                        actions   : [ 'closeRemoveDialogs', 'closeAllItems', 'addItem' ],
+                          trigger   : 'click keydown',
+                          selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
+                          name      : 'add_item',
+                          actions   : [ 'closeRemoveDialogs', 'closeAllItems', 'addItem' ],
                     }
               ]);//module.userEventMap
       },
@@ -56,22 +71,36 @@ $.extend( CZRDynModuleMths, {
               //Setup the module event listeners
               module.setupDOMListeners( module.userEventMap() , { dom_el : module.container } );
 
-              //PRE MODEL VALUE
+              // Pre Item Value => used to store the preItem model
               module.preItem = new api.Value( module.getDefaultItemModel() );
 
-              //PRE MODEL EMBED PROMISE
-              module.preItemEmbedded = $.Deferred();//was module.czr_preItem.create('item_content');
-              //Add view rendered listeners
-              module.preItemEmbedded.done( function( $preWrapper ) {
-                    module.preItemsWrapper = $preWrapper;
-                    module.setupPreItemInputCollection();
-              });
+              // Action on pre Item expansion / collapsing
+              module.preItemExpanded.callbacks.add( function( isExpanded ) {
+                    if ( isExpanded ) {
+                          module.renderPreItemView()
+                                .done( function( $preWrapper ) {
+                                      module.preItemsWrapper = $preWrapper;
+                                      //Re-initialize the pre item model
+                                      module.preItem( module.getDefaultItemModel() );
 
-              //PRE MODEL VIEW STATE
-              module.preItemExpanded = new api.Value(false);
-              //add state listeners
-              module.preItemExpanded.callbacks.add( function( to, from ) {
-                    module._togglePreItemViewExpansion( to );
+                                      module.trigger( 'before-pre-item-input-collection-setup' );
+                                      // Setup the pre item input collection from dom
+                                      module.setupPreItemInputCollection();
+
+                                })
+                                .fail( function( message ) {
+                                      api.errorLog( 'Pre-Item : ' + message );
+                                });
+                    } else {
+                          $.when( module.preItemsWrapper.remove() ).done( function() {
+                                module.preItem.czr_Input = {};
+                                module.preItemsWrapper = null;
+                                module.trigger( 'pre-item-input-collection-destroyed' );
+                          });
+                    }
+
+                    // Expand / Collapse
+                    module._togglePreItemViewExpansion( isExpanded );
               });
 
               api.CZRModule.prototype.ready.call( module );//fires the parent
@@ -102,8 +131,10 @@ $.extend( CZRDynModuleMths, {
                           } ) );
 
                           //fire ready once the input Value() instance is initialized
-                          module.preItem.czr_Input(_id).ready();
+                          module.preItem.czr_Input( _id ).ready();
                     });//each
+
+              module.trigger( 'pre-item-input-collection-ready' );
       },
 
 
@@ -115,8 +146,7 @@ $.extend( CZRDynModuleMths, {
               var module = this,
                   item = module.preItem(),
                   collapsePreItem = function() {
-                        module.preItemExpanded.set(false);
-                        module._resetPreItemInputs();
+                        module.preItemExpanded.set( false );
                         //module.toggleSuccessMessage('off');
                   },
                   dfd = $.Deferred();
@@ -161,18 +191,6 @@ $.extend( CZRDynModuleMths, {
                       dfd.resolve();
               });
               return dfd.promise();
-      },
-
-      _resetPreItemInputs : function() {
-              var module = this;
-              module.preItem.set( module.getDefaultItemModel() );
-              module.preItem.czr_Input.each( function( input_instance ) {
-                    var _input_id = input_instance.id;
-                    //do we have a default value ?
-                    if ( ! _.has( module.getDefaultItemModel(), _input_id ) )
-                      return;
-                    input_instance.set( module.getDefaultItemModel()._input_id );
-              });
       }
 });//$.extend
 })( wp.customize , jQuery, _ );

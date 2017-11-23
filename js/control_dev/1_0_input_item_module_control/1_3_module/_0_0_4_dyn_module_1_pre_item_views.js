@@ -12,41 +12,35 @@ $.extend( CZRDynModuleMths, {
       /// PRE ADD MODEL DIALOG AND VIEW
       //////////////////////////////////////////////////
       renderPreItemView : function( obj ) {
-              var module = this;
+              var module = this, dfd = $.Deferred();
               //is this view already rendered ?
-              if ( 'pending' != module.preItemEmbedded.state() ) //was ! _.isEmpty( module.czr_preItem('item_content')() ) )
-                return;
+              if ( _.isObject( module.preItemsWrapper ) && 0 < module.preItemsWrapper.length ) //was ! _.isEmpty( module.czr_preItem('item_content')() ) )
+                return dfd.resolve( module.preItemsWrapper ).promise();
 
               //do we have view template script?
               if ( ! _.has(module, 'itemPreAddEl') ||  0 === $( '#tmpl-' + module.itemPreAddEl ).length )
-                return this;
+                return dfd.reject( 'Missing itemPreAddEl or template ').promise();
 
               //print the html
               var pre_add_template = wp.template( module.itemPreAddEl );
 
               //do we have an html template and a module container?
               if ( ! pre_add_template  || ! module.container )
-                return this;
+                return dfd.reject( 'Missing html template ').promise();
 
               var $_pre_add_el = $('.' + module.control.css_attr.pre_add_item_content, module.container );
-              $_pre_add_el.prepend( pre_add_template() );
+
+              $_pre_add_el.prepend( $('<div>', { class : 'pre-item-wrapper'} ) );
+              $_pre_add_el.find('.pre-item-wrapper').append( pre_add_template() );
 
               //say it
-              module.preItemEmbedded.resolve( $_pre_add_el );
+              return dfd.resolve( $_pre_add_el.find('.pre-item-wrapper') ).promise();
       },
 
       //@return $ el of the pre Item view
       _getPreItemView : function() {
               var module = this;
               return $('.' +  module.control.css_attr.pre_add_item_content, module.container );
-      },
-
-
-      //toggles the visibility of the Remove View Block
-      //@param : obj = { event : {}, item : {}, view : ${} }
-      setPreItemViewVisibility : function(obj) {
-              var module = this;
-              module.preItemExpanded.set( ! module.preItemExpanded() );
       },
 
 
