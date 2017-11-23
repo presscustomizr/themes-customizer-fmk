@@ -144,10 +144,24 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
 
       //GENERIC METHOD TO SETUP EVENT LISTENER
       //NOTE : the args.event must alway be defined
+      //Example of args :
+      //  {
+      //       trigger   : 'click keydown',
+      //       selector  : [ '.' + module.control.css_attr.open_pre_add_btn, '.' + module.control.css_attr.cancel_pre_add_btn ].join(','),
+      //       name      : 'pre_add_item',
+      //       actions   : [
+      //             'closeAllItems',
+      //             'closeRemoveDialogs',
+      //             function(obj) {
+      //                   var module = this;
+      //                   module.preItemExpanded.set( ! module.preItemExpanded() );
+      //             },
+      //       ],
+      // },
       executeEventActionChain : function( args, instance ) {
               var control = this;
 
-              //if the actions param is a anonymous function, fire it and stop there
+              //if the actions param is not an array but is an anonymous function, fire it and stop there
               if ( 'function' === typeof( args.event.actions ) )
                 return args.event.actions.call( instance, args );
 
@@ -164,27 +178,41 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                     if ( _break )
                       return;
 
-                    if ( 'function' != typeof( instance[ _cb ] ) ) {
-                          throw new Error( 'executeEventActionChain : the action : ' + _cb + ' has not been found when firing event : ' + args.event.selector );
+                    var _cbCandidate = function() {};
+
+                    // is the _cb an anonymous function ?
+                    // if not, we expect the method to exist in the provided object instance
+                    if ( 'function' === typeof( _cb ) ) {
+                          _cbCandidate = _cb;
+                    } else {
+                          if ( 'function' != typeof( instance[ _cb ] ) ) {
+                                throw new Error( 'executeEventActionChain : the action : ' + _cb + ' has not been found when firing event : ' + args.event.selector );
+                          } else {
+                                _cbCandidate = instance[ _cb ];
+                          }
                     }
 
-                    //Allow other actions to be bound before action and after
+                    // Allow other actions to be bound before action and after
                     //
-                    //=> we don't want the event in the object here => we use the one in the event map if set
-                    //=> otherwise will loop infinitely because triggering always the same cb from args.event.actions[_cb]
-                    //=> the dom element shall be get from the passed args and fall back to the controler container.
+                    // => we don't want the event in the object here => we use the one in the event map if set
+                    // => otherwise will loop infinitely because triggering always the same cb from args.event.actions[_cb]
+                    // => the dom element shall be get from the passed args and fall back to the controler container.
                     var $_dom_el = ( _.has(args, 'dom_el') && -1 != args.dom_el.length ) ? args.dom_el : control.container;
 
-                    $_dom_el.trigger( 'before_' + _cb, _.omit( args, 'event' ) );
+                    if ( 'string' === typeof( _cb ) ) {
+                          $_dom_el.trigger( 'before_' + _cb, _.omit( args, 'event' ) );
+                    }
 
                     //executes the _cb and stores the result in a local var
-                    var _cb_return = instance[ _cb ].call( instance, args );
+                    var _cb_return = _cbCandidate.call( instance, args );
                     //shall we stop the action chain here ?
                     if ( false === _cb_return )
                       _break = true;
 
-                    //allow other actions to be bound after
-                    $_dom_el.trigger( 'after_' + _cb, _.omit( args, 'event' ) );
+                    if ( 'string' === typeof( _cb ) ) {
+                          //allow other actions to be bound after
+                          $_dom_el.trigger( 'after_' + _cb, _.omit( args, 'event' ) );
+                    }
               });//_.map
       }
 });//$.extend
