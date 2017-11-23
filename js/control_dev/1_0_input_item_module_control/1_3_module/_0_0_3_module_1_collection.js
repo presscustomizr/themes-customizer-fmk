@@ -69,6 +69,7 @@ $.extend( CZRModuleMths, {
               var module = this;
               //Prepare the item, make sure its id is set and unique
               item_candidate = module.prepareItemForAPI( item );
+
               //Item id checks !
               if ( ! _.has( item_candidate, 'id' ) ) {
                 throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
@@ -146,7 +147,13 @@ $.extend( CZRModuleMths, {
               //Now amend the initial_item_model with the generated id
               api_ready_item.initial_item_model.id = api_ready_item.id;
 
-              return api_ready_item;
+              return module.validateItemBeforeInstantiation( api_ready_item );
+      },
+
+
+      // Designed to be overriden in modules
+      validateItemBeforeInstantiation : function( api_ready_item ) {
+            return api_ready_item;
       },
 
 
