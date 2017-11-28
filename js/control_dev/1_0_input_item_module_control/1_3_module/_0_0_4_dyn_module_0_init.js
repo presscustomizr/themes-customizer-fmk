@@ -163,29 +163,35 @@ $.extend( CZRDynModuleMths, {
 
               //this iife job is to close the pre item and to maybe refresh the preview
               //@return a promise(), then once done the item view is expanded to start editing it
-              ( function() {
-                    return $.Deferred( function() {
-                          var _dfd_ = this;
-                          module.czr_Item( item.id ).isReady.then( function() {
-                                //module.toggleSuccessMessage('on');
-                                collapsePreItem();
+              $.Deferred( function() {
+                    var _dfd_ = this;
+                    module.czr_Item( item.id ).isReady.then( function() {
+                          //module.toggleSuccessMessage('on');
+                          collapsePreItem();
 
-                                module.trigger('item-added', item );
-                                //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
+                          module.trigger('item-added', item );
 
-                                //refresh the preview frame (only needed if transport is postMessage )
-                                //must be a dom event not triggered
-                                //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
-                                if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
-                                  api.previewer.refresh().done( function() {
-                                        _dfd_.resolve();
-                                  });
-                                } else {
-                                        _dfd_.resolve();
-                                }
-                          });
-                    }).promise();
-              })().done( function() {
+                          var resolveWhenPreviewerReady = function() {
+                                api.previewer.unbind( 'ready', resolveWhenPreviewerReady );
+                                _dfd_.resolve();
+                          };
+                          //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
+
+                          //refresh the preview frame (only needed if transport is postMessage && has no partial refresh set )
+                          //must be a dom event not triggered
+                          //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
+                          if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
+                                // api.previewer.refresh().done( function() {
+                                //       _dfd_.resolve();
+                                // });
+                                // It would be better to wait for the refresh promise
+                                api.previewer.bind( 'ready', resolveWhenPreviewerReady );
+                                api.previewer.refresh();
+                          } else {
+                                _dfd_.resolve();
+                          }
+                    });
+              }).done( function() {
                       module.czr_Item( item.id ).viewState( 'expanded' );
               }).always( function() {
                       dfd.resolve();
