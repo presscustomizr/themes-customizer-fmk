@@ -215,12 +215,13 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                 is_mod_opt = _.has( inputParentInst() , 'is_mod_opt' );
 
             //bail if already done
-            if ( _.has( inputParentInst, 'czr_Input') && ! _.isEmpty( inputParentInst.inputCollection() ) )
+            //_.has( inputParentInst, 'czr_Input')
+            if ( ! _.isEmpty( inputParentInst.inputCollection() ) )
               return;
 
             //INPUTS => Setup as soon as the view content is rendered
             //the inputParentInst is a collection of inputs, each one has its own view module.
-            inputParentInst.czr_Input = new api.Values();
+            inputParentInst.czr_Input = inputParentInst.czr_Input || new api.Values();
 
             //IS THE PARENT AN ITEM OR A MODULE OPTION ?
             //those default constructors (declared in the module init ) can be overridden by extended item or mod opt constructors inside the modules

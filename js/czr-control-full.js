@@ -600,12 +600,13 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                 is_mod_opt = _.has( inputParentInst() , 'is_mod_opt' );
 
             //bail if already done
-            if ( _.has( inputParentInst, 'czr_Input') && ! _.isEmpty( inputParentInst.inputCollection() ) )
+            //_.has( inputParentInst, 'czr_Input')
+            if ( ! _.isEmpty( inputParentInst.inputCollection() ) )
               return;
 
             //INPUTS => Setup as soon as the view content is rendered
             //the inputParentInst is a collection of inputs, each one has its own view module.
-            inputParentInst.czr_Input = new api.Values();
+            inputParentInst.czr_Input = inputParentInst.czr_Input || new api.Values();
 
             //IS THE PARENT AN ITEM OR A MODULE OPTION ?
             //those default constructors (declared in the module init ) can be overridden by extended item or mod opt constructors inside the modules
@@ -2049,6 +2050,22 @@ $.extend( CZRItemMths , {
             item.embedded = $.Deferred();
             item.container = null;//will store the item $ dom element
             item.contentContainer = null;//will store the item content $ dom element
+
+            // this collection will be populated based on the DOM rendered input candidates
+            // will allows us to set and get any individual input : item.czr_Input('font-family')()
+            // declaring the collection Values here allows us to schedule actions for not yet registered inputs
+            // like for example :
+            // => when the font-family input is registered, then listen to it
+            // item.czr_Input.when( 'font-family', function( _input_ ) {
+            //       _input_.bind( function( to, from ) {
+            //             console.log('font-family input changed ', to ,from );
+            //       });
+            // });
+            item.czr_Input = new api.Values();
+
+            // the item.inputCollection stores all instantiated input from DOM at the end of api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
+            // the collection of each individual input object is stored in item.czr_Input()
+            // this inputCollection is designed to be listened to, in order to fire action when the collection has been populated.
             item.inputCollection = new api.Value({});
 
             //VIEW STATES FOR ITEM AND REMOVE DIALOG
@@ -2127,7 +2144,8 @@ $.extend( CZRItemMths , {
                   item.bind( 'contentRendered', function() {
                         //create the collection of inputs if needed
                         //first time or after a removal
-                        if ( ! _.has( item, 'czr_Input' ) || _.isEmpty( item.inputCollection() ) ) {
+                        // previous condition included :  ! _.has( item, 'czr_Input' )
+                        if ( _.isEmpty( item.inputCollection() ) ) {
                               try {
                                     api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
                                     //the item.container is now available
