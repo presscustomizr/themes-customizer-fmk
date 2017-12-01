@@ -135,7 +135,7 @@ $.extend( CZRItemMths , {
 
                   //SCHEDULE INPUTS DESTROY
                   item.bind( 'contentRemoved', function() {
-                        if ( _.has(item, 'czr_Input') )
+                        if ( _.has( item, 'czr_Input' ) )
                           api.CZR_Helpers.removeInputCollection.call( item );
                   });
 

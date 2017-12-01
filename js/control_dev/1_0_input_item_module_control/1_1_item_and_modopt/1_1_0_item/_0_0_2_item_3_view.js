@@ -23,9 +23,9 @@ $.extend( CZRItemMths , {
       },
 
 
-      //fired when item is ready and embedded
-      //define the item view DOM event map
-      //bind actions when the item is embedded
+      // fired when item is ready and embedded
+      // define the item view DOM event map
+      // bind actions when the item is embedded
       itemWrapperViewSetup : function( item_model ) {
             var item = this,
                 module = this.module;
