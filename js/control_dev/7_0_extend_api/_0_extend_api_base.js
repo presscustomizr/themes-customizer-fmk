@@ -31,7 +31,8 @@
             content_picker : 'setupContentPicker',
             text_editor    : 'setupTextEditor',
             password : '',
-            range_slider : 'setupRangeSlider'
+            range_slider : 'setupRangeSlider',
+            hidden : ''
       });
 
       //BASE ITEMS => used as constructor when creating the collection of models
