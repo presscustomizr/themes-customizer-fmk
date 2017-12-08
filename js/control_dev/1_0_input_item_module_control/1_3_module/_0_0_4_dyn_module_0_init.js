@@ -139,48 +139,63 @@ $.extend( CZRDynModuleMths, {
       },
 
 
+      // Designed to be overriden in modules
+      validateItemBeforeAddition : function( item_candidate ) {
+            return item_candidate;
+      },
+
 
       //Fired on user Dom action.
       //the item is manually added.
       //@return a promise() for future sequential actions
       addItem : function(obj) {
             var module = this,
-                item = module.preItem(),
+                item_candidate = module.preItem(),
                 collapsePreItem = function() {
                       module.preItemExpanded.set( false );
                       //module.toggleSuccessMessage('off');
                 },
                 dfd = $.Deferred();
 
-            if ( _.isEmpty(item) || ! _.isObject(item) ) {
-                  api.errorLog( 'addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
+            if ( _.isEmpty(item_candidate) || ! _.isObject(item_candidate) ) {
+                  api.errorLog( 'addItem : an item_candidate should be an object and not empty. In : ' + module.id +'. Aborted.' );
                   return dfd.resolve().promise();
             }
-            //display a sucess message if item is successfully instantiated
+            //display a sucess message if item_candidate is successfully instantiated
             collapsePreItem = _.debounce( collapsePreItem, 200 );
 
+            //allow modules to validate the item_candidate before addition
+            item_candidate = module.validateItemBeforeAddition( item_candidate );
+
+            // Abort here and display a simple console message if item is null or false, for example if validateItemBeforeAddition returned null or false
+            if ( ! item_candidate || _.isNull( item_candidate ) ) {
+                  api.consoleLog( 'item_candidate invalid. InstantiateItem aborted in module ' + module.id );
+                  return;
+            }
+
+
             //instantiates and fires ready
-            module.instantiateItem( item, true ).ready(); //true == Added by user
+            module.instantiateItem( item_candidate, true ).ready(); //true == Added by user
 
             //this iife job is to close the pre item and to maybe refresh the preview
             //@return a promise(), then once done the item view is expanded to start editing it
             $.Deferred( function() {
                   var _dfd_ = this;
-                  module.czr_Item( item.id ).isReady.then( function() {
+                  module.czr_Item( item_candidate.id ).isReady.then( function() {
                         //module.toggleSuccessMessage('on');
                         collapsePreItem();
 
-                        module.trigger('item-added', item );
+                        module.trigger('item-added', item_candidate );
 
                         var resolveWhenPreviewerReady = function() {
                               api.previewer.unbind( 'ready', resolveWhenPreviewerReady );
                               _dfd_.resolve();
                         };
-                        //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
+                        //module.doActions( 'item_added_by_user' , module.container, { item : item_candidate , dom_event : obj.dom_event } );
 
                         //refresh the preview frame (only needed if transport is postMessage && has no partial refresh set )
                         //must be a dom event not triggered
-                        //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
+                        //otherwise we are in the init collection case where the items are fetched and added from the setting in initialize
                         if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
                               // api.previewer.refresh().done( function() {
                               //       _dfd_.resolve();
@@ -193,7 +208,7 @@ $.extend( CZRDynModuleMths, {
                         }
                   });
             }).done( function() {
-                    module.czr_Item( item.id ).viewState( 'expanded' );
+                    module.czr_Item( item_candidate.id ).viewState( 'expanded' );
             }).always( function() {
                     dfd.resolve();
             });

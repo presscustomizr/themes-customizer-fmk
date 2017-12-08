@@ -59,6 +59,9 @@ $.extend( CZRItemMths , {
             //set initial values
             var _initial_model = $.extend( item.defaultItemModel, options.initial_item_model );
 
+            // Check initial model here : to be overriden in each module
+            _initial_model = item.validateItemModelOnInitialize( _initial_model );
+
             //this won't be listened to at this stage
             item.set( _initial_model );
 
@@ -110,6 +113,7 @@ $.extend( CZRItemMths , {
             item.isReady.done( function() {
                   //push it to the collection
                   item.module.updateItemsCollection( { item : item() } );
+                  console.log('New item added and ready', item() );
                   //listen to each single item change
                   item.callbacks.add( function() { return item.itemReact.apply(item, arguments ); } );
 
@@ -171,6 +175,12 @@ $.extend( CZRItemMths , {
             this.isReady.resolve();
       },
 
+
+      // @return validated model object
+      // To be overriden in each module
+      validateItemModelOnInitialize : function( item_model_candidate ) {
+            return item_model_candidate;
+      },
 
       //React to a single item change
       //cb of module.czr_Item( item.id ).callbacks

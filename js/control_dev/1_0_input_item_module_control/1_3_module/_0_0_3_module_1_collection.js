@@ -70,6 +70,12 @@ $.extend( CZRModuleMths, {
               //Prepare the item, make sure its id is set and unique
               item_candidate = module.prepareItemForAPI( item );
 
+              // Display a simple console message if item is null or false, for example if validateItemBeforeInstantiation returned null or false
+              if ( ! item_candidate || _.isNull( item_candidate ) ) {
+                    api.consoleLog( 'item_candidate invalid. InstantiateItem aborted in module ' + module.id );
+                    return;
+              }
+
               //Item id checks !
               if ( ! _.has( item_candidate, 'id' ) ) {
                 throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
@@ -109,10 +115,16 @@ $.extend( CZRModuleMths, {
                     var _candidate_val = item_candidate[_key];
                     switch( _key ) {
                           case 'id' :
+                              // The id can be specified in a module ( ex: the pre defined item ids of the Font Customizer module )
+                              // => that's why we need to check here if the item id is not already registered here
                               if ( _.isEmpty( _candidate_val ) ) {
-                                  api_ready_item[_key] = module.generateItemId( module.module_type );
+                                    api_ready_item[_key] = module.generateItemId( module.module_type );
                               } else {
-                                  api_ready_item[_key] = _candidate_val;
+                                    if ( module.isItemRegistered( _candidate_val ) ) {
+                                          module.generateItemId( _candidate_val );
+                                    } else {
+                                          api_ready_item[_key] = _candidate_val;
+                                    }
                               }
                           break;
                           case 'initial_item_model' :
@@ -157,8 +169,9 @@ $.extend( CZRModuleMths, {
       },
 
 
-      //recursive
-      generateItemId : function( module_type, key, i ) {
+      // recursive
+      // will generate a unique id with the provided prefix
+      generateItemId : function( prefix, key, i ) {
               //prevent a potential infinite loop
               i = i || 1;
               if ( i > 100 ) {
@@ -166,17 +179,17 @@ $.extend( CZRModuleMths, {
               }
               var module = this;
               key = key || module._getNextItemKeyInCollection();
-              var id_candidate = module_type + '_' + key;
+              var id_candidate = prefix + '_' + key;
 
               //do we have a module collection value ?
-              if ( ! _.has(module, 'itemCollection') || ! _.isArray( module.itemCollection() ) ) {
+              if ( ! _.has( module, 'itemCollection' ) || ! _.isArray( module.itemCollection() ) ) {
                     throw new Error('The item collection does not exist or is not properly set in module : ' + module.id );
               }
 
               //make sure the module is not already instantiated
               if ( module.isItemRegistered( id_candidate ) ) {
                 key++; i++;
-                return module.generateItemId( module_type, key, i );
+                return module.generateItemId( prefix, key, i );
               }
               return id_candidate;
       },
@@ -264,21 +277,34 @@ $.extend( CZRModuleMths, {
               //normalizes with data
               args = _.extend( { data : {} }, args );
 
-              var item = _.clone( args.item );
+              var item_candidate = _.clone( args.item ),
+                  hasMissingProperty = false;
+
+              // Is the item well formed ? Does it have all the properties of the default model ?
+              // Each module has to declare a defaultItemModel which augments the default one : { id : '', title : '' };
+              // Let's loop on the defaultItemModel property and check that none is missing in the candidate
+              _.each( module.defaultItemModel, function( itemData, key ) {
+                    if ( ! _.has( item_candidate, key ) ) {
+                          throw new Error( 'CZRModuleMths => updateItemsCollection : Missing property "' + key + '" for item candidate' );
+                    }
+              });
+
+              if ( hasMissingProperty )
+                return;
 
               //the item already exist in the collection
-              if ( _.findWhere( _new_collection, { id : item.id } ) ) {
+              if ( _.findWhere( _new_collection, { id : item_candidate.id } ) ) {
                     _.each( _current_collection , function( _item, _ind ) {
-                          if ( _item.id != item.id )
+                          if ( _item.id != item_candidate.id )
                             return;
 
                           //set the new val to the changed property
-                          _new_collection[_ind] = item;
+                          _new_collection[_ind] = item_candidate;
                     });
               }
               //the item has to be added
               else {
-                  _new_collection.push(item);
+                  _new_collection.push( item_candidate );
               }
 
               //updates the collection value

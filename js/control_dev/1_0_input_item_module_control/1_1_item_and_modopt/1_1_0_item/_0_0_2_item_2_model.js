@@ -32,33 +32,33 @@ $.extend( CZRItemMths , {
       //fired on click dom event
       //for dynamic multi input modules
       removeItem : function() {
-              var item = this,
-                  module = this.module,
-                  _new_collection = _.clone( module.itemCollection() );
+            var item = this,
+                module = this.module,
+                _new_collection = _.clone( module.itemCollection() );
 
-              //hook here
-              module.trigger('pre_item_dom_remove', item() );
+            //hook here
+            module.trigger('pre_item_dom_remove', item() );
 
-              //destroy the Item DOM el
-              item._destroyView();
+            //destroy the Item DOM el
+            item._destroyView();
 
-              //new collection
-              //say it
-              _new_collection = _.without( _new_collection, _.findWhere( _new_collection, {id: item.id }) );
-              module.itemCollection.set( _new_collection );
-              //hook here
-              module.trigger('pre_item_api_remove', item() );
+            //new collection
+            //say it
+            _new_collection = _.without( _new_collection, _.findWhere( _new_collection, {id: item.id }) );
+            module.itemCollection.set( _new_collection );
+            //hook here
+            module.trigger('pre_item_api_remove', item() );
 
-              var _item_ = $.extend( true, {}, item() );
-              //remove the item from the collection
-              module.czr_Item.remove( item.id );
-              module.trigger( 'item-removed', _item_ );
+            var _item_ = $.extend( true, {}, item() );
+            //remove the item from the collection
+            module.czr_Item.remove( item.id );
+            module.trigger( 'item-removed', _item_ );
       },
 
       //@return the item {...} from the collection
       //takes a item unique id as param
       getModel : function(id) {
-              return this();
+            return this();
       }
 
 });//$.extend

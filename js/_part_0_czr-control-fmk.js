@@ -2084,6 +2084,9 @@ $.extend( CZRItemMths , {
             //set initial values
             var _initial_model = $.extend( item.defaultItemModel, options.initial_item_model );
 
+            // Check initial model here : to be overriden in each module
+            _initial_model = item.validateItemModelOnInitialize( _initial_model );
+
             //this won't be listened to at this stage
             item.set( _initial_model );
 
@@ -2135,6 +2138,7 @@ $.extend( CZRItemMths , {
             item.isReady.done( function() {
                   //push it to the collection
                   item.module.updateItemsCollection( { item : item() } );
+                  console.log('New item added and ready', item() );
                   //listen to each single item change
                   item.callbacks.add( function() { return item.itemReact.apply(item, arguments ); } );
 
@@ -2196,6 +2200,12 @@ $.extend( CZRItemMths , {
             this.isReady.resolve();
       },
 
+
+      // @return validated model object
+      // To be overriden in each module
+      validateItemModelOnInitialize : function( item_model_candidate ) {
+            return item_model_candidate;
+      },
 
       //React to a single item change
       //cb of module.czr_Item( item.id ).callbacks
@@ -2260,33 +2270,33 @@ $.extend( CZRItemMths , {
       //fired on click dom event
       //for dynamic multi input modules
       removeItem : function() {
-              var item = this,
-                  module = this.module,
-                  _new_collection = _.clone( module.itemCollection() );
+            var item = this,
+                module = this.module,
+                _new_collection = _.clone( module.itemCollection() );
 
-              //hook here
-              module.trigger('pre_item_dom_remove', item() );
+            //hook here
+            module.trigger('pre_item_dom_remove', item() );
 
-              //destroy the Item DOM el
-              item._destroyView();
+            //destroy the Item DOM el
+            item._destroyView();
 
-              //new collection
-              //say it
-              _new_collection = _.without( _new_collection, _.findWhere( _new_collection, {id: item.id }) );
-              module.itemCollection.set( _new_collection );
-              //hook here
-              module.trigger('pre_item_api_remove', item() );
+            //new collection
+            //say it
+            _new_collection = _.without( _new_collection, _.findWhere( _new_collection, {id: item.id }) );
+            module.itemCollection.set( _new_collection );
+            //hook here
+            module.trigger('pre_item_api_remove', item() );
 
-              var _item_ = $.extend( true, {}, item() );
-              //remove the item from the collection
-              module.czr_Item.remove( item.id );
-              module.trigger( 'item-removed', _item_ );
+            var _item_ = $.extend( true, {}, item() );
+            //remove the item from the collection
+            module.czr_Item.remove( item.id );
+            module.trigger( 'item-removed', _item_ );
       },
 
       //@return the item {...} from the collection
       //takes a item unique id as param
       getModel : function(id) {
-              return this();
+            return this();
       }
 
 });//$.extend
@@ -2314,6 +2324,42 @@ $.extend( CZRItemMths , {
             });
       },
 
+      //the view wrapper has been rendered by WP
+      //the content ( the various inputs ) is rendered by the following methods
+      //an event is triggered on the control.container when content is rendered
+      renderItemWrapper : function( item_model ) {
+            //=> an array of objects
+            var item = this,
+                module = item.module;
+
+            item_model = item_model || item();
+
+            //render the item wrapper
+            $_view_el = $('<li>', { class : module.control.css_attr.single_item, 'data-id' : item_model.id,  id : item_model.id } );
+
+            //append the item view to the first module view wrapper
+            //!!note : => there could be additional sub view wrapper inside !!
+            //$( '.' + module.control.css_attr.items_wrapper , module.container).first().append( $_view_el );
+            // module.itemsWrapper has been stored as a $ var in module initialize() when the tmpl has been embedded
+            module.itemsWrapper.append( $_view_el );
+
+            //if module is multi item, then render the item crud header part
+            //Note : for the widget module, the getTemplateEl method is overridden
+            if ( module.isMultiItem() ) {
+                  var _template_selector = module.getTemplateEl( 'rudItemPart', item_model );
+                  //do we have view template script?
+                  if ( 0 === $( '#tmpl-' + _template_selector ).length ) {
+                      throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateEl( 'rudItemPart', item_model ) );
+                  }
+                  $_view_el.append( $( wp.template( _template_selector )( item_model ) ) );
+            }
+
+
+            //then, append the item content wrapper
+            $_view_el.append( $( '<div/>', { class: module.control.css_attr.item_content } ) );
+
+            return $_view_el;
+      },
 
       // fired when item is ready and embedded
       // define the item view DOM event map
@@ -2467,69 +2513,32 @@ $.extend( CZRItemMths , {
       },//itemWrapperViewSetup
 
 
-      //the view wrapper has been rendered by WP
-      //the content ( the various inputs ) is rendered by the following methods
-      //an event is triggered on the control.container when content is rendered
-      renderItemWrapper : function( item_model ) {
-            //=> an array of objects
-            var item = this,
-                module = item.module;
-
-            item_model = item_model || item();
-
-            //render the item wrapper
-            $_view_el = $('<li>', { class : module.control.css_attr.single_item, 'data-id' : item_model.id,  id : item_model.id } );
-
-            //append the item view to the first module view wrapper
-            //!!note : => there could be additional sub view wrapper inside !!
-            //$( '.' + module.control.css_attr.items_wrapper , module.container).first().append( $_view_el );
-            // module.itemsWrapper has been stored as a $ var in module initialize() when the tmpl has been embedded
-            module.itemsWrapper.append( $_view_el );
-
-            //if module is multi item, then render the item crud header part
-            //Note : for the widget module, the getTemplateEl method is overridden
-            if ( module.isMultiItem() ) {
-                  var _template_selector = module.getTemplateEl( 'rudItemPart', item_model );
-                  //do we have view template script?
-                  if ( 0 === $( '#tmpl-' + _template_selector ).length ) {
-                      throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateEl( 'rudItemPart', item_model ) );
-                  }
-                  $_view_el.append( $( wp.template( _template_selector )( item_model ) ) );
-            }
-
-
-            //then, append the item content wrapper
-            $_view_el.append( $( '<div/>', { class: module.control.css_attr.item_content } ) );
-
-            return $_view_el;
-      },
-
 
       //renders saved items views and attach event handlers
       //the saved item look like :
       //array[ { id : 'sidebar-one', title : 'A Title One' }, {id : 'sidebar-two', title : 'A Title Two' }]
       renderItemContent : function( item_model ) {
-              //=> an array of objects
-              var item = this,
-                  module = this.module;
+            //=> an array of objects
+            var item = this,
+                module = this.module;
 
-              item_model = item_model || item();
+            item_model = item_model || item();
 
-              //do we have view content template script?
-              if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) ).length ) {
-                  throw new Error('No item content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) );
-              }
+            //do we have view content template script?
+            if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) ).length ) {
+                throw new Error('No item content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) );
+            }
 
-              var  item_content_template = wp.template( module.getTemplateEl( 'itemInputList', item_model ) );
+            var  item_content_template = wp.template( module.getTemplateEl( 'itemInputList', item_model ) );
 
-              //do we have an html template ?
-              if ( ! item_content_template )
-                return this;
+            //do we have an html template ?
+            if ( ! item_content_template )
+              return this;
 
-              //the view content
-              $( item_content_template( item_model )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
+            //the view content
+            $( item_content_template( item_model )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
 
-              return $( $( item_content_template( item_model )), item.container );
+            return $( $( item_content_template( item_model )), item.container );
       },
 
 
@@ -2555,22 +2564,22 @@ $.extend( CZRItemMths , {
       //Fired on view_rendered:new when a new model has been added
       //Fired on click on edit_view_btn
       setViewVisibility : function( obj, is_added_by_user ) {
-              var item = this,
-                  module = this.module;
-              if ( is_added_by_user ) {
-                    item.viewState.set( 'expanded_noscroll' );
-              } else {
-                    module.closeAllItems( item.id );
-                    if ( _.has(module, 'preItem') ) {
-                      module.preItemExpanded.set(false);
-                    }
-                    item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
-              }
+            var item = this,
+                module = this.module;
+            if ( is_added_by_user ) {
+                  item.viewState.set( 'expanded_noscroll' );
+            } else {
+                  module.closeAllItems( item.id );
+                  if ( _.has(module, 'preItem') ) {
+                    module.preItemExpanded.set(false);
+                  }
+                  item.viewState.set( 'expanded' == item._getViewState() ? 'closed' : 'expanded' );
+            }
       },
 
 
       _getViewState : function() {
-              return -1 == this.viewState().indexOf('expanded') ? 'closed' : 'expanded';
+            return -1 == this.viewState().indexOf('expanded') ? 'closed' : 'expanded';
       },
 
 
@@ -2616,12 +2625,12 @@ $.extend( CZRItemMths , {
 
       //removes the view dom module
       _destroyView : function ( duration ) {
-              this.container.fadeOut( {
-                  duration : duration ||400,
-                  done : function() {
-                    $(this).remove();
-                  }
-              });
+            this.container.fadeOut( {
+                duration : duration ||400,
+                done : function() {
+                  $(this).remove();
+                }
+            });
       }
 });//$.extend
 })( wp.customize , jQuery, _ );//extends api.Value
@@ -3392,6 +3401,12 @@ $.extend( CZRModuleMths, {
               //Prepare the item, make sure its id is set and unique
               item_candidate = module.prepareItemForAPI( item );
 
+              // Display a simple console message if item is null or false, for example if validateItemBeforeInstantiation returned null or false
+              if ( ! item_candidate || _.isNull( item_candidate ) ) {
+                    api.consoleLog( 'item_candidate invalid. InstantiateItem aborted in module ' + module.id );
+                    return;
+              }
+
               //Item id checks !
               if ( ! _.has( item_candidate, 'id' ) ) {
                 throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
@@ -3431,10 +3446,16 @@ $.extend( CZRModuleMths, {
                     var _candidate_val = item_candidate[_key];
                     switch( _key ) {
                           case 'id' :
+                              // The id can be specified in a module ( ex: the pre defined item ids of the Font Customizer module )
+                              // => that's why we need to check here if the item id is not already registered here
                               if ( _.isEmpty( _candidate_val ) ) {
-                                  api_ready_item[_key] = module.generateItemId( module.module_type );
+                                    api_ready_item[_key] = module.generateItemId( module.module_type );
                               } else {
-                                  api_ready_item[_key] = _candidate_val;
+                                    if ( module.isItemRegistered( _candidate_val ) ) {
+                                          module.generateItemId( _candidate_val );
+                                    } else {
+                                          api_ready_item[_key] = _candidate_val;
+                                    }
                               }
                           break;
                           case 'initial_item_model' :
@@ -3479,8 +3500,9 @@ $.extend( CZRModuleMths, {
       },
 
 
-      //recursive
-      generateItemId : function( module_type, key, i ) {
+      // recursive
+      // will generate a unique id with the provided prefix
+      generateItemId : function( prefix, key, i ) {
               //prevent a potential infinite loop
               i = i || 1;
               if ( i > 100 ) {
@@ -3488,17 +3510,17 @@ $.extend( CZRModuleMths, {
               }
               var module = this;
               key = key || module._getNextItemKeyInCollection();
-              var id_candidate = module_type + '_' + key;
+              var id_candidate = prefix + '_' + key;
 
               //do we have a module collection value ?
-              if ( ! _.has(module, 'itemCollection') || ! _.isArray( module.itemCollection() ) ) {
+              if ( ! _.has( module, 'itemCollection' ) || ! _.isArray( module.itemCollection() ) ) {
                     throw new Error('The item collection does not exist or is not properly set in module : ' + module.id );
               }
 
               //make sure the module is not already instantiated
               if ( module.isItemRegistered( id_candidate ) ) {
                 key++; i++;
-                return module.generateItemId( module_type, key, i );
+                return module.generateItemId( prefix, key, i );
               }
               return id_candidate;
       },
@@ -3586,21 +3608,34 @@ $.extend( CZRModuleMths, {
               //normalizes with data
               args = _.extend( { data : {} }, args );
 
-              var item = _.clone( args.item );
+              var item_candidate = _.clone( args.item ),
+                  hasMissingProperty = false;
+
+              // Is the item well formed ? Does it have all the properties of the default model ?
+              // Each module has to declare a defaultItemModel which augments the default one : { id : '', title : '' };
+              // Let's loop on the defaultItemModel property and check that none is missing in the candidate
+              _.each( module.defaultItemModel, function( itemData, key ) {
+                    if ( ! _.has( item_candidate, key ) ) {
+                          throw new Error( 'CZRModuleMths => updateItemsCollection : Missing property "' + key + '" for item candidate' );
+                    }
+              });
+
+              if ( hasMissingProperty )
+                return;
 
               //the item already exist in the collection
-              if ( _.findWhere( _new_collection, { id : item.id } ) ) {
+              if ( _.findWhere( _new_collection, { id : item_candidate.id } ) ) {
                     _.each( _current_collection , function( _item, _ind ) {
-                          if ( _item.id != item.id )
+                          if ( _item.id != item_candidate.id )
                             return;
 
                           //set the new val to the changed property
-                          _new_collection[_ind] = item;
+                          _new_collection[_ind] = item_candidate;
                     });
               }
               //the item has to be added
               else {
-                  _new_collection.push(item);
+                  _new_collection.push( item_candidate );
               }
 
               //updates the collection value
@@ -4121,48 +4156,63 @@ $.extend( CZRDynModuleMths, {
       },
 
 
+      // Designed to be overriden in modules
+      validateItemBeforeAddition : function( item_candidate ) {
+            return item_candidate;
+      },
+
 
       //Fired on user Dom action.
       //the item is manually added.
       //@return a promise() for future sequential actions
       addItem : function(obj) {
             var module = this,
-                item = module.preItem(),
+                item_candidate = module.preItem(),
                 collapsePreItem = function() {
                       module.preItemExpanded.set( false );
                       //module.toggleSuccessMessage('off');
                 },
                 dfd = $.Deferred();
 
-            if ( _.isEmpty(item) || ! _.isObject(item) ) {
-                  api.errorLog( 'addItem : an item should be an object and not empty. In : ' + module.id +'. Aborted.' );
+            if ( _.isEmpty(item_candidate) || ! _.isObject(item_candidate) ) {
+                  api.errorLog( 'addItem : an item_candidate should be an object and not empty. In : ' + module.id +'. Aborted.' );
                   return dfd.resolve().promise();
             }
-            //display a sucess message if item is successfully instantiated
+            //display a sucess message if item_candidate is successfully instantiated
             collapsePreItem = _.debounce( collapsePreItem, 200 );
 
+            //allow modules to validate the item_candidate before addition
+            item_candidate = module.validateItemBeforeAddition( item_candidate );
+
+            // Abort here and display a simple console message if item is null or false, for example if validateItemBeforeAddition returned null or false
+            if ( ! item_candidate || _.isNull( item_candidate ) ) {
+                  api.consoleLog( 'item_candidate invalid. InstantiateItem aborted in module ' + module.id );
+                  return;
+            }
+
+
             //instantiates and fires ready
-            module.instantiateItem( item, true ).ready(); //true == Added by user
+            module.instantiateItem( item_candidate, true ).ready(); //true == Added by user
 
             //this iife job is to close the pre item and to maybe refresh the preview
             //@return a promise(), then once done the item view is expanded to start editing it
             $.Deferred( function() {
                   var _dfd_ = this;
-                  module.czr_Item( item.id ).isReady.then( function() {
+                  module.czr_Item( item_candidate.id ).isReady.then( function() {
                         //module.toggleSuccessMessage('on');
                         collapsePreItem();
 
-                        module.trigger('item-added', item );
+                        module.trigger('item-added', item_candidate );
 
                         var resolveWhenPreviewerReady = function() {
                               api.previewer.unbind( 'ready', resolveWhenPreviewerReady );
                               _dfd_.resolve();
                         };
-                        //module.doActions( 'item_added_by_user' , module.container, { item : item , dom_event : obj.dom_event } );
+                        //module.doActions( 'item_added_by_user' , module.container, { item : item_candidate , dom_event : obj.dom_event } );
 
                         //refresh the preview frame (only needed if transport is postMessage && has no partial refresh set )
                         //must be a dom event not triggered
-                        //otherwise we are in the init collection case where the item are fetched and added from the setting in initialize
+                        //otherwise we are in the init collection case where the items are fetched and added from the setting in initialize
                         if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
                               // api.previewer.refresh().done( function() {
                               //       _dfd_.resolve();
@@ -4175,7 +4225,7 @@ $.extend( CZRDynModuleMths, {
                         }
                   });
             }).done( function() {
-                    module.czr_Item( item.id ).viewState( 'expanded' );
+                    module.czr_Item( item_candidate.id ).viewState( 'expanded' );
             }).always( function() {
                     dfd.resolve();
             });
