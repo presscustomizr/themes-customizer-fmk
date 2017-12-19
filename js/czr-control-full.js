@@ -2138,7 +2138,6 @@ $.extend( CZRItemMths , {
             item.isReady.done( function() {
                   //push it to the collection
                   item.module.updateItemsCollection( { item : item() } );
-                  console.log('New item added and ready', item() );
                   //listen to each single item change
                   item.callbacks.add( function() { return item.itemReact.apply(item, arguments ); } );
 
@@ -2494,6 +2493,7 @@ $.extend( CZRItemMths , {
                         }
 
                         $_alert_el.html( wp.template( module.AlertPart )( { title : ( item().title || item.id ) } ) );
+                        item.trigger( 'remove-dialog-rendered');
                   }
 
                   //Slide it

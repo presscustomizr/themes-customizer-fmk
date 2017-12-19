@@ -113,7 +113,6 @@ $.extend( CZRItemMths , {
             item.isReady.done( function() {
                   //push it to the collection
                   item.module.updateItemsCollection( { item : item() } );
-                  console.log('New item added and ready', item() );
                   //listen to each single item change
                   item.callbacks.add( function() { return item.itemReact.apply(item, arguments ); } );
 

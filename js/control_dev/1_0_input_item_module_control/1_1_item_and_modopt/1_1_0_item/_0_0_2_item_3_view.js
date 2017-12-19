@@ -192,6 +192,7 @@ $.extend( CZRItemMths , {
                         }
 
                         $_alert_el.html( wp.template( module.AlertPart )( { title : ( item().title || item.id ) } ) );
+                        item.trigger( 'remove-dialog-rendered');
                   }
 
                   //Slide it
@@ -306,8 +307,9 @@ $.extend( CZRItemMths , {
                         $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.i18n.edit );
 
                       //scroll to the currently expanded view
-                      if ( 'expanded' == status )
-                        module._adjustScrollExpandedBlock( item.container );
+                      if ( 'expanded' == status ) {
+                            module._adjustScrollExpandedBlock( item.container );
+                      }
 
                       dfd.resolve();
                 };
