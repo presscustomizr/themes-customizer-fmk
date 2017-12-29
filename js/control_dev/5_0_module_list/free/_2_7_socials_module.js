@@ -76,6 +76,7 @@ $.extend( CZRSocialModuleMths, {
                 'gratipay',
                 'hacker-news',
                 'houzz',
+                'imdb',
                 'instagram',
                 'internet-explorer',
                 'ioxhost',
