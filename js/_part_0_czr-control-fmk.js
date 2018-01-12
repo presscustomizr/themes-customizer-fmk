@@ -96,6 +96,7 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
             if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
               return;
             console.log.apply( console, _prettyPrintLog( { consoleArguments : arguments } ) );
+            console.log( 'Unstyled console message : ', arguments );
       };
 
       api.errorLog = function() {
@@ -104,6 +105,7 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
               return;
 
             console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : arguments } ) );
+            console.log( 'Unstyled error message : ', arguments );
       };
 
       api.czr_isSkopOn = function() {
@@ -2608,8 +2610,9 @@ $.extend( CZRItemMths , {
                         $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.i18n.edit );
 
                       //scroll to the currently expanded view
-                      if ( 'expanded' == status )
-                        module._adjustScrollExpandedBlock( item.container );
+                      if ( 'expanded' == status ) {
+                            module._adjustScrollExpandedBlock( item.container );
+                      }
 
                       dfd.resolve();
                 };

@@ -52,6 +52,7 @@
             if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
               return;
             console.log.apply( console, _prettyPrintLog( { consoleArguments : arguments } ) );
+            console.log( 'Unstyled console message : ', arguments );
       };
 
       api.errorLog = function() {
@@ -60,6 +61,7 @@
               return;
 
             console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : arguments } ) );
+            console.log( 'Unstyled error message : ', arguments );
       };
 
       api.czr_isSkopOn = function() {
