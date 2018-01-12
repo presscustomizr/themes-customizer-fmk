@@ -90,6 +90,7 @@ $.extend( CZRSocialModuleMths, {
                 'linux',
                 'maxcdn',
                 'meanpath',
+                'meetup',
                 'medium',
                 'mixcloud',
                 'mobile',
