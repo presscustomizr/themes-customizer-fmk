@@ -292,7 +292,7 @@ $.extend( CZRSocialModuleMths, {
       },
 
       //from : https://stackoverflow.com/a/34560648
-      _strReplace($f, $r, $s){
+      _strReplace : function( $f, $r, $s ) {
               return $s.replace(new RegExp("(" + (typeof($f) == "string" ? $f.replace(/[.?*+^$[\]\\(){}|-]/g, "\\$&") : $f.map(function(i){return i.replace(/[.?*+^$[\]\\(){}|-]/g, "\\$&")}).join("|")) + ")", "g"), typeof($r) == "string" ? $r : typeof($f) == "string" ? $r[0] : function(i){ return $r[$f.indexOf(i)]});
       },
 
