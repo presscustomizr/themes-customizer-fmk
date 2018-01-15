@@ -230,7 +230,9 @@ h2.czr-current-skope-title {
     font-weight: normal;
     text-shadow: 1px 1px 0px #dedede;
 }
-.czr-scope .fa {
+.czr-scope .fab,
+.czr-scope .far,
+.czr-scope .fas {
     font-size: 10px;
     padding: 2%;
     color: #585858;
