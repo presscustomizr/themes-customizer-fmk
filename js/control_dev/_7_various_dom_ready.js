@@ -115,7 +115,7 @@
 
 
             var fireHeaderButtons = function() {
-                  var $home_button = $('<span/>', { class:'customize-controls-home fa fa-home', html:'<span class="screen-reader-text">Home</span>' } );
+                  var $home_button = $('<span/>', { class:'customize-controls-home fas fa-home', html:'<span class="screen-reader-text">Home</span>' } );
                   $.when( $('#customize-header-actions').append( $home_button ) )
                         .done( function() {
                               $home_button

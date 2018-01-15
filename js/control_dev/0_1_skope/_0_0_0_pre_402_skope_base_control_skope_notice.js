@@ -24,7 +24,7 @@ $.extend( CZRSkopeBaseMths, {
                             $.when( ctrl.container
                                   .find('.customize-control-title').first()//was.find('.customize-control-title')
                                   .append( $( '<span/>', {
-                                        class : 'czr-toggle-notice fa fa-info-circle',
+                                        class : 'czr-toggle-notice fas fa-info-circle',
                                         title : serverControlParams.i18n.skope['Display informations about the scope of this option.']
                                   } ) ) )
                             .done( function(){

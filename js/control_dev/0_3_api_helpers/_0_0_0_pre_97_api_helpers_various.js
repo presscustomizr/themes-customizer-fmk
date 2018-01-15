@@ -41,7 +41,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             return [
               '<a href="' + _url + '" title="' + serverControlParams.i18n.readDocumentation + '" target="_blank">',
               ' ',
-              '<span class="fa fa-question-circle-o"></span>'
+              '<span class="far fa-question-circle"></span>'
             ].join('');
       },
 

@@ -167,6 +167,28 @@ $.extend( CZRSocialModuleMths, {
                 'youtube-play',
                 'youtube-square'
               ];
+
+              this.fa_socials_solid = [
+                'fa-envelope',
+                'fa-envelope-square',
+                'fa-mobile',
+                'fa-phone',
+                'fa-phone-square',
+                'fa-rss',
+                'fa-rss-square',
+                'fa-share-alt',
+                'fa-share-alt-square'
+              ];
+
+              this.fa_socials_replacement = {
+                'fa-bitbucket-square'     : 'fa-bitbucket',
+                'fa-facebook-official'    : 'fa-facebook-f',
+                'fa-google-plus-circle'   : 'fa-google-plus',
+                'fa-google-plus-official' : 'fa-google-plus',
+                'fa-linkedin-square'      : 'fa-linkedin',
+                'fa-youtube-play'         : 'fa-youtube'
+              }
+
               //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
               module.inputConstructor = api.CZRInput.extend( module.CZRSocialsInputMths || {} );
               //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
@@ -288,6 +310,7 @@ $.extend( CZRSocialModuleMths, {
                     _.each( socialList , function( icon_name, k ) {
                           // in the pre Item case the first select element is the notice "Select a social icon"
                           // doesn't need the fa-* class
+                          console.log(icon_name);
                           var _value = ( is_preItem && 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
                               _attributes = {
                                     value : _value,
