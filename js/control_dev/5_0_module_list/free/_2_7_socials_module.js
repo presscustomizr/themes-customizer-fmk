@@ -26,7 +26,7 @@ $.extend( CZRSocialModuleMths, {
                 'behance',
                 'behance-square',
                 'bitbucket',
-                'bitbucket-square',
+                //'bitbucket-square', //<-  removed in fa5
                 'black-tie',
                 'btc',
                 'buysellads',
@@ -45,12 +45,12 @@ $.extend( CZRSocialModuleMths, {
                 'edge',
                 'empire',
                 'envelope',
-                'envelope-o',
+                'envelope-o', //<- go with far envelope
                 'envelope-square',
                 'expeditedssl',
                 'facebook',
                 'facebook-f (alias)',
-                'facebook-official',
+                //'facebook-official', //<-  removed in fa5
                 'facebook-square',
                 'firefox',
                 'flickr',
@@ -69,13 +69,15 @@ $.extend( CZRSocialModuleMths, {
                 'git-square',
                 'google',
                 'google-plus',
-                'google-plus-circle',
-                'google-plus-official',
+                //'google-plus-circle', //<- removed in fa5
+                //'google-plus-official', //<- removed in fa5
+                'google-plus-g', //<- added in fa5
                 'google-plus-square',
                 'google-wallet',
                 'gratipay',
                 'hacker-news',
                 'houzz',
+                'imdb',
                 'instagram',
                 'internet-explorer',
                 'ioxhost',
@@ -85,10 +87,12 @@ $.extend( CZRSocialModuleMths, {
                 'lastfm-square',
                 'leanpub',
                 'linkedin',
-                'linkedin-square',
+                //'linkedin-square', //<-  removed in fa5
+                'linkedin-in', //<- added in fa5
                 'linux',
                 'maxcdn',
-                'meanpath',
+                //'meanpath', <- removed in fa5
+                'meetup',
                 'medium',
                 'mixcloud',
                 'mobile',
@@ -164,11 +168,13 @@ $.extend( CZRSocialModuleMths, {
                 'y-combinator',
                 'yelp',
                 'youtube',
-                'youtube-play',
+                //'youtube-play', //<- removed in fa5
                 'youtube-square'
               ];
 
-              this.fa_socials_solid = [
+              //FA5 backward compatibility with FA4
+              //see https://github.com/presscustomizr/customizr/issues/1364
+              this.fa_solid_icons = [
                 'fa-envelope',
                 'fa-envelope-square',
                 'fa-mobile',
@@ -180,7 +186,7 @@ $.extend( CZRSocialModuleMths, {
                 'fa-share-alt-square'
               ];
 
-              this.fa_socials_replacement = {
+              this.fa_icons_replacement = {
                 'fa-bitbucket-square'     : 'fa-bitbucket',
                 'fa-facebook-official'    : 'fa-facebook-f',
                 'fa-google-plus-circle'   : 'fa-google-plus',
@@ -285,21 +291,49 @@ $.extend( CZRSocialModuleMths, {
               return  'fa-' . title.toLowerCase().replace('envelope', 'email');
       },
 
+      //from : https://stackoverflow.com/a/34560648
+      _strReplace($f, $r, $s){
+              return $s.replace(new RegExp("(" + (typeof($f) == "string" ? $f.replace(/[.?*+^$[\]\\(){}|-]/g, "\\$&") : $f.map(function(i){return i.replace(/[.?*+^$[\]\\(){}|-]/g, "\\$&")}).join("|")) + ")", "g"), typeof($r) == "string" ? $r : typeof($f) == "string" ? $r[0] : function(i){ return $r[$f.indexOf(i)]});
+      },
 
+      buildFaIcon : function( value ) {
+              //FA5 backward compatibility with FA4
+              //see https://github.com/presscustomizr/customizr/issues/1364
+              //by default they're brands
+              var _fa_group       = 'fab', //<- brand group by default
+                  _icon_class     = value.toLowerCase(),
+                solidIcons        = this.fa_solid_icons,
+                iconsReplacement  = this.fa_icons_replacement;
 
+              _icon_class = this._strReplace( _.keys( iconsReplacement ),  _.values( iconsReplacement ),_icon_class);
 
+              //former -o icons => now part of the far (Regular) group
+              if ( _icon_class.match(/-o$/) ) {
+                    _fa_group  = 'far';
+                    _icon_class = _icon_class.replace(/-o$/,'');
+              }
+              //solid icons
+              else if ( _.contains( solidIcons, _icon_class ) ) {
+                    _fa_group = 'fas';
+              }
+
+              return _fa_group + ' ' +_icon_class;
+
+      },
 
 
 
       CZRSocialsInputMths : {
               setupSelect : function() {
-                    var input        = this,
-                        item         = input.input_parent,
-                        module       = input.module,
-                        socialList   = module.social_icons,
-                        _model       = item(),
+                    var input              = this,
+                        item               = input.input_parent,
+                        module             = input.module,
+                        socialList         = module.social_icons,
+                        solidIcons         = module.fa_solid_icons,
+                        iconsReplacement   = module.fa_icons_eplacement,
+                        _model             = item(),
                         //check if we are in the pre Item case => if so, the id is empty
-                        is_preItem   = _.isEmpty( _model.id );
+                        is_preItem         = _.isEmpty( _model.id );
 
                     //=> add the select text in the pre Item case
                     if ( is_preItem ) {
@@ -310,8 +344,7 @@ $.extend( CZRSocialModuleMths, {
                     _.each( socialList , function( icon_name, k ) {
                           // in the pre Item case the first select element is the notice "Select a social icon"
                           // doesn't need the fa-* class
-                          console.log(icon_name);
-                          var _value = ( is_preItem && 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
+                          var _value    = ( is_preItem && 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
                               _attributes = {
                                     value : _value,
                                     html: module.getTitleFromIcon( icon_name )
@@ -324,8 +357,10 @@ $.extend( CZRSocialModuleMths, {
 
                     function addIcon( state ) {
                           if (! state.id) { return state.text; }
-                          var $state = $(
-                            '<span class="fa ' + state.element.value.toLowerCase() + '">&nbsp;&nbsp;' + state.text + '</span>'
+
+                          //two spans here because we cannot wrap the social text into the social icon span as the solid FA5 font-weight is bold
+                          var  $state = $(
+                            '<span class="' + module.buildFaIcon( state.element.value.toLowerCase() ) + '"></span><span class="social-name">&nbsp;&nbsp;' + state.text + '</span>'
                           );
                           return $state;
                     }
@@ -401,7 +436,7 @@ $.extend( CZRSocialModuleMths, {
                       icon = icon || 'fa-' + module.social_icons[0];
                       color = color || serverControlParams.social_el_params.defaultSocialColor;
 
-                      return '<div><span class="fa ' + icon + '" style="color:' + color + '"></span> ' + title + '</div>';
+                      return '<div><span class="' + module.buildFaIcon( icon ) + '" style="color:' + color + '"></span> ' + title + '</div>';
               },
 
               //overrides the default parent method by a custom one
