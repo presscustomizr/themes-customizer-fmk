@@ -96,6 +96,7 @@ $.extend( CZRSocialModuleMths, {
                 'medium',
                 'mixcloud',
                 'mobile',
+                'mobile-alt',//<- added in fa5
                 'modx',
                 'odnoklassniki',
                 'odnoklassniki-square',
@@ -178,6 +179,7 @@ $.extend( CZRSocialModuleMths, {
                 'fa-envelope',
                 'fa-envelope-square',
                 'fa-mobile',
+                'fa-mobile-alt',
                 'fa-phone',
                 'fa-phone-square',
                 'fa-rss',
