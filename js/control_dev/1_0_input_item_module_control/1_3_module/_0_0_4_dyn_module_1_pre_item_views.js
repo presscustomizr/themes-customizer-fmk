@@ -59,9 +59,9 @@ $.extend( CZRDynModuleMths, {
                           $(this).toggleClass('open' , _is_expanded );
                           //switch icons
                           if ( _is_expanded )
-                            $_btn.find('.fa').removeClass('fa-plus-square').addClass('fa-minus-square');
+                            $_btn.find('.fas').removeClass('fa-plus-square').addClass('fa-minus-square');
                           else
-                            $_btn.find('.fa').removeClass('fa-minus-square').addClass('fa-plus-square');
+                            $_btn.find('.fas').removeClass('fa-minus-square').addClass('fa-plus-square');
 
                           //set the active class to the btn
                           $_btn.toggleClass( 'active', _is_expanded );

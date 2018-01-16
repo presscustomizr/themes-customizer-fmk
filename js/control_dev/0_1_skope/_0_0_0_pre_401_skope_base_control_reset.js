@@ -46,7 +46,7 @@ $.extend( CZRSkopeBaseMths, {
                                             ctrl.container
                                                   .find('.customize-control-title').first()//was.find('.customize-control-title')
                                                   .prepend( $( '<span/>', {
-                                                        class : 'czr-setting-reset fa fa-refresh',
+                                                        class : 'czr-setting-reset fas fa-sync',
                                                         title : ''
                                                   } ) ) )
                                       .done( function(){

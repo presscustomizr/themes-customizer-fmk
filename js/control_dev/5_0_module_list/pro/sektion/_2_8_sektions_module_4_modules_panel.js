@@ -42,7 +42,7 @@ $.extend( CZRSektionMths, {
                     var $_mod_candidate = $('<li/>', {
                           class : 'czr-module-candidate',
                           'data-module-type' : _mod_type,
-                          html : '<h3><span class="czr-mod-drag-handler fa fa-arrows-alt"></span>' + _data.name + '</h3>'
+                          html : '<h3><span class="czr-mod-drag-handler fas fa-expand-arrows-alt"></span>' + _data.name + '</h3>'
                     });
                     $('#czr-available-modules-list').append(  $_mod_candidate );
             });
