@@ -422,7 +422,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             return [
               '<a href="' + _url + '" title="' + serverControlParams.i18n.readDocumentation + '" target="_blank">',
               ' ',
-              '<span class="fa fa-question-circle-o"></span>'
+              '<span class="far fa-question-circle"></span>'
             ].join('');
       },
 
@@ -2599,9 +2599,9 @@ $.extend( CZRItemMths , {
 
                       $_edit_icon.toggleClass('active' , visible );
                       if ( visible )
-                        $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.i18n.close );
+                        $_edit_icon.removeClass('fa-pencil-alt').addClass('fa-minus-square').attr('title', serverControlParams.i18n.close );
                       else
-                        $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.i18n.edit );
+                        $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil-alt').attr('title', serverControlParams.i18n.edit );
 
                       //scroll to the currently expanded view
                       if ( 'expanded' == status ) {
@@ -2731,7 +2731,7 @@ $.extend( CZRModOptMths , {
                         $.when( ctrl.container
                               .find('.customize-control-title').first()//was.find('.customize-control-title')
                               .append( $( '<span/>', {
-                                    class : [ ctrl.css_attr.edit_modopt_icon, 'fa fa-cog' ].join(' '),
+                                    class : [ ctrl.css_attr.edit_modopt_icon, 'fas fa-cog' ].join(' '),
                                     title : serverControlParams.i18n['Settings']
                               } ) ) )
                         .done( function(){
@@ -2866,7 +2866,7 @@ $.extend( CZRModOptMths , {
                     class : module.control.css_attr.mod_opt_wrapper,
                     html : [
                           [ '<h2 class="mod-opt-title">', _ctrlLabel , '</h2>' ].join(''),
-                          '<span class="fa fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
+                          '<span class="fas fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
                     ].join('')
               } ) );
 
@@ -4290,9 +4290,9 @@ $.extend( CZRDynModuleMths, {
                           $(this).toggleClass('open' , _is_expanded );
                           //switch icons
                           if ( _is_expanded )
-                            $_btn.find('.fa').removeClass('fa-plus-square').addClass('fa-minus-square');
+                            $_btn.find('.fas').removeClass('fa-plus-square').addClass('fa-minus-square');
                           else
-                            $_btn.find('.fa').removeClass('fa-minus-square').addClass('fa-plus-square');
+                            $_btn.find('.fas').removeClass('fa-minus-square').addClass('fa-plus-square');
 
                           //set the active class to the btn
                           $_btn.toggleClass( 'active', _is_expanded );

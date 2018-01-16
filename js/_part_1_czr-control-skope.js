@@ -2117,7 +2117,7 @@ $.extend( CZRSkopeBaseMths, {
                       $('.czr-scope-switcher').prepend(
                             $( '<div/>', {
                                   class:'czr-server-notice',
-                                  html:'<span class="czr-server-message"></span><span class="fa fa-times-circle czr-dismiss-notification"></span>'
+                                  html:'<span class="czr-server-message"></span><span class="fas fa-times-circle czr-dismiss-notification"></span>'
                             } )
                       );
                 },
@@ -4483,7 +4483,7 @@ $.extend( CZRSkopeBaseMths, {
                         _overrides = self.getOverridenSkopeTitles();
 
                     return $.trim( [
-                          '<span class="czr-main-title"><span class="czr-toggle-title-notice fa fa-info-circle"></span>',
+                          '<span class="czr-main-title"><span class="czr-toggle-title-notice fas fa-info-circle"></span>',
                           'global' == api.czr_skope( skope_id || api.czr_activeSkopeId() )().skope ? current_title : ['Customizing', current_title ].join(' '),
                           '</span>',
                           '<span class="czr-skope-inherits-from">',
@@ -5375,7 +5375,7 @@ $.extend( CZRSkopeBaseMths, {
                                             ctrl.container
                                                   .find('.customize-control-title').first()//was.find('.customize-control-title')
                                                   .prepend( $( '<span/>', {
-                                                        class : 'czr-setting-reset fa fa-refresh',
+                                                        class : 'czr-setting-reset fas fa-sync',
                                                         title : ''
                                                   } ) ) )
                                       .done( function(){
@@ -5631,7 +5631,7 @@ $.extend( CZRSkopeBaseMths, {
                             $.when( ctrl.container
                                   .find('.customize-control-title').first()//was.find('.customize-control-title')
                                   .append( $( '<span/>', {
-                                        class : 'czr-toggle-notice fa fa-info-circle',
+                                        class : 'czr-toggle-notice fas fa-info-circle',
                                         title : serverControlParams.i18n.skope['Display informations about the scope of this option.']
                                   } ) ) )
                             .done( function(){
