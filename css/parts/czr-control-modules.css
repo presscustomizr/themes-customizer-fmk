@@ -138,7 +138,9 @@
 .czr-item-title h4 {
   margin: 0;
 }
-.czr-item-title .fa:before {
+.czr-item-title .fab::before,
+.czr-item-title .fas::before,
+.czr-item-title .far::before {
   padding-right: 2px;
 }
 .czr-item-btns {
@@ -236,7 +238,9 @@
     -webkit-filter: blur(1px);
 }
 
-.czr-item-title .fa {
+.czr-item-title .far,
+.czr-item-title .fab,
+.czr-item-title .fas {
   font-size: 18px;
 }
 

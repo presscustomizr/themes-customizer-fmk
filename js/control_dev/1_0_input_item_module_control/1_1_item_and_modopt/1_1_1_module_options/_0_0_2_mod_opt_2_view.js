@@ -97,7 +97,7 @@ $.extend( CZRModOptMths , {
                     class : module.control.css_attr.mod_opt_wrapper,
                     html : [
                           [ '<h2 class="mod-opt-title">', _ctrlLabel , '</h2>' ].join(''),
-                          '<span class="fa fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
+                          '<span class="fas fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
                     ].join('')
               } ) );
 

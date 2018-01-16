@@ -36,7 +36,7 @@ $.extend( CZRSkopeBaseMths, {
                       $('.czr-scope-switcher').prepend(
                             $( '<div/>', {
                                   class:'czr-server-notice',
-                                  html:'<span class="czr-server-message"></span><span class="fa fa-times-circle czr-dismiss-notification"></span>'
+                                  html:'<span class="czr-server-message"></span><span class="fas fa-times-circle czr-dismiss-notification"></span>'
                             } )
                       );
                 },
