@@ -62,7 +62,7 @@ $.extend( CZRModuleMths, {
                       _el = module.modOptInputList;
                       break;
                     case 'itemInputList' :
-                      _el = module.itemInputList;
+                      _el = _.isFunction( module.itemInputList ) ? module.itemInputList( item_model ) : module.itemInputList;
                       break;
               }
               if ( _.isEmpty(_el) ) {
