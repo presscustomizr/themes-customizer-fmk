@@ -132,10 +132,14 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                                 api.errorLog( 'executeEventActionChain : missing obj.event or obj.event.actions' );
                                 return;
                           }
-                          try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
-                                api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
-                                api.errorLog( 'Error : ' + er );
-                          }
+                          if ( serverControlParams.isDevMode ) {
+                              control.executeEventActionChain( actionsParams, instance )
+                          } else {
+                              try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
+                                    api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
+                                    api.errorLog( 'Error : ' + er );
+                              }
+                        }
                     });//.on()
               });//_.map()
       },//setupDomListeners

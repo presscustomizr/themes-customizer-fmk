@@ -124,14 +124,22 @@ $.extend( CZRItemMths , {
                         //first time or after a removal
                         // previous condition included :  ! _.has( item, 'czr_Input' )
                         if ( _.isEmpty( item.inputCollection() ) ) {
-                              try {
+                              if ( serverControlParams.isDevMode ) {
                                     api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
                                     //the item.container is now available
                                     //Setup the tabs navigation
                                     //setupTabNav is defined in the module ctor and its this is the item or the modOpt
                                     item.module.setupTabNav.call( item );
-                              } catch( er ) {
-                                    api.errorLog( 'In item.isReady.done : ' + er );
+                              } else {
+                                    try {
+                                          api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
+                                          //the item.container is now available
+                                          //Setup the tabs navigation
+                                          //setupTabNav is defined in the module ctor and its this is the item or the modOpt
+                                          item.module.setupTabNav.call( item );
+                                    } catch( er ) {
+                                          api.errorLog( 'In item.isReady.done : ' + er );
+                                    }
                               }
                         }
                   });
