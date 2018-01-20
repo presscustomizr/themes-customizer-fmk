@@ -75,15 +75,15 @@ $.extend( CZRItemMths , {
             //When do we render the item content ?
             //If this is a multi-item module, let's render each item content when they are expanded.
             //In the case of a single item module, we can render the item content now.
-            var _updateItemContentDeferred = function( $_content, to, from ) {
+            var _updateItemContentDeferred = function( $_item_content, to, from ) {
                   //update the $.Deferred state
-                  if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                      item.trigger( 'contentRendered' );
-                      item.contentContainer = $_content;
-                      item.toggleItemExpansion( to, from );
+                  if ( ! _.isUndefined( $_item_content ) && false !== $_item_content.length ) {
+                        item.contentContainer = $_item_content;
+                        item.trigger( 'contentRendered', { item_content : $_item_content } );
+                        item.toggleItemExpansion( to, from );
                   }
                   else {
-                      throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
+                        throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
                   }
             };
 
@@ -237,7 +237,7 @@ $.extend( CZRItemMths , {
             //the view content
             $( item_content_template( item_model )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
 
-            return $( $( item_content_template( item_model )), item.container );
+            return $( '.' + module.control.css_attr.item_content, item.container );
       },
 
 

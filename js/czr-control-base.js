@@ -878,10 +878,14 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                                 api.errorLog( 'executeEventActionChain : missing obj.event or obj.event.actions' );
                                 return;
                           }
-                          try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
-                                api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
-                                api.errorLog( 'Error : ' + er );
-                          }
+                          if ( serverControlParams.isDevMode ) {
+                              control.executeEventActionChain( actionsParams, instance )
+                          } else {
+                              try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
+                                    api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
+                                    api.errorLog( 'Error : ' + er );
+                              }
+                        }
                     });//.on()
               });//_.map()
       },//setupDomListeners
@@ -2145,14 +2149,22 @@ $.extend( CZRItemMths , {
                         //first time or after a removal
                         // previous condition included :  ! _.has( item, 'czr_Input' )
                         if ( _.isEmpty( item.inputCollection() ) ) {
-                              try {
+                              if ( serverControlParams.isDevMode ) {
                                     api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
                                     //the item.container is now available
                                     //Setup the tabs navigation
                                     //setupTabNav is defined in the module ctor and its this is the item or the modOpt
                                     item.module.setupTabNav.call( item );
-                              } catch( er ) {
-                                    api.errorLog( 'In item.isReady.done : ' + er );
+                              } else {
+                                    try {
+                                          api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
+                                          //the item.container is now available
+                                          //Setup the tabs navigation
+                                          //setupTabNav is defined in the module ctor and its this is the item or the modOpt
+                                          item.module.setupTabNav.call( item );
+                                    } catch( er ) {
+                                          api.errorLog( 'In item.isReady.done : ' + er );
+                                    }
                               }
                         }
                   });
@@ -2372,15 +2384,15 @@ $.extend( CZRItemMths , {
             //When do we render the item content ?
             //If this is a multi-item module, let's render each item content when they are expanded.
             //In the case of a single item module, we can render the item content now.
-            var _updateItemContentDeferred = function( $_content, to, from ) {
+            var _updateItemContentDeferred = function( $_item_content, to, from ) {
                   //update the $.Deferred state
-                  if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                      item.trigger( 'contentRendered' );
-                      item.contentContainer = $_content;
-                      item.toggleItemExpansion( to, from );
+                  if ( ! _.isUndefined( $_item_content ) && false !== $_item_content.length ) {
+                        item.contentContainer = $_item_content;
+                        item.trigger( 'contentRendered', { item_content : $_item_content } );
+                        item.toggleItemExpansion( to, from );
                   }
                   else {
-                      throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
+                        throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
                   }
             };
 
@@ -2534,7 +2546,7 @@ $.extend( CZRItemMths , {
             //the view content
             $( item_content_template( item_model )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
 
-            return $( $( item_content_template( item_model )), item.container );
+            return $( '.' + module.control.css_attr.item_content, item.container );
       },
 
 
@@ -3816,7 +3828,7 @@ $.extend( CZRModuleMths, {
                       _el = module.modOptInputList;
                       break;
                     case 'itemInputList' :
-                      _el = module.itemInputList;
+                      _el = _.isFunction( module.itemInputList ) ? module.itemInputList( item_model ) : module.itemInputList;
                       break;
               }
               if ( _.isEmpty(_el) ) {
