@@ -2558,7 +2558,8 @@ $.extend( CZRItemMths , {
             var item = this,
                 module = item.module,
                 _model = item_model || item(),
-                _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
+                //Let's fall back on the id if the title is not set or empty
+                _title = ( _.has( _model, 'title') && ! _.isEmpty( _model.title ) ) ? api.CZR_Helpers.capitalize( _model.title ) : _model.id,
 
             _title = api.CZR_Helpers.truncate( _title, 20 );
             $( '.' + module.control.css_attr.item_title , item.container ).text( _title );
@@ -3384,6 +3385,8 @@ $.extend( CZRModuleMths, {
                     }
               });
 
+              _saved_items = module.filterItemCandidatesBeforeInstantiation( _saved_items );
+
               //INSTANTIATE THE ITEMS
               _.each( _saved_items, function( item_candidate , key ) {
                     //adds it to the collection and fire item.ready()
@@ -3403,7 +3406,11 @@ $.extend( CZRModuleMths, {
               //do we need to chain this method ?
               //return this;
       },
-
+      
+      // To be overriden
+      filterItemCandidatesBeforeInstantiation : function( items ) {
+            return items;
+      },
 
       instantiateItem : function( item, is_added_by_user ) {
               var module = this;

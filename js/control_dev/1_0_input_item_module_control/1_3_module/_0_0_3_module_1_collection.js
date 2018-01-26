@@ -44,6 +44,8 @@ $.extend( CZRModuleMths, {
                     }
               });
 
+              _saved_items = module.filterItemCandidatesBeforeInstantiation( _saved_items );
+
               //INSTANTIATE THE ITEMS
               _.each( _saved_items, function( item_candidate , key ) {
                     //adds it to the collection and fire item.ready()
@@ -63,7 +65,11 @@ $.extend( CZRModuleMths, {
               //do we need to chain this method ?
               //return this;
       },
-
+      
+      // To be overriden
+      filterItemCandidatesBeforeInstantiation : function( items ) {
+            return items;
+      },
 
       instantiateItem : function( item, is_added_by_user ) {
               var module = this;

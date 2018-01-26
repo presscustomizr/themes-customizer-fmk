@@ -249,7 +249,8 @@ $.extend( CZRItemMths , {
             var item = this,
                 module = item.module,
                 _model = item_model || item(),
-                _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
+                //Let's fall back on the id if the title is not set or empty
+                _title = ( _.has( _model, 'title') && ! _.isEmpty( _model.title ) ) ? api.CZR_Helpers.capitalize( _model.title ) : _model.id,
 
             _title = api.CZR_Helpers.truncate( _title, 20 );
             $( '.' + module.control.css_attr.item_title , item.container ).text( _title );
