@@ -250,7 +250,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                           if (! state.id) { return state.text; }
                           if (  _.contains(available_locs, state.element.value) ) { return state.text; }
                           var $state = $(
-                            '<span class="czr-unavailable-location fa fa-ban" title="' + serverControlParams.i18n.unavailableLocation + '">&nbsp;&nbsp;' + state.text + '</span>'
+                            '<span class="czr-unavailable-location fas fa-ban" title="' + serverControlParams.i18n.unavailableLocation + '">&nbsp;&nbsp;' + state.text + '</span>'
                           );
                           return $state;
                     }

@@ -303,9 +303,9 @@ $.extend( CZRItemMths , {
 
                       $_edit_icon.toggleClass('active' , visible );
                       if ( visible )
-                        $_edit_icon.removeClass('fa-pencil').addClass('fa-minus-square').attr('title', serverControlParams.i18n.close );
+                        $_edit_icon.removeClass('fa-pencil-alt').addClass('fa-minus-square').attr('title', serverControlParams.i18n.close );
                       else
-                        $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil').attr('title', serverControlParams.i18n.edit );
+                        $_edit_icon.removeClass('fa-minus-square').addClass('fa-pencil-alt').attr('title', serverControlParams.i18n.edit );
 
                       //scroll to the currently expanded view
                       if ( 'expanded' == status ) {
