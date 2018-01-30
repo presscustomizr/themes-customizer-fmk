@@ -82,18 +82,22 @@ $.extend( CZRBaseModuleControlMths, {
                     //inits the collection with the saved module => there's only one module to instantiate in this case.
                     //populates the collection with the saved module
                     _.each( control.getSavedModules() , function( _mod, _key ) {
-                          //stores it
-                          single_module = _mod;
+                        //stores it
+                        single_module = _mod;
 
-                          //adds it to the collection
-                          //=> it will be fired ready usually when the control section is expanded
-                          try { control.instantiateModule( _mod, {} ); } catch( er ) {
-                                api.errorLog( 'Failed to instantiate module ' + _mod.id + ' ' + er );
-                                return;
-                          }
+                        //adds it to the collection
+                        //=> it will be fired ready usually when the control section is expanded
+                        if ( serverControlParams.isDevMode ) {
+                              control.instantiateModule( _mod, {} );
+                        } else {
+                              try { control.instantiateModule( _mod, {} ); } catch( er ) {
+                                    api.errorLog( 'Failed to instantiate module ' + _mod.id + ' ' + er );
+                                    return;
+                              }
+                        }
 
-                          //adds the module name to the control container element
-                          control.container.attr('data-module', _mod.id );
+                        //adds the module name to the control container element
+                        control.container.attr('data-module', _mod.id );
                     });
                     //the module collection is ready
                     control.moduleCollectionReady.resolve( single_module );
@@ -269,7 +273,8 @@ $.extend( CZRBaseModuleControlMths, {
                   //  [...]
 
                   //POPULATE THE ITEMS [] and the MODOPT {} FROM THE RAW DB SAVED SETTING VAL
-                  _raw_saved_module_val = _.isArray( api( control.id )() ) ? api( control.id )() : [ api( control.id )() ];
+                  var settingId = api.CZR_Helpers.getControlSettingId( control.id );
+                  _raw_saved_module_val = _.isArray( api( settingId )() ) ? api( settingId )() : [ api( settingId )() ];
 
                   _.each( _raw_saved_module_val, function( item_or_mod_opt_candidate , key ) {
                         if ( api.CZR_Helpers.hasModuleModOpt( _module_type ) && 0*0 === key ) {

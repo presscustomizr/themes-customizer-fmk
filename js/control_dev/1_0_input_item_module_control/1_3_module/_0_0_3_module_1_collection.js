@@ -49,8 +49,12 @@ $.extend( CZRModuleMths, {
               //INSTANTIATE THE ITEMS
               _.each( _saved_items, function( item_candidate , key ) {
                     //adds it to the collection and fire item.ready()
-                    try { module.instantiateItem( item_candidate ).ready(); } catch( er ) {
-                          api.errorLog( 'populateSavedItemCollection : ' + er );
+                    if ( serverControlParams.isDevMode ) {
+                        module.instantiateItem( item_candidate ).ready();
+                    } else {
+                        try { module.instantiateItem( item_candidate ).ready(); } catch( er ) {
+                              api.errorLog( 'populateSavedItemCollection : ' + er );
+                        }
                     }
               });
 

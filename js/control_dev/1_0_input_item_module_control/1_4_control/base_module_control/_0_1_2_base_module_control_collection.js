@@ -172,7 +172,7 @@ $.extend( CZRBaseModuleControlMths, {
       filterModuleCollectionBeforeAjax : function( collection ) {
               var control = this,
                   _filtered_collection = $.extend( true, [], collection ),
-                  _to_return;
+                  itemsToReturn;
 
               _.each( collection , function( _mod, _key ) {
                     var db_ready_mod = $.extend( true, {}, _mod );
@@ -205,14 +205,13 @@ $.extend( CZRBaseModuleControlMths, {
                     }
 
                     //items
-                    _to_return = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
+                    itemsToReturn = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
+                    itemsToReturn = module_instance.filterItemsBeforeCoreApiSettingValue( itemsToReturn );
 
                     //Add the modOpt if any
-                    return module_instance.hasModOpt() ? _.union( [ module_instance().modOpt ] , _to_return ) : _to_return;
+                    return module_instance.hasModOpt() ? _.union( [ module_instance().modOpt ] , itemsToReturn ) : itemsToReturn;
               }
       },
-
-
 
 
       //fired before adding a module to the collection of DB candidates
