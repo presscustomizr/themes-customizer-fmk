@@ -10,6 +10,9 @@ $.extend( CZRItemMths , {
 
             if ( 'pending' != item.embedded.state() )
               return;
+            // Make sure we don't print twice
+            if ( ! _.isEmpty( item.container ) && item.container.length > 0 )
+              return;
 
             $.when( item.renderItemWrapper() ).done( function( $_container ) {
                   item.container = $_container;
