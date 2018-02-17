@@ -2183,7 +2183,7 @@ $.extend( CZRItemMths , {
                   // if ( ! item.module.isInSektion() ) {
                   //       item.mayBeRenderItemWrapper();
                   // }
-                  if ( item.canBeRenderedInContext() ) {
+                  if ( item.canBeRendered() ) {
                         item.mayBeRenderItemWrapper();
                   }
 
@@ -2213,7 +2213,7 @@ $.extend( CZRItemMths , {
 
       // overridable method introduced with the flat skope
       // problem to solve => an instantiated item, doesn't necessary have to be rendered in a given context.
-      canBeRenderedInContext : function() {
+      canBeRendered : function() {
             return true;
       },
 
@@ -4215,11 +4215,20 @@ $.extend( CZRDynModuleMths, {
             return item_candidate;
       },
 
+      // overridable method introduced with the flat skope
+      // problem to solve in skope => an item, can't always be instantiated in a given context.
+      itemCanBeInstantiated : function() {
+            return true;
+      },
 
       //Fired on user Dom action.
       //the item is manually added.
       //@return a promise() for future sequential actions
       addItem : function(obj) {
+            if ( ! this.itemCanBeInstantiated() ) {
+
+                  return;
+            }
             var module = this,
                 item_candidate = module.preItem(),
                 collapsePreItem = function() {

@@ -156,7 +156,7 @@ $.extend( CZRItemMths , {
                   // if ( ! item.module.isInSektion() ) {
                   //       item.mayBeRenderItemWrapper();
                   // }
-                  if ( item.canBeRenderedInContext() ) {
+                  if ( item.canBeRendered() ) {
                         item.mayBeRenderItemWrapper();
                   }
 
@@ -186,7 +186,7 @@ $.extend( CZRItemMths , {
 
       // overridable method introduced with the flat skope
       // problem to solve => an instantiated item, doesn't necessary have to be rendered in a given context.
-      canBeRenderedInContext : function() {
+      canBeRendered : function() {
             return true;
       },
 
