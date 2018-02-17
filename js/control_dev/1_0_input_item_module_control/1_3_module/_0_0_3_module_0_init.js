@@ -28,7 +28,21 @@ $.extend( CZRModuleMths, {
             //=> we don't want the ready method to be fired several times
             module.isReady = $.Deferred();
 
-            //write the options as properties
+            //write the module constructor options as properties
+            // The default module model can be get with
+            // and is formed this way :
+            // {
+            // control:{}
+            // crud:false
+            // id:""
+            // items:[]
+            // modOpt:{}
+            // module_type:""
+            // multi_item:false
+            // section:""
+            // sortable:false
+            //}
+
             $.extend( module, constructorOptions || {} );
 
             //extend the module with new template Selectors
@@ -39,7 +53,6 @@ $.extend( CZRModuleMths, {
                   itemInputList : '',//is specific for each crud module
                   modOptInputList : '',//is specific for each module
                   AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
-
             } );
 
             //embed : define a container, store the embed state, fire the render method
@@ -219,8 +232,13 @@ $.extend( CZRModuleMths, {
             module.set( _new_model, data || {} );
       },
 
+      //This method is fired from the control
+      filterItemsBeforeCoreApiSettingValue : function( itemsToReturn ) {
+            return itemsToReturn;
+      },
 
       //cb of module.callbacks
+      //=> sets the setting value via the module collection !
       moduleReact : function( to, from, data ) {
             //cb of : module.callbacks
             var module            = this,

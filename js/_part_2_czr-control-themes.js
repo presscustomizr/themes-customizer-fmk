@@ -1703,7 +1703,7 @@ $.extend( CZRBodyBgModuleMths, {
                   'background-position' : 'center center',
                   'background-size' : 'cover'
             };
-            api.consoleLog('New module instantiated : ', module.id );
+
             //fired ready :
             //1) on section expansion
             //2) or in the case of a module embedded in a regular control, if the module section is alreay opened => typically when skope is enabled

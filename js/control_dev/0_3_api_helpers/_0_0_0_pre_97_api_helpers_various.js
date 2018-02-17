@@ -15,7 +15,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
       getControlSettingId : function( control_id, setting_type ) {
             setting_type = 'default' || setting_type;
             if ( ! api.control.has( control_id ) ) {
-                  api.consoleLog( 'getControlSettingId : The requested control_id is not registered in the api yet : ' + control_id );
+                 // api.consoleLog( 'getControlSettingId : The requested control_id is not registered in the api yet : ' + control_id );
                   return control_id;
             }
             if ( ! _.has( api.control( control_id ), 'settings' ) || _.isEmpty( api.control( control_id ).settings ) )
@@ -41,7 +41,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             return [
               '<a href="' + _url + '" title="' + serverControlParams.i18n.readDocumentation + '" target="_blank">',
               ' ',
-              '<span class="far fa-question-circle"></span>'
+              '<span class="far fa-question-circle-o"></span>'
             ].join('');
       },
 

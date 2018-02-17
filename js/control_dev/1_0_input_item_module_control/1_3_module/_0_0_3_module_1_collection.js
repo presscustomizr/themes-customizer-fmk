@@ -10,9 +10,11 @@ var CZRModuleMths = CZRModuleMths || {};
 $.extend( CZRModuleMths, {
       //@fired in module ready on api('ready')
       //the module().items has been set in initialize
-      populateSavedItemCollection : function() {
+      //A collection of items can be supplied.
+      populateSavedItemCollection : function( _itemCollection_ ) {
               var module = this, _saved_items = [];
-              if ( ! _.isArray( module().items ) ) {
+              _itemCollection_ = _itemCollection_ || module().items;
+              if ( ! _.isArray( _itemCollection_ ) ) {
                     api.errorLog( 'populateSavedItemCollection : The saved items collection must be an array in module :' + module.id );
                     return;
               }
@@ -38,17 +40,23 @@ $.extend( CZRModuleMths, {
 
               //FILTER THE ACTUAL ITEMS ( REMOVE THE MODOPTS ELEMENT IF ANY )
               //=> the items and the modOpt should already be split at this stage, because it's done before module instantiation... this check is totally paranoid.
-              _.each( module().items, function( item_candidate , key ) {
+              _.each( _itemCollection_, function( item_candidate , key ) {
                     if ( _.has( item_candidate, 'id') && ! _.has( item_candidate, 'is_mod_opt' ) ) {
                           _saved_items.push( item_candidate );
                     }
               });
 
+              _saved_items = module.filterItemCandidatesBeforeInstantiation( _saved_items );
+
               //INSTANTIATE THE ITEMS
               _.each( _saved_items, function( item_candidate , key ) {
                     //adds it to the collection and fire item.ready()
-                    try { module.instantiateItem( item_candidate ).ready(); } catch( er ) {
-                          api.errorLog( 'populateSavedItemCollection : ' + er );
+                    if ( serverControlParams.isDevMode ) {
+                        module.instantiateItem( item_candidate ).ready();
+                    } else {
+                        try { module.instantiateItem( item_candidate ).ready(); } catch( er ) {
+                              api.errorLog( 'populateSavedItemCollection : ' + er );
+                        }
                     }
               });
 
@@ -64,6 +72,10 @@ $.extend( CZRModuleMths, {
               //return this;
       },
 
+      // To be overriden
+      filterItemCandidatesBeforeInstantiation : function( items ) {
+            return items;
+      },
 
       instantiateItem : function( item, is_added_by_user ) {
               var module = this;
@@ -352,10 +364,12 @@ $.extend( CZRModuleMths, {
             var module = this;
             //Remove item views and instances
             module.czr_Item.each( function( _itm ) {
-                  $.when( module.czr_Item( _itm.id ).container.remove() ).done( function() {
-                        //Remove item instances
-                        module.czr_Item.remove( _itm.id );
-                  });
+                  if ( module.czr_Item( _itm.id ).container && 0 < module.czr_Item( _itm.id ).container.length ) {
+                        $.when( module.czr_Item( _itm.id ).container.remove() ).done( function() {
+                              //Remove item instances
+                              module.czr_Item.remove( _itm.id );
+                        });
+                  }
             });
 
             // Reset the item collection

@@ -124,14 +124,22 @@ $.extend( CZRItemMths , {
                         //first time or after a removal
                         // previous condition included :  ! _.has( item, 'czr_Input' )
                         if ( _.isEmpty( item.inputCollection() ) ) {
-                              try {
+                              if ( serverControlParams.isDevMode ) {
                                     api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
                                     //the item.container is now available
                                     //Setup the tabs navigation
                                     //setupTabNav is defined in the module ctor and its this is the item or the modOpt
                                     item.module.setupTabNav.call( item );
-                              } catch( er ) {
-                                    api.errorLog( 'In item.isReady.done : ' + er );
+                              } else {
+                                    try {
+                                          api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
+                                          //the item.container is now available
+                                          //Setup the tabs navigation
+                                          //setupTabNav is defined in the module ctor and its this is the item or the modOpt
+                                          item.module.setupTabNav.call( item );
+                                    } catch( er ) {
+                                          api.errorLog( 'In item.isReady.done : ' + er );
+                                    }
                               }
                         }
                   });
@@ -148,7 +156,9 @@ $.extend( CZRItemMths , {
                   // if ( ! item.module.isInSektion() ) {
                   //       item.mayBeRenderItemWrapper();
                   // }
-                  item.mayBeRenderItemWrapper();
+                  if ( item.canBeRendered() ) {
+                        item.mayBeRenderItemWrapper();
+                  }
 
                   //ITEM WRAPPER VIEW SETUP
                   //defer actions on item view embedded
@@ -174,6 +184,11 @@ $.extend( CZRItemMths , {
             this.isReady.resolve();
       },
 
+      // overridable method introduced with the flat skope
+      // problem to solve => an instantiated item, doesn't necessary have to be rendered in a given context.
+      canBeRendered : function() {
+            return true;
+      },
 
       // @return validated model object
       // To be overriden in each module

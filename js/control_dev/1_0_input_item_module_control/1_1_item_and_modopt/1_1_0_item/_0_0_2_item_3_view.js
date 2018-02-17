@@ -10,6 +10,9 @@ $.extend( CZRItemMths , {
 
             if ( 'pending' != item.embedded.state() )
               return;
+            // Make sure we don't print twice
+            if ( ! _.isEmpty( item.container ) && item.container.length > 0 )
+              return;
 
             $.when( item.renderItemWrapper() ).done( function( $_container ) {
                   item.container = $_container;
@@ -75,15 +78,15 @@ $.extend( CZRItemMths , {
             //When do we render the item content ?
             //If this is a multi-item module, let's render each item content when they are expanded.
             //In the case of a single item module, we can render the item content now.
-            var _updateItemContentDeferred = function( $_content, to, from ) {
+            var _updateItemContentDeferred = function( $_item_content, to, from ) {
                   //update the $.Deferred state
-                  if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                      item.trigger( 'contentRendered' );
-                      item.contentContainer = $_content;
-                      item.toggleItemExpansion( to, from );
+                  if ( ! _.isUndefined( $_item_content ) && false !== $_item_content.length ) {
+                        item.contentContainer = $_item_content;
+                        item.trigger( 'contentRendered', { item_content : $_item_content } );
+                        item.toggleItemExpansion( to, from );
                   }
                   else {
-                      throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
+                        throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
                   }
             };
 
@@ -237,7 +240,7 @@ $.extend( CZRItemMths , {
             //the view content
             $( item_content_template( item_model )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
 
-            return $( $( item_content_template( item_model )), item.container );
+            return $( '.' + module.control.css_attr.item_content, item.container );
       },
 
 
@@ -249,7 +252,8 @@ $.extend( CZRItemMths , {
             var item = this,
                 module = item.module,
                 _model = item_model || item(),
-                _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
+                //Let's fall back on the id if the title is not set or empty
+                _title = ( _.has( _model, 'title') && ! _.isEmpty( _model.title ) ) ? api.CZR_Helpers.capitalize( _model.title ) : _model.id,
 
             _title = api.CZR_Helpers.truncate( _title, 20 );
             $( '.' + module.control.css_attr.item_title , item.container ).text( _title );

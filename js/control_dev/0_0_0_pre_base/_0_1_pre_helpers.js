@@ -61,7 +61,9 @@
               return;
 
             console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : arguments } ) );
-            console.log( 'Unstyled error message : ', arguments );
+            if ( serverControlParams.isDevMode ) {
+                  console.log( 'Unstyled error message : ', arguments );
+            }
       };
 
       api.czr_isSkopOn = function() {

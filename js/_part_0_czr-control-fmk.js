@@ -99,7 +99,9 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
               return;
 
             console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : arguments } ) );
-            console.log( 'Unstyled error message : ', arguments );
+            if ( serverControlParams.isDevMode ) {
+                  console.log( 'Unstyled error message : ', arguments );
+            }
       };
 
       api.czr_isSkopOn = function() {
@@ -396,7 +398,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
       getControlSettingId : function( control_id, setting_type ) {
             setting_type = 'default' || setting_type;
             if ( ! api.control.has( control_id ) ) {
-                  api.consoleLog( 'getControlSettingId : The requested control_id is not registered in the api yet : ' + control_id );
+                 // api.consoleLog( 'getControlSettingId : The requested control_id is not registered in the api yet : ' + control_id );
                   return control_id;
             }
             if ( ! _.has( api.control( control_id ), 'settings' ) || _.isEmpty( api.control( control_id ).settings ) )
@@ -422,7 +424,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             return [
               '<a href="' + _url + '" title="' + serverControlParams.i18n.readDocumentation + '" target="_blank">',
               ' ',
-              '<span class="far fa-question-circle"></span>'
+              '<span class="far fa-question-circle-o"></span>'
             ].join('');
       },
 
@@ -878,10 +880,14 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                                 api.errorLog( 'executeEventActionChain : missing obj.event or obj.event.actions' );
                                 return;
                           }
-                          try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
-                                api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
-                                api.errorLog( 'Error : ' + er );
-                          }
+                          if ( serverControlParams.isDevMode ) {
+                              control.executeEventActionChain( actionsParams, instance )
+                          } else {
+                              try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
+                                    api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
+                                    api.errorLog( 'Error : ' + er );
+                              }
+                        }
                     });//.on()
               });//_.map()
       },//setupDomListeners
@@ -2145,14 +2151,22 @@ $.extend( CZRItemMths , {
                         //first time or after a removal
                         // previous condition included :  ! _.has( item, 'czr_Input' )
                         if ( _.isEmpty( item.inputCollection() ) ) {
-                              try {
+                              if ( serverControlParams.isDevMode ) {
                                     api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
                                     //the item.container is now available
                                     //Setup the tabs navigation
                                     //setupTabNav is defined in the module ctor and its this is the item or the modOpt
                                     item.module.setupTabNav.call( item );
-                              } catch( er ) {
-                                    api.errorLog( 'In item.isReady.done : ' + er );
+                              } else {
+                                    try {
+                                          api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
+                                          //the item.container is now available
+                                          //Setup the tabs navigation
+                                          //setupTabNav is defined in the module ctor and its this is the item or the modOpt
+                                          item.module.setupTabNav.call( item );
+                                    } catch( er ) {
+                                          api.errorLog( 'In item.isReady.done : ' + er );
+                                    }
                               }
                         }
                   });
@@ -2169,7 +2183,9 @@ $.extend( CZRItemMths , {
                   // if ( ! item.module.isInSektion() ) {
                   //       item.mayBeRenderItemWrapper();
                   // }
-                  item.mayBeRenderItemWrapper();
+                  if ( item.canBeRendered() ) {
+                        item.mayBeRenderItemWrapper();
+                  }
 
                   //ITEM WRAPPER VIEW SETUP
                   //defer actions on item view embedded
@@ -2195,6 +2211,11 @@ $.extend( CZRItemMths , {
             this.isReady.resolve();
       },
 
+      // overridable method introduced with the flat skope
+      // problem to solve => an instantiated item, doesn't necessary have to be rendered in a given context.
+      canBeRendered : function() {
+            return true;
+      },
 
       // @return validated model object
       // To be overriden in each module
@@ -2307,6 +2328,9 @@ $.extend( CZRItemMths , {
 
             if ( 'pending' != item.embedded.state() )
               return;
+            // Make sure we don't print twice
+            if ( ! _.isEmpty( item.container ) && item.container.length > 0 )
+              return;
 
             $.when( item.renderItemWrapper() ).done( function( $_container ) {
                   item.container = $_container;
@@ -2372,15 +2396,15 @@ $.extend( CZRItemMths , {
             //When do we render the item content ?
             //If this is a multi-item module, let's render each item content when they are expanded.
             //In the case of a single item module, we can render the item content now.
-            var _updateItemContentDeferred = function( $_content, to, from ) {
+            var _updateItemContentDeferred = function( $_item_content, to, from ) {
                   //update the $.Deferred state
-                  if ( ! _.isUndefined( $_content ) && false !== $_content.length ) {
-                      item.trigger( 'contentRendered' );
-                      item.contentContainer = $_content;
-                      item.toggleItemExpansion( to, from );
+                  if ( ! _.isUndefined( $_item_content ) && false !== $_item_content.length ) {
+                        item.contentContainer = $_item_content;
+                        item.trigger( 'contentRendered', { item_content : $_item_content } );
+                        item.toggleItemExpansion( to, from );
                   }
                   else {
-                      throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
+                        throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
                   }
             };
 
@@ -2534,7 +2558,7 @@ $.extend( CZRItemMths , {
             //the view content
             $( item_content_template( item_model )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
 
-            return $( $( item_content_template( item_model )), item.container );
+            return $( '.' + module.control.css_attr.item_content, item.container );
       },
 
 
@@ -2546,7 +2570,8 @@ $.extend( CZRItemMths , {
             var item = this,
                 module = item.module,
                 _model = item_model || item(),
-                _title = _.has( _model, 'title')? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
+                //Let's fall back on the id if the title is not set or empty
+                _title = ( _.has( _model, 'title') && ! _.isEmpty( _model.title ) ) ? api.CZR_Helpers.capitalize( _model.title ) : _model.id,
 
             _title = api.CZR_Helpers.truncate( _title, 20 );
             $( '.' + module.control.css_attr.item_title , item.container ).text( _title );
@@ -2923,7 +2948,21 @@ $.extend( CZRModuleMths, {
             //=> we don't want the ready method to be fired several times
             module.isReady = $.Deferred();
 
-            //write the options as properties
+            //write the module constructor options as properties
+            // The default module model can be get with
+            // and is formed this way :
+            // {
+            // control:{}
+            // crud:false
+            // id:""
+            // items:[]
+            // modOpt:{}
+            // module_type:""
+            // multi_item:false
+            // section:""
+            // sortable:false
+            //}
+
             $.extend( module, constructorOptions || {} );
 
             //extend the module with new template Selectors
@@ -2934,7 +2973,6 @@ $.extend( CZRModuleMths, {
                   itemInputList : '',//is specific for each crud module
                   modOptInputList : '',//is specific for each module
                   AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
-
             } );
 
             //embed : define a container, store the embed state, fire the render method
@@ -3114,8 +3152,13 @@ $.extend( CZRModuleMths, {
             module.set( _new_model, data || {} );
       },
 
+      //This method is fired from the control
+      filterItemsBeforeCoreApiSettingValue : function( itemsToReturn ) {
+            return itemsToReturn;
+      },
 
       //cb of module.callbacks
+      //=> sets the setting value via the module collection !
       moduleReact : function( to, from, data ) {
             //cb of : module.callbacks
             var module            = this,
@@ -3338,9 +3381,11 @@ var CZRModuleMths = CZRModuleMths || {};
 $.extend( CZRModuleMths, {
       //@fired in module ready on api('ready')
       //the module().items has been set in initialize
-      populateSavedItemCollection : function() {
+      //A collection of items can be supplied.
+      populateSavedItemCollection : function( _itemCollection_ ) {
               var module = this, _saved_items = [];
-              if ( ! _.isArray( module().items ) ) {
+              _itemCollection_ = _itemCollection_ || module().items;
+              if ( ! _.isArray( _itemCollection_ ) ) {
                     api.errorLog( 'populateSavedItemCollection : The saved items collection must be an array in module :' + module.id );
                     return;
               }
@@ -3366,17 +3411,23 @@ $.extend( CZRModuleMths, {
 
               //FILTER THE ACTUAL ITEMS ( REMOVE THE MODOPTS ELEMENT IF ANY )
               //=> the items and the modOpt should already be split at this stage, because it's done before module instantiation... this check is totally paranoid.
-              _.each( module().items, function( item_candidate , key ) {
+              _.each( _itemCollection_, function( item_candidate , key ) {
                     if ( _.has( item_candidate, 'id') && ! _.has( item_candidate, 'is_mod_opt' ) ) {
                           _saved_items.push( item_candidate );
                     }
               });
 
+              _saved_items = module.filterItemCandidatesBeforeInstantiation( _saved_items );
+
               //INSTANTIATE THE ITEMS
               _.each( _saved_items, function( item_candidate , key ) {
                     //adds it to the collection and fire item.ready()
-                    try { module.instantiateItem( item_candidate ).ready(); } catch( er ) {
-                          api.errorLog( 'populateSavedItemCollection : ' + er );
+                    if ( serverControlParams.isDevMode ) {
+                        module.instantiateItem( item_candidate ).ready();
+                    } else {
+                        try { module.instantiateItem( item_candidate ).ready(); } catch( er ) {
+                              api.errorLog( 'populateSavedItemCollection : ' + er );
+                        }
                     }
               });
 
@@ -3392,6 +3443,10 @@ $.extend( CZRModuleMths, {
               //return this;
       },
 
+      // To be overriden
+      filterItemCandidatesBeforeInstantiation : function( items ) {
+            return items;
+      },
 
       instantiateItem : function( item, is_added_by_user ) {
               var module = this;
@@ -3680,10 +3735,12 @@ $.extend( CZRModuleMths, {
             var module = this;
             //Remove item views and instances
             module.czr_Item.each( function( _itm ) {
-                  $.when( module.czr_Item( _itm.id ).container.remove() ).done( function() {
-                        //Remove item instances
-                        module.czr_Item.remove( _itm.id );
-                  });
+                  if ( module.czr_Item( _itm.id ).container && 0 < module.czr_Item( _itm.id ).container.length ) {
+                        $.when( module.czr_Item( _itm.id ).container.remove() ).done( function() {
+                              //Remove item instances
+                              module.czr_Item.remove( _itm.id );
+                        });
+                  }
             });
 
             // Reset the item collection
@@ -3816,7 +3873,7 @@ $.extend( CZRModuleMths, {
                       _el = module.modOptInputList;
                       break;
                     case 'itemInputList' :
-                      _el = module.itemInputList;
+                      _el = _.isFunction( module.itemInputList ) ? module.itemInputList( item_model ) : module.itemInputList;
                       break;
               }
               if ( _.isEmpty(_el) ) {
@@ -4158,11 +4215,20 @@ $.extend( CZRDynModuleMths, {
             return item_candidate;
       },
 
+      // overridable method introduced with the flat skope
+      // problem to solve in skope => an item, can't always be instantiated in a given context.
+      itemCanBeInstantiated : function() {
+            return true;
+      },
 
       //Fired on user Dom action.
       //the item is manually added.
       //@return a promise() for future sequential actions
       addItem : function(obj) {
+            if ( ! this.itemCanBeInstantiated() ) {
+
+                  return;
+            }
             var module = this,
                 item_candidate = module.preItem(),
                 collapsePreItem = function() {
@@ -4445,18 +4511,22 @@ $.extend( CZRBaseModuleControlMths, {
                     //inits the collection with the saved module => there's only one module to instantiate in this case.
                     //populates the collection with the saved module
                     _.each( control.getSavedModules() , function( _mod, _key ) {
-                          //stores it
-                          single_module = _mod;
+                        //stores it
+                        single_module = _mod;
 
-                          //adds it to the collection
-                          //=> it will be fired ready usually when the control section is expanded
-                          try { control.instantiateModule( _mod, {} ); } catch( er ) {
-                                api.errorLog( 'Failed to instantiate module ' + _mod.id + ' ' + er );
-                                return;
-                          }
+                        //adds it to the collection
+                        //=> it will be fired ready usually when the control section is expanded
+                        if ( serverControlParams.isDevMode ) {
+                              control.instantiateModule( _mod, {} );
+                        } else {
+                              try { control.instantiateModule( _mod, {} ); } catch( er ) {
+                                    api.errorLog( 'Failed to instantiate module ' + _mod.id + ' ' + er );
+                                    return;
+                              }
+                        }
 
-                          //adds the module name to the control container element
-                          control.container.attr('data-module', _mod.id );
+                        //adds the module name to the control container element
+                        control.container.attr('data-module', _mod.id );
                     });
                     //the module collection is ready
                     control.moduleCollectionReady.resolve( single_module );
@@ -4632,7 +4702,8 @@ $.extend( CZRBaseModuleControlMths, {
                   //  [...]
 
                   //POPULATE THE ITEMS [] and the MODOPT {} FROM THE RAW DB SAVED SETTING VAL
-                  _raw_saved_module_val = _.isArray( api( control.id )() ) ? api( control.id )() : [ api( control.id )() ];
+                  var settingId = api.CZR_Helpers.getControlSettingId( control.id );
+                  _raw_saved_module_val = _.isArray( api( settingId )() ) ? api( settingId )() : [ api( settingId )() ];
 
                   _.each( _raw_saved_module_val, function( item_or_mod_opt_candidate , key ) {
                         if ( api.CZR_Helpers.hasModuleModOpt( _module_type ) && 0*0 === key ) {
@@ -5085,7 +5156,7 @@ $.extend( CZRBaseModuleControlMths, {
       filterModuleCollectionBeforeAjax : function( collection ) {
               var control = this,
                   _filtered_collection = $.extend( true, [], collection ),
-                  _to_return;
+                  itemsToReturn;
 
               _.each( collection , function( _mod, _key ) {
                     var db_ready_mod = $.extend( true, {}, _mod );
@@ -5118,14 +5189,13 @@ $.extend( CZRBaseModuleControlMths, {
                     }
 
                     //items
-                    _to_return = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
+                    itemsToReturn = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
+                    itemsToReturn = module_instance.filterItemsBeforeCoreApiSettingValue( itemsToReturn );
 
                     //Add the modOpt if any
-                    return module_instance.hasModOpt() ? _.union( [ module_instance().modOpt ] , _to_return ) : _to_return;
+                    return module_instance.hasModOpt() ? _.union( [ module_instance().modOpt ] , itemsToReturn ) : itemsToReturn;
               }
       },
-
-
 
 
       //fired before adding a module to the collection of DB candidates
