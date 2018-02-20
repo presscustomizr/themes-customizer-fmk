@@ -28,6 +28,7 @@
             number    : 'setupStepper',
             upload    : 'setupImageUploader',
             color     : 'setupColorPicker',
+            wp_color  : 'setupWPColorPicker',//not used for the moment
             content_picker : 'setupContentPicker',
             text_editor    : 'setupTextEditor',
             password : '',

@@ -6,7 +6,7 @@ var CZRInputMths = CZRInputMths || {};
 // id : _id,
 // input_options : {} <= a set of options that are used when setting up the input type
 // input_parent : {} can be an item instance or a modOpt instance (Value instance, has a parent module)
-// input_value : $(this).find('[data-type]').val(),
+// input_value : $(this).find('[data-czrtype]').val(),
 // module : module,
 // transport : inherit or specified in the template with data-transport="postMessage" or "refresh".
 // type : $(this).attr('data-input-type'),
@@ -63,7 +63,7 @@ $.extend( CZRInputMths , {
                   //set input value
                   {
                     trigger   : $.trim( ['change', trigger_map[input.type] || '' ].join(' ') ),//was 'propertychange change click keyup input',//colorpickerchange is a custom colorpicker event @see method setupColorPicker => otherwise we don't
-                    selector  : 'input[data-type], select[data-type], textarea[data-type]',
+                    selector  : 'input[data-czrtype], select[data-czrtype], textarea[data-czrtype]',
                     name      : 'set_input_value',
                     actions   : function( obj ) {
                         if ( ! _.has( input.input_parent, 'syncElements') || ! _.has( input.input_parent.syncElements, input.id ) ) {
@@ -117,8 +117,8 @@ $.extend( CZRInputMths , {
     setupSynchronizer: function() {
           var input       = this,
               input_parent        = input.input_parent,
-              $_input_el  = input.container.find('[data-type]'),
-              is_textarea = input.container.find('[data-type]').is('textarea');
+              $_input_el  = input.container.find('[data-czrtype]'),
+              is_textarea = input.container.find('[data-czrtype]').is('textarea');
 
           //@hack => todo
           //for text area inputs, the synchronizer is buggy
@@ -197,7 +197,7 @@ $.extend( CZRInputMths , {
                   //weird
                   //is there a "change complete" kind of event for iris ?
                   //$(this).val($(this).wpColorPicker('color'));
-                  //input.container.find('[data-type]').trigger('colorpickerchange');
+                  //input.container.find('[data-czrtype]').trigger('colorpickerchange');
 
                   //synchronizes with the original input
                   //OLD => $(this).val( $(this).wpColorPicker('color') ).trigger('colorpickerchange').trigger('change');

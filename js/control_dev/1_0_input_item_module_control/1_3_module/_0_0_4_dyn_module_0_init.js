@@ -120,7 +120,7 @@ $.extend( CZRDynModuleMths, {
             $('.' + module.control.css_attr.pre_add_wrapper, module.container)
                   .find( '.' + module.control.css_attr.sub_set_wrapper)
                   .each( function( _index ) {
-                        var _id = $(this).find('[data-type]').attr('data-type') || 'sub_set_' + _index;
+                        var _id = $(this).find('[data-czrtype]').attr('data-czrtype') || 'sub_set_' + _index;
                         //instantiate the input
                         module.preItem.czr_Input.add( _id, new module.inputConstructor( _id, {//api.CZRInput;
                               id : _id,

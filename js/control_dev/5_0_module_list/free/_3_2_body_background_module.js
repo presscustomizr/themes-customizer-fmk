@@ -77,10 +77,10 @@ $.extend( CZRBodyBgModuleMths, {
                         if ( key == input() || _.contains( input(), key ) )
                           $.extend( _attributes, { selected : "selected" } );
 
-                        $( 'select[data-type]', input.container ).append( $('<option>', _attributes) );
+                        $( 'select[data-czrtype]', input.container ).append( $('<option>', _attributes) );
                   });
                   //fire select2
-                  $( 'select[data-type]', input.container ).select2();
+                  $( 'select[data-czrtype]', input.container ).select2();
             }
       },
 

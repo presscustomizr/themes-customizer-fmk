@@ -582,7 +582,7 @@ $.extend( CZRSocialModuleMths, {
                           if ( _value == _model['social-icon'] )
                             $.extend( _attributes, { selected : "selected" } );
 
-                          $( 'select[data-type="social-icon"]', input.container ).append( $('<option>', _attributes) );
+                          $( 'select[data-czrtype="social-icon"]', input.container ).append( $('<option>', _attributes) );
                     });
 
                     function addIcon( state ) {
@@ -596,7 +596,7 @@ $.extend( CZRSocialModuleMths, {
                     }
 
                     //fire select2
-                    $( 'select[data-type="social-icon"]', input.container ).select2( {
+                    $( 'select[data-czrtype="social-icon"]', input.container ).select2( {
                             templateResult: addIcon,
                             templateSelection: addIcon
                     });
@@ -606,7 +606,7 @@ $.extend( CZRSocialModuleMths, {
                     var input      = this,
                         item       = input.input_parent,
                         module     = input.module,
-                        $el        = $( 'input[data-type="social-color"]', input.container );
+                        $el        = $( 'input[data-czrtype="social-color"]', input.container );
 
                     $el.iris( {
                               palettes: true,
@@ -899,10 +899,10 @@ $.extend( CZRWidgetAreaModuleMths, {
                           if ( key == input_contexts || _.contains( input_contexts, key ) )
                             $.extend( _attributes, { selected : "selected" } );
 
-                          $( 'select[data-type="contexts"]', input.container ).append( $('<option>', _attributes) );
+                          $( 'select[data-czrtype="contexts"]', input.container ).append( $('<option>', _attributes) );
                     });
                     //fire select2
-                    $( 'select[data-type="contexts"]', input.container ).select2();
+                    $( 'select[data-czrtype="contexts"]', input.container ).select2();
             },
 
 
@@ -917,7 +917,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
                     //generates the locations options
                     //append them if not set yet
-                    if ( ! $( 'select[data-type="locations"]', input.container ).children().length ) {
+                    if ( ! $( 'select[data-czrtype="locations"]', input.container ).children().length ) {
                           _.each( module.locations, function( title, key ) {
                                 var _attributes = {
                                       value : key,
@@ -927,7 +927,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                                 if ( key == input_locations || _.contains( input_locations, key ) )
                                   $.extend( _attributes, { selected : "selected" } );
 
-                                $( 'select[data-type="locations"]', input.container ).append( $('<option>', _attributes) );
+                                $( 'select[data-czrtype="locations"]', input.container ).append( $('<option>', _attributes) );
                           });
                     }//if
 
@@ -941,11 +941,11 @@ $.extend( CZRWidgetAreaModuleMths, {
                     }
 
                     if ( refresh ) {
-                          $( 'select[data-type="locations"]', input.container ).select2( 'destroy' );
+                          $( 'select[data-czrtype="locations"]', input.container ).select2( 'destroy' );
                     }
 
                     //fire select2
-                    $( 'select[data-type="locations"]', input.container ).select2( {
+                    $( 'select[data-czrtype="locations"]', input.container ).select2( {
                       templateResult: setAvailability,
                       templateSelection: setAvailability
                     });
@@ -962,7 +962,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                     if ( ! _.has( item(), 'locations') || _.isEmpty( item().locations ) )
                       return;
 
-                    var _selected_locations = $('select[data-type="locations"]', input.container ).val(),
+                    var _selected_locations = $('select[data-czrtype="locations"]', input.container ).val(),
                         available_locs = api.sidebar_insights('available_locations')(),
                         _unavailable = _.filter( _selected_locations, function( loc ) {
                           return ! _.contains(available_locs, loc);
@@ -1669,7 +1669,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                           style:"display:none"
                     });
 
-                    $('select[data-type="locations"]', $view ).closest('div').after($_alert_el);
+                    $('select[data-czrtype="locations"]', $view ).closest('div').after($_alert_el);
               }
               $_alert_el.toggle( 'expanded' == to);
       }
@@ -1753,10 +1753,10 @@ $.extend( CZRBodyBgModuleMths, {
                         if ( key == input() || _.contains( input(), key ) )
                           $.extend( _attributes, { selected : "selected" } );
 
-                        $( 'select[data-type]', input.container ).append( $('<option>', _attributes) );
+                        $( 'select[data-czrtype]', input.container ).append( $('<option>', _attributes) );
                   });
                   //fire select2
-                  $( 'select[data-type]', input.container ).select2();
+                  $( 'select[data-czrtype]', input.container ).select2();
             }
       },
 

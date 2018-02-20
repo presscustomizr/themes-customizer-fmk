@@ -632,9 +632,9 @@ $.extend( CZRSlideModuleMths, {
                   if ( _k == _model[ input.id ] ) {
                         $.extend( _attributes, { selected : "selected" } );
                   }
-                  $( 'select[data-type="' + input.id + '"]', input.container ).append( $('<option>', _attributes) );
+                  $( 'select[data-czrtype="' + input.id + '"]', input.container ).append( $('<option>', _attributes) );
             });
-            $( 'select[data-type="' + input.id + '"]', input.container ).selecter();
+            $( 'select[data-czrtype="' + input.id + '"]', input.container ).selecter();
       },
 
 
@@ -653,7 +653,7 @@ $.extend( CZRSlideModuleMths, {
                       //weird
                       //is there a "change complete" kind of event for iris ?
                       //$(this).val($(this).wpColorPicker('color'));
-                      //input.container.find('[data-type]').trigger('colorpickerchange');
+                      //input.container.find('[data-czrtype]').trigger('colorpickerchange');
 
                       var _rgb = api.CZR_Helpers.hexToRgb( o.color.toString() ),
                           _isCorrectRgb = _.isString( _rgb ) && -1 !== _rgb.indexOf('rgb(');
@@ -1497,9 +1497,9 @@ $.extend( CZRRelatedPostsModMths, {
                         if ( _k == _model[ input.id ] ) {
                               $.extend( _attributes, { selected : "selected" } );
                         }
-                        $( 'select[data-type="' + input.id + '"]', input.container ).append( $('<option>', _attributes) );
+                        $( 'select[data-czrtype="' + input.id + '"]', input.container ).append( $('<option>', _attributes) );
                   });
-                  $( 'select[data-type="' + input.id + '"]', input.container ).selecter();
+                  $( 'select[data-czrtype="' + input.id + '"]', input.container ).selecter();
             },
       },//CZRRelPostsItemInputCtor
 

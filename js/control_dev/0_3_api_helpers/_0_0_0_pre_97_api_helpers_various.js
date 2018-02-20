@@ -246,12 +246,12 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
 
             //creates the inputs based on the rendered item or mod opt
             $( '.' + module.control.css_attr.sub_set_wrapper, inputParentInst.container).each( function( _index ) {
-                  var _id = $(this).find('[data-type]').attr( 'data-type' ),
+                  var _id = $(this).find('[data-czrtype]').attr( 'data-czrtype' ),
                       _value = _.has( inputParentInst_model, _id ) ? inputParentInst_model[ _id ] : '';
 
-                  //skip if no valid input data-type is found in this node
+                  //skip if no valid input data-czrtype is found in this node
                   if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
-                        api.consoleLog( 'setupInputCollectionFromDOM : missing data-type for ' + module.id );
+                        api.consoleLog( 'setupInputCollectionFromDOM : missing data-czrtype for ' + module.id );
                         return;
                   }
                   //check if this property exists in the current inputParentInst model
@@ -262,28 +262,32 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                   //Do we have a specific set of options defined in the parent module for this inputConstructor ?
                   var _inputType      = $(this).attr( 'data-input-type' ),
                       _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
-                      _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {};
+                      _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {},
+                      _inputArgs = {
+                            id            : _id,
+                            type          : _inputType,
+                            transport     : _inputTransport,
+                            input_value   : _value,
+                            input_options : _inputOptions,//<= a module can define a specific set of option
+                            container     : $(this),
+                            input_parent  : inputParentInst,
+                            is_mod_opt    : is_mod_opt,
+                            module        : module
+                      };
 
-                  //INSTANTIATE THE INPUT
-                  inputParentInst.czr_Input.add( _id, new inputParentInst.inputConstructor( _id, {
-                        id            : _id,
-                        type          : _inputType,
-                        transport     : _inputTransport,
-                        input_value   : _value,
-                        input_options : _inputOptions,//<= a module can define a specific set of option
-                        container     : $(this),
-                        input_parent  : inputParentInst,
-                        is_mod_opt    : is_mod_opt,
-                        module        : module
-                  } ) );
+                  // ALLOW PLUGINS TO FILTER THE INPUT ARGS BEFORE INSTANTIATION
+                  inputParentInst.trigger( 'input-args-before-instantiation', _inputArgs );
 
-                  //FIRE THE INPUT
-                  //fires ready once the input Value() instance is initialized
+                  // INSTANTIATE THE INPUT
+                  inputParentInst.czr_Input.add( _id, new inputParentInst.inputConstructor( _id, _inputArgs ) );
+
+                  // FIRE THE INPUT
+                  // fires ready once the input Value() instance is initialized
                   inputParentInst.czr_Input( _id ).ready();
 
-                  //POPULATES THE PARENT INPUT COLLECTION
+                  // POPULATES THE PARENT INPUT COLLECTION
                   dom_inputParentInst_model[ _id ] = _value;
-                  //shall we trigger a specific event when the input collection from DOM has been populated ?
+                  // shall we trigger a specific event when the input collection from DOM has been populated ?
             });//each
 
             //stores the collection

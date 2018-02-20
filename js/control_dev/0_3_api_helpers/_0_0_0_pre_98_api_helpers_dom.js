@@ -133,7 +133,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                                 return;
                           }
                           if ( serverControlParams.isDevMode ) {
-                              control.executeEventActionChain( actionsParams, instance )
+                              control.executeEventActionChain( actionsParams, instance );
                           } else {
                               try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
                                     api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );

@@ -103,9 +103,9 @@ $.extend( CZRRelatedPostsModMths, {
                         if ( _k == _model[ input.id ] ) {
                               $.extend( _attributes, { selected : "selected" } );
                         }
-                        $( 'select[data-type="' + input.id + '"]', input.container ).append( $('<option>', _attributes) );
+                        $( 'select[data-czrtype="' + input.id + '"]', input.container ).append( $('<option>', _attributes) );
                   });
-                  $( 'select[data-type="' + input.id + '"]', input.container ).selecter();
+                  $( 'select[data-czrtype="' + input.id + '"]', input.container ).selecter();
             },
       },//CZRRelPostsItemInputCtor
 

@@ -354,7 +354,7 @@ $.extend( CZRSocialModuleMths, {
                           if ( _value == _model['social-icon'] )
                             $.extend( _attributes, { selected : "selected" } );
 
-                          $( 'select[data-type="social-icon"]', input.container ).append( $('<option>', _attributes) );
+                          $( 'select[data-czrtype="social-icon"]', input.container ).append( $('<option>', _attributes) );
                     });
 
                     function addIcon( state ) {
@@ -368,7 +368,7 @@ $.extend( CZRSocialModuleMths, {
                     }
 
                     //fire select2
-                    $( 'select[data-type="social-icon"]', input.container ).select2( {
+                    $( 'select[data-czrtype="social-icon"]', input.container ).select2( {
                             templateResult: addIcon,
                             templateSelection: addIcon
                     });
@@ -378,7 +378,7 @@ $.extend( CZRSocialModuleMths, {
                     var input      = this,
                         item       = input.input_parent,
                         module     = input.module,
-                        $el        = $( 'input[data-type="social-color"]', input.container );
+                        $el        = $( 'input[data-czrtype="social-color"]', input.container );
 
                     $el.iris( {
                               palettes: true,
