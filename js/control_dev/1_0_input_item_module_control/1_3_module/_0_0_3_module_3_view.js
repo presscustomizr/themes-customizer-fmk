@@ -51,7 +51,7 @@ $.extend( CZRModuleMths, {
       //@item_model is an object describing the current item model
       getTemplateEl : function( type, item_model ) {
               var module = this, _el;
-              switch(type) {
+              switch( type ) {
                     case 'rudItemPart' :
                       _el = module.rudItemPart;
                       break;
