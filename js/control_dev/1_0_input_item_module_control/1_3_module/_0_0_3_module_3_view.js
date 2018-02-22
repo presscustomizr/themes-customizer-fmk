@@ -49,7 +49,7 @@ $.extend( CZRModuleMths, {
       //Read Update (ru)
       //...
       //@item_model is an object describing the current item model
-      getTemplateEl : function( type, item_model ) {
+      getTemplateSelectorPart : function( type, item_model ) {
               var module = this, _el;
               switch( type ) {
                     case 'rudItemPart' :
@@ -66,7 +66,7 @@ $.extend( CZRModuleMths, {
                       break;
               }
               if ( _.isEmpty(_el) ) {
-                   throw new Error('No valid template has been found in getTemplateEl() ' + module.id + '. Aborting');
+                   throw new Error('No valid template has been found in getTemplateSelectorPart() ' + module.id + '. Aborting');
               } else {
                   return _el;
               }

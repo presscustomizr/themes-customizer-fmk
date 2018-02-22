@@ -23,7 +23,7 @@ $.extend( CZRInputMths , {
           }
 
           api.Value.prototype.initialize.call( this, null, options );
-          console.log('INPUT INITIALIZE', options );
+
           var input = this;
           //input.options = options;
           //write the options as properties, name is included

@@ -1623,7 +1623,7 @@ $.extend( CZRWidgetAreaModuleMths, {
       //Read Update (ru)
       //...
       //@item_model is an object describing the current item model
-      getTemplateEl : function( type, item_model ) {
+      getTemplateSelectorPart : function( type, item_model ) {
               var module = this, _el;
               //force view-content type to ru-item-part if the model is a built-in (primary, secondary, footer-1, ...)
               //=> user can't delete a built-in model.
@@ -1649,7 +1649,7 @@ $.extend( CZRWidgetAreaModuleMths, {
               }
 
               if ( _.isEmpty(_el) ) {
-                throw new Error( 'No valid template has been found in getTemplateEl()' );
+                throw new Error( 'No valid template has been found in getTemplateSelectorPart()' );
               } else {
                 return _el;
               }

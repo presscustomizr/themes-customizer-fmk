@@ -75,11 +75,11 @@ $.extend( CZRModOptMths , {
               modOpt_model = modOpt_model || modOpt();
 
               //do we have view content template script?
-              if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) ).length ) {
-                    api.errorLog('renderModOptContent : No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'modOptInputList', modOpt_model ) );
+              if ( 0 === $( '#tmpl-' + module.getTemplateSelectorPart( 'modOptInputList', modOpt_model ) ).length ) {
+                    api.errorLog('renderModOptContent : No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateSelectorPart( 'modOptInputList', modOpt_model ) );
                     return;
               }
-              var  modOpt_content_template = wp.template( module.getTemplateEl( 'modOptInputList', modOpt_model ) );
+              var  modOpt_content_template = wp.template( module.getTemplateSelectorPart( 'modOptInputList', modOpt_model ) );
 
               //do we have an html template ?
               if ( ! modOpt_content_template )

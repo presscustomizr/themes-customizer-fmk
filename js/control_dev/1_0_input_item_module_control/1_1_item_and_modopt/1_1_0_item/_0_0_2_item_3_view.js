@@ -49,12 +49,12 @@ $.extend( CZRItemMths , {
             module.itemsWrapper.append( $_view_el );
 
             //if module is multi item, then render the item crud header part
-            //Note : for the widget module, the getTemplateEl method is overridden
+            //Note : for the widget module, the getTemplateSelectorPart method is overridden
             if ( module.isMultiItem() ) {
-                  var _template_selector = module.getTemplateEl( 'rudItemPart', item_model_for_template_injection );
+                  var _template_selector = module.getTemplateSelectorPart( 'rudItemPart', item_model_for_template_injection );
                   //do we have view template script?
                   if ( 0 === $( '#tmpl-' + _template_selector ).length ) {
-                      throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateEl( 'rudItemPart', item_model_for_template_injection ) );
+                      throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateSelectorPart( 'rudItemPart', item_model_for_template_injection ) );
                   }
                   $_view_el.append( $( wp.template( _template_selector )( item_model_for_template_injection ) ) );
             }
@@ -73,10 +73,10 @@ $.extend( CZRItemMths , {
             var item = this,
                 module = this.module;
 
-            _item_model_ = item() || item.initial_item_model;//could not be set yet
+            //_item_model_ = item() || item.initial_item_model;//could not be set yet
 
             // Let's create a deep copy now
-            item_model = $.extend( true, {}, _item_model_ );
+            item_model = item() || item.initial_item_model;//$.extend( true, {}, _item_model_ );
 
             //always write the title
             item.writeItemViewTitle();
@@ -113,7 +113,7 @@ $.extend( CZRItemMths , {
                                     //toggle on view state change
                                     item.toggleItemExpansion(to, from );
                               } else {
-                                    $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
+                                    $.when( item.renderItemContent( item() || item.initial_item_model ) ).done( function( $_item_content ) {
                                           //introduce a small delay to give some times to the modules to be printed.
                                           //@todo : needed ?
                                           _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
@@ -232,18 +232,18 @@ $.extend( CZRItemMths , {
                 module = this.module;
 
             // Create a deep copy of the item, so we can inject custom properties before parsing the template, without affecting the original item
-            var item_model_for_template_injection = $.extend( true, {}, _item_model_ || item() );
+            var item_model_for_template_injection = $.extend( true, {}, _item_model_ || item() ),
+                tmplSelectorPart = module.getTemplateSelectorPart( 'itemInputList', item_model_for_template_injection );
 
             // allow plugin to alter the item_model before template injection
             item.trigger( 'item-model-before-item-content-template-injection', item_model_for_template_injection );
 
-            console.log('item_model_for_template_injection', $.extend( true, {},item_model_for_template_injection ) );
             //do we have view content template script?
-            if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'itemInputList', item_model_for_template_injection ) ).length ) {
-                throw new Error('No item content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'itemInputList', item_model_for_template_injection ) );
+            if ( 0 === $( '#tmpl-' + tmplSelectorPart ).length ) {
+                throw new Error('No item content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateSelectorPart( 'itemInputList', item_model_for_template_injection ) );
             }
 
-            var  item_content_template = wp.template( module.getTemplateEl( 'itemInputList', item_model_for_template_injection ) );
+            var  item_content_template = wp.template( tmplSelectorPart );
 
             //do we have an html template ?
             if ( ! item_content_template )
