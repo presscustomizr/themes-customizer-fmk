@@ -47,8 +47,13 @@ $.extend( CZRDynModuleMths, {
                               // => will render or destroy the pre item view
                               // @param : obj = { event : {}, item : {}, view : ${} }
                               function(obj) {
-                                    var module = this;
-                                    module.preItemExpanded.set( ! module.preItemExpanded() );
+                                    var module = this,
+                                        canWe = { addTheItem : true };
+                                    // allow remote filtering of the condition for addition
+                                    module.trigger( 'is-item-addition-possible', canWe );
+                                    if ( canWe.addTheItem ) {
+                                          module.preItemExpanded.set( ! module.preItemExpanded() );
+                                    }
                               },
                         ],
                   },
