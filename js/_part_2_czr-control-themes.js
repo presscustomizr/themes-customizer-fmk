@@ -333,6 +333,7 @@ $.extend( CZRSocialModuleMths, {
                 'opera',
                 'optin-monster',
                 'pagelines',
+                'patreon',
                 'paypal',
                 'phone',
                 'phone-square',

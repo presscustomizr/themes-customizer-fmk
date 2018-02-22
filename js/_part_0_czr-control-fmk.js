@@ -1070,7 +1070,7 @@ $.extend( CZRInputMths , {
           }
 
           api.Value.prototype.initialize.call( this, null, options );
-
+          console.log('INPUT INITIALIZE', options );
           var input = this;
           //input.options = options;
           //write the options as properties, name is included
@@ -2044,7 +2044,7 @@ $.extend( CZRItemMths , {
             if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
               throw new Error('No module assigned to item ' + id + '. Aborting');
             }
-
+            console.log('IN ITEM INITIALIZE', options );
             var item = this;
             api.Value.prototype.initialize.call( item, null, options );
 
@@ -2350,15 +2350,19 @@ $.extend( CZRItemMths , {
       //the view wrapper has been rendered by WP
       //the content ( the various inputs ) is rendered by the following methods
       //an event is triggered on the control.container when content is rendered
-      renderItemWrapper : function( item_model ) {
+      renderItemWrapper : function( _item_model_ ) {
             //=> an array of objects
             var item = this,
                 module = item.module;
 
-            item_model = item_model || item();
+            // Create a deep copy of the item, so we can inject custom properties before parsing the template, without affecting the original item
+            var item_model_for_template_injection = $.extend( true, {}, _item_model_ || item() );
+
+            // allow plugin to alter the item_model before template injection
+            item.trigger( 'item-model-before-item-wrapper-template-injection', item_model_for_template_injection );
 
             //render the item wrapper
-            $_view_el = $('<li>', { class : module.control.css_attr.single_item, 'data-id' : item_model.id,  id : item_model.id } );
+            $_view_el = $('<li>', { class : module.control.css_attr.single_item, 'data-id' : item_model_for_template_injection.id,  id : item_model_for_template_injection.id } );
 
             //append the item view to the first module view wrapper
             //!!note : => there could be additional sub view wrapper inside !!
@@ -2369,12 +2373,12 @@ $.extend( CZRItemMths , {
             //if module is multi item, then render the item crud header part
             //Note : for the widget module, the getTemplateEl method is overridden
             if ( module.isMultiItem() ) {
-                  var _template_selector = module.getTemplateEl( 'rudItemPart', item_model );
+                  var _template_selector = module.getTemplateEl( 'rudItemPart', item_model_for_template_injection );
                   //do we have view template script?
                   if ( 0 === $( '#tmpl-' + _template_selector ).length ) {
-                      throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateEl( 'rudItemPart', item_model ) );
+                      throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateEl( 'rudItemPart', item_model_for_template_injection ) );
                   }
-                  $_view_el.append( $( wp.template( _template_selector )( item_model ) ) );
+                  $_view_el.append( $( wp.template( _template_selector )( item_model_for_template_injection ) ) );
             }
 
 
@@ -2387,11 +2391,14 @@ $.extend( CZRItemMths , {
       // fired when item is ready and embedded
       // define the item view DOM event map
       // bind actions when the item is embedded
-      itemWrapperViewSetup : function( item_model ) {
+      itemWrapperViewSetup : function( _item_model_ ) {
             var item = this,
                 module = this.module;
 
-            item_model = item() || item.initial_item_model;//could not be set yet
+            _item_model_ = item() || item.initial_item_model;//could not be set yet
+
+            // Let's create a deep copy now
+            item_model = $.extend( true, {}, _item_model_ );
 
             //always write the title
             item.writeItemViewTitle();
@@ -2428,7 +2435,7 @@ $.extend( CZRItemMths , {
                                     //toggle on view state change
                                     item.toggleItemExpansion(to, from );
                               } else {
-                                    $.when( item.renderItemContent( item() || item.initial_item_model ) ).done( function( $_item_content ) {
+                                    $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
                                           //introduce a small delay to give some times to the modules to be printed.
                                           //@todo : needed ?
                                           _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
@@ -2541,26 +2548,32 @@ $.extend( CZRItemMths , {
       //renders saved items views and attach event handlers
       //the saved item look like :
       //array[ { id : 'sidebar-one', title : 'A Title One' }, {id : 'sidebar-two', title : 'A Title Two' }]
-      renderItemContent : function( item_model ) {
+      renderItemContent : function( _item_model_ ) {
             //=> an array of objects
             var item = this,
                 module = this.module;
 
-            item_model = item_model || item();
+            // Create a deep copy of the item, so we can inject custom properties before parsing the template, without affecting the original item
+            var item_model_for_template_injection = $.extend( true, {}, _item_model_ || item() );
 
+            // allow plugin to alter the item_model before template injection
+            item.trigger( 'item-model-before-item-content-template-injection', item_model_for_template_injection );
+
+            console.log('item_model_for_template_injection', $.extend( true, {},item_model_for_template_injection ) );
             //do we have view content template script?
-            if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) ).length ) {
-                throw new Error('No item content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'itemInputList', item_model ) );
+            if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'itemInputList', item_model_for_template_injection ) ).length ) {
+                throw new Error('No item content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'itemInputList', item_model_for_template_injection ) );
             }
 
-            var  item_content_template = wp.template( module.getTemplateEl( 'itemInputList', item_model ) );
+            var  item_content_template = wp.template( module.getTemplateEl( 'itemInputList', item_model_for_template_injection ) );
 
             //do we have an html template ?
             if ( ! item_content_template )
               return this;
 
             //the view content
-            $( item_content_template( item_model )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
+            $( item_content_template( item_model_for_template_injection )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
+
 
             return $( '.' + module.control.css_attr.item_content, item.container );
       },
@@ -3866,7 +3879,7 @@ $.extend( CZRModuleMths, {
       //@item_model is an object describing the current item model
       getTemplateEl : function( type, item_model ) {
               var module = this, _el;
-              switch(type) {
+              switch( type ) {
                     case 'rudItemPart' :
                       _el = module.rudItemPart;
                       break;
@@ -5858,6 +5871,7 @@ $.extend( CZRMultiModuleControlMths, {
             textarea  : '',
             check     : 'setupIcheck',
             select    : 'setupSelect',
+            radio     : 'setupRadio',
             number    : 'setupStepper',
             upload    : 'setupImageUploader',
             color     : 'setupColorPicker',

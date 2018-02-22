@@ -25,6 +25,7 @@
             textarea  : '',
             check     : 'setupIcheck',
             select    : 'setupSelect',
+            radio     : 'setupRadio',
             number    : 'setupStepper',
             upload    : 'setupImageUploader',
             color     : 'setupColorPicker',

@@ -13,7 +13,7 @@ $.extend( CZRItemMths , {
             if ( _.isUndefined(options.module) || _.isEmpty(options.module) ) {
               throw new Error('No module assigned to item ' + id + '. Aborting');
             }
-
+            console.log('IN ITEM INITIALIZE', options );
             var item = this;
             api.Value.prototype.initialize.call( item, null, options );
 

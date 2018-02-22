@@ -237,7 +237,7 @@ $.extend( CZRItemMths , {
             // allow plugin to alter the item_model before template injection
             item.trigger( 'item-model-before-item-content-template-injection', item_model_for_template_injection );
 
-
+            console.log('item_model_for_template_injection', $.extend( true, {},item_model_for_template_injection ) );
             //do we have view content template script?
             if ( 0 === $( '#tmpl-' + module.getTemplateEl( 'itemInputList', item_model_for_template_injection ) ).length ) {
                 throw new Error('No item content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateEl( 'itemInputList', item_model_for_template_injection ) );
