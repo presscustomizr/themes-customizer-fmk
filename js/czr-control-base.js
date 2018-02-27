@@ -795,8 +795,9 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
               }
 
               args = _.extend( _defaultArgs, args );
-              // => we need an existing dom element
-              if ( ! args.dom_el instanceof jQuery || 1 > args.dom_el.length ) {
+
+              // => we need a dom_el as an existing jQuery object
+              if ( ! ( args.dom_el instanceof jQuery ) || 1 > args.dom_el.length ) {
                     api.errorLog( 'setupDomListeners : dom element should be an existing dom element', args );
                     return;
               }
@@ -4121,7 +4122,7 @@ $.extend( CZRDynModuleMths, {
 
             ////////////////////////////////////////////////////
             /// MODULE DOM EVENT MAP
-            ////////////////////////////////////////////////////
+            ////////////////////////////////////////////////////<
             module.userEventMap = new api.Value( [
                   //pre add new item : open the dialog box
                   {

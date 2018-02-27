@@ -33,7 +33,7 @@ $.extend( CZRDynModuleMths, {
 
             ////////////////////////////////////////////////////
             /// MODULE DOM EVENT MAP
-            ////////////////////////////////////////////////////
+            ////////////////////////////////////////////////////<
             module.userEventMap = new api.Value( [
                   //pre add new item : open the dialog box
                   {
