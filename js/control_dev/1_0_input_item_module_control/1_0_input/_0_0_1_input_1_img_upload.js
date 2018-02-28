@@ -1,9 +1,23 @@
 var CZRInputMths = CZRInputMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRInputMths , {
-    setupImageUploader : function() {
+    // callback for data-input-type="upload"
+    setupImageUploaderSaveAsId : function() {
+          this.setupImageUploader();
+    },
+
+    // callback for data-input-type="upload_url"
+    setupImageUploaderSaveAsUrl : function() {
+          this.setupImageUploader( { save_as_url : true } );
+    },
+
+    //@param args { save_as_url : false }
+    setupImageUploader : function( args ) {
           var input        = this,
               _model       = input();
+
+          args = _.extend( { save_as_url : false }, args || {} );
+          input.save_as_url = args.save_as_url;
 
           //an instance field where we'll store the current attachment
           input.attachment   = {};
@@ -12,34 +26,46 @@ $.extend( CZRInputMths , {
           if ( ! input.container )
             return this;
 
-          this.tmplRendered = $.Deferred();
-          this.setupContentRendering( _model, {} );
+          input.tmplRendered = $.Deferred();
+          input.setupContentRendering( _model, {} );
 
           //valid just in the init
-          this.tmplRendered.done( function(){
-            input.czrImgUploaderBinding();
+          input.tmplRendered.done( function(){
+                input.czrImgUploaderBinding();
           });
   },
 
-  setupContentRendering : function( to, from) {
+  setupContentRendering : function( to, from ) {
         var input = this, _attachment;
         //retrieve new image if 'to' is different from the saved one
         //NEED A BETTER WAY?
         if ( ( input.attachment.id != to ) && from !== to ) {
-              if ( ! to ) {
+              if ( _.isEmpty( to ) ) {
                     input.attachment = {};
                     input.renderImageUploaderTemplate();
+              // handles the case when a url is provided
+              // Occurs for example when contextualizing the header_image with skope
+              } else if ( ! _.isNumber( to ) ) {
+                    input.renderImageUploaderTemplate( { fromUrl : true, url : to });
               }
               //Has this image already been fetched ?
               _attachment = wp.media.attachment( to );
               if ( _.isObject( _attachment ) && _.has( _attachment, 'attributes' ) && _.has( _attachment.attributes, 'sizes' ) ) {
                     input.attachment       = _attachment.attributes;
                     input.renderImageUploaderTemplate();
-              } else {
-                    wp.media.attachment( to ).fetch().done( function() {
-                          input.attachment       = this.attributes;
-                          input.renderImageUploaderTemplate();
-                    });
+              }
+              // If not, try to fetch it but only if the candidate "to" is a number
+              else {
+                    if ( _.isNumber( to ) ) {
+                          wp.media.attachment( to ).fetch().done( function() {
+                                input.attachment       = this.attributes;
+                                input.renderImageUploaderTemplate();
+                          }).fail( function() {
+                                api.errorLog('renderImageUploaderTemplate => failed attempt to fetch an img with id : ' + to );
+                                // input.attachment = {};
+                                // input.renderImageUploaderTemplate();
+                          });
+                     }
               }
         }//Standard reaction, the image has been updated by the user or init
         else if (  ! input.attachment.id || input.attachment.id === to ) {
@@ -60,7 +86,7 @@ $.extend( CZRInputMths , {
 
         input.bind( input.id + ':changed', function( to, from ){
               input.tmplRendered = $.Deferred();
-              input.setupContentRendering(to,from);
+              input.setupContentRendering( to, from );
         });
   },
   /**
@@ -135,7 +161,7 @@ $.extend( CZRInputMths , {
         //save the attachment in a class field
         input.attachment = attachment;
         //set the model
-        input.set(attachment.id);
+        input.set( input.save_as_url ? attachment.url : attachment.id );
   },
 
 
@@ -144,16 +170,20 @@ $.extend( CZRInputMths , {
   //////////////////////////////////////////////////
   /// HELPERS
   //////////////////////////////////////////////////
-  renderImageUploaderTemplate: function() {
+  // @param args = { fromUrl : true, url : to } || null
+  renderImageUploaderTemplate: function( args ) {
         var input  = this;
+        args = _.extend( { fromUrl : false, url : '' }, args || {} );
 
         //do we have view template script?
-        if ( 0 === $( '#tmpl-czr-input-img-uploader-view-content' ).length )
-          return;
+        if ( 0 === $( '#tmpl-czr-input-img-uploader-view-content' ).length ) {
+              throw new Error('renderImageUploaderTemplate => Missing template for input ' + input.id );
+        }
+
 
         var view_template = wp.template('czr-input-img-uploader-view-content');
 
-        //  //do we have an html template and a module container?
+        //  do we have an html template and a module container?
         if ( ! view_template  || ! input.container )
          return;
 
@@ -163,13 +193,14 @@ $.extend( CZRInputMths , {
           return;
 
         var _template_params = {
-          button_labels : input.getUploaderLabels(),
-          settings      : input.id,
-          attachment    : input.attachment,
-          canUpload     : true
+              button_labels : input.getUploaderLabels(),
+              settings      : input.id,
+              attachment    : input.attachment,
+              fromUrl       : args.url,
+              canUpload     : true
         };
 
-        $_view_el.html( view_template( _template_params) );
+        $_view_el.html( view_template( _template_params ) );
 
         input.tmplRendered.resolve();
         input.container.trigger( input.id + ':content_rendered' );
@@ -179,6 +210,7 @@ $.extend( CZRInputMths , {
 
   getUploaderLabels : function() {
         var _ts = serverControlParams.i18n,
+            input = this,
             _map = {
             'select'      : _ts.select_image,
             'change'      : _ts.change_image,
@@ -190,15 +222,18 @@ $.extend( CZRInputMths , {
         };
 
         //are we fine ?
+        var _fallbackmap = {};
         _.each( _map, function( ts_string, key ) {
-              if ( _.isUndefined( ts_string ) ) {
-                    var input = this;
+              if ( _.isEmpty( ts_string ) ) {
                     api.errorLog( 'A translated string is missing ( ' + key + ' ) for the image uploader input in module : ' + input.module.id );
-                    return '';
+                    _fallbackmap[ key ] = key;
+                    return;
+              } else {
+                _fallbackmap[ key ] = ts_string;
               }
         });
 
-        return _map;
+        return _fallbackmap;
   }
 });//$.extend
 })( wp.customize , jQuery, _ );

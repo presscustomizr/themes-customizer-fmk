@@ -47,7 +47,7 @@ $.extend( CZRInputMths , {
                       input[_meth]( options.input_options || null );
                 }
           } else {
-                api.consoleLog('Warning an input : ' + input.id + ' has no corresponding method defined in api.czrInputMap.');
+                api.consoleLog('Warning the input : ' + input.id + ' with type ' + input.type + ' has no corresponding method defined in api.czrInputMap.');
           }
 
           var trigger_map = {

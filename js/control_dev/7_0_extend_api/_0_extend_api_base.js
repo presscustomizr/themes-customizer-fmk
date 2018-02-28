@@ -27,7 +27,8 @@
             select    : 'setupSelect',
             radio     : 'setupRadio',
             number    : 'setupStepper',
-            upload    : 'setupImageUploader',
+            upload    : 'setupImageUploaderSaveAsId',
+            upload_url : 'setupImageUploaderSaveAsUrl',
             color     : 'setupColorPicker',
             wp_color  : 'setupWPColorPicker',//not used for the moment
             content_picker : 'setupContentPicker',
