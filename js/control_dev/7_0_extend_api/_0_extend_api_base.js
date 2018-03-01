@@ -34,6 +34,7 @@
             content_picker : 'setupContentPicker',
             text_editor    : 'setupTextEditor',
             password : '',
+            range : 'setupSimpleRange',
             range_slider : 'setupRangeSlider',
             hidden : ''
       });

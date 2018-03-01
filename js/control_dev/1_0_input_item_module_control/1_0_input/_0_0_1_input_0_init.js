@@ -238,12 +238,32 @@ $.extend( CZRInputMths , {
             });
     },
 
+    setupRadio : function( obj ) {
+            var input      = this;
+            $( 'input[type=radio]', input.container ).each( function(e) {
+                  if ( 0 !== $(this).closest('div[class^="icheckbox"]').length )
+                    return;
+
+                  $(this).iCheck({
+                        checkboxClass: 'icheckbox_flat-grey',
+                        checkedClass: 'checked',
+                        radioClass: 'iradio_flat-grey',
+                  })
+                  .on( 'ifChanged', function(e){
+                        $(e.currentTarget).trigger('change');
+                  });
+            });
+    },
+
     setupStepper : function( obj ) {
           var input      = this;
           $('input[type="number"]',input.container ).each( function( e ) {
                 $(this).stepper();
           });
     },
+
+    // Empty for the moment, to be overriden
+    setupSimpleRange : function() {},
 
     //@use rangeslider https://github.com/andreruffert/rangeslider.js
     setupRangeSlider : function( options ) {
