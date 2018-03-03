@@ -88,7 +88,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                           if ( ! _.contains( _currentListenerCollection, _name ) ) {
                                 _currentListenerCollection.push( _name );
                           } else {
-                                // api.errorLog('Dom listener already created for event : ', _name );
+                                api.errorLog('setupDOMListeners : aborting because listener already created for event : ', _name );
                                 return;
                           }
 

@@ -840,7 +840,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                           if ( ! _.contains( _currentListenerCollection, _name ) ) {
                                 _currentListenerCollection.push( _name );
                           } else {
-                                // api.errorLog('Dom listener already created for event : ', _name );
+                                api.errorLog('setupDOMListeners : aborting because listener already created for event : ', _name );
                                 return;
                           }
 
@@ -1171,7 +1171,7 @@ $.extend( CZRInputMths , {
           //@hack => todo
           //for text area inputs, the synchronizer is buggy
           if ( is_textarea ) {
-            throw new Error('TO DO : THE TEXTAREA INPUT ARE NOT READY IN THE SYNCHRONIZER!');
+                api.errorLog('TO DO : THE TEXTAREA INPUT ARE NOT IMPLEMENTED YET IN THE SYNCHRONIZER!');
           }
 
           var syncElement = new api.Element( $_input_el );
