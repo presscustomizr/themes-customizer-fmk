@@ -67,7 +67,7 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
                 _truncate = function( string ){
                       if ( ! _.isString( string ) )
                         return '';
-                      return string.length > 150 ? string.substr( 0, 149 ) : string;
+                      return string.length > 200 ? string.substr( 0, 199 ) : string;
                 };
 
             //if the array to print is not composed exclusively of strings, then let's stringify it
@@ -111,7 +111,6 @@ if(this.$element.prop("multiple"))this.current(function(d){var e=[];a=[a],a.push
       api.czr_isChangeSetOn = function() {
             return serverControlParams.isChangeSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
       };
-
 })( wp.customize , jQuery, _);
 ( function ( api, $, _ ) {
       // if ( ! serverControlParams.isSkopOn )
@@ -744,6 +743,77 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                   return hex.length == 1 ? "0" + hex : hex;
             };
             return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+      },
+
+
+
+      // inspired from wp.template in wp-includes/js/wp-util.js
+      parseTemplate : _.memoize(function ( html ) {
+            var compiled,
+              /*
+               * Underscore's default ERB-style templates are incompatible with PHP
+               * when asp_tags is enabled, so WordPress uses Mustache-inspired templating syntax.
+               *
+               * @see trac ticket #22344.
+               */
+              options = {
+                    evaluate:    /<#([\s\S]+?)#>/g,
+                    interpolate: /\{\{\{([\s\S]+?)\}\}\}/g,
+                    escape:      /\{\{([^\}]+?)\}\}(?!\})/g,
+                    variable:    'data'
+              };
+
+            return function ( data ) {
+                  compiled = compiled || _.template( html,  options );
+                  return compiled( data );
+            };
+      }),
+
+      // Fetches a module tmpl from the server if not yet cached
+      // {
+      //   tmpl : 'item-inputs',
+      //   module_type: module.module_type || 'all_modules',
+      //   module_id : ''
+      // }
+      // @return a promise()
+      getModuleTmpl : function( args ) {
+            var dfd = $.Deferred();
+            args = _.extend( { tmpl : '', module_type: '', module_id : '' }, args );
+            // are we good to go ?
+            if ( _.isEmpty( args.tmpl ) || _.isEmpty( args.module_type ) ) {
+                  dfd.reject( 'api.CZR_Helpers.getModuleTmpl => missing tmpl or module_type param' );
+            }
+
+            // This will be used to store the previously fetched template
+            // 1) the generic templates used for all_modules
+            // 2) each module templates : pre-item inputs, item inputs and mod options
+            api.CZR_Helpers.czr_cachedTmpl = api.CZR_Helpers.czr_cachedTmpl || {};
+            api.CZR_Helpers.czr_cachedTmpl[ args.module_type ] = api.CZR_Helpers.czr_cachedTmpl[ args.module_type ] || {};
+
+            if ( ! _.isEmpty( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) && _.isString( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) ) {
+                  dfd.resolve( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] );
+            } else {
+                  // if the tmpl is currently being fetched, return the temporary promise()
+                  // this can occurs when rendering a multi-item module for the first time
+                  // assigning the tmpl ajax request to the future cache entry allows us to fetch only once
+                  if ( _.isObject( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) && 'pending' == api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ].state() ) {
+                        return api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ];//<= this is a $.promise()
+                  } else {
+                        // First time fetch
+                        api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = wp.ajax.post( 'ac_get_template', {
+                              tmpl : args.tmpl,
+                              module_type: args.module_type,
+                              nonce: api.settings.nonce.save//<= do we need to set a specific nonce to fetch the tmpls ?
+                        }).done( function( _serverTmpl_ ) {
+                              // resolve and cache
+                              dfd.resolve( _serverTmpl_ );
+                              api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = _serverTmpl_;
+                        }).fail( function( ) {
+                              dfd.reject( 'api.CZR_Helpers.getModuleTmpl => Problem when fetching the ' + args.tmpl + ' tmpl from server for module : ' + args.module_id + ' ' + args.module_type );
+                        });
+                  }
+            }
+            return dfd.promise();
       }
 
 });//$.extend
@@ -2409,10 +2479,30 @@ $.extend( CZRItemMths , {
       renderItemWrapper : function( _item_model_ ) {
             //=> an array of objects
             var item = this,
-                module = item.module;
+                module = item.module,
+                dfd = $.Deferred(),
+                $_view_el;
 
             // Create a deep copy of the item, so we can inject custom properties before parsing the template, without affecting the original item
             var item_model_for_template_injection = $.extend( true, {}, _item_model_ || item() );
+
+            var appendAndResolve = function( _tmpl_ ) {
+                  //if module is multi item, then render the item crud header part
+                  //Note : for the widget module, the getTemplateSelectorPart method is overridden
+                  if ( module.isMultiItem() ) {
+                        //do we have an html template ?
+                        if ( _.isEmpty( _tmpl_ ) ) {
+                              dfd.reject( 'renderItemWrapper => Missing html template for module : '+ module.id );
+                        }
+                        $_view_el.append( _tmpl_ );
+                  }
+
+                  //then, append the item content wrapper
+                  $_view_el.append( $( '<div/>', { class: module.control.css_attr.item_content } ) );
+
+                  dfd.resolve( $_view_el );
+            };//appendAndResolve
+
 
             // allow plugin to alter the item_model before template injection
             item.trigger( 'item-model-before-item-wrapper-template-injection', item_model_for_template_injection );
@@ -2426,22 +2516,40 @@ $.extend( CZRItemMths , {
             // module.itemsWrapper has been stored as a $ var in module initialize() when the tmpl has been embedded
             module.itemsWrapper.append( $_view_el );
 
-            //if module is multi item, then render the item crud header part
-            //Note : for the widget module, the getTemplateSelectorPart method is overridden
             if ( module.isMultiItem() ) {
-                  var _template_selector = module.getTemplateSelectorPart( 'rudItemPart', item_model_for_template_injection );
-                  //do we have view template script?
-                  if ( 0 === $( '#tmpl-' + _template_selector ).length ) {
-                      throw new Error('Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + module.getTemplateSelectorPart( 'rudItemPart', item_model_for_template_injection ) );
+                  // Do we have view content template script?
+                  // if yes, let's use it <= Old way
+                  // Otherwise let's fetch the html template from the server
+                  if ( ! _.isEmpty( module.rudItemPart ) ) {
+                        var _template_selector = module.getTemplateSelectorPart( 'rudItemPart', item_model_for_template_injection );
+                        //do we have view template script?
+                        if ( 1 > $( '#tmpl-' + _template_selector ).length ) {
+                            dfd.reject( 'Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + _template_selector );
+                        }
+                        appendAndResolve( wp.template( _template_selector )( item_model_for_template_injection ) );
+                  } else {
+
+                        // allow plugin to alter the ajax params before fetching
+                        var requestParams = {
+                              tmpl : 'rud-item-part',
+                              module_type: 'all_modules',
+                              module_id : module.id
+                        };
+                        item.trigger( 'item-wrapper-tmpl-params-before-fetching', requestParams );
+
+                        api.CZR_Helpers.getModuleTmpl( requestParams ).done( function( _serverTmpl_ ) {
+                              //console.log( 'renderItemWrapper => success response =>', module.id, _serverTmpl_);
+                              appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( {} ) );
+                        }).fail( function( _r_ ) {
+                              //console.log( 'renderItemWrapper => fail response =>', _r_);
+                              dfd.reject( 'renderItemWrapper => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                        });
                   }
-                  $_view_el.append( $( wp.template( _template_selector )( item_model_for_template_injection ) ) );
+            } else {
+                  appendAndResolve();
             }
 
-
-            //then, append the item content wrapper
-            $_view_el.append( $( '<div/>', { class: module.control.css_attr.item_content } ) );
-
-            return $_view_el;
+            return dfd.promise();
       },
 
       // fired when item is ready and embedded
@@ -2491,12 +2599,16 @@ $.extend( CZRItemMths , {
                                     //toggle on view state change
                                     item.toggleItemExpansion(to, from );
                               } else {
-                                    $.when( item.renderItemContent( item() || item.initial_item_model ) ).done( function( $_item_content ) {
-                                          //introduce a small delay to give some times to the modules to be printed.
-                                          //@todo : needed ?
-                                          _updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
-                                          _updateItemContentDeferred( $_item_content, to, from );
-                                    });
+                                    item.renderItemContent( item() || item.initial_item_model )
+                                          .done( function( $_item_content ) {
+                                                //introduce a small delay to give some times to the modules to be printed.
+                                                //@todo : needed ?
+                                                //_updateItemContentDeferred = _.debounce(_updateItemContentDeferred, 50 );
+                                                _updateItemContentDeferred( $_item_content, to, from );
+                                          })
+                                          .fail( function( _r_ ) {
+                                                api.errorLog( "multi-item module => failed item.renderItemContent for module : " + module.id, _r_ );
+                                          });
                               }
                         } else {
                               //toggle on view state change
@@ -2525,10 +2637,14 @@ $.extend( CZRItemMths , {
                   });
 
                   //renderview content now for a single item module
-                  $.when( item.renderItemContent( item_model ) ).done( function( $_item_content ) {
-                        _updateItemContentDeferred( $_item_content, true );
-                        //item.viewState.set('expanded');
-                  });
+                  item.renderItemContent( item_model )
+                        .done( function( $_item_content ) {
+                              _updateItemContentDeferred( $_item_content, true );
+                              //item.viewState.set('expanded');
+                        })
+                        .fail( function( _r_ ) {
+                              api.errorLog( "mono-item module => failed item.renderItemContent for module : " + module.id, _r_ );
+                        });
             }
 
             //DOM listeners for the user action in item view wrapper
@@ -2573,14 +2689,30 @@ $.extend( CZRItemMths , {
 
                   //print the html if dialod is expanded
                   if ( visible ) {
-                        //do we have an html template and a control container?
-                        if ( ! wp.template( module.AlertPart )  || ! item.container ) {
-                              api.consoleLog( 'No removal alert template available for items in module :' + module.id );
-                              return;
+                        // Do we have view content template script?
+                        // if yes, let's use it <= Old way
+                        // Otherwise let's fetch the html template from the server
+                        if ( ! _.isEmpty( module.alertPart ) ) {
+                              if ( 1 > $( '#tmpl-' + module.alertPart ).length || _.isEmpty( item.container ) ) {
+                                    api.consoleLog( 'No removal alert template available for items in module :' + module.id );
+                                    return;
+                              }
+                              $_alert_el.html( wp.template( module.alertPart )( { title : ( item().title || item.id ) } ) );
+                              item.trigger( 'remove-dialog-rendered');
+                        } else {
+                              api.CZR_Helpers.getModuleTmpl( {
+                                    tmpl : 'rud-item-alert-part',
+                                    module_type: 'all_modules',
+                                    module_id : module.id
+                              } ).done( function( _serverTmpl_ ) {
+                                    //console.log( 'item.removeDialogVisible => success response =>', module.id, _serverTmpl_);
+                                    $_alert_el.html( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( { title : ( item().title || item.id ) } ) );
+                                    item.trigger( 'remove-dialog-rendered');
+                              }).fail( function( _r_ ) {
+                                    //console.log( 'item.removeDialogVisible => fail response =>', _r_);
+                                    api.errorLog( 'item.removeDialogVisible => Problem when fetching the tmpl from server for module : '+ module.id );
+                              });
                         }
-
-                        $_alert_el.html( wp.template( module.AlertPart )( { title : ( item().title || item.id ) } ) );
-                        item.trigger( 'remove-dialog-rendered');
                   }
 
                   //Slide it
@@ -2607,31 +2739,48 @@ $.extend( CZRItemMths , {
       renderItemContent : function( _item_model_ ) {
             //=> an array of objects
             var item = this,
-                module = this.module;
+                module = this.module,
+                dfd = $.Deferred();
 
             // Create a deep copy of the item, so we can inject custom properties before parsing the template, without affecting the original item
-            var item_model_for_template_injection = $.extend( true, {}, _item_model_ || item() ),
-                tmplSelectorPart = module.getTemplateSelectorPart( 'itemInputList', item_model_for_template_injection );
+            var item_model_for_template_injection = $.extend( true, {}, _item_model_ || item() );
 
-            // allow plugin to alter the item_model before template injection
-            item.trigger( 'item-model-before-item-content-template-injection', item_model_for_template_injection );
+            var appendAndResolve = function( _tmpl_ ) {
+                  //do we have an html template ?
+                  if ( _.isEmpty( _tmpl_ ) ) {
+                        dfd.reject( 'renderItemContent => Missing html template for module : '+ module.id );
+                  }
+                  var $itemContentWrapper = $( '.' + module.control.css_attr.item_content, item.container );
+                  // append the view content
+                  $( _tmpl_ ).appendTo( $itemContentWrapper );
+                  // allow plugin to alter the item_model before template injection
+                  item.trigger( 'item-model-before-item-content-template-injection', item_model_for_template_injection );
+                  dfd.resolve( $itemContentWrapper );
+            };//appendAndResolve
 
-            //do we have view content template script?
-            if ( 0 === $( '#tmpl-' + tmplSelectorPart ).length ) {
-                throw new Error('No item content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateSelectorPart( 'itemInputList', item_model_for_template_injection ) );
+            // Do we have view content template script?
+            // if yes, let's use it <= Old way
+            // Otherwise let's fetch the html template from the server
+            if ( ! _.isEmpty( module.itemInputList ) || _.isFunction( module.itemInputList ) ) {
+                  var tmplSelectorSuffix = module.getTemplateSelectorPart( 'itemInputList', item_model_for_template_injection );
+                  if ( 1 > $( '#tmpl-' + tmplSelectorSuffix ).length ) {
+                        dfd.reject( 'renderItemContent => No itemInputList content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + tmplSelectorSuffix );
+                  }
+                  appendAndResolve( wp.template( tmplSelectorSuffix )( item_model_for_template_injection ) );
+            } else {
+                  api.CZR_Helpers.getModuleTmpl( {
+                        tmpl : 'item-inputs',
+                        module_type: module.module_type,
+                        module_id : module.id
+                  } ).done( function( _serverTmpl_ ) {
+                        //console.log( 'renderItemContent => success response =>', _serverTmpl_);
+                        appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( item_model_for_template_injection ) );
+                  }).fail( function( _r_ ) {
+                        //console.log( 'renderItemContent => fail response =>', _r_);
+                        dfd.reject( 'renderItemContent> Problem when fetching the tmpl from server for module : '+ module.id );
+                  });
             }
-
-            var  item_content_template = wp.template( tmplSelectorPart );
-
-            //do we have an html template ?
-            if ( ! item_content_template )
-              return this;
-
-            //the view content
-            $( item_content_template( item_model_for_template_injection )).appendTo( $('.' + module.control.css_attr.item_content, item.container ) );
-
-
-            return $( '.' + module.control.css_attr.item_content, item.container );
+            return dfd.promise();
       },
 
 
@@ -2644,7 +2793,7 @@ $.extend( CZRItemMths , {
                 module = item.module,
                 _model = item_model || item(),
                 //Let's fall back on the id if the title is not set or empty
-                _title = ( _.has( _model, 'title') && ! _.isEmpty( _model.title ) ) ? api.CZR_Helpers.capitalize( _model.title ) : _model.id,
+                _title = ( _.has( _model, 'title') && ! _.isEmpty( _model.title ) ) ? api.CZR_Helpers.capitalize( _model.title ) : _model.id;
 
             _title = api.CZR_Helpers.truncate( _title, 20 );
             $( '.' + module.control.css_attr.item_title , item.container ).text( _title );
@@ -2709,10 +2858,11 @@ $.extend( CZRItemMths , {
                       dfd.resolve();
                 };
 
-            if ( visible )
-              $el.stop( true, true ).slideDown( duration || 200, function() { _slideComplete( visible ); } );
-            else
-              $el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
+            if ( visible ) {
+                  $el.stop( true, true ).slideDown( duration || 200, function() { _slideComplete( visible ); } );
+            } else {
+                  $el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
+            }
 
             return dfd.promise();
       },
@@ -2909,16 +3059,19 @@ $.extend( CZRModOptMths , {
               modOpt_model = modOpt() || modOpt.initial_modOpt_model;//could not be set yet
 
               //renderview content now
-              $.when( modOpt.renderModOptContent( modOpt_model ) )
+              modOpt.renderModOptContent( modOpt_model )
                     .done( function( $_container ) {
                           //update the $.Deferred state
-                          if ( ! _.isUndefined( $_container ) && false !== $_container.length ) {
+                          if ( ! _.isEmpty( $_container ) && 0 < $_container.length ) {
                                 _setupDOMListeners( $_container );
                                 dfd.resolve( $_container );
                           }
                           else {
                                 throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
                           }
+                    })
+                    .fail( function( _r_ ) {
+                          api.errorLog( "failed modOpt.renderModOptContent for module : " + module.id, _r_ );
                     })
                     .then( function() {
                           //the modOpt.container is now available
@@ -2931,47 +3084,70 @@ $.extend( CZRModOptMths , {
       },
 
 
-      //renders saved modOpt views and attach event handlers
+      //renders saved modOpt views
+      //returns a promise( $container )
       //the saved modOpt look like :
       //array[ { id : 'sidebar-one', title : 'A Title One' }, {id : 'sidebar-two', title : 'A Title Two' }]
       renderModOptContent : function( modOpt_model ) {
               //=> an array of objects
               var modOpt = this,
-                  module = this.module;
+                  module = this.module,
+                  dfd = $.Deferred();
 
               modOpt_model = modOpt_model || modOpt();
 
-              //do we have view content template script?
-              if ( 0 === $( '#tmpl-' + module.getTemplateSelectorPart( 'modOptInputList', modOpt_model ) ).length ) {
-                    api.errorLog('renderModOptContent : No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateSelectorPart( 'modOptInputList', modOpt_model ) );
-                    return;
+              var appendAndResolve = function( _tmpl_ ) {
+                    //do we have an html template ?
+                    if ( _.isEmpty( _tmpl_ ) ) {
+                          dfd.reject( 'renderModOptContent => Missing html template for module : '+ module.id );
+                    }
+
+                    var _ctrlLabel = '';
+                    try {
+                          _ctrlLabel = [ serverControlParams.i18n['Options for'], module.control.params.label ].join(' ');
+                    } catch( er ) {
+                          api.errorLog( 'renderItemContent => Problem with ctrl label => ' + er );
+                          _ctrlLabel = serverControlParams.i18n['Settings'];
+                    }
+
+                    $('#widgets-left').after( $( '<div/>', {
+                          class : module.control.css_attr.mod_opt_wrapper,
+                          html : [
+                                [ '<h2 class="mod-opt-title">', _ctrlLabel , '</h2>' ].join(''),
+                                '<span class="fas fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
+                          ].join('')
+                    } ) );
+
+                    //render the mod opt content for this module
+                    $( '.' + module.control.css_attr.mod_opt_wrapper ).append( _tmpl_ );
+
+                    dfd.resolve( $( '.' + module.control.css_attr.mod_opt_wrapper ) );
+              };//appendAndResolve
+
+              // Do we have view content template script?
+              // if yes, let's use it <= Old way
+              // Otherwise let's fetch the html template from the server
+              if ( ! _.isEmpty( module.itemPreAddEl ) ) {
+                    var tmplSelectorSuffix = module.getTemplateSelectorPart( 'modOptInputList', modOpt_model );
+                    if ( 1 > $( '#tmpl-' + tmplSelectorSuffix ).length ) {
+                          dfd.reject( 'renderModOptContent => No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + tmplSelectorSuffix );
+                    }
+                    appendAndResolve( wp.template( tmplSelectorSuffix )( modOpt_model ) );
+              } else {
+                    api.CZR_Helpers.getModuleTmpl( {
+                          tmpl : 'mod-opt',
+                          module_type: module.module_type,
+                          module_id : module.id
+                    } ).done( function( _serverTmpl_ ) {
+                          //console.log( 'renderModOptContent => success response =>', _serverTmpl_);
+                          appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( modOpt_model ) );
+                    }).fail( function( _r_ ) {
+                          //console.log( 'renderModOptContent => fail response =>', _r_);
+                          dfd.reject( 'renderPreItemView => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                    });
               }
-              var  modOpt_content_template = wp.template( module.getTemplateSelectorPart( 'modOptInputList', modOpt_model ) );
 
-              //do we have an html template ?
-              if ( ! modOpt_content_template )
-                return this;
-
-              var _ctrlLabel = '';
-              try {
-                    _ctrlLabel = [ serverControlParams.i18n['Options for'], module.control.params.label ].join(' ');
-              } catch( er ) {
-                    api.errorLog( 'In renderModOptContent : ' + er );
-                    _ctrlLabel = serverControlParams.i18n['Settings'];
-              }
-
-              $('#widgets-left').after( $( '<div/>', {
-                    class : module.control.css_attr.mod_opt_wrapper,
-                    html : [
-                          [ '<h2 class="mod-opt-title">', _ctrlLabel , '</h2>' ].join(''),
-                          '<span class="fas fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
-                    ].join('')
-              } ) );
-
-              //render the mod opt content for this module
-              $( '.' + module.control.css_attr.mod_opt_wrapper ).append( $( modOpt_content_template( modOpt_model ) ) );
-
-              return $( '.' + module.control.css_attr.mod_opt_wrapper );
+              return dfd.promise();
       },
 
 
@@ -3040,12 +3216,12 @@ $.extend( CZRModuleMths, {
 
             //extend the module with new template Selectors
             $.extend( module, {
-                  crudModulePart : 'czr-crud-module-part',//create, read, update, delete
-                  rudItemPart : 'czr-rud-item-part',//read, update, delete
-                  ruItemPart : 'czr-ru-item-part',//read, update
+                  crudModulePart : '', //'czr-crud-module-part',//create, read, update, delete
+                  rudItemPart : '',// 'czr-rud-item-part',//read, update, delete
+                  ruItemPart : '',// 'czr-ru-item-part',//read, update <= ONLY USED IN THE WIDGET MODULE
+                  alertPart : '',// 'czr-rud-item-alert-part',//used both for items and modules removal
                   itemInputList : '',//is specific for each crud module
-                  modOptInputList : '',//is specific for each module
-                  AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
+                  modOptInputList : ''//is specific for each module
             } );
 
             //embed : define a container, store the embed state, fire the render method
@@ -3061,13 +3237,17 @@ $.extend( CZRModuleMths, {
 
             //render the item(s) wrapper
             module.embedded.done( function() {
-                  $.when( module.renderModuleParts() ).done(function( $_module_items_wrapper ){
-                        if ( false === $_module_items_wrapper.length ) {
-                            throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
-                        }
-                        //stores the items wrapper ( </ul> el ) as a jQuery var
-                        module.itemsWrapper = $_module_items_wrapper;
-                  });
+                  module.renderModuleParts()
+                        .done( function( $_module_items_wrapper ){
+                              if ( false === $_module_items_wrapper.length ) {
+                                  throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
+                              }
+                              //stores the items wrapper ( </ul> el ) as a jQuery var
+                              module.itemsWrapper = $_module_items_wrapper;
+                        })
+                        .fail( function( _r_ ) {
+                              throw new Error( [ "initialize module => failed module.renderModuleParts() for module : " , module.id , _r_ ].join(' '));
+                        });
             });
 
             /*-----------------------------------------------
@@ -3895,34 +4075,65 @@ $.extend( CZRModuleMths, {
       //fired on module.isReady.done()
       //the module.container is set. Either as the control.container or the single module wrapper in a sektion
       renderModuleParts : function() {
-              var module = this,
-                  $_moduleContentEl = module.isInSektion() ? $( module.container ).find('.czr-mod-content') : $( module.container );
+            var module = this,
+                $_moduleContentEl = module.isInSektion() ? $( module.container ).find('.czr-mod-content') : $( module.container ),
+                dfd = $.Deferred();
 
-              //Crud modules => then let's add the crud module part tmpl
-              if ( module.isCrud() ) {
-                    //do we have view template script?
-                    if ( 0 === $( '#tmpl-' + module.crudModulePart ).length ) {
-                      throw new Error('No crud Module Part template for module ' + module.id + '. The template script id should be : #tmpl-' + module.crudModulePart );
-                    }
+            var appendAndResolve = function( _tmpl_ ) {
+                  if ( module.isCrud() ) {
+                        //do we have an html template ?
+                        if ( _.isEmpty( _tmpl_ ) ) {
+                              dfd.reject( 'renderModuleParts => Missing html template for module : '+ module.id );
+                        }
+                        //append the module wrapper to the column
+                        $_moduleContentEl.append( _tmpl_ );
+                  }
 
-                    //append the module wrapper to the column
-                    $_moduleContentEl.append( $( wp.template( module.crudModulePart )( {} ) ) );
-              }
-              var $_module_items_wrapper = $(
-                '<ul/>',
-                {
-                  class : [
-                    module.control.css_attr.items_wrapper,
-                    module.module_type,
-                    module.isMultiItem() ? 'multi-item-mod' : 'mono-item-mod',
-                    module.isCrud() ? 'crud-mod' : 'not-crud-mod'
-                  ].join(' ')
-                }
-              );
+                  // Always append this
+                  var $_module_items_wrapper = $(
+                        '<ul/>',
+                        {
+                          class : [
+                            module.control.css_attr.items_wrapper,
+                            module.module_type,
+                            module.isMultiItem() ? 'multi-item-mod' : 'mono-item-mod',
+                            module.isCrud() ? 'crud-mod' : 'not-crud-mod'
+                          ].join(' ')
+                        }
+                  );
 
-              $_moduleContentEl.append($_module_items_wrapper);
+                  $_moduleContentEl.append( $_module_items_wrapper );
 
-              return $( $_module_items_wrapper, $_moduleContentEl );
+                  dfd.resolve( $( $_module_items_wrapper, $_moduleContentEl ) );
+            };//appendAndResolve
+
+            //Crud modules => then let's add the crud module part tmpl
+            if ( module.isCrud() ) {
+                  // Do we have view content template script?
+                  // if yes, let's use it <= Old way
+                  // Otherwise let's fetch the html template from the server
+                  if ( ! _.isEmpty( module.crudModulePart ) ) {
+                        if ( 1 > $( '#tmpl-' + module.crudModulePart ).length ) {
+                              dfd.reject( 'renderModuleParts => no crud Module Part template for module ' + module.id + '. The template script id should be : #tmpl-' + module.crudModulePart );
+                        }
+                        appendAndResolve( wp.template( module.crudModulePart )( {} ) );
+                  } else {
+                        api.CZR_Helpers.getModuleTmpl( {
+                              tmpl : 'crud-module-part',
+                              module_type: 'all_modules',
+                              module_id : module.id
+                        } ).done( function( _serverTmpl_ ) {
+                              //console.log( 'renderModuleParts => success response =>', module.id, _serverTmpl_);
+                              appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( {} ) );
+                        }).fail( function( _r_ ) {
+                              //console.log( 'renderModuleParts => fail response =>', _r_);
+                              dfd.reject( 'renderModuleParts => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                        });
+                  }
+            } else {
+                  appendAndResolve();
+            }
+            return dfd.promise();
       },
 
       //called before rendering a view. Fired in module::renderItemWrapper()
@@ -4387,29 +4598,54 @@ $.extend( CZRDynModuleMths, {
       /// PRE ADD MODEL DIALOG AND VIEW
       //////////////////////////////////////////////////
       renderPreItemView : function( obj ) {
-              var module = this, dfd = $.Deferred();
+              var module = this,
+                  dfd = $.Deferred(),
+                  pre_add_template;
+
               //is this view already rendered ?
-              if ( _.isObject( module.preItemsWrapper ) && 0 < module.preItemsWrapper.length ) //was ! _.isEmpty( module.czr_preItem('item_content')() ) )
-                return dfd.resolve( module.preItemsWrapper ).promise();
+              if ( _.isObject( module.preItemsWrapper ) && 0 < module.preItemsWrapper.length ) { //was ! _.isEmpty( module.czr_preItem('item_content')() ) )
+                    return dfd.resolve( module.preItemsWrapper ).promise();
+              }
 
-              //do we have view template script?
-              if ( ! _.has(module, 'itemPreAddEl') ||  0 === $( '#tmpl-' + module.itemPreAddEl ).length )
-                return dfd.reject( 'Missing itemPreAddEl or template ').promise();
+              var appendAndResolve = function( _tmpl_ ){
+                    //console.log('pre_add_template', _tmpl_ );
+                    //do we have an html template and a module container?
+                    if ( _.isEmpty( _tmpl_ ) || ! module.container ) {
+                          dfd.reject( 'renderPreItemView => Missing html template for module : '+ module.id );
+                    }
 
-              //print the html
-              var pre_add_template = wp.template( module.itemPreAddEl );
+                    var $_pre_add_el = $('.' + module.control.css_attr.pre_add_item_content, module.container );
 
-              //do we have an html template and a module container?
-              if ( ! pre_add_template  || ! module.container )
-                return dfd.reject( 'Missing html template ').promise();
+                    $_pre_add_el.prepend( $('<div>', { class : 'pre-item-wrapper'} ) );
+                    $_pre_add_el.find('.pre-item-wrapper').append( _tmpl_ );
 
-              var $_pre_add_el = $('.' + module.control.css_attr.pre_add_item_content, module.container );
+                    //say it
+                    dfd.resolve( $_pre_add_el.find('.pre-item-wrapper') ).promise();
+              };
 
-              $_pre_add_el.prepend( $('<div>', { class : 'pre-item-wrapper'} ) );
-              $_pre_add_el.find('.pre-item-wrapper').append( pre_add_template() );
-
-              //say it
-              return dfd.resolve( $_pre_add_el.find('.pre-item-wrapper') ).promise();
+              // do we have view template script ?
+              // if yes, let's use it <= Old way
+              // Otherwise let's fetch the html template from the server
+              if ( ! _.isEmpty( module.itemPreAddEl ) ) {
+                    if ( 1 > $( '#tmpl-' + module.itemPreAddEl ).length ) {
+                          dfd.reject( 'renderPreItemView => Missing itemPreAddEl or template in module '+ module.id );
+                    }
+                    // parse the html
+                    appendAndResolve( wp.template( module.itemPreAddEl )() );
+              } else {
+                    api.CZR_Helpers.getModuleTmpl( {
+                          tmpl : 'pre-item',
+                          module_type: module.module_type,
+                          module_id : module.id
+                    } ).done( function( _serverTmpl_ ) {
+                          //console.log( 'success response =>', _serverTmpl_);
+                          appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )() );
+                    }).fail( function( _r_ ) {
+                          //console.log( 'fail response =>', _r_);
+                          dfd.reject( 'renderPreItemView => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                    });
+              }
+              return dfd.promise();
       },
 
       //@return $ el of the pre Item view
@@ -5852,11 +6088,11 @@ $.extend( CZRMultiModuleControlMths, {
 
                     //print the html
                     //do we have an html template and a control container?
-                    if ( ! wp.template( module.AlertPart )  || ! module.container ) {
+                    if ( ! wp.template( module.alertPart )  || ! module.container ) {
                         throw new Error( 'No removal alert template available for module :' + module.id );
                     }
 
-                    $_alert_el.html( wp.template( module.AlertPart )( { title : ( module().title || module.id ) } ) );
+                    $_alert_el.html( wp.template( module.alertPart )( { title : ( module().title || module.id ) } ) );
 
                     //toggle it
                     $_alert_el.slideToggle( {

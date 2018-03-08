@@ -29,7 +29,7 @@
                 _truncate = function( string ){
                       if ( ! _.isString( string ) )
                         return '';
-                      return string.length > 150 ? string.substr( 0, 149 ) : string;
+                      return string.length > 200 ? string.substr( 0, 199 ) : string;
                 };
 
             //if the array to print is not composed exclusively of strings, then let's stringify it
@@ -73,5 +73,4 @@
       api.czr_isChangeSetOn = function() {
             return serverControlParams.isChangeSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.
       };
-
 })( wp.customize , jQuery, _);

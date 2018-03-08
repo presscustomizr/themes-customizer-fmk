@@ -238,11 +238,10 @@ $.extend( CZRSocialModuleMths, {
 
               //extend the module with new template Selectors
               $.extend( module, {
-                    itemPreAddEl : 'czr-module-social-pre-add-view-content',
-                    itemInputList : 'czr-module-social-item-content',
-                    modOptInputList : 'czr-module-social-mod-opt'
+                    itemPreAddEl : '',/// 'czr-module-social-pre-add-view-content',
+                    itemInputList : '',// 'czr-module-social-item-content',
+                    modOptInputList : ''//czr-module-social-mod-opt'
               } );
-
 
               this.social_icons = [
                 '500px',
@@ -424,7 +423,10 @@ $.extend( CZRSocialModuleMths, {
                 'fa-google-plus-official' : 'fa-google-plus',
                 'fa-linkedin-square'      : 'fa-linkedin',
                 'fa-youtube-play'         : 'fa-youtube'
-              }
+              };
+
+              this.defaultSocialColor = ( serverControlParams.social_el_params && serverControlParams.social_el_params.defaultSocialColor ) ? serverControlParams.social_el_params.defaultSocialColor : 'rgb(90,90,90)';
+              this.defaultSocialSize = ( serverControlParams.social_el_params && serverControlParams.social_el_params.defaultSocialSize ) ? serverControlParams.social_el_params.defaultSocialSize : 14;
 
               //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
               module.inputConstructor = api.CZRInput.extend( module.CZRSocialsInputMths || {} );
@@ -435,7 +437,7 @@ $.extend( CZRSocialModuleMths, {
               this.defaultModOptModel = {
                   is_mod_opt : true,
                   module_id : module.id,
-                  'social-size' : serverControlParams.social_el_params.defaultSocialSize || 14
+                  'social-size' : module.defaultSocialSize
               };
 
               //declares a default model
@@ -444,7 +446,7 @@ $.extend( CZRSocialModuleMths, {
                     title : '' ,
                     'social-icon' : '',
                     'social-link' : '',
-                    'social-color' : serverControlParams.social_el_params.defaultSocialColor,
+                    'social-color' : module.defaultSocialColor,
                     'social-target' : 1
               };
 
@@ -466,6 +468,8 @@ $.extend( CZRSocialModuleMths, {
               });
 
               module.isReady.then( function() {
+                    if ( _.isUndefined( module.preItem ) )
+                      return;
                     //specific update for the item preModel on social-icon change
                     module.preItem.bind( function( to, from ) {
                           if ( ! _.has(to, 'social-icon') )
@@ -483,7 +487,9 @@ $.extend( CZRSocialModuleMths, {
       //Don't fire in pre item case
       //@item_instance an be the preItem or an already created item
       updateItemModel : function( item_instance, is_preItem ) {
-              var item = item_instance;
+              var item = item_instance,
+                  module = this;
+
               is_preItem = is_preItem || false;
 
               //check if we are in the pre Item case => if so, the social-icon might be empty
@@ -494,7 +500,7 @@ $.extend( CZRSocialModuleMths, {
 
               _new_model  = $.extend( true, {}, item() );//always safer to deep clone ( alternative to _.clone() ) => we don't know how nested this object might be in the future
               _new_title  = this.getTitleFromIcon( _new_model['social-icon'] );
-              _new_color  = serverControlParams.social_el_params.defaultSocialColor;
+              _new_color  = module.defaultSocialColor;
               if ( ! is_preItem && item.czr_Input.has( 'social-color' ) )
                 _new_color = item.czr_Input('social-color')();
 
@@ -568,11 +574,11 @@ $.extend( CZRSocialModuleMths, {
 
                     //=> add the select text in the pre Item case
                     if ( is_preItem ) {
-                          socialList = _.union( [ serverControlParams.i18n.selectSocialIcon ], socialList );
+                          socialList = _.union( [ serverControlParams.i18n.selectSocialIcon || 'Select a social icon' ], socialList );
                     }
-
                     //generates the options
                     _.each( socialList , function( icon_name, k ) {
+                          icon_name = _.isEmpty( icon_name ) ? '' : icon_name;
                           // in the pre Item case the first select element is the notice "Select a social icon"
                           // doesn't need the fa-* class
                           var _value    = ( is_preItem && 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
@@ -612,14 +618,14 @@ $.extend( CZRSocialModuleMths, {
                     $el.iris( {
                               palettes: true,
                               hide:false,
-                              defaultColor : serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)',
+                              defaultColor : module.defaultSocialColor || 'rgba(255,255,255,0.7)',
                               change : function( e, o ) {
                                     //if the input val is not updated here, it's not detected right away.
                                     //weird
                                     //is there a "change complete" kind of event for iris ?
                                     //hack to reset the color to default...@todo => use another color picker.
                                     if ( _.has( o, 'color') && 16777215 == o.color._color )
-                                      $(this).val( serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)' );
+                                      $(this).val( module.defaultSocialColor || 'rgba(255,255,255,0.7)' );
                                     else
                                       $(this).val( o.color.toString() );
 
@@ -665,7 +671,7 @@ $.extend( CZRSocialModuleMths, {
                       title = title || ( 'string' === typeof(icon) ? api.CZR_Helpers.capitalize( icon.replace( 'fa-', '') ) : '' );
                       title = api.CZR_Helpers.truncate(title, 20);
                       icon = icon || 'fa-' + module.social_icons[0];
-                      color = color || serverControlParams.social_el_params.defaultSocialColor;
+                      color = color || module.defaultSocialColor;
 
                       return '<div><span class="' + module.buildFaIcon( icon ) + '" style="color:' + color + '"></span> ' + title + '</div>';
               },
@@ -705,7 +711,7 @@ $.extend( CZRWidgetAreaModuleMths, {
               //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
               module.inputConstructor = api.CZRInput.extend( module.CZRWZonesInputMths || {} );
               //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
-              module.itemConstructor = api.CZRItem.extend( module.CZRWZonesItem || {} );
+              module.itemConstructor = api.CZRItem.extend( module.CZRWZonesItemConstructor || {} );
 
               module.serverParams = serverControlParams.widget_area_el_params || {};
 
@@ -900,10 +906,10 @@ $.extend( CZRWidgetAreaModuleMths, {
                           if ( key == input_contexts || _.contains( input_contexts, key ) )
                             $.extend( _attributes, { selected : "selected" } );
 
-                          $( 'select[data-czrtype="contexts"]', input.container ).append( $('<option>', _attributes) );
+                          $( 'select[data-type="contexts"]', input.container ).append( $('<option>', _attributes) );
                     });
                     //fire select2
-                    $( 'select[data-czrtype="contexts"]', input.container ).select2();
+                    $( 'select[data-type="contexts"]', input.container ).select2();
             },
 
 
@@ -918,7 +924,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
                     //generates the locations options
                     //append them if not set yet
-                    if ( ! $( 'select[data-czrtype="locations"]', input.container ).children().length ) {
+                    if ( ! $( 'select[data-type="locations"]', input.container ).children().length ) {
                           _.each( module.locations, function( title, key ) {
                                 var _attributes = {
                                       value : key,
@@ -928,7 +934,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                                 if ( key == input_locations || _.contains( input_locations, key ) )
                                   $.extend( _attributes, { selected : "selected" } );
 
-                                $( 'select[data-czrtype="locations"]', input.container ).append( $('<option>', _attributes) );
+                                $( 'select[data-type="locations"]', input.container ).append( $('<option>', _attributes) );
                           });
                     }//if
 
@@ -942,11 +948,11 @@ $.extend( CZRWidgetAreaModuleMths, {
                     }
 
                     if ( refresh ) {
-                          $( 'select[data-czrtype="locations"]', input.container ).select2( 'destroy' );
+                          $( 'select[data-type="locations"]', input.container ).select2( 'destroy' );
                     }
 
                     //fire select2
-                    $( 'select[data-czrtype="locations"]', input.container ).select2( {
+                    $( 'select[data-type="locations"]', input.container ).select2( {
                       templateResult: setAvailability,
                       templateSelection: setAvailability
                     });
@@ -963,7 +969,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                     if ( ! _.has( item(), 'locations') || _.isEmpty( item().locations ) )
                       return;
 
-                    var _selected_locations = $('select[data-czrtype="locations"]', input.container ).val(),
+                    var _selected_locations = $('select[data-type="locations"]', input.container ).val(),
                         available_locs = api.sidebar_insights('available_locations')(),
                         _unavailable = _.filter( _selected_locations, function( loc ) {
                           return ! _.contains(available_locs, loc);
@@ -992,7 +998,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
 
-      CZRWZonesItem : {
+      CZRWZonesItemConstructor : {
             initialize : function( id, options ) {
                     var item = this,
                         module = item.module;
@@ -1001,6 +1007,23 @@ $.extend( CZRWidgetAreaModuleMths, {
                     item.czr_itemLocationAlert = new api.Value();
 
                     api.CZRItem.prototype.initialize.call( item, null, options );
+
+                    // filter the params of the ajax query used to get the item wrapper template
+                    // because we need a ru ( not a read update delete ) template for builtins widget zones
+                    // requestParams = {
+                    //       tmpl : 'rud-item-part',
+                    //       module_type: 'all_modules',
+                    //       nonce: api.settings.nonce.save//<= do we need to set a specific nonce to fetch the tmpls ?
+                    // };
+                    // this has been introduced in March 2018, after the introduction of the tmpl ajax fetching
+                    // it does the same job that the overriden getTemplateEl() was doing.
+                    // This filter is declared in item::renderItemWrapper()
+                    item.bind( 'item-wrapper-tmpl-params-before-fetching', function( requestParams ) {
+                          //force view-content type to ru-item-part if the model is a built-in (primary, secondary, footer-1, ...)
+                          //=> user can't delete a built-in model.
+                          requestParams.tmpl = ( _.has( item(), 'is_builtin' ) && item().is_builtin ) ? 'ruItemPart' : requestParams.tmpl;
+                          return requestParams;
+                    });
             },
 
 
@@ -1204,7 +1227,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
                     return _.isEmpty( _matched ) ? defaults : _matched;
             }
-      },//CZRWZonesItem
+      },//CZRWZonesItemConstructor
 
 
 
@@ -1623,7 +1646,7 @@ $.extend( CZRWidgetAreaModuleMths, {
       //Read Update (ru)
       //...
       //@item_model is an object describing the current item model
-      getTemplateSelectorPart : function( type, item_model ) {
+      getTemplateEl : function( type, item_model ) {
               var module = this, _el;
               //force view-content type to ru-item-part if the model is a built-in (primary, secondary, footer-1, ...)
               //=> user can't delete a built-in model.
@@ -1649,7 +1672,7 @@ $.extend( CZRWidgetAreaModuleMths, {
               }
 
               if ( _.isEmpty(_el) ) {
-                throw new Error( 'No valid template has been found in getTemplateSelectorPart()' );
+                throw new Error( 'No valid template has been found in getTemplateEl()' );
               } else {
                 return _el;
               }
@@ -1670,7 +1693,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                           style:"display:none"
                     });
 
-                    $('select[data-czrtype="locations"]', $view ).closest('div').after($_alert_el);
+                    $('select[data-type="locations"]', $view ).closest('div').after($_alert_el);
               }
               $_alert_el.toggle( 'expanded' == to);
       }

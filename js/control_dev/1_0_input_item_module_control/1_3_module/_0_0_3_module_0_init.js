@@ -47,12 +47,12 @@ $.extend( CZRModuleMths, {
 
             //extend the module with new template Selectors
             $.extend( module, {
-                  crudModulePart : 'czr-crud-module-part',//create, read, update, delete
-                  rudItemPart : 'czr-rud-item-part',//read, update, delete
-                  ruItemPart : 'czr-ru-item-part',//read, update
+                  crudModulePart : '', //'czr-crud-module-part',//create, read, update, delete
+                  rudItemPart : '',// 'czr-rud-item-part',//read, update, delete
+                  ruItemPart : '',// 'czr-ru-item-part',//read, update <= ONLY USED IN THE WIDGET MODULE
+                  alertPart : '',// 'czr-rud-item-alert-part',//used both for items and modules removal
                   itemInputList : '',//is specific for each crud module
-                  modOptInputList : '',//is specific for each module
-                  AlertPart : 'czr-rud-item-alert-part',//used both for items and modules removal
+                  modOptInputList : ''//is specific for each module
             } );
 
             //embed : define a container, store the embed state, fire the render method
@@ -68,13 +68,17 @@ $.extend( CZRModuleMths, {
 
             //render the item(s) wrapper
             module.embedded.done( function() {
-                  $.when( module.renderModuleParts() ).done(function( $_module_items_wrapper ){
-                        if ( false === $_module_items_wrapper.length ) {
-                            throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
-                        }
-                        //stores the items wrapper ( </ul> el ) as a jQuery var
-                        module.itemsWrapper = $_module_items_wrapper;
-                  });
+                  module.renderModuleParts()
+                        .done( function( $_module_items_wrapper ){
+                              if ( false === $_module_items_wrapper.length ) {
+                                  throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
+                              }
+                              //stores the items wrapper ( </ul> el ) as a jQuery var
+                              module.itemsWrapper = $_module_items_wrapper;
+                        })
+                        .fail( function( _r_ ) {
+                              throw new Error( [ "initialize module => failed module.renderModuleParts() for module : " , module.id , _r_ ].join(' '));
+                        });
             });
 
             /*-----------------------------------------------

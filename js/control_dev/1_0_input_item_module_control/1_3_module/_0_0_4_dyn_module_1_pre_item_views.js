@@ -12,29 +12,54 @@ $.extend( CZRDynModuleMths, {
       /// PRE ADD MODEL DIALOG AND VIEW
       //////////////////////////////////////////////////
       renderPreItemView : function( obj ) {
-              var module = this, dfd = $.Deferred();
+              var module = this,
+                  dfd = $.Deferred(),
+                  pre_add_template;
+
               //is this view already rendered ?
-              if ( _.isObject( module.preItemsWrapper ) && 0 < module.preItemsWrapper.length ) //was ! _.isEmpty( module.czr_preItem('item_content')() ) )
-                return dfd.resolve( module.preItemsWrapper ).promise();
+              if ( _.isObject( module.preItemsWrapper ) && 0 < module.preItemsWrapper.length ) { //was ! _.isEmpty( module.czr_preItem('item_content')() ) )
+                    return dfd.resolve( module.preItemsWrapper ).promise();
+              }
 
-              //do we have view template script?
-              if ( ! _.has(module, 'itemPreAddEl') ||  0 === $( '#tmpl-' + module.itemPreAddEl ).length )
-                return dfd.reject( 'Missing itemPreAddEl or template ').promise();
+              var appendAndResolve = function( _tmpl_ ){
+                    //console.log('pre_add_template', _tmpl_ );
+                    //do we have an html template and a module container?
+                    if ( _.isEmpty( _tmpl_ ) || ! module.container ) {
+                          dfd.reject( 'renderPreItemView => Missing html template for module : '+ module.id );
+                    }
 
-              //print the html
-              var pre_add_template = wp.template( module.itemPreAddEl );
+                    var $_pre_add_el = $('.' + module.control.css_attr.pre_add_item_content, module.container );
 
-              //do we have an html template and a module container?
-              if ( ! pre_add_template  || ! module.container )
-                return dfd.reject( 'Missing html template ').promise();
+                    $_pre_add_el.prepend( $('<div>', { class : 'pre-item-wrapper'} ) );
+                    $_pre_add_el.find('.pre-item-wrapper').append( _tmpl_ );
 
-              var $_pre_add_el = $('.' + module.control.css_attr.pre_add_item_content, module.container );
+                    //say it
+                    dfd.resolve( $_pre_add_el.find('.pre-item-wrapper') ).promise();
+              };
 
-              $_pre_add_el.prepend( $('<div>', { class : 'pre-item-wrapper'} ) );
-              $_pre_add_el.find('.pre-item-wrapper').append( pre_add_template() );
-
-              //say it
-              return dfd.resolve( $_pre_add_el.find('.pre-item-wrapper') ).promise();
+              // do we have view template script ?
+              // if yes, let's use it <= Old way
+              // Otherwise let's fetch the html template from the server
+              if ( ! _.isEmpty( module.itemPreAddEl ) ) {
+                    if ( 1 > $( '#tmpl-' + module.itemPreAddEl ).length ) {
+                          dfd.reject( 'renderPreItemView => Missing itemPreAddEl or template in module '+ module.id );
+                    }
+                    // parse the html
+                    appendAndResolve( wp.template( module.itemPreAddEl )() );
+              } else {
+                    api.CZR_Helpers.getModuleTmpl( {
+                          tmpl : 'pre-item',
+                          module_type: module.module_type,
+                          module_id : module.id
+                    } ).done( function( _serverTmpl_ ) {
+                          //console.log( 'success response =>', _serverTmpl_);
+                          appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )() );
+                    }).fail( function( _r_ ) {
+                          //console.log( 'fail response =>', _r_);
+                          dfd.reject( 'renderPreItemView => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                    });
+              }
+              return dfd.promise();
       },
 
       //@return $ el of the pre Item view

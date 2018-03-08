@@ -10,11 +10,10 @@ $.extend( CZRSocialModuleMths, {
 
               //extend the module with new template Selectors
               $.extend( module, {
-                    itemPreAddEl : 'czr-module-social-pre-add-view-content',
-                    itemInputList : 'czr-module-social-item-content',
-                    modOptInputList : 'czr-module-social-mod-opt'
+                    itemPreAddEl : '',/// 'czr-module-social-pre-add-view-content',
+                    itemInputList : '',// 'czr-module-social-item-content',
+                    modOptInputList : ''//czr-module-social-mod-opt'
               } );
-
 
               this.social_icons = [
                 '500px',
@@ -196,7 +195,10 @@ $.extend( CZRSocialModuleMths, {
                 'fa-google-plus-official' : 'fa-google-plus',
                 'fa-linkedin-square'      : 'fa-linkedin',
                 'fa-youtube-play'         : 'fa-youtube'
-              }
+              };
+
+              this.defaultSocialColor = ( serverControlParams.social_el_params && serverControlParams.social_el_params.defaultSocialColor ) ? serverControlParams.social_el_params.defaultSocialColor : 'rgb(90,90,90)';
+              this.defaultSocialSize = ( serverControlParams.social_el_params && serverControlParams.social_el_params.defaultSocialSize ) ? serverControlParams.social_el_params.defaultSocialSize : 14;
 
               //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
               module.inputConstructor = api.CZRInput.extend( module.CZRSocialsInputMths || {} );
@@ -207,7 +209,7 @@ $.extend( CZRSocialModuleMths, {
               this.defaultModOptModel = {
                   is_mod_opt : true,
                   module_id : module.id,
-                  'social-size' : serverControlParams.social_el_params.defaultSocialSize || 14
+                  'social-size' : module.defaultSocialSize
               };
 
               //declares a default model
@@ -216,7 +218,7 @@ $.extend( CZRSocialModuleMths, {
                     title : '' ,
                     'social-icon' : '',
                     'social-link' : '',
-                    'social-color' : serverControlParams.social_el_params.defaultSocialColor,
+                    'social-color' : module.defaultSocialColor,
                     'social-target' : 1
               };
 
@@ -238,6 +240,8 @@ $.extend( CZRSocialModuleMths, {
               });
 
               module.isReady.then( function() {
+                    if ( _.isUndefined( module.preItem ) )
+                      return;
                     //specific update for the item preModel on social-icon change
                     module.preItem.bind( function( to, from ) {
                           if ( ! _.has(to, 'social-icon') )
@@ -255,7 +259,9 @@ $.extend( CZRSocialModuleMths, {
       //Don't fire in pre item case
       //@item_instance an be the preItem or an already created item
       updateItemModel : function( item_instance, is_preItem ) {
-              var item = item_instance;
+              var item = item_instance,
+                  module = this;
+
               is_preItem = is_preItem || false;
 
               //check if we are in the pre Item case => if so, the social-icon might be empty
@@ -266,7 +272,7 @@ $.extend( CZRSocialModuleMths, {
 
               _new_model  = $.extend( true, {}, item() );//always safer to deep clone ( alternative to _.clone() ) => we don't know how nested this object might be in the future
               _new_title  = this.getTitleFromIcon( _new_model['social-icon'] );
-              _new_color  = serverControlParams.social_el_params.defaultSocialColor;
+              _new_color  = module.defaultSocialColor;
               if ( ! is_preItem && item.czr_Input.has( 'social-color' ) )
                 _new_color = item.czr_Input('social-color')();
 
@@ -340,11 +346,11 @@ $.extend( CZRSocialModuleMths, {
 
                     //=> add the select text in the pre Item case
                     if ( is_preItem ) {
-                          socialList = _.union( [ serverControlParams.i18n.selectSocialIcon ], socialList );
+                          socialList = _.union( [ serverControlParams.i18n.selectSocialIcon || 'Select a social icon' ], socialList );
                     }
-
                     //generates the options
                     _.each( socialList , function( icon_name, k ) {
+                          icon_name = _.isEmpty( icon_name ) ? '' : icon_name;
                           // in the pre Item case the first select element is the notice "Select a social icon"
                           // doesn't need the fa-* class
                           var _value    = ( is_preItem && 0 === k ) ? '' : 'fa-' + icon_name.toLowerCase(),
@@ -384,14 +390,14 @@ $.extend( CZRSocialModuleMths, {
                     $el.iris( {
                               palettes: true,
                               hide:false,
-                              defaultColor : serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)',
+                              defaultColor : module.defaultSocialColor || 'rgba(255,255,255,0.7)',
                               change : function( e, o ) {
                                     //if the input val is not updated here, it's not detected right away.
                                     //weird
                                     //is there a "change complete" kind of event for iris ?
                                     //hack to reset the color to default...@todo => use another color picker.
                                     if ( _.has( o, 'color') && 16777215 == o.color._color )
-                                      $(this).val( serverControlParams.social_el_params.defaultSocialColor || 'rgba(255,255,255,0.7)' );
+                                      $(this).val( module.defaultSocialColor || 'rgba(255,255,255,0.7)' );
                                     else
                                       $(this).val( o.color.toString() );
 
@@ -437,7 +443,7 @@ $.extend( CZRSocialModuleMths, {
                       title = title || ( 'string' === typeof(icon) ? api.CZR_Helpers.capitalize( icon.replace( 'fa-', '') ) : '' );
                       title = api.CZR_Helpers.truncate(title, 20);
                       icon = icon || 'fa-' + module.social_icons[0];
-                      color = color || serverControlParams.social_el_params.defaultSocialColor;
+                      color = color || module.defaultSocialColor;
 
                       return '<div><span class="' + module.buildFaIcon( icon ) + '" style="color:' + color + '"></span> ' + title + '</div>';
               },

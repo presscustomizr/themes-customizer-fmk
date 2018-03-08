@@ -19,7 +19,7 @@ $.extend( CZRWidgetAreaModuleMths, {
               //EXTEND THE DEFAULT CONSTRUCTORS FOR INPUT
               module.inputConstructor = api.CZRInput.extend( module.CZRWZonesInputMths || {} );
               //EXTEND THE DEFAULT CONSTRUCTORS FOR MONOMODEL
-              module.itemConstructor = api.CZRItem.extend( module.CZRWZonesItem || {} );
+              module.itemConstructor = api.CZRItem.extend( module.CZRWZonesItemConstructor || {} );
 
               module.serverParams = serverControlParams.widget_area_el_params || {};
 
@@ -214,10 +214,10 @@ $.extend( CZRWidgetAreaModuleMths, {
                           if ( key == input_contexts || _.contains( input_contexts, key ) )
                             $.extend( _attributes, { selected : "selected" } );
 
-                          $( 'select[data-czrtype="contexts"]', input.container ).append( $('<option>', _attributes) );
+                          $( 'select[data-type="contexts"]', input.container ).append( $('<option>', _attributes) );
                     });
                     //fire select2
-                    $( 'select[data-czrtype="contexts"]', input.container ).select2();
+                    $( 'select[data-type="contexts"]', input.container ).select2();
             },
 
 
@@ -232,7 +232,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
                     //generates the locations options
                     //append them if not set yet
-                    if ( ! $( 'select[data-czrtype="locations"]', input.container ).children().length ) {
+                    if ( ! $( 'select[data-type="locations"]', input.container ).children().length ) {
                           _.each( module.locations, function( title, key ) {
                                 var _attributes = {
                                       value : key,
@@ -242,7 +242,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                                 if ( key == input_locations || _.contains( input_locations, key ) )
                                   $.extend( _attributes, { selected : "selected" } );
 
-                                $( 'select[data-czrtype="locations"]', input.container ).append( $('<option>', _attributes) );
+                                $( 'select[data-type="locations"]', input.container ).append( $('<option>', _attributes) );
                           });
                     }//if
 
@@ -256,11 +256,11 @@ $.extend( CZRWidgetAreaModuleMths, {
                     }
 
                     if ( refresh ) {
-                          $( 'select[data-czrtype="locations"]', input.container ).select2( 'destroy' );
+                          $( 'select[data-type="locations"]', input.container ).select2( 'destroy' );
                     }
 
                     //fire select2
-                    $( 'select[data-czrtype="locations"]', input.container ).select2( {
+                    $( 'select[data-type="locations"]', input.container ).select2( {
                       templateResult: setAvailability,
                       templateSelection: setAvailability
                     });
@@ -277,7 +277,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                     if ( ! _.has( item(), 'locations') || _.isEmpty( item().locations ) )
                       return;
 
-                    var _selected_locations = $('select[data-czrtype="locations"]', input.container ).val(),
+                    var _selected_locations = $('select[data-type="locations"]', input.container ).val(),
                         available_locs = api.sidebar_insights('available_locations')(),
                         _unavailable = _.filter( _selected_locations, function( loc ) {
                           return ! _.contains(available_locs, loc);
@@ -306,7 +306,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
 
 
-      CZRWZonesItem : {
+      CZRWZonesItemConstructor : {
             initialize : function( id, options ) {
                     var item = this,
                         module = item.module;
@@ -315,6 +315,23 @@ $.extend( CZRWidgetAreaModuleMths, {
                     item.czr_itemLocationAlert = new api.Value();
 
                     api.CZRItem.prototype.initialize.call( item, null, options );
+
+                    // filter the params of the ajax query used to get the item wrapper template
+                    // because we need a ru ( not a read update delete ) template for builtins widget zones
+                    // requestParams = {
+                    //       tmpl : 'rud-item-part',
+                    //       module_type: 'all_modules',
+                    //       nonce: api.settings.nonce.save//<= do we need to set a specific nonce to fetch the tmpls ?
+                    // };
+                    // this has been introduced in March 2018, after the introduction of the tmpl ajax fetching
+                    // it does the same job that the overriden getTemplateEl() was doing.
+                    // This filter is declared in item::renderItemWrapper()
+                    item.bind( 'item-wrapper-tmpl-params-before-fetching', function( requestParams ) {
+                          //force view-content type to ru-item-part if the model is a built-in (primary, secondary, footer-1, ...)
+                          //=> user can't delete a built-in model.
+                          requestParams.tmpl = ( _.has( item(), 'is_builtin' ) && item().is_builtin ) ? 'ruItemPart' : requestParams.tmpl;
+                          return requestParams;
+                    });
             },
 
 
@@ -518,7 +535,7 @@ $.extend( CZRWidgetAreaModuleMths, {
 
                     return _.isEmpty( _matched ) ? defaults : _matched;
             }
-      },//CZRWZonesItem
+      },//CZRWZonesItemConstructor
 
 
 
@@ -937,7 +954,7 @@ $.extend( CZRWidgetAreaModuleMths, {
       //Read Update (ru)
       //...
       //@item_model is an object describing the current item model
-      getTemplateSelectorPart : function( type, item_model ) {
+      getTemplateEl : function( type, item_model ) {
               var module = this, _el;
               //force view-content type to ru-item-part if the model is a built-in (primary, secondary, footer-1, ...)
               //=> user can't delete a built-in model.
@@ -963,7 +980,7 @@ $.extend( CZRWidgetAreaModuleMths, {
               }
 
               if ( _.isEmpty(_el) ) {
-                throw new Error( 'No valid template has been found in getTemplateSelectorPart()' );
+                throw new Error( 'No valid template has been found in getTemplateEl()' );
               } else {
                 return _el;
               }
@@ -984,7 +1001,7 @@ $.extend( CZRWidgetAreaModuleMths, {
                           style:"display:none"
                     });
 
-                    $('select[data-czrtype="locations"]', $view ).closest('div').after($_alert_el);
+                    $('select[data-type="locations"]', $view ).closest('div').after($_alert_el);
               }
               $_alert_el.toggle( 'expanded' == to);
       }

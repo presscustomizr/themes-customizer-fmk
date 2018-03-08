@@ -42,16 +42,19 @@ $.extend( CZRModOptMths , {
               modOpt_model = modOpt() || modOpt.initial_modOpt_model;//could not be set yet
 
               //renderview content now
-              $.when( modOpt.renderModOptContent( modOpt_model ) )
+              modOpt.renderModOptContent( modOpt_model )
                     .done( function( $_container ) {
                           //update the $.Deferred state
-                          if ( ! _.isUndefined( $_container ) && false !== $_container.length ) {
+                          if ( ! _.isEmpty( $_container ) && 0 < $_container.length ) {
                                 _setupDOMListeners( $_container );
                                 dfd.resolve( $_container );
                           }
                           else {
                                 throw new Error( 'Module : ' + modOpt.module.id + ', the modOpt content has not been rendered' );
                           }
+                    })
+                    .fail( function( _r_ ) {
+                          api.errorLog( "failed modOpt.renderModOptContent for module : " + module.id, _r_ );
                     })
                     .then( function() {
                           //the modOpt.container is now available
@@ -64,47 +67,70 @@ $.extend( CZRModOptMths , {
       },
 
 
-      //renders saved modOpt views and attach event handlers
+      //renders saved modOpt views
+      //returns a promise( $container )
       //the saved modOpt look like :
       //array[ { id : 'sidebar-one', title : 'A Title One' }, {id : 'sidebar-two', title : 'A Title Two' }]
       renderModOptContent : function( modOpt_model ) {
               //=> an array of objects
               var modOpt = this,
-                  module = this.module;
+                  module = this.module,
+                  dfd = $.Deferred();
 
               modOpt_model = modOpt_model || modOpt();
 
-              //do we have view content template script?
-              if ( 0 === $( '#tmpl-' + module.getTemplateSelectorPart( 'modOptInputList', modOpt_model ) ).length ) {
-                    api.errorLog('renderModOptContent : No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + module.getTemplateSelectorPart( 'modOptInputList', modOpt_model ) );
-                    return;
+              var appendAndResolve = function( _tmpl_ ) {
+                    //do we have an html template ?
+                    if ( _.isEmpty( _tmpl_ ) ) {
+                          dfd.reject( 'renderModOptContent => Missing html template for module : '+ module.id );
+                    }
+
+                    var _ctrlLabel = '';
+                    try {
+                          _ctrlLabel = [ serverControlParams.i18n['Options for'], module.control.params.label ].join(' ');
+                    } catch( er ) {
+                          api.errorLog( 'renderItemContent => Problem with ctrl label => ' + er );
+                          _ctrlLabel = serverControlParams.i18n['Settings'];
+                    }
+
+                    $('#widgets-left').after( $( '<div/>', {
+                          class : module.control.css_attr.mod_opt_wrapper,
+                          html : [
+                                [ '<h2 class="mod-opt-title">', _ctrlLabel , '</h2>' ].join(''),
+                                '<span class="fas fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
+                          ].join('')
+                    } ) );
+
+                    //render the mod opt content for this module
+                    $( '.' + module.control.css_attr.mod_opt_wrapper ).append( _tmpl_ );
+
+                    dfd.resolve( $( '.' + module.control.css_attr.mod_opt_wrapper ) );
+              };//appendAndResolve
+
+              // Do we have view content template script?
+              // if yes, let's use it <= Old way
+              // Otherwise let's fetch the html template from the server
+              if ( ! _.isEmpty( module.itemPreAddEl ) ) {
+                    var tmplSelectorSuffix = module.getTemplateSelectorPart( 'modOptInputList', modOpt_model );
+                    if ( 1 > $( '#tmpl-' + tmplSelectorSuffix ).length ) {
+                          dfd.reject( 'renderModOptContent => No modOpt content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + tmplSelectorSuffix );
+                    }
+                    appendAndResolve( wp.template( tmplSelectorSuffix )( modOpt_model ) );
+              } else {
+                    api.CZR_Helpers.getModuleTmpl( {
+                          tmpl : 'mod-opt',
+                          module_type: module.module_type,
+                          module_id : module.id
+                    } ).done( function( _serverTmpl_ ) {
+                          //console.log( 'renderModOptContent => success response =>', _serverTmpl_);
+                          appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( modOpt_model ) );
+                    }).fail( function( _r_ ) {
+                          //console.log( 'renderModOptContent => fail response =>', _r_);
+                          dfd.reject( 'renderPreItemView => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                    });
               }
-              var  modOpt_content_template = wp.template( module.getTemplateSelectorPart( 'modOptInputList', modOpt_model ) );
 
-              //do we have an html template ?
-              if ( ! modOpt_content_template )
-                return this;
-
-              var _ctrlLabel = '';
-              try {
-                    _ctrlLabel = [ serverControlParams.i18n['Options for'], module.control.params.label ].join(' ');
-              } catch( er ) {
-                    api.errorLog( 'In renderModOptContent : ' + er );
-                    _ctrlLabel = serverControlParams.i18n['Settings'];
-              }
-
-              $('#widgets-left').after( $( '<div/>', {
-                    class : module.control.css_attr.mod_opt_wrapper,
-                    html : [
-                          [ '<h2 class="mod-opt-title">', _ctrlLabel , '</h2>' ].join(''),
-                          '<span class="fas fa-times ' + module.control.css_attr.close_modopt_icon + '" title="close"></span>'
-                    ].join('')
-              } ) );
-
-              //render the mod opt content for this module
-              $( '.' + module.control.css_attr.mod_opt_wrapper ).append( $( modOpt_content_template( modOpt_model ) ) );
-
-              return $( '.' + module.control.css_attr.mod_opt_wrapper );
+              return dfd.promise();
       },
 
 

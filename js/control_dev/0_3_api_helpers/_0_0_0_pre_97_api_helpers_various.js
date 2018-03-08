@@ -361,6 +361,77 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                   return hex.length == 1 ? "0" + hex : hex;
             };
             return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+      },
+
+
+
+      // inspired from wp.template in wp-includes/js/wp-util.js
+      parseTemplate : _.memoize(function ( html ) {
+            var compiled,
+              /*
+               * Underscore's default ERB-style templates are incompatible with PHP
+               * when asp_tags is enabled, so WordPress uses Mustache-inspired templating syntax.
+               *
+               * @see trac ticket #22344.
+               */
+              options = {
+                    evaluate:    /<#([\s\S]+?)#>/g,
+                    interpolate: /\{\{\{([\s\S]+?)\}\}\}/g,
+                    escape:      /\{\{([^\}]+?)\}\}(?!\})/g,
+                    variable:    'data'
+              };
+
+            return function ( data ) {
+                  compiled = compiled || _.template( html,  options );
+                  return compiled( data );
+            };
+      }),
+
+      // Fetches a module tmpl from the server if not yet cached
+      // {
+      //   tmpl : 'item-inputs',
+      //   module_type: module.module_type || 'all_modules',
+      //   module_id : ''
+      // }
+      // @return a promise()
+      getModuleTmpl : function( args ) {
+            var dfd = $.Deferred();
+            args = _.extend( { tmpl : '', module_type: '', module_id : '' }, args );
+            // are we good to go ?
+            if ( _.isEmpty( args.tmpl ) || _.isEmpty( args.module_type ) ) {
+                  dfd.reject( 'api.CZR_Helpers.getModuleTmpl => missing tmpl or module_type param' );
+            }
+
+            // This will be used to store the previously fetched template
+            // 1) the generic templates used for all_modules
+            // 2) each module templates : pre-item inputs, item inputs and mod options
+            api.CZR_Helpers.czr_cachedTmpl = api.CZR_Helpers.czr_cachedTmpl || {};
+            api.CZR_Helpers.czr_cachedTmpl[ args.module_type ] = api.CZR_Helpers.czr_cachedTmpl[ args.module_type ] || {};
+
+            if ( ! _.isEmpty( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) && _.isString( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) ) {
+                  dfd.resolve( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] );
+            } else {
+                  // if the tmpl is currently being fetched, return the temporary promise()
+                  // this can occurs when rendering a multi-item module for the first time
+                  // assigning the tmpl ajax request to the future cache entry allows us to fetch only once
+                  if ( _.isObject( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) && 'pending' == api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ].state() ) {
+                        return api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ];//<= this is a $.promise()
+                  } else {
+                        // First time fetch
+                        api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = wp.ajax.post( 'ac_get_template', {
+                              tmpl : args.tmpl,
+                              module_type: args.module_type,
+                              nonce: api.settings.nonce.save//<= do we need to set a specific nonce to fetch the tmpls ?
+                        }).done( function( _serverTmpl_ ) {
+                              // resolve and cache
+                              dfd.resolve( _serverTmpl_ );
+                              api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = _serverTmpl_;
+                        }).fail( function( ) {
+                              dfd.reject( 'api.CZR_Helpers.getModuleTmpl => Problem when fetching the ' + args.tmpl + ' tmpl from server for module : ' + args.module_id + ' ' + args.module_type );
+                        });
+                  }
+            }
+            return dfd.promise();
       }
 
 });//$.extend

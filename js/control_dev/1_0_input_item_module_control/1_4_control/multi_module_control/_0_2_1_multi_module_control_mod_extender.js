@@ -403,11 +403,11 @@ $.extend( CZRMultiModuleControlMths, {
 
                     //print the html
                     //do we have an html template and a control container?
-                    if ( ! wp.template( module.AlertPart )  || ! module.container ) {
+                    if ( ! wp.template( module.alertPart )  || ! module.container ) {
                         throw new Error( 'No removal alert template available for module :' + module.id );
                     }
 
-                    $_alert_el.html( wp.template( module.AlertPart )( { title : ( module().title || module.id ) } ) );
+                    $_alert_el.html( wp.template( module.alertPart )( { title : ( module().title || module.id ) } ) );
 
                     //toggle it
                     $_alert_el.slideToggle( {

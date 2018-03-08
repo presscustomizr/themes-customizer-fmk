@@ -11,34 +11,65 @@ $.extend( CZRModuleMths, {
       //fired on module.isReady.done()
       //the module.container is set. Either as the control.container or the single module wrapper in a sektion
       renderModuleParts : function() {
-              var module = this,
-                  $_moduleContentEl = module.isInSektion() ? $( module.container ).find('.czr-mod-content') : $( module.container );
+            var module = this,
+                $_moduleContentEl = module.isInSektion() ? $( module.container ).find('.czr-mod-content') : $( module.container ),
+                dfd = $.Deferred();
 
-              //Crud modules => then let's add the crud module part tmpl
-              if ( module.isCrud() ) {
-                    //do we have view template script?
-                    if ( 0 === $( '#tmpl-' + module.crudModulePart ).length ) {
-                      throw new Error('No crud Module Part template for module ' + module.id + '. The template script id should be : #tmpl-' + module.crudModulePart );
-                    }
+            var appendAndResolve = function( _tmpl_ ) {
+                  if ( module.isCrud() ) {
+                        //do we have an html template ?
+                        if ( _.isEmpty( _tmpl_ ) ) {
+                              dfd.reject( 'renderModuleParts => Missing html template for module : '+ module.id );
+                        }
+                        //append the module wrapper to the column
+                        $_moduleContentEl.append( _tmpl_ );
+                  }
 
-                    //append the module wrapper to the column
-                    $_moduleContentEl.append( $( wp.template( module.crudModulePart )( {} ) ) );
-              }
-              var $_module_items_wrapper = $(
-                '<ul/>',
-                {
-                  class : [
-                    module.control.css_attr.items_wrapper,
-                    module.module_type,
-                    module.isMultiItem() ? 'multi-item-mod' : 'mono-item-mod',
-                    module.isCrud() ? 'crud-mod' : 'not-crud-mod'
-                  ].join(' ')
-                }
-              );
+                  // Always append this
+                  var $_module_items_wrapper = $(
+                        '<ul/>',
+                        {
+                          class : [
+                            module.control.css_attr.items_wrapper,
+                            module.module_type,
+                            module.isMultiItem() ? 'multi-item-mod' : 'mono-item-mod',
+                            module.isCrud() ? 'crud-mod' : 'not-crud-mod'
+                          ].join(' ')
+                        }
+                  );
 
-              $_moduleContentEl.append($_module_items_wrapper);
+                  $_moduleContentEl.append( $_module_items_wrapper );
 
-              return $( $_module_items_wrapper, $_moduleContentEl );
+                  dfd.resolve( $( $_module_items_wrapper, $_moduleContentEl ) );
+            };//appendAndResolve
+
+            //Crud modules => then let's add the crud module part tmpl
+            if ( module.isCrud() ) {
+                  // Do we have view content template script?
+                  // if yes, let's use it <= Old way
+                  // Otherwise let's fetch the html template from the server
+                  if ( ! _.isEmpty( module.crudModulePart ) ) {
+                        if ( 1 > $( '#tmpl-' + module.crudModulePart ).length ) {
+                              dfd.reject( 'renderModuleParts => no crud Module Part template for module ' + module.id + '. The template script id should be : #tmpl-' + module.crudModulePart );
+                        }
+                        appendAndResolve( wp.template( module.crudModulePart )( {} ) );
+                  } else {
+                        api.CZR_Helpers.getModuleTmpl( {
+                              tmpl : 'crud-module-part',
+                              module_type: 'all_modules',
+                              module_id : module.id
+                        } ).done( function( _serverTmpl_ ) {
+                              //console.log( 'renderModuleParts => success response =>', module.id, _serverTmpl_);
+                              appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( {} ) );
+                        }).fail( function( _r_ ) {
+                              //console.log( 'renderModuleParts => fail response =>', _r_);
+                              dfd.reject( 'renderModuleParts => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                        });
+                  }
+            } else {
+                  appendAndResolve();
+            }
+            return dfd.promise();
       },
 
       //called before rendering a view. Fired in module::renderItemWrapper()
