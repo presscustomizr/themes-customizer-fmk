@@ -801,6 +801,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             // when cache is on, use the cached template
             // Example of cache set to off => the skoped items templates are all different because based on the control type => we can't cache them
             if ( true === args.cache && ! _.isEmpty( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) && _.isString( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) ) {
+                  //console.log('Cached => ', args.tmpl );
                   dfd.resolve( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] );
             } else {
                   // if the tmpl is currently being fetched, return the temporary promise()
@@ -809,13 +810,15 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                   if ( _.isObject( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) && 'pending' == api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ].state() ) {
                         return api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ];//<= this is a $.promise()
                   } else {
+                        //console.log('Needs to be fetched => ', args.tmpl );
                         // First time fetch
                         api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = wp.ajax.post( 'ac_get_template', args )
                               .done( function( _serverTmpl_ ) {
                                     // resolve and cache
                                     dfd.resolve( _serverTmpl_ );
                                     api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = _serverTmpl_;
-                              }).fail( function( ) {
+                              }).fail( function( _r_ ) {
+                                    //console.log( 'api.CZR_Helpers.getModuleTmpl => ', _r_ );
                                     dfd.reject( 'api.CZR_Helpers.getModuleTmpl => Problem when fetching the ' + args.tmpl + ' tmpl from server for module : ' + args.module_id + ' ' + args.module_type );
                               });
                   }
@@ -1460,9 +1463,13 @@ $.extend( CZRInputMths , {
           input.setupContentRendering( _model, {} );
 
           //valid just in the init
-          input.tmplRendered.done( function(){
-                input.czrImgUploaderBinding();
-          });
+          input.tmplRendered
+                .done( function(){
+                      input.czrImgUploaderBinding();
+                })
+                .fail( function() {
+                      api.errorLog( 'setupImageUploader => failed to fetch the template.');
+                });
   },
 
   setupContentRendering : function( to, from ) {
@@ -1605,21 +1612,21 @@ $.extend( CZRInputMths , {
         var input  = this;
         args = _.extend( { fromUrl : false, url : '' }, args || {} );
 
-        //do we have view template script?
-        if ( 0 === $( '#tmpl-czr-input-img-uploader-view-content' ).length ) {
-              throw new Error('renderImageUploaderTemplate => Missing template for input ' + input.id );
-        }
+        // //do we have view template script?
+        // if ( 0 === $( '#tmpl-czr-input-img-uploader-view-content' ).length ) {
+        //       throw new Error('renderImageUploaderTemplate => Missing template for input ' + input.id );
+        // }
 
 
-        var view_template = wp.template('czr-input-img-uploader-view-content');
+        // var view_template = wp.template('czr-input-img-uploader-view-content');
 
-        //  do we have an html template and a module container?
-        if ( ! view_template  || ! input.container )
-         return;
+        // //  do we have an html template and a module container?
+        // if ( ! view_template  || ! input.container )
+        //  return;
 
         var $_view_el    = input.container.find('.' + input.module.control.css_attr.img_upload_container );
 
-        if ( ! $_view_el.length )
+        if ( ! $_view_el.length || 1 > input.container.length )
           return;
 
         var _template_params = {
@@ -1630,11 +1637,19 @@ $.extend( CZRInputMths , {
               canUpload     : true
         };
 
-        $_view_el.html( view_template( _template_params ) );
-
-        input.tmplRendered.resolve();
-        input.container.trigger( input.id + ':content_rendered' );
-
+        api.CZR_Helpers.getModuleTmpl( {
+              tmpl : 'img-uploader',
+              module_type: 'all_modules',
+              module_id : input.module.id
+        } ).done( function( _serverTmpl_ ) {
+              //console.log( 'renderModuleParts => success response =>', input.module.id, _serverTmpl_);
+              $_view_el.html( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( _template_params ) );
+              input.tmplRendered.resolve();
+              input.container.trigger( input.id + ':content_rendered' );
+        }).fail( function( _r_ ) {
+              //console.log( 'renderModuleParts => fail response =>', _r_);
+              input.tmplRendered.reject( 'renderImageUploaderTemplate => Problem when fetching the tmpl from server for module : '+ input.module.id );
+        });
         return true;
   },
 
@@ -2549,7 +2564,7 @@ $.extend( CZRItemMths , {
                               appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( {} ) );
                         }).fail( function( _r_ ) {
                               //console.log( 'renderItemWrapper => fail response =>', _r_);
-                              dfd.reject( 'renderItemWrapper => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                              dfd.reject( 'renderItemWrapper => Problem when fetching the rud-item-part tmpl from server for module : '+ module.id );
                         });
                   }
             } else {
@@ -2752,6 +2767,9 @@ $.extend( CZRItemMths , {
             // Create a deep copy of the item, so we can inject custom properties before parsing the template, without affecting the original item
             var item_model_for_template_injection = $.extend( true, {}, _item_model_ || item() );
 
+            // allow plugin to alter the item_model before template injection
+            item.trigger( 'item-model-before-item-content-template-injection', item_model_for_template_injection );
+
             var appendAndResolve = function( _tmpl_ ) {
                   //do we have an html template ?
                   if ( _.isEmpty( _tmpl_ ) ) {
@@ -2760,8 +2778,6 @@ $.extend( CZRItemMths , {
                   var $itemContentWrapper = $( '.' + module.control.css_attr.item_content, item.container );
                   // append the view content
                   $( _tmpl_ ).appendTo( $itemContentWrapper );
-                  // allow plugin to alter the item_model before template injection
-                  item.trigger( 'item-model-before-item-content-template-injection', item_model_for_template_injection );
                   dfd.resolve( $itemContentWrapper );
             };//appendAndResolve
 
@@ -3155,7 +3171,7 @@ $.extend( CZRModOptMths , {
                           appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( modOpt_model ) );
                     }).fail( function( _r_ ) {
                           //console.log( 'renderModOptContent => fail response =>', _r_);
-                          dfd.reject( 'renderPreItemView => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                          dfd.reject( 'renderPreItemView => Problem when fetching the mod-opt tmpl from server for module : '+ module.id );
                     });
               }
 
@@ -4139,7 +4155,7 @@ $.extend( CZRModuleMths, {
                               appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( {} ) );
                         }).fail( function( _r_ ) {
                               //console.log( 'renderModuleParts => fail response =>', _r_);
-                              dfd.reject( 'renderModuleParts => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                              dfd.reject( 'renderModuleParts => Problem when fetching the crud-module-part tmpl from server for module : '+ module.id );
                         });
                   }
             } else {

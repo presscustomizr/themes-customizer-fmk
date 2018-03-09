@@ -30,9 +30,13 @@ $.extend( CZRInputMths , {
           input.setupContentRendering( _model, {} );
 
           //valid just in the init
-          input.tmplRendered.done( function(){
-                input.czrImgUploaderBinding();
-          });
+          input.tmplRendered
+                .done( function(){
+                      input.czrImgUploaderBinding();
+                })
+                .fail( function() {
+                      api.errorLog( 'setupImageUploader => failed to fetch the template.');
+                });
   },
 
   setupContentRendering : function( to, from ) {
@@ -175,21 +179,21 @@ $.extend( CZRInputMths , {
         var input  = this;
         args = _.extend( { fromUrl : false, url : '' }, args || {} );
 
-        //do we have view template script?
-        if ( 0 === $( '#tmpl-czr-input-img-uploader-view-content' ).length ) {
-              throw new Error('renderImageUploaderTemplate => Missing template for input ' + input.id );
-        }
+        // //do we have view template script?
+        // if ( 0 === $( '#tmpl-czr-input-img-uploader-view-content' ).length ) {
+        //       throw new Error('renderImageUploaderTemplate => Missing template for input ' + input.id );
+        // }
 
 
-        var view_template = wp.template('czr-input-img-uploader-view-content');
+        // var view_template = wp.template('czr-input-img-uploader-view-content');
 
-        //  do we have an html template and a module container?
-        if ( ! view_template  || ! input.container )
-         return;
+        // //  do we have an html template and a module container?
+        // if ( ! view_template  || ! input.container )
+        //  return;
 
         var $_view_el    = input.container.find('.' + input.module.control.css_attr.img_upload_container );
 
-        if ( ! $_view_el.length )
+        if ( ! $_view_el.length || 1 > input.container.length )
           return;
 
         var _template_params = {
@@ -200,11 +204,19 @@ $.extend( CZRInputMths , {
               canUpload     : true
         };
 
-        $_view_el.html( view_template( _template_params ) );
-
-        input.tmplRendered.resolve();
-        input.container.trigger( input.id + ':content_rendered' );
-
+        api.CZR_Helpers.getModuleTmpl( {
+              tmpl : 'img-uploader',
+              module_type: 'all_modules',
+              module_id : input.module.id
+        } ).done( function( _serverTmpl_ ) {
+              //console.log( 'renderModuleParts => success response =>', input.module.id, _serverTmpl_);
+              $_view_el.html( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( _template_params ) );
+              input.tmplRendered.resolve();
+              input.container.trigger( input.id + ':content_rendered' );
+        }).fail( function( _r_ ) {
+              //console.log( 'renderModuleParts => fail response =>', _r_);
+              input.tmplRendered.reject( 'renderImageUploaderTemplate => Problem when fetching the tmpl from server for module : '+ input.module.id );
+        });
         return true;
   },
 

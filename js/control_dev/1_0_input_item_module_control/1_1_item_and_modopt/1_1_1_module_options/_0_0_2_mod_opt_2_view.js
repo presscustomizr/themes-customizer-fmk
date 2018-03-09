@@ -126,7 +126,7 @@ $.extend( CZRModOptMths , {
                           appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( modOpt_model ) );
                     }).fail( function( _r_ ) {
                           //console.log( 'renderModOptContent => fail response =>', _r_);
-                          dfd.reject( 'renderPreItemView => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                          dfd.reject( 'renderPreItemView => Problem when fetching the mod-opt tmpl from server for module : '+ module.id );
                     });
               }
 

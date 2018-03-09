@@ -94,7 +94,7 @@ $.extend( CZRItemMths , {
                               appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( {} ) );
                         }).fail( function( _r_ ) {
                               //console.log( 'renderItemWrapper => fail response =>', _r_);
-                              dfd.reject( 'renderItemWrapper => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                              dfd.reject( 'renderItemWrapper => Problem when fetching the rud-item-part tmpl from server for module : '+ module.id );
                         });
                   }
             } else {
@@ -297,6 +297,9 @@ $.extend( CZRItemMths , {
             // Create a deep copy of the item, so we can inject custom properties before parsing the template, without affecting the original item
             var item_model_for_template_injection = $.extend( true, {}, _item_model_ || item() );
 
+            // allow plugin to alter the item_model before template injection
+            item.trigger( 'item-model-before-item-content-template-injection', item_model_for_template_injection );
+
             var appendAndResolve = function( _tmpl_ ) {
                   //do we have an html template ?
                   if ( _.isEmpty( _tmpl_ ) ) {
@@ -305,8 +308,6 @@ $.extend( CZRItemMths , {
                   var $itemContentWrapper = $( '.' + module.control.css_attr.item_content, item.container );
                   // append the view content
                   $( _tmpl_ ).appendTo( $itemContentWrapper );
-                  // allow plugin to alter the item_model before template injection
-                  item.trigger( 'item-model-before-item-content-template-injection', item_model_for_template_injection );
                   dfd.resolve( $itemContentWrapper );
             };//appendAndResolve
 

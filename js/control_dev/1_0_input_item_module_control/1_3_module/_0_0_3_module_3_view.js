@@ -63,7 +63,7 @@ $.extend( CZRModuleMths, {
                               appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( {} ) );
                         }).fail( function( _r_ ) {
                               //console.log( 'renderModuleParts => fail response =>', _r_);
-                              dfd.reject( 'renderModuleParts => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                              dfd.reject( 'renderModuleParts => Problem when fetching the crud-module-part tmpl from server for module : '+ module.id );
                         });
                   }
             } else {

@@ -419,6 +419,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             // when cache is on, use the cached template
             // Example of cache set to off => the skoped items templates are all different because based on the control type => we can't cache them
             if ( true === args.cache && ! _.isEmpty( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) && _.isString( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) ) {
+                  //console.log('Cached => ', args.tmpl );
                   dfd.resolve( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] );
             } else {
                   // if the tmpl is currently being fetched, return the temporary promise()
@@ -427,13 +428,15 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                   if ( _.isObject( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) && 'pending' == api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ].state() ) {
                         return api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ];//<= this is a $.promise()
                   } else {
+                        //console.log('Needs to be fetched => ', args.tmpl );
                         // First time fetch
                         api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = wp.ajax.post( 'ac_get_template', args )
                               .done( function( _serverTmpl_ ) {
                                     // resolve and cache
                                     dfd.resolve( _serverTmpl_ );
                                     api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = _serverTmpl_;
-                              }).fail( function( ) {
+                              }).fail( function( _r_ ) {
+                                    //console.log( 'api.CZR_Helpers.getModuleTmpl => ', _r_ );
                                     dfd.reject( 'api.CZR_Helpers.getModuleTmpl => Problem when fetching the ' + args.tmpl + ' tmpl from server for module : ' + args.module_id + ' ' + args.module_type );
                               });
                   }
