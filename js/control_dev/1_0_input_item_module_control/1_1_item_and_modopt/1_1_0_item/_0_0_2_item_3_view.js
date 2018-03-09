@@ -320,11 +320,16 @@ $.extend( CZRItemMths , {
                   }
                   appendAndResolve( wp.template( tmplSelectorSuffix )( item_model_for_template_injection ) );
             } else {
-                  api.CZR_Helpers.getModuleTmpl( {
+                  var requestParams = {
                         tmpl : 'item-inputs',
                         module_type: module.module_type,
-                        module_id : module.id
-                  } ).done( function( _serverTmpl_ ) {
+                        module_id : module.id,
+                        item_model : item_model_for_template_injection
+                  };
+                  // allow plugins to filter the query param before fetching the template for item content
+                  module.trigger( 'filter-request-params-before-fetching-for-item-content-tmpl', requestParams );
+
+                  api.CZR_Helpers.getModuleTmpl( requestParams ).done( function( _serverTmpl_ ) {
                         //console.log( 'renderItemContent => success response =>', _serverTmpl_);
                         appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( item_model_for_template_injection ) );
                   }).fail( function( _r_ ) {

@@ -774,11 +774,19 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
       //   tmpl : 'item-inputs',
       //   module_type: module.module_type || 'all_modules',
       //   module_id : ''
+      //   ... <= other custom args can be added dynamically here. Like the item_model when fetching the item content template
       // }
       // @return a promise()
       getModuleTmpl : function( args ) {
             var dfd = $.Deferred();
-            args = _.extend( { tmpl : '', module_type: '', module_id : '' }, args );
+            args = _.extend( {
+                  tmpl : '',
+                  module_type: '',
+                  module_id : '',
+                  cache : true,//<= shall we cache the tmpl or not. Should be true in almost all cases.
+                  nonce: api.settings.nonce.save//<= do we need to set a specific nonce to fetch the tmpls ?
+            }, args );
+
             // are we good to go ?
             if ( _.isEmpty( args.tmpl ) || _.isEmpty( args.module_type ) ) {
                   dfd.reject( 'api.CZR_Helpers.getModuleTmpl => missing tmpl or module_type param' );
@@ -790,7 +798,9 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             api.CZR_Helpers.czr_cachedTmpl = api.CZR_Helpers.czr_cachedTmpl || {};
             api.CZR_Helpers.czr_cachedTmpl[ args.module_type ] = api.CZR_Helpers.czr_cachedTmpl[ args.module_type ] || {};
 
-            if ( ! _.isEmpty( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) && _.isString( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) ) {
+            // when cache is on, use the cached template
+            // Example of cache set to off => the skoped items templates are all different because based on the control type => we can't cache them
+            if ( true === args.cache && ! _.isEmpty( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) && _.isString( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] ) ) {
                   dfd.resolve( api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] );
             } else {
                   // if the tmpl is currently being fetched, return the temporary promise()
@@ -800,17 +810,14 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                         return api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ];//<= this is a $.promise()
                   } else {
                         // First time fetch
-                        api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = wp.ajax.post( 'ac_get_template', {
-                              tmpl : args.tmpl,
-                              module_type: args.module_type,
-                              nonce: api.settings.nonce.save//<= do we need to set a specific nonce to fetch the tmpls ?
-                        }).done( function( _serverTmpl_ ) {
-                              // resolve and cache
-                              dfd.resolve( _serverTmpl_ );
-                              api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = _serverTmpl_;
-                        }).fail( function( ) {
-                              dfd.reject( 'api.CZR_Helpers.getModuleTmpl => Problem when fetching the ' + args.tmpl + ' tmpl from server for module : ' + args.module_id + ' ' + args.module_type );
-                        });
+                        api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = wp.ajax.post( 'ac_get_template', args )
+                              .done( function( _serverTmpl_ ) {
+                                    // resolve and cache
+                                    dfd.resolve( _serverTmpl_ );
+                                    api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = _serverTmpl_;
+                              }).fail( function( ) {
+                                    dfd.reject( 'api.CZR_Helpers.getModuleTmpl => Problem when fetching the ' + args.tmpl + ' tmpl from server for module : ' + args.module_id + ' ' + args.module_type );
+                              });
                   }
             }
             return dfd.promise();
@@ -2768,11 +2775,16 @@ $.extend( CZRItemMths , {
                   }
                   appendAndResolve( wp.template( tmplSelectorSuffix )( item_model_for_template_injection ) );
             } else {
-                  api.CZR_Helpers.getModuleTmpl( {
+                  var requestParams = {
                         tmpl : 'item-inputs',
                         module_type: module.module_type,
-                        module_id : module.id
-                  } ).done( function( _serverTmpl_ ) {
+                        module_id : module.id,
+                        item_model : item_model_for_template_injection
+                  };
+                  // allow plugins to filter the query param before fetching the template for item content
+                  module.trigger( 'filter-request-params-before-fetching-for-item-content-tmpl', requestParams );
+
+                  api.CZR_Helpers.getModuleTmpl( requestParams ).done( function( _serverTmpl_ ) {
                         //console.log( 'renderItemContent => success response =>', _serverTmpl_);
                         appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( item_model_for_template_injection ) );
                   }).fail( function( _r_ ) {
