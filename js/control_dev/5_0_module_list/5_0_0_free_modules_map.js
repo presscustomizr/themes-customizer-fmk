@@ -16,12 +16,6 @@
                   sektion_allowed : false,
                   name : 'Widget Areas'
             },
-            czr_social_module : {
-                  mthds : CZRSocialModuleMths,
-                  crud : true,
-                  name : 'Social Icons',
-                  has_mod_opt : true
-            },
             czr_background : {
                   mthds : CZRBodyBgModuleMths,
                   crud : false,
