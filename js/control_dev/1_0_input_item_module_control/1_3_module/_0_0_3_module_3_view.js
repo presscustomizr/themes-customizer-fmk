@@ -57,7 +57,8 @@ $.extend( CZRModuleMths, {
                         api.CZR_Helpers.getModuleTmpl( {
                               tmpl : 'crud-module-part',
                               module_type: 'all_modules',
-                              module_id : module.id
+                              module_id : module.id,
+                              control_id : module.control.id
                         } ).done( function( _serverTmpl_ ) {
                               //console.log( 'renderModuleParts => success response =>', module.id, _serverTmpl_);
                               appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( {} ) );

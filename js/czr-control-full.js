@@ -2576,7 +2576,8 @@ $.extend( CZRItemMths , {
                         var requestParams = {
                               tmpl : 'rud-item-part',
                               module_type: 'all_modules',
-                              module_id : module.id
+                              module_id : module.id,
+                              control_id : module.control.id
                         };
                         item.trigger( 'item-wrapper-tmpl-params-before-fetching', requestParams );
 
@@ -2746,7 +2747,8 @@ $.extend( CZRItemMths , {
                               api.CZR_Helpers.getModuleTmpl( {
                                     tmpl : 'rud-item-alert-part',
                                     module_type: 'all_modules',
-                                    module_id : module.id
+                                    module_id : module.id,
+                                    control_id : module.control.id
                               } ).done( function( _serverTmpl_ ) {
                                     //console.log( 'item.removeDialogVisible => success response =>', module.id, _serverTmpl_);
                                     $_alert_el.html( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( { title : ( item().title || item.id ) } ) );
@@ -2816,6 +2818,7 @@ $.extend( CZRItemMths , {
                         tmpl : 'item-inputs',
                         module_type: module.module_type,
                         module_id : module.id,
+                        control_id : module.control.id,
                         item_model : item_model_for_template_injection
                   };
                   // allow plugins to filter the query param before fetching the template for item content
@@ -3186,7 +3189,8 @@ $.extend( CZRModOptMths , {
                     api.CZR_Helpers.getModuleTmpl( {
                           tmpl : 'mod-opt',
                           module_type: module.module_type,
-                          module_id : module.id
+                          module_id : module.id,
+                          control_id : module.control.id
                     } ).done( function( _serverTmpl_ ) {
                           //console.log( 'renderModOptContent => success response =>', _serverTmpl_);
                           appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( modOpt_model ) );
@@ -4170,7 +4174,8 @@ $.extend( CZRModuleMths, {
                         api.CZR_Helpers.getModuleTmpl( {
                               tmpl : 'crud-module-part',
                               module_type: 'all_modules',
-                              module_id : module.id
+                              module_id : module.id,
+                              control_id : module.control.id
                         } ).done( function( _serverTmpl_ ) {
                               //console.log( 'renderModuleParts => success response =>', module.id, _serverTmpl_);
                               appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( {} ) );
@@ -4685,7 +4690,8 @@ $.extend( CZRDynModuleMths, {
                     api.CZR_Helpers.getModuleTmpl( {
                           tmpl : 'pre-item',
                           module_type: module.module_type,
-                          module_id : module.id
+                          module_id : module.id,
+                          control_id : module.control.id
                     } ).done( function( _serverTmpl_ ) {
                           //console.log( 'success response =>', _serverTmpl_);
                           appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )() );

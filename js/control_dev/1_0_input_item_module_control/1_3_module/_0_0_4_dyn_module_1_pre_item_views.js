@@ -50,7 +50,8 @@ $.extend( CZRDynModuleMths, {
                     api.CZR_Helpers.getModuleTmpl( {
                           tmpl : 'pre-item',
                           module_type: module.module_type,
-                          module_id : module.id
+                          module_id : module.id,
+                          control_id : module.control.id
                     } ).done( function( _serverTmpl_ ) {
                           //console.log( 'success response =>', _serverTmpl_);
                           appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )() );

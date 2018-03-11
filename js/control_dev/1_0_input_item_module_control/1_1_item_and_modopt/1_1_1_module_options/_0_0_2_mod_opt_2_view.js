@@ -120,7 +120,8 @@ $.extend( CZRModOptMths , {
                     api.CZR_Helpers.getModuleTmpl( {
                           tmpl : 'mod-opt',
                           module_type: module.module_type,
-                          module_id : module.id
+                          module_id : module.id,
+                          control_id : module.control.id
                     } ).done( function( _serverTmpl_ ) {
                           //console.log( 'renderModOptContent => success response =>', _serverTmpl_);
                           appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( modOpt_model ) );
