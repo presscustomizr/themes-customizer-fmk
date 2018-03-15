@@ -25,13 +25,18 @@
             textarea  : '',
             check     : 'setupIcheck',
             select    : 'setupSelect',
+            radio     : 'setupRadio',
             number    : 'setupStepper',
-            upload    : 'setupImageUploader',
+            upload    : 'setupImageUploaderSaveAsId',
+            upload_url : 'setupImageUploaderSaveAsUrl',
             color     : 'setupColorPicker',
+            wp_color  : 'setupWPColorPicker',//not used for the moment
             content_picker : 'setupContentPicker',
             text_editor    : 'setupTextEditor',
             password : '',
-            range_slider : 'setupRangeSlider'
+            range : 'setupSimpleRange',
+            range_slider : 'setupRangeSlider',
+            hidden : ''
       });
 
       //BASE ITEMS => used as constructor when creating the collection of models
@@ -46,72 +51,19 @@
 
       //BASE COLUMNS => used as constructor
       //Columns are a pro feature, only part of the full build.
-      if ( ! _.isUndefined( window.CZRColumnMths ) ) {
-            api.CZRColumn           = api.Value.extend( CZRColumnMths );
-      }
+      // if ( ! _.isUndefined( window.CZRColumnMths ) ) {
+      //       api.CZRColumn           = api.Value.extend( CZRColumnMths );
+      // }
 
       //BASE CONTROLS
       api.CZRBaseControl            = api.Control.extend( CZRBaseControlMths );
       api.CZRBaseModuleControl      = api.CZRBaseControl.extend( CZRBaseModuleControlMths );
-      api.CZRMultiModuleControl     = api.CZRBaseModuleControl.extend( CZRMultiModuleControlMths );
+      //api.CZRMultiModuleControl     = api.CZRBaseModuleControl.extend( CZRMultiModuleControlMths );<= Deprecated, was used for old sektions
 
       $.extend( api.controlConstructor, {
             czr_module : api.CZRBaseModuleControl,
             czr_multi_module : api.CZRMultiModuleControl,
             //czr_sektions   : api.CZRSektionsControl
       });
-
-
-
-
-
-      //SKOPE
-      $.extend( CZRSkopeBaseMths, api.Events );
-      $.extend( CZRSkopeMths, api.Events );
-      $.extend( CZRSkopeMths, api.CZR_Helpers );
-      api.CZR_skopeBase             = api.Class.extend( CZRSkopeBaseMths );
-      api.CZR_skopeSave             = api.Class.extend( CZRSkopeSaveMths );
-      api.CZR_skopeReset            = api.Class.extend( CZRSkopeResetMths );
-      api.CZR_skope                 = api.Value.extend( CZRSkopeMths ); //=> used as constructor when creating the collection of skopes
-
-      //Skope related :
-      //=> Special case for the header image
-      //Capture objects before they are overridden by WP.
-      //=> needed when regenerating the header_image control.
-      if ( _.has(api, 'HeaderTool') ) {
-            api.czr_HeaderTool = $.extend(  true, {}, api.HeaderTool );
-      }
-
-
-
-
-
-
-      //THEME CONTROLS
-      //api.CZRBackgroundControl     = api.CZRItemControl.extend( CZRBackgroundMths );
-
-      //api.CZRWidgetAreasControl    = api.CZRDynModule.extend( CZRWidgetAreasMths );
-
-      api.CZRUploadControl          = api.Control.extend( CZRUploadMths );
-      api.CZRLayoutControl          = api.Control.extend( CZRLayoutSelectMths );
-      api.CZRMultiplePickerControl  = api.Control.extend( CZRMultiplePickerMths );
-
-
-      $.extend( api.controlConstructor, {
-            czr_upload     : api.CZRUploadControl,
-            //czr_sidebars   : api.CZRWidgetAreasControl,
-            //czr_socials    : api.CZRSocialControl,
-            czr_multiple_picker : api.CZRMultiplePickerControl,
-            czr_layouts    : api.CZRLayoutControl
-            //czr_background : api.CZRBackgroundControl
-      });
-
-      if ( 'function' == typeof api.CroppedImageControl ) {
-            api.CZRCroppedImageControl   = api.CroppedImageControl.extend( CZRCroppedImageMths );
-
-            $.extend( api.controlConstructor, {
-                  czr_cropped_image : api.CZRCroppedImageControl
-            });
-      }
 
 })( wp.customize, jQuery, _ );

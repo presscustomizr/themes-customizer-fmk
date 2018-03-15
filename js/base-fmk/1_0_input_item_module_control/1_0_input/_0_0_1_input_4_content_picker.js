@@ -128,7 +128,7 @@ $.extend( CZRInputMths , {
                     data : input.setupSelectedContents(),
                     //  allowClear: true,
                     ajax: {
-                          url: serverControlParams.AjaxUrl,
+                          url: wp.ajax.settings.url,// was serverControlParams.AjaxUrl,
                           type: 'POST',
                           dataType: 'json',
                           delay: 250,

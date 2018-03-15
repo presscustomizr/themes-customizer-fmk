@@ -3,7 +3,7 @@
       /*****************************************************************************
       * ADD PRO BEFORE SPECIFIC SECTIONS AND PANELS
       *****************************************************************************/
-      if ( serverControlParams.isPro ) {
+      if ( themeServerControlParams.isPro ) {
             _.each( [
                   //WFC
                   'tc_font_customizer_settings',
@@ -55,7 +55,7 @@
       /*****************************************************************************
       * PRO SECTION CONSTRUCTOR
       *****************************************************************************/
-      if ( ! serverControlParams.isPro && _.isFunction( api.Section ) ) {
+      if ( ! themeServerControlParams.isPro && _.isFunction( api.Section ) ) {
             proSectionConstructor = api.Section.extend( {
                   active : true,
                   // No events for this type of section.

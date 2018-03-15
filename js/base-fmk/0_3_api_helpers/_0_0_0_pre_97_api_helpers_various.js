@@ -46,13 +46,17 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
       },
 
 
-      /*
+       /*
       * @return string
       * simple helper to build the setting wp api ready id
       */
       build_setId : function ( setId ) {
+            if ( _.isUndefined( window.themeServerControlParams ) || ! _.isArray( themeServerControlParams.wpBuiltinSettings ) ) {
+                api.errorLog( 'build_setId => missing themeServerControlParams !');
+                return setId;
+            }
             //exclude the WP built-in settings like blogdescription, show_on_front, etc
-            if ( _.contains( serverControlParams.wpBuiltinSettings, setId ) )
+            if (  _.contains( themeServerControlParams.wpBuiltinSettings, setId ) )
               return setId;
 
             // //extract the setting id for theme mods
@@ -68,22 +72,26 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             // });
             // if ( _isExcld )
             // return setId;
-            if ( ! _.contains( serverControlParams.themeSettingList, setId ) )
+            if ( ! _.contains( themeServerControlParams.themeSettingList, setId ) )
               return setId;
 
-            return -1 == setId.indexOf( serverControlParams.themeOptions ) ? [ serverControlParams.themeOptions +'[' , setId  , ']' ].join('') : setId;
+            return -1 == setId.indexOf( themeServerControlParams.themeOptions ) ? [ themeServerControlParams.themeOptions +'[' , setId  , ']' ].join('') : setId;
     },
 
       /*
       * @return string
       * simple helper to extract the option name from a setting id
       */
-      getOptionName : function(name) {
+      getOptionName : function( name ) {
+            if ( _.isEmpty( window.themeServerControlParams ) || _.isEmpty( themeServerControlParams.themeOptions ) ) {
+                api.errorLog( 'getOptionName => missing themeServerControlParams !');
+                return name;
+            }
             var self = this;
             //targets only the options of the theme
-            if ( -1 == name.indexOf(serverControlParams.themeOptions) )
+            if ( -1 == name.indexOf( themeServerControlParams.themeOptions) )
               return name;
-            return name.replace(/\[|\]/g, '').replace(serverControlParams.themeOptions, '');
+            return name.replace(/\[|\]/g, '').replace( themeServerControlParams.themeOptions, '');
       },
 
 
