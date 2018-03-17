@@ -10,12 +10,9 @@
                 api.errorLog( 'serverControlParams.dynamicSettingParams should be an array');
           }
 
+          //console.log( 'serverControlParams.dynamicSettingParams', serverControlParams.dynamicSettingParams );
+
           _.each( serverControlParams.dynamicSettingParams, function( dynParams, setId ) {
-                // is the setting already registered ?
-                if ( api.has( setId ) ) {
-                      api.errorLog( 'api.ready => dynamic setting registration => setting already registered => ' + setId );
-                      return;
-                }
                 try { registerDynamicModuleSettingControl( dynParams ); } catch( er ) {
                       api.errorLog( er );
                 }
