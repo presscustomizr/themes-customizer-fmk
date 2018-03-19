@@ -4,6 +4,9 @@
       * OBSERVE SECTIONS AND PANEL EXPANSION
       * /store the current expanded section and panel
       *****************************************************************************/
+      api.czr_activeSectionId = api.czr_activeSectionId || new api.Value('');
+      api.czr_activePanelId = api.czr_activePanelId || new api.Value('');
+
       api.bind('ready', function() {
             if ( 'function' != typeof api.Section ) {
               throw new Error( 'Your current version of WordPress does not support the customizer sections needed for this theme. Please upgrade WordPress to the latest version.' );
@@ -11,8 +14,7 @@
 
             //STORE THE CURRENTLY ACTIVE SECTION AND PANELS IN AN OBSERVABLE VALUE
             //BIND EXISTING AND FUTURE SECTIONS AND PANELS
-            api.czr_activeSectionId = api.czr_activeSectionId || new api.Value('');
-            api.czr_activePanelId = api.czr_activePanelId || new api.Value('');
+
 
             var _storeCurrentSection = function( expanded, section_id ) {
                   api.czr_activeSectionId( expanded ? section_id : '' );

@@ -1,75 +1,77 @@
 
 ( function ( api, $, _ ) {
-      /*****************************************************************************
-      * ADD PRO BEFORE SPECIFIC SECTIONS AND PANELS
-      *****************************************************************************/
-      if ( themeServerControlParams.isPro ) {
-            _.each( [
-                  //WFC
-                  'tc_font_customizer_settings',
 
-                  //hueman pro
-                  'header_image_sec',
-                  'content_blog_sec',
-                  'static_front_page',
-                  'content_single_sec',
+      api.bind( 'ready', function() {
+            /*****************************************************************************
+            * ADD PRO BEFORE SPECIFIC SECTIONS AND PANELS
+            *****************************************************************************/
+            if ( themeServerControlParams.isPro ) {
+                  _.each( [
+                        //WFC
+                        'tc_font_customizer_settings',
 
-                  //customizr-pro
-                  'tc_fpu',
-                  'nav',
-                  'post_lists_sec',
-                  'galleries_sec',
-                  'footer_customizer_sec',
-                  'custom_scripts_sec',
-                  'contact_info_sec'
+                        //hueman pro
+                        'header_image_sec',
+                        'content_blog_sec',
+                        'static_front_page',
+                        'content_single_sec',
 
-            ], function( _secId ) {
-                  _.delay( function() {
-                      api.section.when( _secId, function( _sec_ ) {
-                            if ( 1 >= _sec_.headContainer.length ) {
-                                _sec_.headContainer.find('.accordion-section-title').prepend( '<span class="pro-title-block">Pro</span>' );
-                            }
-                      });
-                  }, 1000 );
-            });
-            _.each( [
-                  //hueman pro
-                  //'hu-header-panel',
-                  //'hu-content-panel',
+                        //customizr-pro
+                        'tc_fpu',
+                        'nav',
+                        'post_lists_sec',
+                        'galleries_sec',
+                        'footer_customizer_sec',
+                        'custom_scripts_sec',
+                        'contact_info_sec'
 
-                  //customizr-pro
-                  //'tc-header-panel',
-                  //'tc-content-panel',
-                  //'tc-footer-panel',
-                  //'tc-advanced-panel'
-            ], function( _secId ) {
-                  api.panel.when( _secId, function( _sec_ ) {
-                        if ( 1 >= _sec_.headContainer.length ) {
-                            _sec_.headContainer.find('.accordion-section-title').prepend( '<span class="pro-title-block">Pro</span>' );
-                        }
+                  ], function( _secId ) {
+                        _.delay( function() {
+                            api.section.when( _secId, function( _sec_ ) {
+                                  if ( 1 >= _sec_.headContainer.length ) {
+                                      _sec_.headContainer.find('.accordion-section-title').prepend( '<span class="pro-title-block">Pro</span>' );
+                                  }
+                            });
+                        }, 1000 );
                   });
-            });
-      }
+                  _.each( [
+                        //hueman pro
+                        //'hu-header-panel',
+                        //'hu-content-panel',
+
+                        //customizr-pro
+                        //'tc-header-panel',
+                        //'tc-content-panel',
+                        //'tc-footer-panel',
+                        //'tc-advanced-panel'
+                  ], function( _secId ) {
+                        api.panel.when( _secId, function( _sec_ ) {
+                              if ( 1 >= _sec_.headContainer.length ) {
+                                  _sec_.headContainer.find('.accordion-section-title').prepend( '<span class="pro-title-block">Pro</span>' );
+                              }
+                        });
+                  });
+            }
 
 
-      /*****************************************************************************
-      * PRO SECTION CONSTRUCTOR
-      *****************************************************************************/
-      if ( ! themeServerControlParams.isPro && _.isFunction( api.Section ) ) {
-            proSectionConstructor = api.Section.extend( {
-                  active : true,
+            /*****************************************************************************
+            * PRO SECTION OVERRIDE
+            *****************************************************************************/
+            if ( ! themeServerControlParams.isPro && _.isFunction( api.Section ) ) {
+                  proSectionInstance = api.section('go_pro_sec');
+                  if ( ! _.isObject( proSectionInstance ) )
+                    return;
+
                   // No events for this type of section.
-                  attachEvents: function () {},
+                  proSectionInstance.attachEvents = function () {};
                   // Always make the section active.
-                  isContextuallyActive: function () {
+                  proSectionInstance.isContextuallyActive = function () {
                     return this.active();
-                  },
-                  _toggleActive: function(){ return true; },
+                  };
+                  proSectionInstance._toggleActive = function(){ return true; };
 
-            } );
+                  proSectionInstance.active( true );
+            }
+      });
 
-            $.extend( api.sectionConstructor, {
-                  'czr-customize-section-pro' : proSectionConstructor
-            });
-      }
 })( wp.customize , jQuery, _);

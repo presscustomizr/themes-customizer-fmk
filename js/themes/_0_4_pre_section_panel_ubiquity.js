@@ -72,6 +72,8 @@
               return;
             api.czr_ModOptVisible(false);
       };
-      api.czr_activeSectionId.bind( _closeModOpt );
-      api.czr_activePanelId.bind( _closeModOpt );
+      api.bind('ready', function() {
+            api.czr_activeSectionId.bind( _closeModOpt );
+            api.czr_activePanelId.bind( _closeModOpt );
+      });
 })( wp.customize , jQuery, _);

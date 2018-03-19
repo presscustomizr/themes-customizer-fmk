@@ -10,7 +10,7 @@
                 api.errorLog( 'serverControlParams.dynamicSettingParams should be an array');
           }
 
-          console.log( 'serverControlParams.dynamicSettingParams', serverControlParams.dynamicSettingParams );
+          //console.log( 'serverControlParams.dynamicSettingParams', serverControlParams.dynamicSettingParams );
 
           _.each( serverControlParams.dynamicSettingParams, function( dynParams, setId ) {
                 try { registerDynamicModuleSettingControl( dynParams ); } catch( er ) {
