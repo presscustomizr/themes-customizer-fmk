@@ -52,7 +52,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
       */
       build_setId : function ( setId ) {
             if ( _.isUndefined( window.themeServerControlParams ) || ! _.isArray( themeServerControlParams.wpBuiltinSettings ) ) {
-                api.errorLog( 'build_setId => missing themeServerControlParams !');
+                //api.errorLog( 'build_setId => missing themeServerControlParams !');
                 return setId;
             }
             //exclude the WP built-in settings like blogdescription, show_on_front, etc
@@ -84,7 +84,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
       */
       getOptionName : function( name ) {
             if ( _.isEmpty( window.themeServerControlParams ) || _.isEmpty( themeServerControlParams.themeOptions ) ) {
-                api.errorLog( 'getOptionName => missing themeServerControlParams !');
+                //api.errorLog( 'getOptionName => missing themeServerControlParams !');
                 return name;
             }
             var self = this;
