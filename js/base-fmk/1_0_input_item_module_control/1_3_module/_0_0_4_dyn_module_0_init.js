@@ -62,7 +62,15 @@ $.extend( CZRDynModuleMths, {
                         trigger   : 'click keydown',
                         selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
                         name      : 'add_item',
-                        actions   : [ 'closeRemoveDialogs', 'closeAllItems', 'addItem' ],
+                        actions   : function() {
+                              module.closeRemoveDialogs().closeAllItems().addItem().done( function( item_id ) {
+                                    module.czr_Item( item_candidate.id, function( _item_ ) {
+                                          _item_.embedded.then( function() {
+                                                module.czr_Item( item_candidate.id ).viewState( 'expanded' );
+                                          });
+                                    } );
+                              });
+                        }
                   }
             ]);//module.userEventMap
       },
@@ -192,7 +200,8 @@ $.extend( CZRDynModuleMths, {
             module.instantiateItem( item_candidate, true ).ready(); //true == Added by user
 
             //this iife job is to close the pre item and to maybe refresh the preview
-            //@return a promise(), then once done the item view is expanded to start editing it
+            //then once done the item view is expanded to start editing it
+            //@return a promise()
             $.Deferred( function() {
                   var _dfd_ = this;
                   module.czr_Item( item_candidate.id ).isReady.then( function() {
@@ -218,13 +227,11 @@ $.extend( CZRDynModuleMths, {
                               api.previewer.bind( 'ready', resolveWhenPreviewerReady );
                               api.previewer.refresh();
                         } else {
-                              _dfd_.resolve();
+                              _dfd_.resolve( );
                         }
                   });
-            }).done( function() {
-                    module.czr_Item( item_candidate.id ).viewState( 'expanded' );
             }).always( function() {
-                    dfd.resolve();
+                    dfd.resolve( item_candidate.id );
             });
             return dfd.promise();
       }
