@@ -62,8 +62,9 @@ $.extend( CZRDynModuleMths, {
                         trigger   : 'click keydown',
                         selector  : '.' + module.control.css_attr.add_new_btn, //'.czr-add-new',
                         name      : 'add_item',
-                        actions   : function() {
-                              module.closeRemoveDialogs().closeAllItems().addItem().done( function( item_id ) {
+                        //@param params : { dom_el : {}, dom_event : {}, event : {}, model {} }
+                        actions   : function( params ) {
+                              module.closeRemoveDialogs( params ).closeAllItems( params ).addItem( params ).done( function( item_id ) {
                                     module.czr_Item( item_candidate.id, function( _item_ ) {
                                           _item_.embedded.then( function() {
                                                 module.czr_Item( item_candidate.id ).viewState( 'expanded' );
@@ -166,7 +167,8 @@ $.extend( CZRDynModuleMths, {
       //Fired on user Dom action.
       //the item is manually added.
       //@return a promise() for future sequential actions
-      addItem : function(obj) {
+      //@param params : { dom_el : {}, dom_event : {}, event : {}, model {} }
+      addItem : function( params ) {
             if ( ! this.itemCanBeInstantiated() ) {
 
                   return;
@@ -214,12 +216,12 @@ $.extend( CZRDynModuleMths, {
                               api.previewer.unbind( 'ready', resolveWhenPreviewerReady );
                               _dfd_.resolve();
                         };
-                        //module.doActions( 'item_added_by_user' , module.container, { item : item_candidate , dom_event : obj.dom_event } );
+                        //module.doActions( 'item_added_by_user' , module.container, { item : item_candidate , dom_event : params.dom_event } );
 
                         //refresh the preview frame (only needed if transport is postMessage && has no partial refresh set )
                         //must be a dom event not triggered
                         //otherwise we are in the init collection case where the items are fetched and added from the setting in initialize
-                        if ( 'postMessage' == api(module.control.id).transport && _.has( obj, 'dom_event') && ! _.has( obj.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
+                        if ( 'postMessage' == api(module.control.id).transport && _.has( params, 'dom_event') && ! _.has( params.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
                               // api.previewer.refresh().done( function() {
                               //       _dfd_.resolve();
                               // });
