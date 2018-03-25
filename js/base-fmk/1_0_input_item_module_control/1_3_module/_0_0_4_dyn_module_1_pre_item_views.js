@@ -57,7 +57,7 @@ $.extend( CZRDynModuleMths, {
                           appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )() );
                     }).fail( function( _r_ ) {
                           //console.log( 'fail response =>', _r_);
-                          dfd.reject( 'renderPreItemView => Problem when fetching the pre-item tmpl from server for module : '+ module.id );
+                          dfd.reject( [ 'renderPreItemView for module : ', module.id , _r_ ].join(' ') );
                     });
               }
               return dfd.promise();

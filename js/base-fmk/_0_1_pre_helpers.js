@@ -29,7 +29,7 @@
                 _truncate = function( string ){
                       if ( ! _.isString( string ) )
                         return '';
-                      return string.length > 200 ? string.substr( 0, 199 ) : string;
+                      return string.length > 300 ? string.substr( 0, 299 ) + '...' : string;
                 };
 
             //if the array to print is not composed exclusively of strings, then let's stringify it

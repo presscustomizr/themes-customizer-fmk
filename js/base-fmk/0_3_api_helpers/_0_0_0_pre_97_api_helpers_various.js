@@ -445,7 +445,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                                     api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = _serverTmpl_;
                               }).fail( function( _r_ ) {
                                     //console.log( 'api.CZR_Helpers.getModuleTmpl => ', _r_ );
-                                    dfd.reject( 'api.CZR_Helpers.getModuleTmpl => Problem when fetching the ' + args.tmpl + ' tmpl from server for module : ' + args.module_id + ' ' + args.module_type );
+                                    dfd.reject( 'api.CZR_Helpers.getModuleTmpl => Problem when fetching the ' + args.tmpl + ' tmpl from server for module : ' + args.module_id + ' ' + args.module_type + _r_ );
                               });
                   }
             }
