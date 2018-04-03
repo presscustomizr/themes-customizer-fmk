@@ -8,6 +8,9 @@ var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRBaseModuleControlMths, {
       initialize: function( id, options ) {
+              if ( ! api.has( id ) ) {
+                    throw new Error( 'Missing a registered setting for control : ' + id );
+              }
               var control = this;
 
               control.czr_Module = new api.Values();
@@ -64,7 +67,14 @@ $.extend( CZRBaseModuleControlMths, {
 
       //////////////////////////////////
       ///READY = CONTROL INSTANTIATED AND DOM ELEMENT EMBEDDED ON THE PAGE
-      ///FIRED BEFORE API READY
+      ///FIRED BEFORE API READY ? still true ?
+      //
+      // WP CORE => After the control is embedded on the page, invoke the "ready" method.
+      // control.deferred.embedded.done( function () {
+      //   control.linkElements(); // Link any additional elements after template is rendered by renderContent().
+      //   control.setupNotifications();
+      //   control.ready();
+      // });
       //////////////////////////////////
       ready : function() {
               var control = this;
