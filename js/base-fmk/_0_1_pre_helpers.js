@@ -61,8 +61,25 @@
               return;
 
             console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : arguments } ) );
+            // if ( serverControlParams.isDevMode ) {
+            //       console.log( 'Unstyled error message : ', arguments );
+            // }
+      };
+
+      api.errare = function( title, error ) {
+            //fix for IE, because console is only defined when in F12 debugging mode in IE
+            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
+              return;
             if ( serverControlParams.isDevMode ) {
-                  console.log( 'Unstyled error message : ', arguments );
+                  if ( _.isUndefined( error ) ) {
+                        console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : [ '<' + title + '>' ] } ) );
+                  } else {
+                        console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : [ '<' + title + '>' ] } ) );
+                        console.log( error );
+                        console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : [ '</' + title + '>' ] } ) );
+                  }
+            } else {
+                  console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : [ title ] } ) );
             }
       };
 
