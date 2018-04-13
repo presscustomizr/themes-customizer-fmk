@@ -45,9 +45,11 @@ $.extend( CZRInputMths , {
                 var _meth = api.czrInputMap[ input.type ];
                 if ( _.isFunction( input[_meth]) ) {
                       input[_meth]( options.input_options || null );
+                } else if ( _.isFunction( api.czrInputMap[ input.type ] ) ) {
+                      api.czrInputMap[ input.type ].apply( input, [ options.input_options || null ] );
                 }
           } else {
-                api.consoleLog('Warning the input : ' + input.id + ' with type ' + input.type + ' has no corresponding method defined in api.czrInputMap.');
+                api.errare('Warning the input : ' + input.id + ' with type ' + input.type + ' has no corresponding method defined in api.czrInputMap.');
           }
 
           var trigger_map = {
