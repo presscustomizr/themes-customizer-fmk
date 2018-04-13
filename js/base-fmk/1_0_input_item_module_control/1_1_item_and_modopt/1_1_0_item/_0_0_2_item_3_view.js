@@ -196,7 +196,7 @@ $.extend( CZRItemMths , {
                               //item.viewState.set('expanded');
                         })
                         .fail( function( _r_ ) {
-                              api.errorLog( "mono-item module => failed item.renderItemContent for module : " + module.id, _r_ );
+                              api.errare( "mono-item module => failed item.renderItemContent for module : " + module.id, _r_ );
                         });
             }
 
@@ -264,7 +264,7 @@ $.extend( CZRItemMths , {
                                     item.trigger( 'remove-dialog-rendered');
                               }).fail( function( _r_ ) {
                                     //console.log( 'item.removeDialogVisible => fail response =>', _r_);
-                                    api.errorLog( 'item.removeDialogVisible => Problem when fetching the tmpl from server for module : '+ module.id );
+                                    api.errare( 'item.removeDialogVisible => Problem when fetching the tmpl from server for module : '+ module.id, _r_ );
                               });
                         }
                   }
@@ -338,7 +338,7 @@ $.extend( CZRItemMths , {
                         appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( item_model_for_template_injection ) );
                   }).fail( function( _r_ ) {
                         //console.log( 'renderItemContent => fail response =>', _r_);
-                        dfd.reject( 'renderItemContent> Problem when fetching the tmpl from server for module : '+ module.id );
+                        dfd.reject( _r_ );
                   });
             }
             return dfd.promise();

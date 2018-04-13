@@ -259,7 +259,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
 
                   //skip if no valid input data-czrtype is found in this node
                   if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
-                        api.consoleLog( 'setupInputCollectionFromDOM : missing data-czrtype for ' + module.id );
+                        api.errare( 'setupInputCollectionFromDOM : missing data-czrtype for ' + module.id );
                         return;
                   }
                   //check if this property exists in the current inputParentInst model
@@ -445,7 +445,8 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                                     api.CZR_Helpers.czr_cachedTmpl[ args.module_type ][ args.tmpl ] = _serverTmpl_;
                               }).fail( function( _r_ ) {
                                     //console.log( 'api.CZR_Helpers.getModuleTmpl => ', _r_ );
-                                    dfd.reject( 'api.CZR_Helpers.getModuleTmpl => Problem when fetching the ' + args.tmpl + ' tmpl from server for module : ' + args.module_id + ' ' + args.module_type + _r_ );
+                                    api.errare( 'api.CZR_Helpers.getModuleTmpl => Problem when fetching the ' + args.tmpl + ' tmpl from server for module : ' + args.module_id + ' ' + args.module_type, _r_);
+                                    dfd.reject( _r_ );
                               });
                   }
             }
