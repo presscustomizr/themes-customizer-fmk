@@ -32,7 +32,7 @@
             color     : 'setupColorPicker',
             wp_color  : 'setupWPColorPicker',//not used for the moment
             content_picker : 'setupContentPicker',
-            text_editor    : 'setupTextEditor',
+            tiny_mce_editor : 'setupTinyMceEditor',
             password : '',
             range : 'setupSimpleRange',
             range_slider : 'setupRangeSlider',
@@ -49,21 +49,10 @@
       api.CZRModule                 = api.Value.extend( CZRModuleMths );
       api.CZRDynModule              = api.CZRModule.extend( CZRDynModuleMths );
 
-      //BASE COLUMNS => used as constructor
-      //Columns are a pro feature, only part of the full build.
-      // if ( ! _.isUndefined( window.CZRColumnMths ) ) {
-      //       api.CZRColumn           = api.Value.extend( CZRColumnMths );
-      // }
-
       //BASE CONTROLS
       api.CZRBaseControl            = api.Control.extend( CZRBaseControlMths );
       api.CZRBaseModuleControl      = api.CZRBaseControl.extend( CZRBaseModuleControlMths );
-      //api.CZRMultiModuleControl     = api.CZRBaseModuleControl.extend( CZRMultiModuleControlMths );<= Deprecated, was used for old sektions
 
-      $.extend( api.controlConstructor, {
-            czr_module : api.CZRBaseModuleControl,
-            czr_multi_module : api.CZRMultiModuleControl,
-            //czr_sektions   : api.CZRSektionsControl
-      });
+      $.extend( api.controlConstructor, { czr_module : api.CZRBaseModuleControl });
 
 })( wp.customize, jQuery, _ );

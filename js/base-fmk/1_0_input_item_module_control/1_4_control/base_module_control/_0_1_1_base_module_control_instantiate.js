@@ -47,27 +47,20 @@ $.extend( CZRBaseModuleControlMths, {
                   constructor = {};
 
               if ( ! _.has( module, 'module_type' ) ) {
-                  throw new Error('CZRModule::getModuleConstructor : no module type found for module ' + module.id );
+                    throw new Error('CZRModule::getModuleConstructor : no module type found for module ' + module.id );
               }
               if ( ! _.has( api.czrModuleMap, module.module_type ) ) {
-                  throw new Error('Module type ' + module.module_type + ' is not listed in the module map api.czrModuleMap.' );
+                    throw new Error('Module type ' + module.module_type + ' is not listed in the module map api.czrModuleMap.' );
               }
 
               var _mthds = api.czrModuleMap[ module.module_type ].mthds,
                   _is_crud = api.czrModuleMap[ module.module_type ].crud,
                   _base_constructor = _is_crud ? api.CZRDynModule : api.CZRModule;
 
-              //in the general case of multi_module / sektion control, we need to extend the module constructors
-              if ( ! _.isEmpty( module.sektion_id ) ) {
-                  parentConstructor = _base_constructor.extend( _mthds );
-                  constructor = parentConstructor.extend( control.getMultiModuleExtender( parentConstructor ) );
-              } else {
-                //in the particular case of a module embedded in a control, the constructor is ready to be fired.
-                  constructor = _base_constructor.extend( _mthds );
-              }
+              constructor = _base_constructor.extend( _mthds );
 
               if ( _.isUndefined(constructor) || _.isEmpty(constructor) || ! constructor ) {
-                  throw new Error('CZRModule::getModuleConstructor : no constructor found for module type : ' + module.module_type +'.' );
+                    throw new Error('CZRModule::getModuleConstructor : no constructor found for module type : ' + module.module_type +'.' );
               }
               return constructor;
       },
@@ -160,30 +153,6 @@ $.extend( CZRBaseModuleControlMths, {
 
 
                         //PROPERTIES FOR MODULE EMBEDDED IN A SEKTION
-                        case  'column_id' :
-                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module column id must a string not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case  'sektion' :
-                              if ( ! _.isObject( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module sektion must be an object not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case  'sektion_id' :
-                              if ( ! _.isString( _candidate_val ) || _.isEmpty( _candidate_val ) ) {
-                                    throw new Error('prepareModuleForAPI : a module sektion id must be a string not empty');
-                              }
-                              api_ready_module[_key] = _candidate_val;
-                        break;
-                        case 'is_added_by_user' :
-                              if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
-                                    throw new Error('prepareModuleForAPI : the module param "is_added_by_user" must be a boolean');
-                              }
-                            api_ready_module[_key] = _candidate_val || false;
-                        break;
                         case 'dirty' :
                               api_ready_module[_key] = _candidate_val || false;
                         break;

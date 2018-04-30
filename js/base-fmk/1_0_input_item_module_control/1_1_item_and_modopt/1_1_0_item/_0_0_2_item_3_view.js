@@ -4,7 +4,6 @@ var CZRItemMths = CZRItemMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRItemMths , {
       //fired on initialize for items in module embedded in a regular control
-      //fired when user edit module for items in modules embedded in a sektion
       mayBeRenderItemWrapper : function() {
             var item = this;
 
@@ -247,7 +246,7 @@ $.extend( CZRItemMths , {
                         // Otherwise let's fetch the html template from the server
                         if ( ! _.isEmpty( module.alertPart ) ) {
                               if ( 1 > $( '#tmpl-' + module.alertPart ).length || _.isEmpty( item.container ) ) {
-                                    api.consoleLog( 'No removal alert template available for items in module :' + module.id );
+                                    api.errare( 'No removal alert template available for items in module :' + module.id );
                                     return;
                               }
                               $_alert_el.html( wp.template( module.alertPart )( { title : ( item().title || item.id ) } ) );
@@ -335,7 +334,7 @@ $.extend( CZRItemMths , {
 
                   api.CZR_Helpers.getModuleTmpl( requestParams ).done( function( _serverTmpl_ ) {
                         //console.log( 'renderItemContent => success response =>', _serverTmpl_);
-                        appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( item_model_for_template_injection ) );
+                        appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( $.extend( item_model_for_template_injection, { control_id : module.control.id } ) ) );
                   }).fail( function( _r_ ) {
                         //console.log( 'renderItemContent => fail response =>', _r_);
                         dfd.reject( _r_ );

@@ -9,10 +9,10 @@ var CZRModuleMths = CZRModuleMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRModuleMths, {
       //fired on module.isReady.done()
-      //the module.container is set. Either as the control.container or the single module wrapper in a sektion
+      //the module.container is set.
       renderModuleParts : function() {
             var module = this,
-                $_moduleContentEl = module.isInSektion() ? $( module.container ).find('.czr-mod-content') : $( module.container ),
+                $_moduleContentEl = $( module.container ),
                 dfd = $.Deferred();
 
             var appendAndResolve = function( _tmpl_ ) {
@@ -186,14 +186,7 @@ $.extend( CZRModuleMths, {
               var module = this;
               $( '.' + module.control.css_attr.items_wrapper, module.container ).sortable( {
                     handle: '.' + module.control.css_attr.item_sort_handle,
-                    start: function() {
-                          //close the module panel if needed
-                          if ( _.has(api, 'czrModulePanelState' ) )
-                            api.czrModulePanelState.set(false);
-                          //close the sektion settings panel if needed
-                          if ( _.has(api, 'czrSekSettingsPanelState' ) )
-                            api.czrSekSettingsPanelState.set(false);
-                    },
+                    start: function() {},
                     update: function( event, ui ) {
                           var _sortedCollectionReact = function() {
                                 if ( _.has(module, 'preItem') ) {

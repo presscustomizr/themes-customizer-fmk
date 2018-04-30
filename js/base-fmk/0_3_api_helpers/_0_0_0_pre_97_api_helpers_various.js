@@ -208,6 +208,18 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       //This method is now statically accessed by item and modopt instances because it does the same job for both.
       //=> It instantiates the inputs based on what it finds in the DOM ( item or mod opt js templates )
       //
@@ -238,17 +250,18 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             var _defaultInputParentModel = is_mod_opt ? inputParentInst.defaultModOptModel : inputParentInst.defaultItemModel;
 
             if ( _.isEmpty( _defaultInputParentModel ) || _.isUndefined( _defaultInputParentModel ) ) {
-              throw new Error( 'No default model found in item or mod opt ' + inputParentInst.id + '.' );
+                  throw new Error( 'No default model found in item or mod opt ' + inputParentInst.id + '.' );
             }
 
             //prepare and sets the inputParentInst value on api ready
             //=> triggers the module rendering + DOM LISTENERS
             var inputParentInst_model = $.extend( true, {}, inputParentInst() );
 
-            if ( ! _.isObject( inputParentInst_model ) )
-              inputParentInst_model = _defaultInputParentModel;
-            else
-              inputParentInst_model = $.extend( _defaultInputParentModel, inputParentInst_model );
+            if ( ! _.isObject( inputParentInst_model ) ) {
+                  inputParentInst_model = _defaultInputParentModel;
+            } else {
+                  inputParentInst_model = $.extend( _defaultInputParentModel, inputParentInst_model );
+            }
 
             var dom_inputParentInst_model = {};
 
@@ -304,6 +317,19 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             //chain
             return inputParentInst;
       },
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       //@self explanatory: removes a collection of input from a parent item or modOpt instance
       //Triggered by : user actions usually when an item is collapsed or when the modOpt panel is closed

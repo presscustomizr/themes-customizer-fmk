@@ -13,7 +13,6 @@
   // module_type : module.module_type,
   // multi_item  : bool
   // section     : module.section,
-  // is_added_by_user : is_added_by_user || false
 var CZRModuleMths = CZRModuleMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRModuleMths, {
@@ -60,11 +59,8 @@ $.extend( CZRModuleMths, {
             module.itemsWrapper = '';//will store the $ item container
 
             //if a module is embedded in a control, its container == the control container.
-            //if the module is part of a sektion, its container will be set and resolve() later ( @see multi_module part )
-            if ( ! module.isInSektion() ) {
-                  module.container = $( module.control.selector );
-                  module.embedded.resolve();
-            }
+            module.container = $( module.control.selector );
+            module.embedded.resolve();
 
             //render the item(s) wrapper
             module.embedded.done( function() {
@@ -148,7 +144,7 @@ $.extend( CZRModuleMths, {
                         .done( function( initialModuleValue ) {
                               module.set( initialModuleValue );
                         })
-                        .fail( function( response ){ api.consoleLog( 'Module : ' + module.id + ' initialize module model failed : ', response ); })
+                        .fail( function( response ){ api.errare( 'Module : ' + module.id + ' initialize module model failed : ', response ); })
                         .always( function( initialModuleValue ) {
                               //listen to each single module change
                               module.callbacks.add( function() { return module.moduleReact.apply( module, arguments ); } );
@@ -171,14 +167,12 @@ $.extend( CZRModuleMths, {
                               });
 
                               //populate and instantiate the items now when a module is embedded in a regular control
-                              //if in a sektion, the populateSavedItemCollection() will be fired on module edit
-                              if ( ! module.isInSektion() )
-                                module.populateSavedItemCollection();
+                              module.populateSavedItemCollection();
 
                               //When the module has modOpt :
                               //=> Instantiate the modOpt and setup listener
                               if ( module.hasModOpt() ) {
-                                  module.instantiateModOpt();
+                                    module.instantiateModOpt();
                               }
                         });
             });//module.isReady.done()
@@ -272,12 +266,6 @@ $.extend( CZRModuleMths, {
       //@todo : create a smart helper to get either the wp api section or the czr api sektion, depending on the module context
       getModuleSection : function() {
             return this.section;
-      },
-
-      //@return bool
-      isInSektion : function() {
-            var module = this;
-            return _.has( module, 'sektion_id' );
       },
 
       //is this module multi item ?

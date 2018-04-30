@@ -372,6 +372,21 @@ span.select2-results, body .select2-container {
   transition: all 0.2s;
   visibility: hidden;
 }
+.czr-close-editor {
+  position: absolute;
+  cursor: pointer;
+  right: 20px;
+  top: -33px;
+  color: #444;
+  background: #eee;
+  font-size: 13px;
+  line-height: 19px;
+  height: 20px;
+  margin: 5px 0 0 5px;
+  padding: 3px 8px 4px;
+  border: 1px solid #e5e5e5;
+  border-bottom: none;
+}
 body.czr-customize-content_editor-pane-resize #customize-preview,
 body.czr-customize-content_editor-pane-resize #czr-customize-content_editor-pane {
   -webkit-transition: none;
@@ -381,7 +396,7 @@ body.mce-fullscreen.czr-customize-content_editor-pane-open #czr-customize-conten
   top: 0;
 }
 body.czr-customize-content_editor-pane-open #czr-customize-content_editor-pane {
-  bottom: 0;
+  bottom: 40px;
   visibility: inherit;
 }
 #czr-customize-content_editor-pane .wp-editor-tools {
