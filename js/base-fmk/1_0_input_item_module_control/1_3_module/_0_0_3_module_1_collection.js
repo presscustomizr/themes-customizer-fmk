@@ -12,12 +12,15 @@ $.extend( CZRModuleMths, {
       //the module().items has been set in initialize
       //A collection of items can be supplied.
       populateSavedItemCollection : function( _itemCollection_ ) {
-              var module = this, _saved_items = [];
-              _itemCollection_ = _itemCollection_ || module().items;
-              if ( ! _.isArray( _itemCollection_ ) ) {
+              var module = this,
+                  _deepCopyOfItemCollection;
+
+              if ( ! _.isArray( _itemCollection_ || module().items ) ) {
                     api.errorLog( 'populateSavedItemCollection : The saved items collection must be an array in module :' + module.id );
                     return;
               }
+
+              _deepCopyOfItemCollection = $.extend( true, [], _itemCollection_ || module().items );
 
               //populates the collection with the saved items
               //the modOpt must be skipped
@@ -38,30 +41,31 @@ $.extend( CZRModuleMths, {
               //     ....
               //   ]
 
-              //FILTER THE ACTUAL ITEMS ( REMOVE THE MODOPTS ELEMENT IF ANY )
+              // CHECK THAT WE DON'T HAVE ANY MODOPT AT THIS STAGE
               //=> the items and the modOpt should already be split at this stage, because it's done before module instantiation... this check is totally paranoid.
-              _.each( _itemCollection_, function( item_candidate , key ) {
-                    if ( _.has( item_candidate, 'id') && ! _.has( item_candidate, 'is_mod_opt' ) ) {
-                          _saved_items.push( item_candidate );
+              _.each( _deepCopyOfItemCollection , function( item_candidate , key ) {
+                    if ( _.has( item_candidate, 'is_mod_opt' ) ) {
+                          throw new Error( 'populateSavedItemCollection => there should be no mod opt to instantiate here.');
                     }
               });
 
-              _saved_items = module.filterItemCandidatesBeforeInstantiation( _saved_items );
+              // allow modules to hook here
+              module.trigger( 'filterItemCandidatesBeforeInstantiation', _deepCopyOfItemCollection );
 
               //INSTANTIATE THE ITEMS
-              _.each( _saved_items, function( item_candidate , key ) {
+              _.each( _deepCopyOfItemCollection, function( item_candidate , key ) {
                     //adds it to the collection and fire item.ready()
                     if ( serverControlParams.isDevMode ) {
-                        module.instantiateItem( item_candidate ).ready();
+                          module.instantiateItem( item_candidate ).ready();
                     } else {
-                        try { module.instantiateItem( item_candidate ).ready(); } catch( er ) {
-                              api.errorLog( 'populateSavedItemCollection : ' + er );
-                        }
+                          try { module.instantiateItem( item_candidate ).ready(); } catch( er ) {
+                                api.errare( 'populateSavedItemCollection : ' + er );
+                          }
                     }
               });
 
               //check if everything went well
-              _.each( _saved_items, function( _item ) {
+              _.each( _deepCopyOfItemCollection, function( _item ) {
                     if ( _.isUndefined( _.findWhere( module.itemCollection(), _item.id ) ) ) {
                           throw new Error( 'populateSavedItemCollection : The saved items have not been properly populated in module : ' + module.id );
                     }
@@ -72,10 +76,6 @@ $.extend( CZRModuleMths, {
               //return this;
       },
 
-      // To be overriden
-      filterItemCandidatesBeforeInstantiation : function( items ) {
-            return items;
-      },
 
       instantiateItem : function( item, is_added_by_user ) {
               var module = this;
@@ -84,22 +84,22 @@ $.extend( CZRModuleMths, {
 
               // Display a simple console message if item is null or false, for example if validateItemBeforeInstantiation returned null or false
               if ( ! item_candidate || _.isNull( item_candidate ) ) {
-                    api.consoleLog( 'item_candidate invalid. InstantiateItem aborted in module ' + module.id );
+                    api.errare( 'item_candidate invalid. InstantiateItem aborted in module ' + module.id );
                     return;
               }
 
               //Item id checks !
               if ( ! _.has( item_candidate, 'id' ) ) {
-                throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
+                    throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
               }
               if ( module.czr_Item.has( item_candidate.id ) ) {
-                  throw new Error('CZRModule::instantiateItem() : the following item id ' + item_candidate.id + ' already exists in module.czr_Item() for module ' + this.id  );
+                    throw new Error('CZRModule::instantiateItem() : the following item id ' + item_candidate.id + ' already exists in module.czr_Item() for module ' + this.id  );
               }
               //instanciate the item with the default constructor
               module.czr_Item.add( item_candidate.id, new module.itemConstructor( item_candidate.id, item_candidate ) );
 
               if ( ! module.czr_Item.has( item_candidate.id ) ) {
-                  throw new Error('CZRModule::instantiateItem() : instantiation failed for item id ' + item_candidate.id + ' for module ' + this.id  );
+                    throw new Error('CZRModule::instantiateItem() : instantiation failed for item id ' + item_candidate.id + ' for module ' + this.id  );
               }
               //the item is now ready and will listen to changes
               //return the instance
