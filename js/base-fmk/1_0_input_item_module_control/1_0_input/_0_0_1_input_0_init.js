@@ -208,6 +208,27 @@ $.extend( CZRInputMths , {
         });
     },
 
+    setupColorPickerAlpha : function() {
+        var input  = this;
+
+        input.container.find('input').wpColorPicker({
+            palettes: true,
+            //hide:false,
+            width: window.innerWidth >= 1440 ? 271 : 251,
+            change : function( e, o ) {
+                  //if the input val is not updated here, it's not detected right away.
+                  //weird
+                  //is there a "change complete" kind of event for iris ?
+                  //$(this).val($(this).wpColorPicker('color'));
+                  //input.container.find('[data-czrtype]').trigger('colorpickerchange');
+
+                  //synchronizes with the original input
+                  //OLD => $(this).val( $(this).wpColorPicker('color') ).trigger('colorpickerchange').trigger('change');
+                  $(this).val( o.color.toString() ).trigger('colorpickerchange').trigger('change');
+            }
+        });
+    },
+
     setupSelect : function() {
         var input = this;
         $('select', input.container ).not('.no-selecter-js')
@@ -238,6 +259,23 @@ $.extend( CZRInputMths , {
                         $(e.currentTarget).trigger('change');
                   });
             });
+    },
+
+    setupGutenCheck : function( params ) {
+          var input      = this;
+          var $input = input.container.find('input[type=checkbox]'),
+              $checkWrapper = $( '.czr-toggle-check', input.container );
+          var refreshSVG = function() {
+                $checkWrapper.find('svg').remove();
+                $checkWrapper.append(
+                      ! $input.is(':checked') ? '<svg class="czr-toggle-check__off" width="6" height="6" aria-hidden="true" role="img" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6 6"><path d="M3 1.5c.8 0 1.5.7 1.5 1.5S3.8 4.5 3 4.5 1.5 3.8 1.5 3 2.2 1.5 3 1.5M3 0C1.3 0 0 1.3 0 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"></path></svg>' : '<svg class="czr-toggle-check__on" width="2" height="6" aria-hidden="true" role="img" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 6"><path d="M0 0h2v6H0z"></path></svg>'
+                );
+          };
+          $input.on( 'change', function() {
+                $(this).closest('.czr-toggle-check').toggleClass( 'is-checked', $(this).is(':checked') );
+                refreshSVG();
+          });
+          refreshSVG();
     },
 
     setupRadio : function( obj ) {
@@ -272,7 +310,7 @@ $.extend( CZRInputMths , {
               var input = this,
                   $handle,
                   _updateHandle = function(el, val) {
-                        el.textContent = val + "%";
+                        el.textContent = val + input.container.find('input').data( 'unit' );
                   };
 
               $( input.container ).find('input').rangeslider( {
@@ -297,12 +335,15 @@ $.extend( CZRInputMths , {
                           _updateHandle( $handle[0], this.value );
                     },
                     // Callback function
-                    //onSlide: function(position, value) {},
+                    onSlide: function(position, value) {
+                          _updateHandle( $handle[0], value );
+                    },
                     // Callback function
                     //onSlideEnd: function(position, value) {}
-              } ).on('input', function() {
-                    _updateHandle( $handle[0], this.value );
-              });
+              } );
+              // .on('input', function() {
+              //       _updateHandle( $handle[0], this.value );
+              // });
         }
 });//$.extend
 })( wp.customize , jQuery, _ );

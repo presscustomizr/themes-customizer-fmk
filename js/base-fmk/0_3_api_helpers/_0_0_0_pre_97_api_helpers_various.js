@@ -270,6 +270,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                   var _id = $(this).find('[data-czrtype]').attr( 'data-czrtype' ),
                       _value = _.has( inputParentInst_model, _id ) ? inputParentInst_model[ _id ] : '';
 
+                  //console.log('/// ID /// => ', _id );
                   //skip if no valid input data-czrtype is found in this node
                   if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
                         api.errare( 'setupInputCollectionFromDOM : missing data-czrtype for ' + module.id );

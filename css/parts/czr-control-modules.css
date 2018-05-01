@@ -226,6 +226,14 @@
   padding: 1px 0;
   font-size: 13px;
 }
+
+.customize-control-title.width-80 {
+    width: 80%!important;
+}
+.czr-input.width-20 {
+    width: 20%!important;
+}
+
 /* rtl */
 .rtl.wp-customizer .czr-sub-set .customize-control-title {
   float: right;
