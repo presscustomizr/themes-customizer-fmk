@@ -230,15 +230,14 @@ $.extend( CZRModuleMths, {
       * TABS NAVIGATION IN ITEMS AND MODOPT
       ------------------------------------------------*/
       //This method is fired on tab click
-      //the @args is the classical DOM listener obj {model : model, dom_el : $_view_el, event : _event, dom_event : e ,refreshed : _refreshed }
       // IMPORTANT : the this is the item or the modopt instance. NOT the module.
       // =>This method has been added to the module constructor to avoid repeating the code in two places because it is used both in items and modOpts
       // @return void()
-      toggleTabVisibility : function( args ) {
+      toggleTabVisibility : function( tabIdSwitchedTo ) {
             var inputParent = this,
                 tabs = $( inputParent.container ).find('li'),
-                content_items = $( inputParent.container ).find('section'),
-                tabIdSwitchedTo = $( args.dom_event.currentTarget, args.dom_el ).attr('data-tab-id');
+                content_items = $( inputParent.container ).find('section');
+                //tabIdSwitchedTo = $( args.dom_event.currentTarget, args.dom_el ).attr('data-tab-id');
 
             $( '.tabs nav li', inputParent.container ).each( function() {
                   $(this).removeClass('tab-current').addClass('tab-inactive');
