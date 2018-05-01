@@ -8,10 +8,11 @@ var CZRBaseModuleControlMths = CZRBaseModuleControlMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRBaseModuleControlMths, {
       initialize: function( id, options ) {
+              var control = this;
               if ( ! api.has( id ) ) {
                     throw new Error( 'Missing a registered setting for control : ' + id );
               }
-              var control = this;
+
 
               control.czr_Module = new api.Values();
 
@@ -42,15 +43,19 @@ $.extend( CZRBaseModuleControlMths, {
               //     api.consoleLog( 'SETTING ', control.id, ' HAS CHANGED : ', to, from );
               // });
 
-              //close any open item and dialog boxes on section expansion
-              api.section( control.section() ).expanded.bind(function(to) {
-                    control.czr_Module.each( function( _mod ){
-                          _mod.closeAllItems().closeRemoveDialogs();
-                          if ( _.has( _mod, 'preItem' ) ) {
-                                _mod.preItemExpanded(false);
-                          }
+              if ( api.section.has( control.section() ) ) {
+                    //close any open item and dialog boxes on section expansion
+                    api.section( control.section() ).expanded.bind(function(to) {
+                          control.czr_Module.each( function( _mod ){
+                                _mod.closeAllItems().closeRemoveDialogs();
+                                if ( _.has( _mod, 'preItem' ) ) {
+                                      _mod.preItemExpanded(false);
+                                }
+                          });
                     });
-              });
+              } else {
+                    api.errare('The section ' + control.params.section + ' of control ' + id + ' has not been registered yet' );
+              }
 
       },
 
