@@ -32,13 +32,13 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
               instance = instance || control;
               //event_map : are we good ?
               if ( ! _.isArray( event_map ) ) {
-                    api.errorLog( 'setupDomListeners : event_map should be an array', args );
+                    api.errare( 'setupDomListeners : event_map should be an array', args );
                     return;
               }
 
               //args : are we good ?
               if ( ! _.isObject( args ) ) {
-                    api.errorLog( 'setupDomListeners : args should be an object', event_map );
+                    api.errare( 'setupDomListeners : args should be an object', event_map );
                     return;
               }
 
@@ -46,7 +46,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
 
               // => we need a dom_el as an existing jQuery object
               if ( ! ( args.dom_el instanceof jQuery ) || 1 > args.dom_el.length ) {
-                    api.errorLog( 'setupDomListeners : dom element should be an existing dom element', args );
+                    api.errare( 'setupDomListeners : dom element should be an existing dom element', args );
                     return;
               }
 
@@ -60,18 +60,18 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
               // },
               _.map( event_map , function( _event ) {
                     if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
-                          api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
+                          api.errare( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
                           return;
                     }
 
                     //Are we good ?
                     if ( ! _.isString( _event.selector ) || _.isEmpty( _event.selector ) ) {
-                          api.errorLog( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
+                          api.errare( 'setupDOMListeners : selector must be a string not empty. Aborting setup of action(s) : ' + _event.actions.join(',') );
                           return;
                     }
 
                     // if ( ! _event.name && ! _.isEmpty( _event.name ) ) {
-                    //     api.errorLog('in setupDOMListeners : missing name', _event );
+                    //     api.errare('in setupDOMListeners : missing name', _event );
                     // }
 
                     // DON'T CREATE THE SAME LISTENERS MULTIPLE TIMES
@@ -88,7 +88,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                           if ( ! _.contains( _currentListenerCollection, _name ) ) {
                                 _currentListenerCollection.push( _name );
                           } else {
-                                api.errorLog('setupDOMListeners : aborting because listener already created for event : ', _name );
+                                api.errare('setupDOMListeners : aborting because listener already created for event : ' + _name );
                                 return;
                           }
 
@@ -130,15 +130,14 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                           //pass the model and the current dom_el
                           //the model is always passed as parameter
                           if ( ! _.has( actionsParams, 'event' ) || ! _.has( actionsParams.event, 'actions' ) ) {
-                                api.errorLog( 'executeEventActionChain : missing obj.event or obj.event.actions' );
+                                api.errare( 'executeEventActionChain : missing obj.event or obj.event.actions' );
                                 return;
                           }
                           if ( serverControlParams.isDevMode ) {
                               control.executeEventActionChain( actionsParams, instance );
                           } else {
                               try { control.executeEventActionChain( actionsParams, instance ); } catch( er ) {
-                                    api.errorLog( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions );
-                                    api.errorLog( 'Error : ' + er );
+                                    api.errare( 'In setupDOMListeners : problem when trying to fire actions : ' + actionsParams.event.actions , er );
                               }
                         }
                     });//.on()

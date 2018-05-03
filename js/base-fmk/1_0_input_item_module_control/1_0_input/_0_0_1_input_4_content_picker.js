@@ -32,6 +32,7 @@
 var CZRInputMths = CZRInputMths || {};
 ( function ( api, $, _ ) {
 $.extend( CZRInputMths , {
+      // fired in the input::initialize()
       setupContentPicker: function( wpObjectTypes ) {
               var input  = this,
               _event_map = [];
@@ -48,8 +49,8 @@ $.extend( CZRInputMths , {
               /* Methodize this or use a template */
               input.container.find('.czr-input').append('<select data-select-type="content-picker-select" class="js-example-basic-simple"></select>');
 
-              //binding
-              _event_map = [
+              // Overrides the default input_event_map declared in ::initialize()
+              input.input_event_map = [
                     //set input value
                     {
                           trigger   : 'change',
@@ -69,7 +70,7 @@ $.extend( CZRInputMths , {
 
                                 _raw_val = _.isArray( _raw_val ) ? _raw_val[0] : _raw_val;
                                 if ( ! _.isObject( _raw_val ) || _.isEmpty( _raw_val ) ) {
-                                    api.errorLog( 'Content Picker Input : the picked value should be an object not empty.');
+                                    api.errare( 'Content Picker Input : the picked value should be an object not empty.');
                                     return;
                                 }
 
@@ -78,7 +79,7 @@ $.extend( CZRInputMths , {
                                 _.each( _default, function( val, k ){
                                       if ( '_custom_' !== _raw_val.id ) {
                                             if ( ! _.has( _raw_val, k ) || _.isEmpty( _raw_val[ k ] ) ) {
-                                                  api.errorLog( 'content_picker : missing input param : ' + k );
+                                                  api.errare( 'content_picker : missing input param : ' + k );
                                                   return;
                                             }
                                       }
@@ -90,7 +91,7 @@ $.extend( CZRInputMths , {
                     }
               ];
 
-              input.setupDOMListeners( _event_map , { dom_el : input.container }, input );
+              //input.setupDOMListeners( _event_map , { dom_el : input.container }, input );
               //setup when ready.
               input.isReady.done( function() {
                     input.setupContentSelecter();
