@@ -38,10 +38,10 @@ $.extend( CZRInputMths , {
 
               /* Dummy for the prototype purpose */
               //input.object = ['post']; //this.control.params.object_types  - array('page', 'post')
-              $.extend( {
+              $.extend( _.isObject( wpObjectTypes ) ? wpObjectTypes : {}, {
                     post : '',
                     taxonomy : ''
-              }, _.isObject( wpObjectTypes ) ? wpObjectTypes : {} );
+              } );
 
               input.wpObjectTypes = wpObjectTypes;
 
@@ -143,23 +143,31 @@ $.extend( CZRInputMths , {
                                       wp_customize    : 'on',
                                       page            : page,
                                       wp_object_types : JSON.stringify( input.wpObjectTypes ),
-                                      CZRCpNonce      : serverControlParams.CZRCpNonce
+                                      nonce : api.settings.nonce.save
                                 };
                           },
-                          /* transport: function (params, success, failure) {
-                            var $request = $.ajax(params);
+                          //  transport: function (params, success, failure) {
+                          //   console.log('params', params );
+                          //   console.log('success', success );
+                          //   console.log('failure', failure );
+                          //   var $request = $.ajax(params);
 
-                            $request.then(success);
-                            $request.fail(failure);
+                          //   $request.then(success);
+                          //   $request.fail(failure);
 
-                            return $request;
-                          },*/
+                          //   return $request;
+                          // },
                           processResults: function ( data, params ) {
-                                //let us remotely set a default option like custom link when initializing the content picker input.
-                                input.defaultContentPickerOption = input.defaultContentPickerOption || [];
 
-                                if ( ! data.success )
-                                  return { results: input.defaultContentPickerOption };
+                                //allows us to remotely set a default option like custom link when initializing the content picker input.
+                                var defaultContentPickerOption = { defaultOption : [] };
+
+                                input.input_parent.module.trigger('set_default_content_picker_options', defaultContentPickerOption );
+
+                                if ( ! data.success ) {
+                                      api.errare('request failure in setupContentPicker => processResults', data );
+                                      return { results: defaultContentPickerOption.defaultOption };
+                                }
 
 
                                 var items   = data.data.items,

@@ -36,7 +36,7 @@
 
 .czr-single-item {
   padding: 0%;
-  border: 1px solid #ccc;
+  /*border: 1px solid #ccc;*/
   margin: 1% 0 0 2%;
   float: left;
   width: 98%;
@@ -49,13 +49,13 @@
   transition: opacity 1s ease-in-out;
 }
 
-#customize-theme-controls .czr-single-item.open {
+/*#customize-theme-controls .czr-single-item.open {
   border: 1px solid #dedede;
-}
+}*/
 /* Keep the normal border for single module, mono items controls */
-#customize-theme-controls .mono-item-mod .czr-single-item {
+/*#customize-theme-controls .mono-item-mod .czr-single-item {
   border: 1px solid #ccc;
-}
+}*/
 
 .czr-single-item .czr-item-header, .czr-single-item .czr-item-content {
   padding: 1%;
@@ -194,7 +194,7 @@
 
 .czr-single-item .czr-item-content {
   display: none;
-  background: rgba(238, 238, 238, 0.5);
+  /*background: rgba(238, 238, 238, 0.5);*/
   clear: both;
   width: 96%;
   padding: 2%;
@@ -551,6 +551,7 @@ body.czr-editing-modopt .czr-mod-opt-wrapper {
 }
 
 .tabs nav ul li {
+  font-size: 14px;
   position: relative;
   z-index: 1;
   display: block;
