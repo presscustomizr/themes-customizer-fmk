@@ -11,13 +11,13 @@ $.extend( CZRBaseModuleControlMths, {
       //@param : constructor string
       instantiateModule : function( module, constructor ) {
               if ( ! _.has( module,'id') ) {
-                throw new Error('CZRModule::instantiateModule() : a module has no id and could not be added in the collection of : ' + this.id +'. Aborted.' );
+                    throw new Error('CZRModule::instantiateModule() : a module has no id and could not be added in the collection of : ' + this.id +'. Aborted.' );
               }
               var control = this;
               //is a constructor provided ?
               //if not try to look in the module object if we an find one
               if ( _.isUndefined(constructor) || _.isEmpty(constructor) ) {
-                  constructor = control.getModuleConstructor( module );
+                    constructor = control.getModuleConstructor( module );
               }
               //on init, the module collection is populated with module already having an id
               //For now, let's check if the id is empty and is not already part of the collection.
@@ -32,7 +32,7 @@ $.extend( CZRBaseModuleControlMths, {
               control.czr_Module.add( module_api_ready.id, new constructor( module_api_ready.id, module_api_ready ) );
 
               if ( ! control.czr_Module.has( module_api_ready.id ) ) {
-                  throw new Error('instantiateModule() : instantiation failed for module id ' + module_api_ready.id + ' in control ' + control.id  );
+                    throw new Error('instantiateModule() : instantiation failed for module id ' + module_api_ready.id + ' in control ' + control.id  );
               }
               //return the module instance for chaining
               return control.czr_Module(module_api_ready.id);
@@ -59,7 +59,7 @@ $.extend( CZRBaseModuleControlMths, {
 
               constructor = _base_constructor.extend( _mthds );
 
-              if ( _.isUndefined(constructor) || _.isEmpty(constructor) || ! constructor ) {
+              if ( _.isUndefined( constructor ) || _.isEmpty(constructor) || ! constructor ) {
                     throw new Error('CZRModule::getModuleConstructor : no constructor found for module type : ' + module.module_type +'.' );
               }
               return constructor;

@@ -109,19 +109,21 @@ $.extend( CZRModuleMths, {
                   is_added_by_user : false
             };
 
-            //declares a default item model
-            module.defaultItemModel = { id : '', title : '' };
+            // declares a default item model
+            module.defaultItemModel = api.czrModuleMap[ module.module_type ].defaultItemModel || { id : '', title : '' };
 
-            //define a default Constructors
-            module.itemConstructor = api.CZRItem;
-            //czr_model stores the each model value => one value by created by model.id
+            // item constuctor : use the constructor already defined in a module, or fallback on the default one
+            module.itemConstructor = module.itemConstructor || api.CZRItem;
+
+            // czr_model stores the each model value => one value by created by model.id
             module.czr_Item = new api.Values();
 
 
             /*-----------------------------------------------
             * SET THE DEFAULT INPUT CONSTRUCTOR AND INPUT OPTIONS
             ------------------------------------------------*/
-            module.inputConstructor = api.CZRInput;//constructor for the items input
+            // input constuctor : use the constructor already defined in a module, or fallback on the default one
+            module.inputConstructor = module.inputConstructor || api.CZRInput;//constructor for the items input
             if ( module.hasModOpt() ) {
                   module.inputModOptConstructor = api.CZRInput;//constructor for the modOpt input
             }
@@ -176,6 +178,26 @@ $.extend( CZRModuleMths, {
                               }
                         });
             });//module.isReady.done()
+
+
+            /*-----------------------------------------------
+            * Maybe resolve isReady() on parent section expanded
+            ------------------------------------------------*/
+            if ( true === api.czrModuleMap[ module.module_type ].ready_on_section_expanded ) {
+                  //fired ready :
+                  //1) on section expansion
+                  //2) or in the case of a module embedded in a regular control, if the module section is already opened => typically when skope is enabled
+                  if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
+                        module.ready();
+                  }
+
+                  api.section( module.control.section() ).expanded.bind(function(to) {
+                        //set module ready on section expansion
+                        if ( 'resolved' != module.isReady.state() ) {
+                              module.ready();
+                        }
+                  });
+            }
       },
 
 
