@@ -216,7 +216,7 @@ $.extend( CZRInputMths , {
     setupColorPickerAlpha : function() {
         var input  = this;
 
-        input.container.find('input').wpColorPicker({
+        input.container.find('input').czrColorPicker({
             palettes: true,
             //hide:false,
             width: window.innerWidth >= 1440 ? 271 : 251,
@@ -230,6 +230,10 @@ $.extend( CZRInputMths , {
                   //synchronizes with the original input
                   //OLD => $(this).val( $(this).wpColorPicker('color') ).trigger('colorpickerchange').trigger('change');
                   $(this).val( o.color.toString() ).trigger('colorpickerchange').trigger('change');
+            },
+            clear : function( e, o ) {
+                  //$(this).val('').trigger('colorpickerchange').trigger('change');
+                  input('');
             }
         });
     },
