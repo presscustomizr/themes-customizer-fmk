@@ -44,6 +44,23 @@
                   [ 'background:' + args.bgCol, 'color:' + args.textCol, 'display: block;' ].join(';')
             ];
       };
+
+      var _wrapLogInsideTags = function( title, msg, bgColor ) {
+            //fix for IE, because console is only defined when in F12 debugging mode in IE
+            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
+              return;
+            if ( serverControlParams.isDevMode ) {
+                  if ( _.isUndefined( msg ) ) {
+                        console.log.apply( console, _prettyPrintLog( { bgCol : bgColor, textCol : '#000', consoleArguments : [ '<' + title + '>' ] } ) );
+                  } else {
+                        console.log.apply( console, _prettyPrintLog( { bgCol : bgColor, textCol : '#000', consoleArguments : [ '<' + title + '>' ] } ) );
+                        console.log( msg );
+                        console.log.apply( console, _prettyPrintLog( { bgCol : bgColor, textCol : '#000', consoleArguments : [ '</' + title + '>' ] } ) );
+                  }
+            } else {
+                  console.log.apply( console, _prettyPrintLog( { bgCol : bgColor, textCol : '#000', consoleArguments : [ title ] } ) );
+            }
+      };
       //Dev mode aware and IE compatible api.consoleLog()
       api.consoleLog = function() {
             if ( ! serverControlParams.isDevMode )
@@ -66,22 +83,8 @@
             // }
       };
 
-      api.errare = function( title, error ) {
-            //fix for IE, because console is only defined when in F12 debugging mode in IE
-            if ( ( _.isUndefined( console ) && typeof window.console.log != 'function' ) )
-              return;
-            if ( serverControlParams.isDevMode ) {
-                  if ( _.isUndefined( error ) ) {
-                        console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : [ '<' + title + '>' ] } ) );
-                  } else {
-                        console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : [ '<' + title + '>' ] } ) );
-                        console.log( error );
-                        console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : [ '</' + title + '>' ] } ) );
-                  }
-            } else {
-                  console.log.apply( console, _prettyPrintLog( { bgCol : '#ffd5a0', textCol : '#000', consoleArguments : [ title ] } ) );
-            }
-      };
+      api.errare = function( title, msg ) { _wrapLogInsideTags( title, msg, '#ffd5a0' ); };
+      api.infoLog = function( title, msg ) { _wrapLogInsideTags( title, msg, '#5ed1f5' ); };
 
       api.czr_isSkopOn = function() {
             return ! _.isUndefined ( serverControlParams.isSkopOn ) && serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
