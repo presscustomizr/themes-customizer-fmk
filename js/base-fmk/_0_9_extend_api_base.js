@@ -92,6 +92,21 @@
                             input( $(this).data('sek-align') );
                       });
                 });
+            },
+            v_alignment : function( input_options ) {
+                var input = this,
+                    $wrapper = $('.sek-v-align-wrapper', input.container );
+                // on init
+                $wrapper.find( 'div[data-sek-align="' + input() +'"]' ).addClass('selected');
+
+                // on click
+                $wrapper.on( 'click', '[data-sek-align]', function(evt) {
+                      evt.preventDefault();
+                      $wrapper.find('.selected').removeClass('selected');
+                      $.when( $(this).addClass('selected') ).done( function() {
+                            input( $(this).data('sek-align') );
+                      });
+                });
             }
       });
 

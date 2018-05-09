@@ -162,8 +162,12 @@ $.extend( CZRInputMths , {
 
                                 //allows us to remotely set a default option like custom link when initializing the content picker input.
                                 var defaultContentPickerOption = { defaultOption : [] };
+                                if ( input.input_parent && input.input_parent.module ) {
+                                      input.input_parent.module.trigger('set_default_content_picker_options', defaultContentPickerOption );
+                                } else {
+                                      api.infoLog(' content_picker input => ::processResults => event "set_default_content_picker_option" not triggered when in pre-item');
+                                }
 
-                                input.input_parent.module.trigger('set_default_content_picker_options', defaultContentPickerOption );
 
                                 if ( ! data.success ) {
                                       api.errare('request failure in setupContentPicker => processResults', data );
