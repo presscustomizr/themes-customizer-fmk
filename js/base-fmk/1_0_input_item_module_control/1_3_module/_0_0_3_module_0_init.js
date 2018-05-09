@@ -60,22 +60,21 @@ $.extend( CZRModuleMths, {
 
             //if a module is embedded in a control, its container == the control container.
             module.container = $( module.control.selector );
-            module.embedded.resolve();
 
             //render the item(s) wrapper
-            module.embedded.done( function() {
-                  module.renderModuleParts()
-                        .done( function( $_module_items_wrapper ){
-                              if ( false === $_module_items_wrapper.length ) {
-                                  throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
-                              }
-                              //stores the items wrapper ( </ul> el ) as a jQuery var
-                              module.itemsWrapper = $_module_items_wrapper;
-                        })
-                        .fail( function( _r_ ) {
-                              throw new Error( [ "initialize module => failed module.renderModuleParts() for module : " , module.id , _r_ ].join(' '));
-                        });
-            });
+            //and resolve the module.embedded promise()
+            module.renderModuleParts()
+                  .done( function( $_module_items_wrapper ){
+                        if ( false === $_module_items_wrapper.length ) {
+                            throw new Error( 'The items wrapper has not been rendered for module : ' + module.id );
+                        }
+                        //stores the items wrapper ( </ul> el ) as a jQuery var
+                        module.itemsWrapper = $_module_items_wrapper;
+                        module.embedded.resolve();
+                  })
+                  .fail( function( _r_ ) {
+                        throw new Error( [ "initialize module => failed module.renderModuleParts() for module : " , module.id , _r_ ].join(' '));
+                  });
 
             /*-----------------------------------------------
             * MODULE OPTIONS
@@ -188,13 +187,17 @@ $.extend( CZRModuleMths, {
                   //1) on section expansion
                   //2) or in the case of a module embedded in a regular control, if the module section is already opened => typically when skope is enabled
                   if ( _.has( api, 'czr_activeSectionId' ) && module.control.section() == api.czr_activeSectionId() && 'resolved' != module.isReady.state() ) {
-                        module.ready();
+                        module.embedded.then( function() {
+                              module.ready();
+                        });
                   }
 
                   api.section( module.control.section() ).expanded.bind(function(to) {
                         //set module ready on section expansion
                         if ( 'resolved' != module.isReady.state() ) {
-                              module.ready();
+                              module.embedded.then( function() {
+                                    module.ready();
+                              });
                         }
                   });
             }
