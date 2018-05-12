@@ -314,43 +314,60 @@ $.extend( CZRInputMths , {
 
     //@use rangeslider https://github.com/andreruffert/rangeslider.js
     setupRangeSlider : function( options ) {
-              var input = this,
-                  $handle,
-                  _updateHandle = function(el, val) {
-                        el.textContent = val + input.container.find('input').data( 'unit' );
-                  };
+          var input = this,
+              $handle,
+              _updateHandle = function(el, val) {
+                    el.textContent = val + input.container.find('input').data( 'unit' );
+              };
 
-              $( input.container ).find('input').rangeslider( {
-                    // Feature detection the default is `true`.
-                    // Set this to `false` if you want to use
-                    // the polyfill also in Browsers which support
-                    // the native <input type="range"> element.
-                    polyfill: false,
+          $( input.container ).find('input').rangeslider( {
+                // Feature detection the default is `true`.
+                // Set this to `false` if you want to use
+                // the polyfill also in Browsers which support
+                // the native <input type="range"> element.
+                polyfill: false,
 
-                    // Default CSS classes
-                    rangeClass: 'rangeslider',
-                    disabledClass: 'rangeslider--disabled',
-                    horizontalClass: 'rangeslider--horizontal',
-                    verticalClass: 'rangeslider--vertical',
-                    fillClass: 'rangeslider__fill',
-                    handleClass: 'rangeslider__handle',
+                // Default CSS classes
+                rangeClass: 'rangeslider',
+                disabledClass: 'rangeslider--disabled',
+                horizontalClass: 'rangeslider--horizontal',
+                verticalClass: 'rangeslider--vertical',
+                fillClass: 'rangeslider__fill',
+                handleClass: 'rangeslider__handle',
 
-                    // Callback function
-                    onInit: function() {
-                          $handle = $('.rangeslider__handle', this.$range);
-                          $('.rangeslider__handle', this.$range);
-                          _updateHandle( $handle[0], this.value );
-                    },
-                    // Callback function
-                    onSlide: function(position, value) {
-                          _updateHandle( $handle[0], value );
-                    },
-                    // Callback function
-                    //onSlideEnd: function(position, value) {}
-              } );
-              // .on('input', function() {
-              //       _updateHandle( $handle[0], this.value );
-              // });
-        }
+                // Callback function
+                onInit: function() {
+                      $handle = $('.rangeslider__handle', this.$range);
+                      $('.rangeslider__handle', this.$range);
+                      _updateHandle( $handle[0], this.value );
+                },
+                // Callback function
+                onSlide: function(position, value) {
+                      _updateHandle( $handle[0], value );
+                },
+                // Callback function
+                //onSlideEnd: function(position, value) {}
+          } );
+          // .on('input', function() {
+          //       _updateHandle( $handle[0], this.value );
+          // });
+    },
+
+    // for h_alignment and h_text_alignment types
+    setupHAlignement : function( input_options ) {
+        var input = this,
+            $wrapper = $('.sek-h-align-wrapper', input.container );
+        // on init
+        $wrapper.find( 'div[data-sek-align="' + input() +'"]' ).addClass('selected');
+
+        // on click
+        $wrapper.on( 'click', '[data-sek-align]', function(evt) {
+              evt.preventDefault();
+              $wrapper.find('.selected').removeClass('selected');
+              $.when( $(this).addClass('selected') ).done( function() {
+                    input( $(this).data('sek-align') );
+              });
+        });
+    }
 });//$.extend
 })( wp.customize , jQuery, _ );

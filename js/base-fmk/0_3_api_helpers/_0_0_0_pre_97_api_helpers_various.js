@@ -229,7 +229,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
       setupInputCollectionFromDOM : function() {
             var inputParentInst = this;//<= because fired with .call( inputParentInst )
             if ( ! _.isFunction( inputParentInst ) ) {
-                  throw new Error( 'setupInputCollectionFromDOM : inputParentInst is not valid.' );
+                  throw new Error( 'setupInputCollectionFromDOM => inputParentInst is not valid.' );
             }
             var module = inputParentInst.module,
                 is_mod_opt = _.has( inputParentInst() , 'is_mod_opt' );
@@ -250,7 +250,7 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
             var _defaultInputParentModel = is_mod_opt ? inputParentInst.defaultModOptModel : inputParentInst.defaultItemModel;
 
             if ( _.isEmpty( _defaultInputParentModel ) || _.isUndefined( _defaultInputParentModel ) ) {
-                  throw new Error( 'No default model found in item or mod opt ' + inputParentInst.id + '.' );
+                  throw new Error( 'setupInputCollectionFromDOM => No default model found in item or mod opt ' + inputParentInst.id + '.' );
             }
 
             //prepare and sets the inputParentInst value on api ready
@@ -273,17 +273,17 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                   //console.log('/// ID /// => ', _id );
                   //skip if no valid input data-czrtype is found in this node
                   if ( _.isUndefined( _id ) || _.isEmpty( _id ) ) {
-                        api.errare( 'setupInputCollectionFromDOM : missing data-czrtype for ' + module.id );
+                        api.errare( 'setupInputCollectionFromDOM => missing data-czrtype id for input type ' + $(this).data( 'input-type' ) + ' in module ' + module.id + '. Check that the server input template is properly declared.' );
                         return;
                   }
                   //check if this property exists in the current inputParentInst model
                   if ( ! _.has( inputParentInst_model, _id ) ) {
-                        throw new Error('The item or mod opt property : ' + _id + ' has been found in the DOM but not in the item or mod opt model : '+ inputParentInst.id + '. The input can not be instantiated.');
+                        throw new Error('setupInputCollectionFromDOM => The item or mod opt property : ' + _id + ' has been found in the DOM but not in the item or mod opt model : '+ inputParentInst.id + '. The input can not be instantiated.');
                   }
 
                   //Do we have a specific set of options defined in the parent module for this inputConstructor ?
-                  var _inputType      = $(this).attr( 'data-input-type' ),
-                      _inputTransport = $(this).attr( 'data-transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
+                  var _inputType      = $(this).data( 'input-type' ),
+                      _inputTransport = $(this).data( 'transport' ) || 'inherit',//<= if no specific transport ( refresh or postMessage ) has been defined in the template, inherits the control transport
                       _inputOptions   = _.has( module.inputOptions, _inputType ) ? module.inputOptions[ _inputType ] : {},
                       _inputArgs = {
                             id            : _id,
