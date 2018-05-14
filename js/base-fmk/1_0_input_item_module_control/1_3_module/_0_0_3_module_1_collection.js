@@ -250,18 +250,18 @@ $.extend( CZRModuleMths, {
       //@param args can be
       //{
       //  collection : [],
-      //  data : data {}
+      //  params : params {}
       //},
       //
       //or {
       //  item : {}
-      //  data : data {}
+      //  params : params {}
       //}
       //if a collection is provided in the passed args then simply refresh the collection
       //=> typically used when reordering the collection item with sortable or when a item is removed
       //
-      //the args.data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
-      //data looks like :
+      //the args.params can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+      //params looks like :
       //{
       //  module : {}
       //  input_changed     : string input.id
@@ -286,8 +286,8 @@ $.extend( CZRModuleMths, {
               if ( ! _.has( args, 'item' ) ) {
                   throw new Error('updateItemsCollection, no item provided ' + module.control.id + '. Aborting');
               }
-              //normalizes with data
-              args = _.extend( { data : {} }, args );
+              //normalizes with params
+              args = _.extend( { params : {} }, args );
 
               var item_candidate = _.clone( args.item ),
                   hasMissingProperty = false;
@@ -321,8 +321,8 @@ $.extend( CZRModuleMths, {
 
               //updates the collection value
               //=> is listened to by module.itemCollectionReact
-              module.itemCollection.set( _new_collection, args.data );
-              return dfd.resolve( { collection : _new_collection, data : args.data } ).promise();
+              module.itemCollection.set( _new_collection, args.params );
+              return dfd.resolve( { collection : _new_collection, params : args.params } ).promise();
       },
 
 

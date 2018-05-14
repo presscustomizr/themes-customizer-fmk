@@ -194,26 +194,26 @@ $.extend( CZRItemMths , {
             return item_model_candidate;
       },
 
-      //React to a single item change
-      //cb of module.czr_Item( item.id ).callbacks
-      //the data can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
-      //data looks like :
-      //{
+      // React to a single item change
+      // cb of module.czr_Item( item.id ).callbacks
+      // the params can typically hold informations passed by the input that has been changed and its specific preview transport (can be PostMessage )
+      // params looks like :
+      // {
       //  module : {}
       //  input_changed     : string input.id
       //  input_transport   : 'postMessage' or '',
       //  not_preview_sent  : bool
-      //}
-      itemReact : function( to, from, data ) {
+      // }
+      itemReact : function( to, from, params ) {
             var item = this,
                 module = item.module;
 
-            data = data || {};
+            params = params || {};
 
             //update the collection
-            module.updateItemsCollection( { item : to, data : data } ).done( function() {
+            module.updateItemsCollection( { item : to, params : params } ).done( function() {
                   //Always update the view title when the item collection has been updated
-                  item.writeItemViewTitle( to, data );
+                  item.writeItemViewTitle( to, params );
             });
 
             //send item to the preview. On update only, not on creation.

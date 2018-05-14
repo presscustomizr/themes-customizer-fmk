@@ -29,6 +29,9 @@ $.extend( CZRInputMths , {
           //write the options as properties, name is included
           $.extend( input, options || {} );
 
+          // store the constructor options
+          input.constructorOptions = $.extend( true, {}, options );
+
           //DEFERRED STATES
           //store the state of ready.
           input.isReady = $.Deferred();
@@ -165,7 +168,8 @@ $.extend( CZRInputMths , {
           input.input_parent.set( _new_model, {
                 input_changed     : input.id,
                 input_transport   : input.transport,
-                not_preview_sent  : 'postMessage' === input.transport//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
+                not_preview_sent  : 'postMessage' === input.transport,//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
+                inputRegistrationParams : input.constructorOptions
           } );
 
           //Trigger and send specific events when changing a published input item

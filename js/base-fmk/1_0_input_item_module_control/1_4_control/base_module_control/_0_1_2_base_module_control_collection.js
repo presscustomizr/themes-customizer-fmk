@@ -69,9 +69,9 @@ $.extend( CZRBaseModuleControlMths, {
       /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       ////////////////////////////////////////////////////// WHERE THE STREETS HAVE NO NAMES //////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-      //cb of control.czr_moduleCollection.callbacks
-      //@data is an optional object. { silent : true }
-      moduleCollectionReact : function( to, from, data ) {
+      // cb of control.czr_moduleCollection.callbacks
+      // @params is an optional object. { silent : true }
+      moduleCollectionReact : function( to, from, params ) {
             var control = this,
                 is_module_added = _.size(to) > _.size(from),
                 is_module_removed = _.size(from) > _.size(to),
@@ -92,9 +92,9 @@ $.extend( CZRBaseModuleControlMths, {
             // is there a passed module param ?
             // if so prepare it for DB
             // if a module is provided, we also want to pass its id to the preview => can be used to target specific selectors in a partial refresh scenario
-            if ( _.isObject( data  ) && _.has( data, 'module' ) ) {
-                  data.module_id = data.module.id;
-                  data.module = control.prepareModuleForDB( $.extend( true, {}, data.module  ) );
+            if ( _.isObject( params  ) && _.has( params, 'module' ) ) {
+                  params.module_id = params.module.id;
+                  params.module = control.prepareModuleForDB( $.extend( true, {}, params.module  ) );
             }
 
             // Inform the the setting if the module is not being added to the collection for the first time,
@@ -103,7 +103,7 @@ $.extend( CZRBaseModuleControlMths, {
                   //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
                   //if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
                   api( this.id )
-                        .set( control.filterModuleCollectionBeforeAjax( to ), data );
+                        .set( control.filterModuleCollectionBeforeAjax( to ), params );
                         //.done( function( to, from, o ) {});
             }
       },
