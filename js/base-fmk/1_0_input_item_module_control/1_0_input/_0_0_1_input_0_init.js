@@ -167,6 +167,7 @@ $.extend( CZRInputMths , {
           //inform the input_parent : item or modOpt
           input.input_parent.set( _new_model, {
                 input_changed     : input.id,
+                input_value       : input(),
                 input_transport   : input.transport,
                 not_preview_sent  : 'postMessage' === input.transport,//<= this parameter set to true will prevent the setting to be sent to the preview ( @see api.Setting.prototype.preview override ). This is useful to decide if a specific input should refresh or not the preview.
                 inputRegistrationParams : input.constructorOptions
@@ -220,7 +221,7 @@ $.extend( CZRInputMths , {
     setupColorPickerAlpha : function() {
         var input  = this;
 
-        input.container.find('input').czrColorPicker({
+        input.container.find('input').wpColorPicker({
             palettes: true,
             //hide:false,
             width: window.innerWidth >= 1440 ? 271 : 251,
