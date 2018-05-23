@@ -163,7 +163,7 @@ $.extend( CZRInputMths , {
                                 //allows us to remotely set a default option like custom link when initializing the content picker input.
                                 var defaultContentPickerOption = { defaultOption : [] };
                                 if ( input.input_parent && input.input_parent.module ) {
-                                      input.input_parent.module.trigger('set_default_content_picker_options', defaultContentPickerOption );
+                                      input.input_parent.module.trigger( 'set_default_content_picker_options', { defaultContentPickerOption : defaultContentPickerOption } );
                                 } else {
                                       api.infoLog(' content_picker input => ::processResults => event "set_default_content_picker_option" not triggered when in pre-item');
                                 }
@@ -174,9 +174,12 @@ $.extend( CZRInputMths , {
                                       return { results: defaultContentPickerOption.defaultOption };
                                 }
 
-
                                 var items   = data.data.items,
                                     _results = [];
+
+                                if ( ! _.isEmpty( defaultContentPickerOption.defaultOption ) ) {
+                                    _results.push( defaultContentPickerOption.defaultOption );
+                                }
 
                                 _.each( items, function( item ) {
                                       _results.push({
