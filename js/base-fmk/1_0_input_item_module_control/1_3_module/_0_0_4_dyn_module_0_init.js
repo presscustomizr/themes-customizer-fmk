@@ -46,13 +46,21 @@ $.extend( CZRDynModuleMths, {
                               // toggles the visibility of the Remove View Block
                               // => will render or destroy the pre item view
                               // @param : obj = { event : {}, item : {}, view : ${} }
-                              function(obj) {
+                              function( params ) {
                                     var module = this,
                                         canWe = { addTheItem : true };
                                     // allow remote filtering of the condition for addition
                                     module.trigger( 'is-item-addition-possible', canWe );
-                                    if ( canWe.addTheItem ) {
+                                    if ( canWe.addTheItem && module.hasPreItem ) {
                                           module.preItemExpanded.set( ! module.preItemExpanded() );
+                                    } else {
+                                          module.addItem( params ).done( function( item_id ) {
+                                                module.czr_Item( item_candidate.id, function( _item_ ) {
+                                                      _item_.embedded.then( function() {
+                                                            module.czr_Item( item_candidate.id ).viewState( 'expanded' );
+                                                      });
+                                                });
+                                          });
                                     }
                               },
                         ],
@@ -170,7 +178,6 @@ $.extend( CZRDynModuleMths, {
       //@param params : { dom_el : {}, dom_event : {}, event : {}, model {} }
       addItem : function( params ) {
             if ( ! this.itemCanBeInstantiated() ) {
-
                   return;
             }
             var module = this,
@@ -181,7 +188,7 @@ $.extend( CZRDynModuleMths, {
                 },
                 dfd = $.Deferred();
 
-            if ( _.isEmpty(item_candidate) || ! _.isObject(item_candidate) ) {
+            if ( _.isEmpty( item_candidate ) || ! _.isObject( item_candidate ) ) {
                   api.errorLog( 'addItem : an item_candidate should be an object and not empty. In : ' + module.id +'. Aborted.' );
                   return dfd.resolve().promise();
             }
@@ -194,7 +201,7 @@ $.extend( CZRDynModuleMths, {
             // Abort here and display a simple console message if item is null or false, for example if validateItemBeforeAddition returned null or false
             if ( ! item_candidate || _.isNull( item_candidate ) ) {
                   api.consoleLog( 'item_candidate invalid. InstantiateItem aborted in module ' + module.id );
-                  return;
+                  return dfd.resolve().promise();
             }
 
 
@@ -221,13 +228,16 @@ $.extend( CZRDynModuleMths, {
                         //refresh the preview frame (only needed if transport is postMessage && has no partial refresh set )
                         //must be a dom event not triggered
                         //otherwise we are in the init collection case where the items are fetched and added from the setting in initialize
-                        if ( 'postMessage' == api(module.control.id).transport && _.has( params, 'dom_event') && ! _.has( params.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
-                              // api.previewer.refresh().done( function() {
-                              //       _dfd_.resolve();
-                              // });
-                              // It would be better to wait for the refresh promise
-                              api.previewer.bind( 'ready', resolveWhenPreviewerReady );
-                              api.previewer.refresh();
+                        // The property "refresh_on_add_item" is declared when registrating the module to the api.czrModuleMap
+                        if ( module.refresh_on_add_item ) {
+                              if ( 'postMessage' == api(module.control.id).transport && _.has( params, 'dom_event') && ! _.has( params.dom_event, 'isTrigger' ) && ! api.CZR_Helpers.hasPartRefresh( module.control.id ) ) {
+                                    // api.previewer.refresh().done( function() {
+                                    //       _dfd_.resolve();
+                                    // });
+                                    // It would be better to wait for the refresh promise
+                                    api.previewer.bind( 'ready', resolveWhenPreviewerReady );
+                                    api.previewer.refresh();
+                              }
                         } else {
                               _dfd_.resolve( );
                         }

@@ -79,6 +79,20 @@ $.extend( CZRBaseModuleControlMths, {
             var control = this,
                 api_ready_module = {};
 
+            // Default module model
+            //{
+            //       id : '',//module.id,
+            //       module_type : '',//module.module_type,
+            //       modOpt : {},//the module modOpt property, typically high level properties that area applied to all items of the module
+            //       items   : [],//$.extend( true, {}, module.items ),
+            //       crud : false,
+            //       hasPreItem : true,//a crud module has a pre item by default
+            //       refresh_on_add_item : true,// the preview is refreshed on item add
+            //       multi_item : false,
+            //       sortable : false,//<= a module can be multi-item but not necessarily sortable
+            //       control : {},//control,
+            //       section : ''
+            // };
             _.each( control.getDefaultModuleApiModel() , function( _value, _key ) {
                   var _candidate_val = module_candidate[_key];
                   switch( _key ) {
@@ -114,6 +128,24 @@ $.extend( CZRBaseModuleControlMths, {
                                     _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
                               } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
                                     throw new Error('prepareModuleForAPI : the module param "crud" must be a boolean');
+                              }
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        case 'hasPreItem' :
+                              //get the value from the czrModuleMap
+                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].hasPreItem;
+                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "hasPreItem" must be a boolean');
+                              }
+                              api_ready_module[_key] = _candidate_val || false;
+                        break;
+                        case 'refresh_on_add_item' :
+                              //get the value from the czrModuleMap
+                              if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].refresh_on_add_item;
+                              } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
+                                    throw new Error('prepareModuleForAPI : the module param "refresh_on_add_item" must be a boolean');
                               }
                               api_ready_module[_key] = _candidate_val || false;
                         break;

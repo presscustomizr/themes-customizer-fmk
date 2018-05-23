@@ -30,17 +30,22 @@ $.extend( CZRModuleMths, {
             //write the module constructor options as properties
             // The default module model can be get with
             // and is formed this way :
-            // {
-            // control:{}
-            // crud:false
-            // id:""
-            // items:[]
-            // modOpt:{}
-            // module_type:""
-            // multi_item:false
-            // section:""
-            // sortable:false
-            //}
+            //@see getDefaultModuleApiModel : function() {
+            //if embedded in a control, amend the common model with the section id
+            //     return {
+            //             id : '',//module.id,
+            //             module_type : '',//module.module_type,
+            //             modOpt : {},//the module modOpt property, typically high level properties that area applied to all items of the module
+            //             items   : [],//$.extend( true, {}, module.items ),
+            //             crud : false,
+            //             hasPreItem : true,//a crud module has a pre item by default
+            //             refresh_on_add_item : true,// the preview is refreshed on item add
+            //             multi_item : false,
+            //             sortable : false,//<= a module can be multi-item but not necessarily sortable
+            //             control : {},//control,
+            //             section : ''
+            //       };
+            // },
 
             $.extend( module, constructorOptions || {} );
 

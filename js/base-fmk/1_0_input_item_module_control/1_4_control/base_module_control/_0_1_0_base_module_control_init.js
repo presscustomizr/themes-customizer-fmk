@@ -122,6 +122,8 @@ $.extend( CZRBaseModuleControlMths, {
                   modOpt : {},//the module modOpt property, typically high level properties that area applied to all items of the module
                   items   : [],//$.extend( true, {}, module.items ),
                   crud : false,
+                  hasPreItem : true,//a crud module has a pre item by default
+                  refresh_on_add_item : true,// the preview is refreshed on item add
                   multi_item : false,
                   sortable : false,//<= a module can be multi-item but not necessarily sortable
                   control : {},//control,
