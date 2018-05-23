@@ -94,7 +94,9 @@ $.extend( CZRBaseModuleControlMths, {
             // if a module is provided, we also want to pass its id to the preview => can be used to target specific selectors in a partial refresh scenario
             if ( _.isObject( params  ) && _.has( params, 'module' ) ) {
                   params.module_id = params.module.id;
+                  params.moduleRegistrationParams = params.module;
                   params.module = control.prepareModuleForDB( $.extend( true, {}, params.module  ) );
+
             }
 
             // Inform the the setting if the module is not being added to the collection for the first time,
