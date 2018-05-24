@@ -146,6 +146,7 @@ $.extend( CZRModuleMths, {
                   //initialize the module api.Value()
                   //constructorOptions has the same structure as the one described in prepareModuleforAPI
                   //setting the module Value won't be listen to at this stage
+                  //api.infoLog('module.isReady.done() => constructorOptions',  constructorOptions);
                   module.initializeModuleModel( constructorOptions )
                         .done( function( initialModuleValue ) {
                               module.set( initialModuleValue );
