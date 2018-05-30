@@ -383,7 +383,21 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
       },
 
 
-      //COLORS
+      // BOOLEAN CHECK
+      // @return bool
+      isChecked : function( v ) {
+            if ( _.isBoolean( v ) ) {
+                  return v;
+            } else if ( _.isNumber( v ) ) {
+                  return v > 0;
+            } else if ( _.isString( v ) ) {
+                return '0' !== v && '' !== v && 'off' !== v;
+            }
+            return false;
+      },
+
+
+      // COLORS
       hexToRgb : function( hex ) {
             // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
             var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;

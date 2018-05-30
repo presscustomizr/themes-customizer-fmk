@@ -62,5 +62,4 @@
       api.CZRBaseModuleControl      = api.CZRBaseControl.extend( CZRBaseModuleControlMths );
 
       $.extend( api.controlConstructor, { czr_module : api.CZRBaseModuleControl });
-
 })( wp.customize, jQuery, _ );

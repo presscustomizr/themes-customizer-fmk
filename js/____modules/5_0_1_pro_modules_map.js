@@ -13,7 +13,7 @@
             czr_sektion_module : {
                   mthds : CZRSektionMths,
                   crud : true,
-                  name : 'Sektions'
+                  name : 'Sections'
             },
             czr_fp_module : {
                   mthds : CZRFeaturedPageModuleMths,
