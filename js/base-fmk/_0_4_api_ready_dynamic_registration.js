@@ -10,8 +10,6 @@
                 api.errorLog( 'serverControlParams.paramsForDynamicRegistration should be an array');
           }
 
-          //console.log( 'serverControlParams.paramsForDynamicRegistration', serverControlParams.paramsForDynamicRegistration );
-
           _.each( serverControlParams.paramsForDynamicRegistration, function( dynParams, setId ) {
                 try { registerDynamicModuleSettingControl( dynParams ); } catch( er ) {
                       api.errorLog( er );
@@ -43,8 +41,9 @@
 
             }, args );
 
-            // we must have not empty setting_id, section and module_type
-            if ( _.isEmpty( args.setting_id ) || _.isEmpty( args.section) || _.isEmpty( args.module_type ) ) {
+            // we must have not empty setting_id, module_type
+            if ( _.isEmpty( args.setting_id ) || _.isEmpty( args.module_type ) ) {
+                  api.errare( 'registerDynamicModuleSettingControl => args', args );
                   throw new Error( 'registerDynamicModuleSettingControl => missing params when registrating a setting');
             }
 
@@ -53,7 +52,6 @@
                   throw new Error( 'registerDynamicModuleSettingControl => the module values must be an array or an object');
             }
 
-            // console.log( "args?", args );
             var settingId =  args.setting_id,
                 settingArgs = args.setting;
 
@@ -79,54 +77,69 @@
                   // assign the value sent from the server
                   settingArgs.value = args.option_value;
 
-                  // console.log('registerDynamicModuleSettingControl => SETTING DATA ?', settingId, settingArgs);
                   var SettingConstructor = api.settingConstructor[ settingArgs.type ] || api.Setting;
                   api.add( new SettingConstructor( settingId, settingArgs.value, settingArgs ) );
             }
 
             // MAYBE REGISTER THE SECTION
             var sectionArgs = args.section;
+            if ( ! _.isEmpty( sectionArgs ) ) {
+                  // Check if we have a correct section
+                  if ( ! _.has( sectionArgs, 'id' ) ){
+                        throw new Error( 'registerDynamicModuleSettingControl => missing section id for the section of setting : ' + settingId );
+                  }
 
-            // Check if we have a correct section
-            if ( ! _.has( sectionArgs, 'id' ) ){
-                  throw new Error( 'registerDynamicModuleSettingControl => missing section id for the section of setting : ' + settingId );
-            }
+                  if ( ! api.section.has( sectionArgs.id ) ) {
+                        var _secData = _.extend(
+                            {
+                              active:true,
+                              content:"",
+                              customizeAction:"Customizing",
+                              description:"",
+                              description_hidden:false,
+                              id: "",
+                              instanceNumber: 99,
+                              panel: "",
+                              priority:0,
+                              title: "",
+                              type: "default",
+                            }, {
+                              id: sectionArgs.id,
+                              title: sectionArgs.title || sectionArgs.id,
+                              description: _.isEmpty( sectionArgs.description ) ? '' : sectionArgs.description,
+                              panel: _.isEmpty( sectionArgs.panel ) ? '' : sectionArgs.panel,
+                              priority: sectionArgs.priority || 10
+                            }
+                        );
 
-            if ( ! api.section.has( sectionArgs.id ) ) {
-                  var _secData = _.extend(
-                      {
-                        active:true,
-                        content:"",
-                        customizeAction:"Customizing",
-                        description:"",
-                        description_hidden:false,
-                        id: "",
-                        instanceNumber: 99,
-                        panel: "",
-                        priority:0,
-                        title: "",
-                        type: "default",
-                      }, {
-                        id: sectionArgs.id,
-                        title: sectionArgs.title || sectionArgs.id,
-                        description: _.isEmpty( sectionArgs.description ) ? '' : sectionArgs.description,
-                        panel: _.isEmpty( sectionArgs.panel ) ? '' : sectionArgs.panel,
-                        priority: sectionArgs.priority || 10
-                      }
-                  );
-
-                  var Constructor = api.sectionConstructor[ _secData.type ] || api.Section;
-                  _secData = _.extend( { params: _secData }, _secData ); // Inclusion of params alias is for back-compat for custom sections that expect to augment this property.
-                  api.section.add( new Constructor( _secData.id, _secData ) );
+                        var Constructor = api.sectionConstructor[ _secData.type ] || api.Section;
+                        _secData = _.extend( { params: _secData }, _secData ); // Inclusion of params alias is for back-compat for custom sections that expect to augment this property.
+                        api.section.add( new Constructor( _secData.id, _secData ) );
+                  }
             }
 
             // REGISTER THE CONTROL
             var controlId = settingId;
 
             if ( ! api.control.has( controlId ) ) {
+
+
                   // start from a copy of a core control object
                   var controlArgs = args.control,
-                      defaultControlArgs = $.extend( true, {} , api.settings.controls.blogdescription );
+                      defaultControlArgs = $.extend( true, {} , api.settings.controls.blogdescription ),
+                      ctrlSectionId;
+
+                  // Do we have a section ?
+                  if ( ! _.isEmpty( args.section ) ) {
+                        ctrlSectionId = args.section.id;
+                  } else {
+                        ctrlSectionId = controlArgs.section;
+                  }
+
+                  if ( _.isEmpty( ctrlSectionId ) ) {
+                        api.errare( 'registerDynamicModuleSettingControl => missing section id for the control', args );
+                        throw new Error( 'registerDynamicModuleSettingControl => missing section id for the section of setting : ' + settingId );
+                  }
                   // Then update it with our defaults set server side
                   // array(
                   //     'type'      => 'czr_module',
@@ -138,7 +151,7 @@
                         {
                               type : 'czr_module',
                               module_type : args.module_type,
-                              section : sectionArgs.id,
+                              section : ctrlSectionId,
                               content : '',
                               label : controlArgs.label,
                               priority : controlArgs.priority
@@ -154,11 +167,9 @@
 
                   // if the currently expanded section is the one of the dynamic control
                   // Awake the module => fire ready
-                  if ( api.section( sectionArgs.id ).expanded() ) {
+                  if ( api.section( ctrlSectionId ).expanded() ) {
                         api.control( controlId ).trigger( 'set-module-ready' );
                   }
-                  // console.log('registerDynamicModuleSettingControl => CONTROL DATA ?', settingId, options);
-                  // console.log('ALORS IN DYNAMIC REGISTRATION ? ', dataForSkopeToRegister, settingId );
             }//if ( ! api.control.has( controlId ) )
 
             return settingId;

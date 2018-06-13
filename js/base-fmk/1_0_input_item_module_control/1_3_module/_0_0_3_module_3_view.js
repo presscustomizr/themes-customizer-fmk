@@ -63,7 +63,7 @@ $.extend( CZRModuleMths, {
                               //console.log( 'renderModuleParts => success response =>', module.id, _serverTmpl_);
                               appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( {} ) );
                         }).fail( function( _r_ ) {
-                              //console.log( 'renderModuleParts => fail response =>', _r_);
+                              api.errare( 'renderModuleParts => fail response =>', _r_);
                               dfd.reject( 'renderModuleParts => Problem when fetching the crud-module-part tmpl from server for module : '+ module.id );
                         });
                   }
