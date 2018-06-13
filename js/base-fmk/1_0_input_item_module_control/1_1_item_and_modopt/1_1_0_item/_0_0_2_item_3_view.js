@@ -68,11 +68,12 @@ $.extend( CZRItemMths , {
             module.itemsWrapper.append( $_view_el );
 
             if ( module.isMultiItem() ) {
+                  var _template_selector;
                   // Do we have view content template script?
                   // if yes, let's use it <= Old way
                   // Otherwise let's fetch the html template from the server
                   if ( ! _.isEmpty( module.rudItemPart ) ) {
-                        var _template_selector = module.getTemplateSelectorPart( 'rudItemPart', item_model_for_template_injection );
+                        _template_selector = module.getTemplateSelectorPart( 'rudItemPart', item_model_for_template_injection );
                         //do we have view template script?
                         if ( 1 > $( '#tmpl-' + _template_selector ).length ) {
                             dfd.reject( 'Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + _template_selector );
@@ -89,15 +90,27 @@ $.extend( CZRItemMths , {
                         };
                         item.trigger( 'item-wrapper-tmpl-params-before-fetching', requestParams );
 
-                        api.CZR_Helpers.getModuleTmpl( requestParams ).done( function( _serverTmpl_ ) {
-                              //console.log( 'renderItemWrapper => success response =>', module.id, _serverTmpl_);
-                              appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( {} ) );
-                        }).fail( function( _r_ ) {
-                              //console.log( 'renderItemWrapper => fail response =>', _r_);
-                              dfd.reject( 'renderItemWrapper => Problem when fetching the rud-item-part tmpl from server for module : '+ module.id );
-                        });
+                        // Let's check if the filtered requested params can find a match of a printed tmpl of the module
+                        // this filter 'item-wrapper-tmpl-params-before-fetching', is used in the widget zone module of the Hueman theme (june 2018 )
+                        // it allows us to assign a specific template for the built-in widget zones
+                        if ( ! _.isEmpty( module[ requestParams.tmpl ] ) ) {
+                              _template_selector = module.getTemplateSelectorPart( requestParams.tmpl, item_model_for_template_injection );
+                              //do we have view template script?
+                              if ( 1 > $( '#tmpl-' + _template_selector ).length ) {
+                                  dfd.reject( 'Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + _template_selector );
+                              }
+                              appendAndResolve( wp.template( _template_selector )( item_model_for_template_injection ) );
+                        } else {
+                              api.CZR_Helpers.getModuleTmpl( requestParams ).done( function( _serverTmpl_ ) {
+                                    //console.log( 'renderItemWrapper => success response =>', module.id, _serverTmpl_);
+                                    appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( {} ) );
+                              }).fail( function( _r_ ) {
+                                    //console.log( 'renderItemWrapper => fail response =>', _r_);
+                                    dfd.reject( 'renderItemWrapper => Problem when fetching the rud-item-part tmpl from server for module : '+ module.id );
+                              });
+                        }
                   }
-            } else {
+            } else {//if ( module.isMultiItem() ) {}
                   appendAndResolve();
             }
 
