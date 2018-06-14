@@ -332,8 +332,10 @@ $.extend( CZRItemMths , {
                   var tmplSelectorSuffix = module.getTemplateSelectorPart( 'itemInputList', item_model_for_template_injection );
                   if ( 1 > $( '#tmpl-' + tmplSelectorSuffix ).length ) {
                         dfd.reject( 'renderItemContent => No itemInputList content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + tmplSelectorSuffix );
+                  } else {
+                        appendAndResolve( wp.template( tmplSelectorSuffix )( item_model_for_template_injection ) );
                   }
-                  appendAndResolve( wp.template( tmplSelectorSuffix )( item_model_for_template_injection ) );
+
             } else {
                   var requestParams = {
                         tmpl : 'item-inputs',
