@@ -54,6 +54,10 @@ $.extend( CZRModuleMths, {
 
               //INSTANTIATE THE ITEMS
               _.each( _deepCopyOfItemCollection, function( item_candidate , key ) {
+                    if ( ! _.isObject( item_candidate ) ) {
+                          api.errare( 'populateSavedItemCollection => an item should be described by an object in module type : ' + module.module_type, 'module id : '  + module.id );
+                          return;
+                    }
                     //adds it to the collection and fire item.ready()
                     if ( serverControlParams.isDevMode ) {
                           module.instantiateItem( item_candidate ).ready();
@@ -66,6 +70,9 @@ $.extend( CZRModuleMths, {
 
               //check if everything went well
               _.each( _deepCopyOfItemCollection, function( _item ) {
+                    if ( ! _.isObject( _item ) ) {
+                          return;
+                    }
                     if ( _.isUndefined( _.findWhere( module.itemCollection(), _item.id ) ) ) {
                           throw new Error( 'populateSavedItemCollection : The saved items have not been properly populated in module : ' + module.id );
                     }
