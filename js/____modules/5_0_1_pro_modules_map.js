@@ -10,40 +10,40 @@
       //4) some DOM behaviour. For example, a multi item shall be sortable.
       api.czrModuleMap = api.czrModuleMap || {};
       $.extend( api.czrModuleMap, {
-            czr_sektion_module : {
-                  mthds : CZRSektionMths,
-                  crud : true,
-                  name : 'Sections'
-            },
-            czr_fp_module : {
-                  mthds : CZRFeaturedPageModuleMths,
-                  crud : true,
-                  name : 'Featured Pages'
-            },
-            czr_slide_module : {
-                  mthds : CZRSlideModuleMths,
-                  crud : true,
-                  name : 'Slider',
-                  has_mod_opt : true
-            },
-            czr_related_posts_module : {
-                  mthds : CZRRelatedPostsModMths,
-                  crud : false,
-                  multi_item : false,
-                  name : 'Related Posts',
-                  has_mod_opt : false
-            },
-            czr_text_module : {
-                  mthds : CZRTextModuleMths,
-                  crud : false,
-                  multi_item : false,
-                  name : 'Simple Text'
-            },
-            czr_text_editor_module : {
-                  mthds : CZRTextEditorModuleMths,
-                  crud : false,
-                  multi_item : false,
-                  name : 'WP Text Editor'
-            }
+            // czr_sektion_module : {
+            //       mthds : CZRSektionMths,
+            //       crud : true,
+            //       name : 'Sections'
+            // },
+            // czr_fp_module : {
+            //       mthds : CZRFeaturedPageModuleMths,
+            //       crud : true,
+            //       name : 'Featured Pages'
+            // },
+            // czr_slide_module : {
+            //       mthds : CZRSlideModuleMths,
+            //       crud : true,
+            //       name : 'Slider',
+            //       has_mod_opt : true
+            // },
+            // czr_related_posts_module : {
+            //       mthds : CZRRelatedPostsModMths,
+            //       crud : false,
+            //       multi_item : false,
+            //       name : 'Related Posts',
+            //       has_mod_opt : false
+            // },
+            // czr_text_module : {
+            //       mthds : CZRTextModuleMths,
+            //       crud : false,
+            //       multi_item : false,
+            //       name : 'Simple Text'
+            // },
+            // czr_text_editor_module : {
+            //       mthds : CZRTextEditorModuleMths,
+            //       crud : false,
+            //       multi_item : false,
+            //       name : 'WP Text Editor'
+            // }
       });
 })( wp.customize, jQuery, _ );
