@@ -11,8 +11,11 @@
           }
 
           _.each( serverControlParams.paramsForDynamicRegistration, function( dynParams, setId ) {
-                try { registerDynamicModuleSettingControl( dynParams ); } catch( er ) {
-                      api.errorLog( er );
+                // The dynamic registration should be explicitely set
+                if ( dynParams.module_registration_params && true === dynParams.module_registration_params.dynamic_registration ) {
+                      try { registerDynamicModuleSettingControl( dynParams ); } catch( er ) {
+                            api.errorLog( er );
+                      }
                 }
           });
 
