@@ -40,6 +40,12 @@
 
                               // console.log('registerDynamicModuleSettingControl => SETTING DATA ?', params.id, settingArgs);
                               var SettingConstructor = api.settingConstructor[ settingArgs.type ] || api.Setting;
+
+                              // extend with specific additional options provided on registration
+                              if ( _.isObject( params.options ) ) {
+                                    settingArgs  = _.extend( settingArgs , params.options );
+                              }
+
                               try { api.add( new SettingConstructor( params.id, settingArgs.value, settingArgs ) ); } catch ( er ) {
                                     api.errare( 'api.CZR_Helpers::register => problem when adding a setting to the api', er );
                               }
@@ -67,6 +73,11 @@
                               );
 
                               var PanelConstructor = _.isObject( params.constructWith ) ? params.constructWith : api.Panel;
+
+                              // extend with specific additional options provided on registration
+                              if ( _.isObject( params.options ) ) {
+                                    panelParams  = _.extend( panelParams , params.options );
+                              }
                               panelParams = _.extend( { params: panelParams }, panelParams ); // Inclusion of params alias is for back-compat for custom panels that expect to augment this property.
 
                               try { __element__ = api.panel.add( new PanelConstructor( params.id, panelParams ) ); } catch ( er ) {
@@ -101,6 +112,12 @@
                               );
 
                               var SectionConstructor = ! _.isUndefined( params.constructWith ) ? params.constructWith : api.Section;
+
+                              // extend with specific additional options provided on registration
+                              if ( _.isObject( params.options ) ) {
+                                    sectionParams  = _.extend( sectionParams , params.options );
+                              }
+
                               sectionParams = _.extend( { params: sectionParams }, sectionParams ); // Inclusion of params alias is for back-compat for custom panels that expect to augment this property.
                               try { __element__ = api.section.add( new SectionConstructor( params.id, sectionParams ) ); } catch ( er ) {
                                     api.errare( 'api.CZR_Helpers::register => problem when adding a section to the api', er );
@@ -135,7 +152,13 @@
                                   ControlConstructor = api.controlConstructor[ controlArgs.type ] || api.Control,
                                   options;
 
+                              // extend with specific additional options provided on registration
+                              if ( _.isObject( params.options ) ) {
+                                    controlArgs = _.extend( controlArgs, params.options );
+                              }
+
                               options = _.extend( { params: controlArgs }, controlArgs ); // Inclusion of params alias is for back-compat for custom controls that expect to augment this property.
+
                               try { __element__ = api.control.add( new ControlConstructor( params.id, options ) ); } catch ( er ) {
                                     api.errare( 'api.CZR_Helpers::register => problem when adding a control to the api', er );
                               }
