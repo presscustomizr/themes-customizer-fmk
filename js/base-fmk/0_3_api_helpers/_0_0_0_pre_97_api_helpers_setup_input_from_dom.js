@@ -53,6 +53,10 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
 
             var dom_inputParentInst_model = {};
 
+            if ( $( '.' + module.control.css_attr.sub_set_wrapper, inputParentInst.container).length < 1 ) {
+                  api.errare( 'setupInputCollectionFromDOM => no input elements found in the DOM' );
+            }
+
             //creates the inputs based on the rendered item or mod opt
             $( '.' + module.control.css_attr.sub_set_wrapper, inputParentInst.container).each( function( _index ) {
                   var _id = $(this).find('[data-czrtype]').attr( 'data-czrtype' ),
