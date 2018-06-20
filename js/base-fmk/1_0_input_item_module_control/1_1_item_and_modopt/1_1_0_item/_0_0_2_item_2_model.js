@@ -74,6 +74,7 @@ $.extend( CZRItemMths , {
                   api.previewer.refresh();
             } else {
                   module.trigger( 'item-removed', _item_ );
+                  module.control.trigger( 'item-removed', _item_ );
             }
 
       },
