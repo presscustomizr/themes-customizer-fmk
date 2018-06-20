@@ -58,7 +58,7 @@
                                     throw new Error( 'registerPanel => missing panel id ');
                               }
 
-                              if ( api.section.has( params.id ) ) {
+                              if ( api.panel.has( params.id ) ) {
                                     //api.errare( 'registerPanel => ' + params.id + ' is already registered');
                                     break;
                               }
@@ -174,30 +174,7 @@
                   api.trigger( 'czr-new-registered', params );
 
                   return 'setting' == params.what ? params : __element__.deferred.embedded;
-            },
-
-
-            //  @return void()
-            //  clean all registered control, section, panel tracked ids
-            //  preserve the settings
-            cleanRegistered : function( registered ) {
-                  api.infoLog( 'in CZR_Helpers => cleanRegistered', registered );
-                  var newRegistered = $.extend( true, [], registered || [] );
-
-                  newRegistered = _.filter( registered, function( _reg_ ) {
-                        if ( 'setting' !== _reg_.what ) {
-                              if ( api[ _reg_.what ].has( _reg_.id ) ) {
-                                    $.when( api[ _reg_.what ]( _reg_.id ).container.remove() ).done( function() {
-                                          // remove control, section, panel
-                                          api[ _reg_.what ].remove( _reg_.id );
-                                    });
-                              }
-                        }
-                        return _reg_.what === 'setting';
-                  });
-                  registered = newRegistered;
             }
-
       });//$.extend
   // $( window ).on( 'message', function( e, o) {
   //   api.consoleLog('WHAT ARE WE LISTENING TO?', e, o );
