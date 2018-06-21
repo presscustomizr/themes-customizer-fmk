@@ -7,13 +7,6 @@
 // };
 //var api = api || wp.customize, $ = $ || jQuery;
 ( function ( api, $, _ ) {
-      //The api.czr_skopeReady is used by some modules like the slider to fire actions
-      //if skope is disabled, we need to resolve it now.
-      api.czr_skopeReady = $.Deferred();
-      if ( _.isUndefined( serverControlParams.isSkopOn ) || ! serverControlParams.isSkopOn ) {
-            api.czr_skopeReady.resolve();
-      }
-
       //@return [] for console method
       //@bgCol @textCol are hex colors
       //@arguments : the original console arguments
@@ -85,10 +78,6 @@
 
       api.errare = function( title, msg ) { _wrapLogInsideTags( title, msg, '#ffd5a0' ); };
       api.infoLog = function( title, msg ) { _wrapLogInsideTags( title, msg, '#5ed1f5' ); };
-
-      api.czr_isSkopOn = function() {
-            return ! _.isUndefined ( serverControlParams.isSkopOn ) && serverControlParams.isSkopOn && _.has( api, 'czr_skopeBase' );
-      };
 
       api.czr_isChangeSetOn = function() {
             return serverControlParams.isChangeSetOn && true === true;//&& true === true is just there to hackily cast the returned value as boolean.

@@ -1,7 +1,5 @@
 
 ( function ( api, $, _ ) {
-      // if ( ! serverControlParams.isSkopOn )
-      //   return;
       /*****************************************************************************
       * A "CONTEXT AWARE" SET METHD
       *****************************************************************************/
@@ -105,7 +103,7 @@
       * , this is typically used in the overridden api.Setting.preview method
       *****************************************************************************/
       //@param to : the new value to set
-      //@param dirtyness : the current dirtyness status of this setting in the skope
+      //@param dirtyness : the current dirtyness status of this setting
       //
       api.Setting.prototype.silent_set =function( to, dirtyness ) {
             var from = this._value,

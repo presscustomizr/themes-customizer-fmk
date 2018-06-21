@@ -32,10 +32,6 @@
 
             transport = setting.transport;
 
-            if ( serverControlParams.isSkopOn && api.czr_isPreviewerSkopeAware && 'pending' == api.czr_isPreviewerSkopeAware.state() ) {
-                  this.previewer.refresh();
-                  return dfd.resolve( arguments ).promise();
-            }
             //as soon as the previewer is setup, let's behave as usual
             //=> but don't refresh when silently updating
 
@@ -97,15 +93,8 @@
                   dfd.resolve( arguments );
 
             } else if ( 'refresh' === transport ) {
-                  //the refresh() method only returns a promise when skope is on
-                  if ( serverControlParams.isSkopOn ) {
-                        setting.previewer.refresh().always( function() {
-                              dfd.resolve( arguments );
-                        });
-                  } else {
-                        setting.previewer.refresh();
-                        dfd.resolve( arguments );
-                  }
+                  setting.previewer.refresh();
+                  dfd.resolve( arguments );
             }
 
             return dfd.promise();
