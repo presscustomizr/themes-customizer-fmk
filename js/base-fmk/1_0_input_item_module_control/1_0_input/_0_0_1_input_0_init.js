@@ -322,7 +322,8 @@ $.extend( CZRInputMths , {
           var input = this,
               $handle,
               _updateHandle = function(el, val) {
-                    el.textContent = val + input.container.find('input').data( 'unit' );
+                    var _unit = input.container.find('input').data( 'unit' );
+                    el.textContent = val + ( _.isEmpty( input.container.find('input').data( 'unit' ) ) ? '' : _unit );
               };
 
           $( input.container ).find('input').rangeslider( {
