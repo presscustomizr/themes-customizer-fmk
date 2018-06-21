@@ -96,7 +96,7 @@ $.extend( CZRModuleMths, {
             module.defaultModOptModel = {};
 
             //define a default Constructors
-            module.modOptConstructor = api.CZRModOpt;
+            module.modOptConstructor = module.modOptConstructor || api.CZRModOpt;
 
             /*-----------------------------------------------
             * ITEMS
