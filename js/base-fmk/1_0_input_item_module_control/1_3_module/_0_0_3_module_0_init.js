@@ -129,7 +129,8 @@ $.extend( CZRModuleMths, {
             // input constuctor : use the constructor already defined in a module, or fallback on the default one
             module.inputConstructor = module.inputConstructor || api.CZRInput;//constructor for the items input
             if ( module.hasModOpt() ) {
-                  module.inputModOptConstructor = api.CZRInput;//constructor for the modOpt input
+                  //use the constructor already defined in a module, or fallback on the default one
+                  module.inputModOptConstructor = module.inputModOptConstructor || api.CZRInput;//constructor for the modOpt input
             }
             module.inputOptions = {};//<= can be set by each module specifically
             //For example, if I need specific options for the content_picker, this is where I will set them in the module extended object
