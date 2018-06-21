@@ -29,8 +29,10 @@ $.extend( CZRModOptMths , {
                                           selector  : '.tabs nav li',
                                           name      : 'tab_nav',
                                           actions   : function( args ) {
-                                                //toggleTabVisibility is defined in the module ctor and its this is the item or the modOpt
-                                                this.module.toggleTabVisibility.call( this, args );
+                                                //toggleTabVisibility is declared in the module ctor and its "this" is the item or the modOpt
+                                                var tabIdSwitchedTo = $( args.dom_event.currentTarget, args.dom_el ).attr('data-tab-id');
+                                                this.module.toggleTabVisibility.call( this, tabIdSwitchedTo );
+                                                this.trigger( 'tab-switch', { id : tabIdSwitchedTo } );
                                           }
                                     }
                               ],//actions to execute
