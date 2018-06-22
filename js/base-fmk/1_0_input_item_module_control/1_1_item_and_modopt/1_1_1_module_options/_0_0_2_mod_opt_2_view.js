@@ -20,7 +20,11 @@ $.extend( CZRModOptMths , {
                                           selector  : '.' + module.control.css_attr.close_modopt_icon,
                                           name      : 'close_mod_option',
                                           actions   : function() {
-                                                api.czr_ModOptVisible( false );
+                                                // @see : moduleCtor::maybeAwakeAndBindSharedModOpt => api.czr_ModOptVisible.bind()
+                                                api.czr_ModOptVisible( false, {
+                                                      module : module,//the current module for which the modOpt is being expanded
+                                                      focus : false//the id of the tab we want to focus on
+                                                });
                                           }
                                     },
                                     //tabs navigation

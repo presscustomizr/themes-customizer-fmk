@@ -208,7 +208,10 @@ $.extend( CZRModuleMths, {
                         }
                   });
             }
-      },
+
+            // Maybe instantiate and bind the api.Value() controlling the module option panel, for the module using it ( has_mod_opt : true on registration )
+            this.maybeAwakeAndBindSharedModOpt();
+      },//initialize()
 
 
 
@@ -471,6 +474,68 @@ $.extend( CZRModuleMths, {
             if ( module.hasModOpt() ) {
                   _sendInputData.call( module.czr_ModOpt );
             }
+      },
+
+
+      // Fired in ::initialize()
+      // Maybe instantiate and bind the api.Value() controlling the visibility of the module option panel, for the module using it ( has_mod_opt : true on registration )
+      maybeAwakeAndBindSharedModOpt : function() {
+            if ( ! _.isUndefined( api.czr_ModOptVisible ) )
+              return;
+
+            //MOD OPT PANEL SETTINGS
+            api.czr_ModOptVisible = new api.Value( false );
+
+            //MOD OPT VISIBLE REACT
+            // passing an optional args object allows us to expand the modopt panel and focus on a specific tab right after
+            //@args : {
+            //  module : module,//the current module for which the modOpt is being expanded
+            //  focus : 'section-topline-2'//the id of the tab we want to focus on
+            //}
+            api.czr_ModOptVisible.bind( function( visible, from, args ) {
+                  args = args || {};
+                  if ( ! _.isFunction( args.module ) || ! _.isFunction( args.module.czr_ModOpt ) ) {
+                        api.errare( 'moduleCtor::maybeAwakeAndBindSharedModOpt => api.czr_ModOptVisible.bind() => incorrect arguments', args );
+                        return;
+                  }
+                  var modOpt = args.module.czr_ModOpt,
+                      module = args.module;
+
+                  // Append content on expansion
+                  // Remove on collapse
+                  if ( visible ) {
+                        //first close all opened remove dialogs and opened items
+                        module.closeRemoveDialogs().closeAllItems();
+
+                        modOpt.modOptWrapperViewSetup( modOpt() ).done( function( $_container ) {
+                              modOpt.container = $_container;
+                              try {
+                                    api.CZR_Helpers.setupInputCollectionFromDOM.call( modOpt ).toggleModPanelView( visible );
+                              } catch(e) {
+                                    api.consoleLog(e);
+                              }
+                              if ( module && args.focus ) {
+                                    _.delay( function() {
+                                          if ( _.isNull(  modOpt.container ) || ! modOpt.container.find('[data-tab-id="' + args.focus + '"] a').length )
+                                            return;
+                                          modOpt.container.find('[data-tab-id="' + args.focus + '"] a').trigger('click');
+                                    }, 200 );
+                              }
+                        });
+
+                  } else {
+                        modOpt.toggleModPanelView( visible ).done( function() {
+                              if ( modOpt.container && 0 < modOpt.container.length ) {
+                                    $.when( modOpt.container.remove() ).done( function() {
+                                          api.CZR_Helpers.removeInputCollection.call( modOpt );
+                                    });
+                              } else {
+                                    api.CZR_Helpers.removeInputCollection.call( modOpt );
+                              }
+                              modOpt.container = null;
+                        });
+                  }
+            } );
       }
 });//$.extend//CZRBaseControlMths
 })( wp.customize , jQuery, _ );

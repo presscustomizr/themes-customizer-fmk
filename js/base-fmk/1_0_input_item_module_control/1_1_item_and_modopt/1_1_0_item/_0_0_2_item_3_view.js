@@ -155,7 +155,10 @@ $.extend( CZRItemMths , {
 
                         //If this module has mod Opt, always close the opt pane on view state change
                         if ( module.hasModOpt() && _isExpanded ) {
-                              api.czr_ModOptVisible( false );
+                              api.czr_ModOptVisible( false, {
+                                    module : module,//the current module for which the modOpt is being expanded
+                                    focus : false//the id of the tab we want to focus on
+                              });
                         }
 
                         if ( _isExpanded ) {
@@ -230,7 +233,10 @@ $.extend( CZRItemMths , {
 
                   //Close Mod opts if any
                   if ( visible && module.hasModOpt() ) {
-                        api.czr_ModOptVisible( false );
+                        api.czr_ModOptVisible( false, {
+                              module : module,//the current module for which the modOpt is being expanded
+                              focus : false//the id of the tab we want to focus on
+                        });
                   }
 
                   //Close Pre item dialog
