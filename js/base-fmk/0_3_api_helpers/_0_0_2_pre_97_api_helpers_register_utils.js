@@ -30,7 +30,7 @@
                                   defaults ,
                                     {
                                           dirty : ! _.isUndefined( params.dirty ) ? params.dirty : false,
-                                          value : params.value || [],
+                                          value : _.isUndefined( params.value ) ? null : params.value,
                                           transport : params.transport || 'refresh',
                                           type : params.type || 'option'
                                     }
