@@ -58,11 +58,20 @@ $.extend( CZRModuleMths, {
                           api.errare( 'populateSavedItemCollection => an item should be described by an object in module type : ' + module.module_type, 'module id : '  + module.id );
                           return;
                     }
+                    //instantiates and fires ready
+                    var _doInstantiate_ = function() {
+                          var _item_instance_ = module.instantiateItem( item_candidate );
+                          if ( _.isFunction( _item_instance_ ) ) {
+                                _item_instance_.ready();
+                          } else {
+                                api.errare( 'populateSavedItemCollection => Could not instantiate item in module ' + module.id , item_candidate );
+                          }
+                    };
                     //adds it to the collection and fire item.ready()
                     if ( serverControlParams.isDevMode ) {
-                          module.instantiateItem( item_candidate ).ready();
+                          _doInstantiate_();
                     } else {
-                          try { module.instantiateItem( item_candidate ).ready(); } catch( er ) {
+                          try { _doInstantiate_(); } catch( er ) {
                                 api.errare( 'populateSavedItemCollection : ' + er );
                           }
                     }
@@ -84,18 +93,30 @@ $.extend( CZRModuleMths, {
       },
 
 
-      instantiateItem : function( item, is_added_by_user ) {
+      instantiateItem : function( item_candidate, is_added_by_user ) {
               var module = this;
-              //Prepare the item, make sure its id is set and unique
-              item_candidate = module.prepareItemForAPI( item );
 
-              // Display a simple console message if item is null or false, for example if validateItemBeforeInstantiation returned null or false
+              // FIRST VALIDATION
+              //allow modules to validate the item_candidate before addition
+              item_candidate = module.validateItemBeforeAddition( item_candidate, is_added_by_user );
+
+              // Abort here and display a simple console message if item is null or false, for example if validateItemBeforeAddition returned null or false
               if ( ! item_candidate || _.isNull( item_candidate ) ) {
-                    api.errare( 'item_candidate invalid. InstantiateItem aborted in module ' + module.id );
+                    api.consoleLog( 'CZRModule::instantiateItem() : item_candidate did not pass validation in module ' + module.id );
                     return;
               }
 
-              //Item id checks !
+              // NORMALIZE
+              //Prepare the item, make sure its id is set and unique
+              item_candidate = module.prepareItemForAPI( item_candidate );
+
+              // Display a simple console message if item is null or false, for example if validateItemBeforeInstantiation returned null or false
+              if ( ! item_candidate || _.isNull( item_candidate ) ) {
+                    api.errare( 'CZRModule::instantiateItem() : item_candidate invalid in module ' + module.id );
+                    return;
+              }
+
+              //ITEM ID CHECKS
               if ( ! _.has( item_candidate, 'id' ) ) {
                     throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
               }

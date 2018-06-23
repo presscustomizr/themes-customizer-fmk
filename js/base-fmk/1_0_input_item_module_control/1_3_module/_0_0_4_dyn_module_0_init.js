@@ -54,13 +54,17 @@ $.extend( CZRDynModuleMths, {
                                     if ( canWe.addTheItem && module.hasPreItem ) {
                                           module.preItemExpanded.set( ! module.preItemExpanded() );
                                     } else {
-                                          module.addItem( params ).done( function( item_id ) {
-                                                module.czr_Item( item_candidate.id, function( _item_ ) {
-                                                      _item_.embedded.then( function() {
-                                                            module.czr_Item( item_candidate.id ).viewState( 'expanded' );
+                                          module.addItem( params )
+                                                .done( function( item_id ) {
+                                                      module.czr_Item( item_candidate.id, function( _item_ ) {
+                                                            _item_.embedded.then( function() {
+                                                                  module.czr_Item( item_candidate.id ).viewState( 'expanded' );
+                                                            });
                                                       });
+                                                })
+                                                .fail( function( error ) {
+                                                      api.errare( 'module.addItem failed on pre_add_item', error );
                                                 });
-                                          });
                                     }
                               },
                         ],
@@ -72,13 +76,17 @@ $.extend( CZRDynModuleMths, {
                         name      : 'add_item',
                         //@param params : { dom_el : {}, dom_event : {}, event : {}, model {} }
                         actions   : function( params ) {
-                              module.closeRemoveDialogs( params ).closeAllItems( params ).addItem( params ).done( function( item_id ) {
-                                    module.czr_Item( item_candidate.id, function( _item_ ) {
-                                          _item_.embedded.then( function() {
-                                                module.czr_Item( item_candidate.id ).viewState( 'expanded' );
-                                          });
-                                    } );
-                              });
+                              module.closeRemoveDialogs( params ).closeAllItems( params ).addItem( params )
+                                    .done( function( item_id ) {
+                                          module.czr_Item( item_candidate.id, function( _item_ ) {
+                                                _item_.embedded.then( function() {
+                                                      module.czr_Item( item_candidate.id ).viewState( 'expanded' );
+                                                });
+                                          } );
+                                    })
+                                    .fail( function( error ) {
+                                          api.errare( 'module.addItem failed on add_item', error );
+                                    });
                         }
                   }
             ]);//module.userEventMap
@@ -162,7 +170,7 @@ $.extend( CZRDynModuleMths, {
 
 
       // Designed to be overriden in modules
-      validateItemBeforeAddition : function( item_candidate ) {
+      validateItemBeforeAddition : function( item_candidate, is_added_by_user ) {
             return item_candidate;
       },
 
@@ -177,36 +185,47 @@ $.extend( CZRDynModuleMths, {
       //@return a promise() for future sequential actions
       //@param params : { dom_el : {}, dom_event : {}, event : {}, model {} }
       addItem : function( params ) {
+            var dfd = $.Deferred();
             if ( ! this.itemCanBeInstantiated() ) {
-                  return;
+                  return dfd.reject().promise();
             }
             var module = this,
                 item_candidate = module.preItem(),
                 collapsePreItem = function() {
                       module.preItemExpanded.set( false );
                       //module.toggleSuccessMessage('off');
-                },
-                dfd = $.Deferred();
+                };
 
             if ( _.isEmpty( item_candidate ) || ! _.isObject( item_candidate ) ) {
                   api.errorLog( 'addItem : an item_candidate should be an object and not empty. In : ' + module.id +'. Aborted.' );
-                  return dfd.resolve().promise();
+                  return dfd.reject().promise();
             }
             //display a sucess message if item_candidate is successfully instantiated
             collapsePreItem = _.debounce( collapsePreItem, 200 );
 
-            //allow modules to validate the item_candidate before addition
-            item_candidate = module.validateItemBeforeAddition( item_candidate );
-
-            // Abort here and display a simple console message if item is null or false, for example if validateItemBeforeAddition returned null or false
-            if ( ! item_candidate || _.isNull( item_candidate ) ) {
-                  api.consoleLog( 'item_candidate invalid. InstantiateItem aborted in module ' + module.id );
-                  return dfd.resolve().promise();
+            //instantiates and fires ready
+            var _doInstantiate_ = function() {
+                  var _item_instance_ = module.instantiateItem( item_candidate, true );//true == Added by user
+                  if ( _.isFunction( _item_instance_ ) ) {
+                        _item_instance_.ready();
+                  } else {
+                        api.errare( 'populateSavedItemCollection => Could not instantiate item in module ' + module.id , item_candidate );
+                  }
+                  return _item_instance_;
+            };
+            //adds it to the collection and fire item.ready()
+            if ( serverControlParams.isDevMode ) {
+                  _doInstantiate_();
+            } else {
+                  try { _doInstantiate_(); } catch( er ) {
+                        api.errare( 'populateSavedItemCollection : ' + er );
+                        return dfd.reject().promise();
+                  }
             }
 
-
-            //instantiates and fires ready
-            module.instantiateItem( item_candidate, true ).ready(); //true == Added by user
+            if ( ! module.czr_Item.has( item_candidate.id ) ) {
+                  return dfd.reject('populateSavedItemCollection : the item ' + item_candidate.id + ' has not been instantiated in module ' + module.id ).promise();
+            }
 
             //this iife job is to close the pre item and to maybe refresh the preview
             //then once done the item view is expanded to start editing it
