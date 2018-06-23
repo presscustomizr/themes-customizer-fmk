@@ -123,7 +123,7 @@ $.extend( CZRModuleMths, {
               if ( module.czr_Item.has( item_candidate.id ) ) {
                     throw new Error('CZRModule::instantiateItem() : the following item id ' + item_candidate.id + ' already exists in module.czr_Item() for module ' + this.id  );
               }
-              //instanciate the item with the default constructor
+              //instantiate the item with the item constructor, default one or provided by the module
               module.czr_Item.add( item_candidate.id, new module.itemConstructor( item_candidate.id, item_candidate ) );
 
               if ( ! module.czr_Item.has( item_candidate.id ) ) {
@@ -135,6 +135,10 @@ $.extend( CZRModuleMths, {
       },
 
 
+      // Designed to be overriden in modules
+      validateItemBeforeAddition : function( item_candidate, is_added_by_user ) {
+            return item_candidate;
+      },
 
       //@return an API ready item object with the following properties
       // id : '',

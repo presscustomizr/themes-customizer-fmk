@@ -169,11 +169,6 @@ $.extend( CZRDynModuleMths, {
       },
 
 
-      // Designed to be overriden in modules
-      validateItemBeforeAddition : function( item_candidate, is_added_by_user ) {
-            return item_candidate;
-      },
-
       // overridable method introduced with the flat skope
       // problem to solve in skope => an item, can't always be instantiated in a given context.
       itemCanBeInstantiated : function() {
