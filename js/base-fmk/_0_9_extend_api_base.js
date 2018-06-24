@@ -26,6 +26,7 @@
             text      : '',
             textarea  : '',
             check     : 'setupIcheck',
+            checkbox     : 'setupIcheck',
             gutencheck : 'setupGutenCheck',
             select    : 'setupSelect',
             radio     : 'setupRadio',
