@@ -11,7 +11,7 @@
                         'tc_font_customizer_settings',
 
                         //hueman pro
-                        'header_image_sec',
+                        'contx_header_bg',
                         'content_blog_sec',
                         'static_front_page',
                         'content_single_sec',
