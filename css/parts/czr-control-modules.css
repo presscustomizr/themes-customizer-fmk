@@ -49,9 +49,10 @@
   transition: opacity 1s ease-in-out;
 }
 
-/*#customize-theme-controls .czr-single-item.open {
-  border: 1px solid #dedede;
-}*/
+#customize-theme-controls .czr-single-item.open {
+  /*border: 1px solid #dedede;*/
+  outline: 1px solid #ccc;
+}
 /* Keep the normal border for single module, mono items controls */
 /*#customize-theme-controls .mono-item-mod .czr-single-item {
   border: 1px solid #ccc;
@@ -754,9 +755,12 @@ section .czr-sub-set:first-child {
   padding-left: 5px;
 }
 
+/* styled like the wp api.notifications, info type */
 .slide-mod-skope-notice {
   padding: 3%;
-  background: rgba(116, 210, 116, 0.42);
+  background: #fff;
+  border-left: 4px solid #00a0d2;
+  box-shadow: 0 1px 1px 0 rgba( 0, 0, 0, 0.1 );
   float: left;
   font-size: 12px;
   line-height: 1.5em;
