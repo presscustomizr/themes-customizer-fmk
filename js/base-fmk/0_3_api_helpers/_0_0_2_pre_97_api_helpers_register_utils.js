@@ -23,7 +23,7 @@
                         case 'setting' :
                               if ( api.has( params.id ) ) {
                                     //api.consoleLog( 'registerSetting => setting Id already registered : ' + params.id );
-                                    return params;
+                                    break;
                               }
                               defaults = $.extend( true, {}, api.Setting.prototype.defaults );
                               var settingArgs = _.extend(
@@ -111,7 +111,12 @@
                                   }
                               );
 
-                              var SectionConstructor = ! _.isUndefined( params.constructWith ) ? params.constructWith : api.Section;
+                              var SectionConstructor = api.Section;
+                              if ( ! _.isUndefined( params.constructWith ) ) {
+                                    SectionConstructor = params.constructWith;
+                              } else if ( ! _.isEmpty( params.type ) && api.sectionConstructor[ params.type ] ) {
+                                    SectionConstructor = api.sectionConstructor[ params.type ];
+                              }
 
                               // extend with specific additional options provided on registration
                               if ( _.isObject( params.options ) ) {
@@ -171,7 +176,11 @@
                   __element__ = ! _.isEmpty( __element__ ) ?  __element__ : { deferred : { embedded : $.Deferred( function() { this.resolve(); }) } };
 
                   // this is where we populate the registered collection
-                  api.trigger( 'czr-new-registered', params );
+                  // if the registered element is "tracked", we inform the api about its registration
+                  // @see Nimble or Contextualizer for tracking usage => ui re-rendering, etc...
+                  if ( false !== params.track ) {
+                        api.trigger( 'czr-new-registered', params );
+                  }
 
                   return 'setting' == params.what ? params : __element__.deferred.embedded;
             }
