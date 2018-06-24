@@ -34,6 +34,22 @@ $.extend( CZRDynModuleMths, {
             ////////////////////////////////////////////////////
             /// MODULE DOM EVENT MAP
             ////////////////////////////////////////////////////<
+            // addItem utility
+            // @return void()
+            // @param params : { dom_el : {}, dom_event : {}, event : {}, model {} }
+            var _doAddItem = function( params ) {
+                    module.addItem( params ).done( function( item_id ) {
+                          module.czr_Item( item_id , function( _item_ ) {
+                                _item_.embedded.then( function() {
+                                      _item_.viewState( 'expanded' );
+                                });
+                          });
+                  })
+                  .fail( function( error ) {
+                        api.errare( 'module.addItem failed on add_item', error );
+                  });
+            };
+
             module.userEventMap = new api.Value( [
                   //pre add new item : open the dialog box
                   {
@@ -51,20 +67,12 @@ $.extend( CZRDynModuleMths, {
                                         canWe = { addTheItem : true };
                                     // allow remote filtering of the condition for addition
                                     module.trigger( 'is-item-addition-possible', canWe );
+
+                                    // if the module has a pre-item, let's expand it, otherwise, let's add the item right away
                                     if ( canWe.addTheItem && module.hasPreItem ) {
                                           module.preItemExpanded.set( ! module.preItemExpanded() );
                                     } else {
-                                          module.addItem( params )
-                                                .done( function( item_id ) {
-                                                      module.czr_Item( item_candidate.id, function( _item_ ) {
-                                                            _item_.embedded.then( function() {
-                                                                  module.czr_Item( item_candidate.id ).viewState( 'expanded' );
-                                                            });
-                                                      });
-                                                })
-                                                .fail( function( error ) {
-                                                      api.errare( 'module.addItem failed on pre_add_item', error );
-                                                });
+                                          _doAddItem( params );
                                     }
                               },
                         ],
@@ -76,21 +84,12 @@ $.extend( CZRDynModuleMths, {
                         name      : 'add_item',
                         //@param params : { dom_el : {}, dom_event : {}, event : {}, model {} }
                         actions   : function( params ) {
-                              module.closeRemoveDialogs( params ).closeAllItems( params ).addItem( params )
-                                    .done( function( item_id ) {
-                                          module.czr_Item( item_candidate.id, function( _item_ ) {
-                                                _item_.embedded.then( function() {
-                                                      module.czr_Item( item_candidate.id ).viewState( 'expanded' );
-                                                });
-                                          } );
-                                    })
-                                    .fail( function( error ) {
-                                          api.errare( 'module.addItem failed on add_item', error );
-                                    });
+                              module.closeRemoveDialogs( params ).closeAllItems( params );
+                              _doAddItem( params );
                         }
                   }
             ]);//module.userEventMap
-      },
+      },//initialize()
 
 
 
@@ -177,7 +176,7 @@ $.extend( CZRDynModuleMths, {
 
       //Fired on user Dom action.
       //the item is manually added.
-      //@return a promise() for future sequential actions
+      //@return a promise() with the item_id as param
       //@param params : { dom_el : {}, dom_event : {}, event : {}, model {} }
       addItem : function( params ) {
             var dfd = $.Deferred();
@@ -251,9 +250,11 @@ $.extend( CZRDynModuleMths, {
                                     // It would be better to wait for the refresh promise
                                     api.previewer.bind( 'ready', resolveWhenPreviewerReady );
                                     api.previewer.refresh();
+                              } else {
+                                    _dfd_.resolve();
                               }
                         } else {
-                              _dfd_.resolve( );
+                              _dfd_.resolve();
                         }
                   });
             }).always( function() {
