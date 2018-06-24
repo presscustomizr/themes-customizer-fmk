@@ -43,9 +43,9 @@ $.extend( CZRBaseModuleControlMths, {
               //     api.consoleLog( 'SETTING ', control.id, ' HAS CHANGED : ', to, from );
               // });
 
-              if ( api.section.has( control.section() ) ) {
-                    //close any open item and dialog boxes on section expansion
-                    api.section( control.section() ).expanded.bind(function(to) {
+              //close any open item and dialog boxes on section expansion
+              api.section( control.section(), function( _section_ ) {
+                    _section_.expanded.bind(function(to) {
                           control.czr_Module.each( function( _mod ){
                                 _mod.closeAllItems().closeRemoveDialogs();
                                 if ( _.has( _mod, 'preItem' ) ) {
@@ -53,9 +53,7 @@ $.extend( CZRBaseModuleControlMths, {
                                 }
                           });
                     });
-              } else {
-                    api.errare('The section ' + control.params.section + ' of control ' + id + ' has not been registered yet' );
-              }
+              });
 
       },
 
