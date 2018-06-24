@@ -7,12 +7,13 @@
   //This is needed for modules contextually dependant
   //For example, the slider module will initialize the module model based on the contextual informations, if no items have been set yet.
   api.czr_wpQueryDataReady = api.czr_wpQueryDataReady || $.Deferred();
+  api.czr_wpQueryInfos = api.czr_wpQueryInfos || new api.Value();
 
   //Data are sent by the preview frame when the panel has sent the 'sync' or even better 'active' event
   api.bind( 'ready', function() {
         /* WP CONDITIONAL TAGS => stores and observes the WP conditional tags sent by the preview */
         api.previewer.bind( 'czr-query-data-ready', function( data ) {
-              api.czr_wpQueryInfos = api.czr_wpQueryInfos || new api.Value();
+
               api.czr_wpQueryInfos( data );
 
               if ( 'pending' == api.czr_wpQueryDataReady.state() ) {
