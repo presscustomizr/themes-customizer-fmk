@@ -544,9 +544,9 @@ li#customize-control-tc_theme_options-tc_custom_css textarea {
 
 /* LAYOUT SELECTION SPECIFICS */
 .czr-layout-img {
-  height: 26px;
-  padding-top: 2px;
-  border: 1px solid #FFF;
+  height: 22px;
+  margin-top: 2px;
+  outline: 1px solid #FFF;
 }
 .czr-layout-title {
   padding: 0 0px 18px 12px;
