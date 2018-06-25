@@ -168,8 +168,9 @@ $.extend( CZRModuleMths, {
                                     //listen to item Collection changes
                                     module.itemCollection.callbacks.add( function() { return module.itemCollectionReact.apply( module, arguments ); } );
 
-                                    //it can be overridden by a module in its initialize method
-                                    if ( module.isMultiItem() ) {
+                                    // The sortable property is set on module registration
+                                    // if not specified, the sortable will be set to true by default if the module is crud or multi-item
+                                    if ( false !== module.sortable ) {
                                           module._makeItemsSortable();
                                     }
                               });
