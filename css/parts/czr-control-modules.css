@@ -48,15 +48,15 @@
   -o-transition: opacity 1s ease-in-out;
   transition: opacity 1s ease-in-out;
 }
-
+/* Display a thin outline around opened item, for multi-items modules */
 #customize-theme-controls .czr-single-item.open {
   /*border: 1px solid #dedede;*/
   outline: 1px solid #ccc;
 }
 /* Keep the normal border for single module, mono items controls */
-/*#customize-theme-controls .mono-item-mod .czr-single-item {
-  border: 1px solid #ccc;
-}*/
+#customize-theme-controls .mono-item-mod .czr-single-item {
+  outline: none;
+}
 
 .czr-single-item .czr-item-header, .czr-single-item .czr-item-content {
   padding: 1%;
