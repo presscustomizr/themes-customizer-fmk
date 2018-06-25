@@ -93,7 +93,7 @@ $.extend( CZRBaseModuleControlMths, {
             //       control : {},//control,
             //       section : ''
             // };
-            _.each( control.getDefaultModuleApiModel() , function( _value, _key ) {
+            _.each( control.getDefaultModuleApiModel() , function( _defaultValue, _key ) {
                   var _candidate_val = module_candidate[_key];
                   switch( _key ) {
                         //PROPERTIES COMMON TO ALL MODULES IN ALL CONTEXTS
@@ -125,7 +125,10 @@ $.extend( CZRBaseModuleControlMths, {
                         case 'crud' :
                               //get the value from the czrModuleMap
                               if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud || _value;
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
+                                    if ( _.isUndefined( _candidate_val ) ) {
+                                          _candidate_val = _defaultValue;
+                                    }
                               } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
                                     throw new Error('prepareModuleForAPI : the module param "crud" must be a boolean');
                               }
@@ -134,7 +137,10 @@ $.extend( CZRBaseModuleControlMths, {
                         case 'hasPreItem' :
                               //get the value from the czrModuleMap
                               if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].hasPreItem || _value;
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].hasPreItem;
+                                    if ( _.isUndefined( _candidate_val ) ) {
+                                          _candidate_val = _defaultValue;
+                                    }
                               } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
                                     throw new Error('prepareModuleForAPI : the module param "hasPreItem" must be a boolean');
                               }
@@ -143,16 +149,23 @@ $.extend( CZRBaseModuleControlMths, {
                         case 'refresh_on_add_item' :
                               //get the value from the czrModuleMap
                               if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].refresh_on_add_item || _value;
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].refresh_on_add_item;
+                                    if ( _.isUndefined( _candidate_val ) ) {
+                                          _candidate_val = _defaultValue;
+                                    }
                               } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
                                     throw new Error('prepareModuleForAPI : the module param "refresh_on_add_item" must be a boolean');
                               }
                               api_ready_module[_key] = _candidate_val || false;
                         break;
                         case 'multi_item' :
-                              //get the value from the czrModuleMap
+                              // get the value from the czrModuleMap
+                              // fallback on "crud" param if set
                               if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                                    if ( _.isUndefined( _candidate_val ) ) {
+                                          _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
+                                    }
                               } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
                                     throw new Error('prepareModuleForAPI : the module param "multi_item" must be a boolean');
                               }
@@ -162,7 +175,14 @@ $.extend( CZRBaseModuleControlMths, {
                         case 'sortable' :
                               //get the value from the czrModuleMap
                               if ( _.has( api.czrModuleMap, module_candidate.module_type ) ) {
-                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].sortable || api.czrModuleMap[ module_candidate.module_type ].crud || api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                                    // if the sortable param is not specified, set it based on the "crud" and "multi_item" params
+                                    _candidate_val = api.czrModuleMap[ module_candidate.module_type ].sortable;
+                                    if ( _.isUndefined( _candidate_val ) ) {
+                                          _candidate_val = api.czrModuleMap[ module_candidate.module_type ].crud;
+                                    }
+                                    if ( _.isUndefined( _candidate_val ) ) {
+                                          _candidate_val = api.czrModuleMap[ module_candidate.module_type ].multi_item;
+                                    }
                               } else if ( ! _.isUndefined( _candidate_val) && ! _.isBoolean( _candidate_val )  ) {
                                     throw new Error('prepareModuleForAPI : the module param "sortable" must be a boolean');
                               }
