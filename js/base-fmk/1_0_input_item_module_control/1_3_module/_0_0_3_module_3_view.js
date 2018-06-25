@@ -179,7 +179,9 @@ $.extend( CZRModuleMths, {
       },
 
 
-      //fired when module.isReady.done
+      // fired when module.isReady.done
+      // if sortable is 'true' on registration
+      // default is false
       _makeItemsSortable : function(obj) {
               if ( wp.media.isTouchDevice || ! $.fn.sortable )
                 return;
