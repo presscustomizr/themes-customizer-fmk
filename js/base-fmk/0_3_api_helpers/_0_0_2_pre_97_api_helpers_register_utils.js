@@ -37,8 +37,6 @@
                               );
                               // assign the value sent from the server
 
-
-                              // console.log('registerDynamicModuleSettingControl => SETTING DATA ?', params.id, settingArgs);
                               var SettingConstructor = api.settingConstructor[ settingArgs.type ] || api.Setting;
 
                               // extend with specific additional options provided on registration
@@ -135,8 +133,6 @@
                                     //api.errorLog( 'registerControl => ' + params.id + ' is already registered');
                                     break;
                               }
-
-                              //console.log('PARAMS BEFORE REGISTERING A CONTROL => ', params);
 
                               //@see api.settings.controls,
                               defaults = $.extend( true, {}, api.Control.prototype.defaults );
