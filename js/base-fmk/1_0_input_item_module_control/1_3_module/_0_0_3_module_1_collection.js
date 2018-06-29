@@ -19,7 +19,6 @@ $.extend( CZRModuleMths, {
                     api.errorLog( 'populateSavedItemCollection : The saved items collection must be an array in module :' + module.id );
                     return;
               }
-
               _deepCopyOfItemCollection = $.extend( true, [], _itemCollection_ || module().items );
 
               //populates the collection with the saved items
@@ -54,10 +53,6 @@ $.extend( CZRModuleMths, {
 
               //INSTANTIATE THE ITEMS
               _.each( _deepCopyOfItemCollection, function( item_candidate , key ) {
-                    if ( ! _.isObject( item_candidate ) ) {
-                          api.errare( 'populateSavedItemCollection => an item should be described by an object in module type : ' + module.module_type, 'module id : '  + module.id );
-                          return;
-                    }
                     //instantiates and fires ready
                     var _doInstantiate_ = function() {
                           var _item_instance_ = module.instantiateItem( item_candidate );
@@ -72,7 +67,7 @@ $.extend( CZRModuleMths, {
                           _doInstantiate_();
                     } else {
                           try { _doInstantiate_(); } catch( er ) {
-                                api.errare( 'populateSavedItemCollection : ' + er );
+                                api.errare( 'populateSavedItemCollection => ' + er );
                           }
                     }
               });
@@ -83,7 +78,7 @@ $.extend( CZRModuleMths, {
                           return;
                     }
                     if ( _.isUndefined( _.findWhere( module.itemCollection(), _item.id ) ) ) {
-                          throw new Error( 'populateSavedItemCollection : The saved items have not been properly populated in module : ' + module.id );
+                          throw new Error( 'populateSavedItemCollection => The saved items have not been properly populated in module : ' + module.id );
                     }
               });
 
@@ -96,13 +91,16 @@ $.extend( CZRModuleMths, {
       instantiateItem : function( item_candidate, is_added_by_user ) {
               var module = this;
 
+              // Cast to an object now.
+              item_candidate = _.isObject( item_candidate ) ? item_candidate : {};
+
               // FIRST VALIDATION
               //allow modules to validate the item_candidate before addition
               item_candidate = module.validateItemBeforeAddition( item_candidate, is_added_by_user );
 
               // Abort here and display a simple console message if item is null or false, for example if validateItemBeforeAddition returned null or false
               if ( ! item_candidate || _.isNull( item_candidate ) ) {
-                    api.consoleLog( 'CZRModule::instantiateItem() : item_candidate did not pass validation in module ' + module.id );
+                    api.errare( 'CZRModule::instantiateItem() => item_candidate did not pass validation in module ' + module.id );
                     return;
               }
 
@@ -110,24 +108,29 @@ $.extend( CZRModuleMths, {
               //Prepare the item, make sure its id is set and unique
               item_candidate = module.prepareItemForAPI( item_candidate );
 
+              if ( ! _.isObject( item_candidate ) ) {
+                    api.errare( 'CZRModule::instantiateItem() => an item should be described by an object in module type : ' + module.module_type, 'module id : '  + module.id );
+                    return;
+              }
+
               // Display a simple console message if item is null or false, for example if validateItemBeforeInstantiation returned null or false
               if ( ! item_candidate || _.isNull( item_candidate ) ) {
-                    api.errare( 'CZRModule::instantiateItem() : item_candidate invalid in module ' + module.id );
+                    api.errare( 'CZRModule::instantiateItem() => item_candidate invalid in module ' + module.id );
                     return;
               }
 
               //ITEM ID CHECKS
               if ( ! _.has( item_candidate, 'id' ) ) {
-                    throw new Error('CZRModule::instantiateItem() : an item has no id and could not be added in the collection of : ' + this.id );
+                    throw new Error('CZRModule::instantiateItem() => an item has no id and could not be added in the collection of : ' + this.id );
               }
               if ( module.czr_Item.has( item_candidate.id ) ) {
-                    throw new Error('CZRModule::instantiateItem() : the following item id ' + item_candidate.id + ' already exists in module.czr_Item() for module ' + this.id  );
+                    throw new Error('CZRModule::instantiateItem() => the following item id ' + item_candidate.id + ' already exists in module.czr_Item() for module ' + this.id  );
               }
               //instantiate the item with the item constructor, default one or provided by the module
               module.czr_Item.add( item_candidate.id, new module.itemConstructor( item_candidate.id, item_candidate ) );
 
               if ( ! module.czr_Item.has( item_candidate.id ) ) {
-                    throw new Error('CZRModule::instantiateItem() : instantiation failed for item id ' + item_candidate.id + ' for module ' + this.id  );
+                    throw new Error('CZRModule::instantiateItem() => instantiation failed for item id ' + item_candidate.id + ' for module ' + this.id  );
               }
               //the item is now ready and will listen to changes
               //return the instance
