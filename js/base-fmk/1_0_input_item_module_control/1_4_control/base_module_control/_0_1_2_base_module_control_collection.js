@@ -96,17 +96,21 @@ $.extend( CZRBaseModuleControlMths, {
                   params.module_id = params.module.id;
                   params.moduleRegistrationParams = params.module;
                   params.module = control.prepareModuleForDB( $.extend( true, {}, params.module  ) );
-
             }
 
             // Inform the the setting if the module is not being added to the collection for the first time,
             // We don't want to say it to the setting, because it might alter the setting dirtyness for nothing on init.
             if ( ! is_module_added ) {
-                  //control.filterModuleCollectionBeforeAjax( to ) returns an array of items
-                  //if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
-                  api( this.id )
-                        .set( control.filterModuleCollectionBeforeAjax( to ), params );
-                        //.done( function( to, from, o ) {});
+                  // control.filterModuleCollectionBeforeAjax( to ) returns an array of items
+                  // if the module has modOpt, the modOpt object is always added as the first element of the items array (unshifted)
+                  if ( serverControlParams.isDevMode ) {
+                        api( this.id ).set( control.filterModuleCollectionBeforeAjax( to ), params );
+                  } else {
+                        try { api( this.id ).set( control.filterModuleCollectionBeforeAjax( to ), params ); } catch( er ) {
+                              api.errare( 'api.CZRBaseControl::moduleCollectionReact => error when firing control.filterModuleCollectionBeforeAjax( to )', er );
+                        }
+                  }
+                  //.done( function( to, from, o ) {});
             }
       },
       /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -125,10 +129,11 @@ $.extend( CZRBaseModuleControlMths, {
       //@return the collection array
       filterModuleCollectionBeforeAjax : function( collection ) {
               var control = this,
-                  _filtered_collection = $.extend( true, [], collection ),
+                  cloned_collection = $.extend( true, [], collection ),
+                  _filtered_collection = [],
                   itemsToReturn;
 
-              _.each( collection , function( _mod, _key ) {
+              _.each( cloned_collection , function( _mod, _key ) {
                     var db_ready_mod = $.extend( true, {}, _mod );
                     _filtered_collection[_key] = control.prepareModuleForDB( db_ready_mod );
               });
@@ -137,23 +142,32 @@ $.extend( CZRBaseModuleControlMths, {
               //1) the collection of item(s)
               //2) the modOpt
               //at this point we should be in the case of a single module collection, typically use to populate a regular setting
-              if ( _.size( collection ) > 1 ) {
-                throw new Error('There should not be several modules in the collection of control : ' + control.id );
+              if ( _.size( cloned_collection ) > 1 ) {
+                    throw new Error('There should not be several modules in the collection of control : ' + control.id );
               }
-              if ( ! _.isArray( collection ) || _.isEmpty( collection ) || ! _.has( collection[0], 'items' ) ) {
-                throw new Error('The setting value could not be populated in control : ' + control.id );
+              if ( ! _.isArray( cloned_collection ) || _.isEmpty( cloned_collection ) || ! _.has( cloned_collection[0], 'items' ) ) {
+                    throw new Error('The setting value could not be populated in control : ' + control.id );
               }
-              var module_id = collection[0].id;
+              var module_id = cloned_collection[0].id;
 
               if ( ! control.czr_Module.has( module_id ) ) {
-                 throw new Error('The single module control (' + control.id + ') has no module registered with the id ' + module_id  );
+                    throw new Error('The single module control (' + control.id + ') has no module registered with the id ' + module_id  );
               }
               var module_instance = control.czr_Module( module_id );
               if ( ! _.isArray( module_instance().items ) ) {
-                throw new Error('The module ' + module_id + ' should be an array in control : ' + control.id );
+                    throw new Error('The module ' + module_id + ' should be an array in control : ' + control.id );
               }
 
-              //items
+              // items
+              // For a mono-item module, we save the first and unique item object
+              // For example :
+              // {
+              //  'heading_text' : "this is a heading"
+              //  'font_size' : '10px'
+              //  ...
+              // }
+              //
+              // For a multi-item module, we save a collection of item objects, which may include a mod_opt item
               itemsToReturn = module_instance.isMultiItem() ? module_instance().items : ( module_instance().items[0] || [] );
               itemsToReturn = module_instance.filterItemsBeforeCoreApiSettingValue( itemsToReturn );
 
@@ -162,17 +176,27 @@ $.extend( CZRBaseModuleControlMths, {
       },
 
 
-      //fired before adding a module to the collection of DB candidates
-      //the module must have the control.getDefaultModuleDBModel structure :
+      // fired before adding a module to the collection of DB candidates
+      // the module must have the control.getDefaultModuleDBModel structure :
       prepareModuleForDB : function ( module_db_candidate ) {
+            var control = this;
             if ( ! _.isObject( module_db_candidate ) ) {
                   throw new Error('::prepareModuleForDB : a module must be an object.');
             }
             var db_ready_module = {};
 
+            // The items property should be a collection, even for mono-item modules
             if ( ! _.isArray( module_db_candidate['items'] )  ) {
                   throw new Error('::prepareModuleForDB : a module item list must be an array');
             }
+
+            // Let's loop on the item(s) to check if they are well formed
+            _.each( module_db_candidate['items'], function( itm ) {
+                  if ( ! _.isObject( itm ) ) {
+                        throw new Error('::prepareModuleForDB : a module item must be an object');
+                  }
+            });
+
             db_ready_module['items'] = module_db_candidate['items'];
             return db_ready_module;
       }
