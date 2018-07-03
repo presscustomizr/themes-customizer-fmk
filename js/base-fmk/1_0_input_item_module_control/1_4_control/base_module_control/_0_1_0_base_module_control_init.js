@@ -38,11 +38,6 @@ $.extend( CZRBaseModuleControlMths, {
 
               api.CZRBaseControl.prototype.initialize.call( control, id, options );
 
-              //FOR TEST PURPOSES
-              // api(this.id).bind( function( to, from) {
-              //     api.consoleLog( 'SETTING ', control.id, ' HAS CHANGED : ', to, from );
-              // });
-
               //close any open item and dialog boxes on section expansion
               api.section( control.section(), function( _section_ ) {
                     _section_.expanded.bind(function(to) {
@@ -72,11 +67,19 @@ $.extend( CZRBaseModuleControlMths, {
       // });
       //////////////////////////////////
       ready : function() {
-              var control = this;
-              var single_module = {};
+              var control = this,
+                  single_module = {},
+                  savedModules;
 
-              //inits the collection with the saved module => there's only one module to instantiate in this case.
-              //populates the collection with the saved module
+              // Get the saved module and its initial items, get from the db of when dynamically registrating the setting control.
+              try { savedModules = control.getSavedModules(); } catch( er ) {
+                    api.errare( 'api.CZRBaseControl::ready() => error on control.getSavedModules()', er );
+                    control.moduleCollectionReady.reject();
+                    return;
+              }
+
+              // inits the collection with the saved module => there's only one module to instantiate in this case.
+              // populates the collection with the saved module
               _.each( control.getSavedModules() , function( _mod, _key ) {
                     //stores it
                     single_module = _mod;
@@ -87,7 +90,7 @@ $.extend( CZRBaseModuleControlMths, {
                           control.instantiateModule( _mod, {} );
                     } else {
                           try { control.instantiateModule( _mod, {} ); } catch( er ) {
-                                api.errare( 'Failed to instantiate module ' + _mod.id , er );
+                                api.errare( 'api.CZRBaseControl::Failed to instantiate module ' + _mod.id , er );
                                 return;
                           }
                     }
@@ -130,11 +133,11 @@ $.extend( CZRBaseModuleControlMths, {
       },
 
 
-      //@return the collection [] of saved module(s) to instantiate
-      //This method does not make sure that the module model is ready for API.
-      //=> it just returns an array of saved module candidates to instantiate.
+      // @return the collection [] of saved module(s) to instantiate
+      // This method does not make sure that the module model is ready for API.
+      // => it just returns an array of saved module candidates to instantiate.
       //
-      //Before instantiation, we will make sure that all required property are defined for the modules with the method control.prepareModuleForAPI()
+      // Before instantiation, we will make sure that all required property are defined for the modules with the method control.prepareModuleForAPI()
       // control     : control,
       // crud        : bool
       // id          : '',
@@ -151,14 +154,15 @@ $.extend( CZRBaseModuleControlMths, {
                   _saved_items = [],
                   _saved_modOpt = {};
 
-              //What is the current server saved value for this setting?
-              //in a normal case, it should be an array of saved properties
-              //But it might not be if coming from a previous option system.
-              //=> let's normalize it.
-              //First let's perform a quick check on the current saved db val.
-              //If the module is not multi-item, the saved value should be an object or empty if not set yet
-              if ( api.CZR_Helpers.isMultiItemModule( _module_type ) && ! _.isEmpty( api( control.id )() ) && ! _.isObject( api( control.id )() ) ) {
-                    api.errare(' getSavedModules => module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
+              // What is the current server saved value for this setting?
+              // in a normal case, it should be an array of saved properties
+              // But it might not be if coming from a previous option system.
+              // => let's normalize it.
+              //
+              // First let's perform a quick check on the current saved db val.
+              // If the module is not multi-item, the saved value should be an object or empty if not set yet
+              if ( ! api.CZR_Helpers.isMultiItemModule( _module_type ) && ! _.isEmpty( api( control.id )() ) && ! _.isObject( api( control.id )() ) ) {
+                    api.errare('api.CZRBaseControl::getSavedModules => module Control Init for ' + control.id + '  : a mono item module control value should be an object if not empty.');
               }
 
               //SPLIT ITEMS [] and MODOPT {}
@@ -183,17 +187,47 @@ $.extend( CZRBaseModuleControlMths, {
               //   ]
               //  [...]
 
-              //POPULATE THE ITEMS [] and the MODOPT {} FROM THE RAW DB SAVED SETTING VAL
+              // POPULATE THE ITEMS [] and the MODOPT {} FROM THE RAW DB SAVED SETTING VAL
+              // OR with the value used when registrating the module
+              //
+              // Important note :
+              // The items should be turned into a collection of items [].
               var settingId = api.CZR_Helpers.getControlSettingId( control.id ),
                   settingVal = api( settingId )();
-              _raw_saved_module_val = _.isArray( settingVal ) ? settingVal : [ settingVal ];
+
+              // TO FIX
+              if ( _.isEmpty( settingVal ) ) {
+                    _raw_saved_module_val = [];
+              } else {
+                    _raw_saved_module_val = _.isArray( settingVal ) ? settingVal : [ settingVal ];
+              }
+
 
               _.each( _raw_saved_module_val, function( item_or_mod_opt_candidate , key ) {
+                    if ( ! _.isObject( item_or_mod_opt_candidate ) ) {
+                          api.errare( 'api.CZRBaseControl::::getSavedModules => an item must be an object in control ' + control.id + ' => module type => ' + control.params.module_type, _raw_saved_module_val );
+                          return;
+                    }
+
+                    // An item or modOpt can be empty on init
+                    // But if not empty, it has to be an associative object, with keys that are string typed
+                    // Fixes the case where an item { null } was accepted
+                    // https://github.com/presscustomizr/themes-customizer-fmk/issues/46
+                    if ( ! _.isEmpty( item_or_mod_opt_candidate ) ) {
+                          _.each( item_or_mod_opt_candidate, function( prop, _key_ ) {
+                                if ( ! _.isString( _key_ ) ) {
+                                      api.errare( 'api.CZRBaseControl::::getSavedModules => item not well formed in control : ' + control.id + ' => module type => ' + control.params.module_type, _raw_saved_module_val );
+                                      return;
+                                }
+                          });
+                    }
+
+
                     // Module options, if enabled, are always saved as first key
                     if ( api.CZR_Helpers.hasModuleModOpt( _module_type ) && 0*0 === key ) {
                           // a saved module mod_opt object should not have an id
                           if ( _.has( item_or_mod_opt_candidate, 'id') ) {
-                                api.errare( 'getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no mod_opt defined while it should.' );
+                                api.errare( 'api.CZRBaseControl::getSavedModules : the module ' + _module_type + ' in control ' + control.id + ' has no mod_opt defined while it should.' );
                           } else {
                                 _saved_modOpt = item_or_mod_opt_candidate;
                           }
@@ -209,7 +243,10 @@ $.extend( CZRBaseModuleControlMths, {
               });
 
 
-              //for now this is a collection with one module
+              // This is a collection with one module
+              // Note : @todo : the fact that the module are saved as a collection is not relevant anymore
+              // This was introduced back in 2016 when building the first version of the section plugin.
+              // With Nimble, a control can have one module only.
               _savedModulesCandidates.push({
                     id : api.CZR_Helpers.getOptionName( control.id ) + '_' + control.params.type,
                     module_type : control.params.module_type,
