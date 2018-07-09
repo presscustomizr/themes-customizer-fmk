@@ -68,9 +68,9 @@ $.extend( CZRInputMths , {
           ];
 
 
-          //Try to find a match with the provided constructor type
-          //=> fire the relevant callback with the provided input_options
-          //input.type_map is declared in extend_api_base
+          // Try to find a match with the provided constructor type
+          // => fire the relevant callback with the provided input_options
+          // input.type_map is declared in extend_api_base
           if ( api.czrInputMap && _.has( api.czrInputMap, input.type ) ) {
                 var _meth = api.czrInputMap[ input.type ];
                 if ( _.isFunction( input[_meth]) ) {
@@ -83,7 +83,8 @@ $.extend( CZRInputMths , {
           }
 
 
-          //Visibility
+          // Visibility => typically used when implementing the input dependencies
+          // true by default
           input.visible = new api.Value( true );
           input.isReady.done( function() {
                 input.visible.bind( function( visible ) {
@@ -94,7 +95,8 @@ $.extend( CZRInputMths , {
                 });
           });
 
-          //Visibility
+          // Enabled status => control the toggling of a "disabled" css class => blur + decrease opacity
+          // used for the hueman pro slide module
           input.enabled = new api.Value( true );
           input.isReady.done( function() {
                 input.enabled.bind( function( enabled ) {
