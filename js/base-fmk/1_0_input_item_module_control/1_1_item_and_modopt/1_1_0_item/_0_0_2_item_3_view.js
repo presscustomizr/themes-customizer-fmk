@@ -15,11 +15,11 @@ $.extend( CZRItemMths , {
 
             $.when( item.renderItemWrapper() ).done( function( $_container ) {
                   item.container = $_container;
-                  if ( _.isUndefined(item.container) || ! item.container.length ) {
-                      throw new Error( 'In mayBeRenderItemWrapper the Item view has not been rendered : ' + item.id );
+                  if ( _.isUndefined( item.container ) || ! item.container.length ) {
+                        throw new Error( 'In mayBeRenderItemWrapper the Item view has not been rendered : ' + item.id );
                   } else {
-                      //say it
-                      item.embedded.resolve();
+                        //say it
+                        item.embedded.resolve();
                   }
             });
       },
@@ -117,6 +117,7 @@ $.extend( CZRItemMths , {
             return dfd.promise();
       },
 
+
       // fired when item is ready and embedded
       // define the item view DOM event map
       // bind actions when the item is embedded
@@ -124,30 +125,34 @@ $.extend( CZRItemMths , {
             var item = this,
                 module = this.module;
 
-            //_item_model_ = item() || item.initial_item_model;//could not be set yet
+            // _item_model_ = item() || item.initial_item_model;//could not be set yet
 
             // Let's create a deep copy now
             item_model = item() || item.initial_item_model;//$.extend( true, {}, _item_model_ );
 
-            //always write the title
+            // always write the title
             item.writeItemViewTitle();
 
 
-            //When do we render the item content ?
-            //If this is a multi-item module, let's render each item content when they are expanded.
-            //In the case of a single item module, we can render the item content now.
+            // When do we render the item content ?
+            // If this is a multi-item module, let's render each item content when they are expanded.
+            // In the case of a single item module, we can render the item content now.
             var _updateItemContentDeferred = function( $_item_content, to, from ) {
                   //update the $.Deferred state
                   if ( ! _.isUndefined( $_item_content ) && false !== $_item_content.length ) {
                         item.contentContainer = $_item_content;
+                        // The 'contentRendered' event triggers the api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
                         item.trigger( 'contentRendered', { item_content : $_item_content } );
                         item.toggleItemExpansion( to, from );
+                        item.cleanLoader();
+
                   }
                   else {
                         throw new Error( 'Module : ' + item.module.id + ', the item content has not been rendered for ' + item.id );
                   }
             };
 
+            // MULTI-ITEM MODULE
             if ( item.module.isMultiItem() ) {
                   item.viewState.callbacks.add( function( to, from ) {
                         //viewState can take 3 states : expanded, expanded_noscroll, closed
@@ -167,6 +172,7 @@ $.extend( CZRItemMths , {
                                     //toggle on view state change
                                     item.toggleItemExpansion(to, from );
                               } else {
+                                    item.printLoader();
                                     item.renderItemContent( item() || item.initial_item_model )
                                           .done( function( $_item_content ) {
                                                 //introduce a small delay to give some times to the modules to be printed.
@@ -197,13 +203,15 @@ $.extend( CZRItemMths , {
                               });
                         }
                   });
-            } else {
+            }
+            // SINGLE ITEM MODULE
+            else {
                   //react to the item state changes
                   item.viewState.callbacks.add( function( to, from ) {
                         //toggle on view state change
-                        item.toggleItemExpansion.apply(item, arguments );
+                        item.toggleItemExpansion.apply(item, [ to, from, 0 ] );
                   });
-
+                  item.printLoader();
                   //renderview content now for a single item module
                   item.renderItemContent( item_model )
                         .done( function( $_item_content ) {
@@ -296,10 +304,11 @@ $.extend( CZRItemMths , {
                         if ( visible )
                           module._adjustScrollExpandedBlock( item.container );
                   };
-                  if ( visible )
-                    $_alert_el.stop( true, true ).slideDown( 200, function() { _slideComplete( visible ); } );
-                  else
-                    $_alert_el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
+                  if ( visible ) {
+                        $_alert_el.stop( true, true ).slideDown( 200, function() { _slideComplete( visible ); } );
+                  } else {
+                        $_alert_el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
+                  }
             });//item.removeDialogVisible.bind()
       },//itemWrapperViewSetup
 
@@ -440,9 +449,9 @@ $.extend( CZRItemMths , {
                 };
 
             if ( visible ) {
-                  $el.stop( true, true ).slideDown( duration || 200, function() { _slideComplete( visible ); } );
+                  $el.stop( true, true ).slideDown( duration || 150, function() { _slideComplete( visible ); } );
             } else {
-                  $el.stop( true, true ).slideUp( 200, function() { _slideComplete( visible ); } );
+                  $el.stop( true, true ).slideUp( 0, function() { _slideComplete( visible ); } );
             }
 
             return dfd.promise();
@@ -457,6 +466,34 @@ $.extend( CZRItemMths , {
                   $(this).remove();
                 }
             });
-      }
+      },
+
+
+
+
+
+
+      // LOADER HELPERS
+      // @return void()
+      // print a loader between the moment the item container is appended, and the item content is fetched from the server
+      printLoader : function() {
+            var item = this;
+            item.container
+                .css({'position' :'relative'})
+                .append( api.CZR_Helpers.css_loader_html ).find('.czr-css-loader').fadeIn( 'fast' );
+
+            // Start the countdown for auto-cleaning
+            clearTimeout( $.data( this, '_czr_loader_active_timer_') );
+            $.data( this, '_czr_loader_active_timer_', setTimeout(function() {
+                  item.cleanLoader();
+            }, 5000 ) );
+      },
+
+      // @return void()
+      cleanLoader : function() {
+            this.container
+                .css({'min-height' : ''})
+                .find('.czr-css-loader').remove();
+      },
 });//$.extend
 })( wp.customize , jQuery, _ );

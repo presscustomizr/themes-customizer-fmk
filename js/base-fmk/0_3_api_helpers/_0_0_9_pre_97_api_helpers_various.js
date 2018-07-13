@@ -8,6 +8,8 @@ api.CZR_Helpers = api.CZR_Helpers || {};
 //@event map = [ {event1}, {event2}, ... ]
 //@new_event = {  trigger   : event name , actions   : [ 'cb1', 'cb2', ... ] }
 api.CZR_Helpers = $.extend( api.CZR_Helpers, {
+      css_loader_html : '<div class="czr-css-loader czr-mr-loader" style="display:none"><div></div><div></div><div></div></div>',
+
       //While a control should always have a default setting,
       //It can have additional setting assigned
       //This method returns the default setting or the specified type if requested
