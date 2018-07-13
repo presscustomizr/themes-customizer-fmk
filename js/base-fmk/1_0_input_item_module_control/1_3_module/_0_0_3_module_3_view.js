@@ -277,7 +277,7 @@ $.extend( CZRModuleMths, {
             setTimeout(
                   function() {
                         preProcessTabs().done( function() {
-                              $('.tabs', inputParent.container ).fadeIn( 450 );
+                              $('.tabs', inputParent.container ).show();
                         });
                   },
                   20//<= introducing a small delay to let jQuery do its preprocessing job
