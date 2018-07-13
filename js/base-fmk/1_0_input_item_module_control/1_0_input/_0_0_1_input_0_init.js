@@ -74,9 +74,13 @@ $.extend( CZRInputMths , {
           if ( api.czrInputMap && _.has( api.czrInputMap, input.type ) ) {
                 var _meth = api.czrInputMap[ input.type ];
                 if ( _.isFunction( input[_meth]) ) {
-                      input[_meth]( options.input_options || null );
+                      try { input[_meth]( options.input_options || null ); } catch( er ) {
+                            api.errare( 'Error in input init => for input id :' + input.id + ' in module type : ' + input.module.module_type, er );
+                      }
                 } else if ( _.isFunction( api.czrInputMap[ input.type ] ) ) {
-                      api.czrInputMap[ input.type ].apply( input, [ options.input_options || null ] );
+                      try { api.czrInputMap[ input.type ].apply( input, [ options.input_options || null ] ); } catch( er ) {
+                            api.errare( 'Error in input init => for input id :' + input.id + ' in module type : ' + input.module.module_type, er );
+                      }
                 }
           } else {
                 api.errare('Warning the input : ' + input.id + ' with type ' + input.type + ' has no corresponding method defined in api.czrInputMap.');
@@ -88,10 +92,11 @@ $.extend( CZRInputMths , {
           input.visible = new api.Value( true );
           input.isReady.done( function() {
                 input.visible.bind( function( visible ) {
-                      if ( visible )
-                        input.container.stop( true, true ).slideDown( 200 );
-                      else
-                        input.container.stop( true, true ).slideUp( 200 );
+                      if ( visible ) {
+                            input.container.stop( true, true ).slideDown( 200 );
+                      } else {
+                            input.container.stop( true, true ).slideUp( 200 );
+                      }
                 });
           });
 
