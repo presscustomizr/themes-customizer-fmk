@@ -89,21 +89,6 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                             module        : module
                       };
 
-                  // introduced for Nimble
-                  // allows us to fine tune the ajax action on input change
-                  // the input constructor args, are stored in each input instance as input.constructorOptions @see Input::initialize()
-                  // the on input change, the constructor options are passed as params when setting the api.Value(to, from, params )
-                  // This can be used when listening to the associated setting of the parent module.
-                  if ( ! _.isUndefined( $(this).data( 'refresh-markup' ) ) ) {
-                        _inputArgs.refresh_markup = $(this).data( 'refresh-markup' );
-                  }
-                  if ( ! _.isUndefined( $(this).data( 'refresh-stylesheet' ) ) ) {
-                        _inputArgs.refresh_stylesheet = $(this).data( 'refresh-stylesheet' );
-                  }
-                  if ( ! _.isUndefined( $(this).data( 'refresh-fonts' ) ) ) {
-                        _inputArgs.refresh_fonts = $(this).data( 'refresh-fonts' );
-                  }
-
                   // ALLOW PLUGINS TO FILTER THE INPUT ARGS BEFORE INSTANTIATION
                   api.trigger( 'input-args-before-instantiation', _inputArgs );
 
