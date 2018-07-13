@@ -143,7 +143,7 @@ $.extend( CZRItemMths , {
                         item.contentContainer = $_item_content;
                         // The 'contentRendered' event triggers the api.CZR_Helpers.setupInputCollectionFromDOM.call( item );
                         item.trigger( 'contentRendered', { item_content : $_item_content } );
-                        item.toggleItemExpansion( to, from );
+                        item.toggleItemExpansion( to, item.module.isMultiItem() ? 150 : 0 );//the second param is the duration
                         item.cleanLoader();
 
                   }
@@ -170,7 +170,7 @@ $.extend( CZRItemMths , {
                               //item already rendered ?
                               if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
                                     //toggle on view state change
-                                    item.toggleItemExpansion(to, from );
+                                    item.toggleItemExpansion(to);
                               } else {
                                     item.printLoader();
                                     item.renderItemContent( item() || item.initial_item_model )
@@ -186,7 +186,7 @@ $.extend( CZRItemMths , {
                               }
                         } else {
                               //toggle on view state change
-                              item.toggleItemExpansion( to, from ).done( function() {
+                              item.toggleItemExpansion( to ).done( function() {
                                     if ( _.isObject( item.contentContainer ) && false !== item.contentContainer.length ) {
                                           item.trigger( 'beforeContenRemoved' );
                                           //Removes DOM input nodes
@@ -209,7 +209,7 @@ $.extend( CZRItemMths , {
                   //react to the item state changes
                   item.viewState.callbacks.add( function( to, from ) {
                         //toggle on view state change
-                        item.toggleItemExpansion.apply(item, [ to, from, 0 ] );
+                        item.toggleItemExpansion.apply( item, [ to, 0 ] );
                   });
                   item.printLoader();
                   //renderview content now for a single item module
@@ -416,9 +416,9 @@ $.extend( CZRItemMths , {
       },
 
 
-      //callback of item.viewState.callbacks
-      //viewState can take 3 states : expanded, expanded_noscroll, closed
-      toggleItemExpansion : function( status, from, duration ) {
+      // callback of item.viewState.callbacks
+      // viewState can take 3 states : expanded, expanded_noscroll, closed
+      toggleItemExpansion : function( status, duration ) {
             var visible = 'closed' != status,
                 item = this,
                 module = this.module,
@@ -447,9 +447,9 @@ $.extend( CZRItemMths , {
 
                       dfd.resolve();
                 };
-
+            duration = _.isUndefined( duration ) ? 150 : duration;
             if ( visible ) {
-                  $el.stop( true, true ).slideDown( duration || 150, function() { _slideComplete( visible ); } );
+                  $el.stop( true, true ).slideDown( duration, function() { _slideComplete( visible ); } );
             } else {
                   $el.stop( true, true ).slideUp( 0, function() { _slideComplete( visible ); } );
             }
