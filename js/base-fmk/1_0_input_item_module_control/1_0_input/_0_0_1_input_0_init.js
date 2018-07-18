@@ -108,12 +108,13 @@ $.extend( CZRInputMths , {
                       input.container.toggleClass( 'disabled', ! enabled );
                 });
           });
-
     },
 
 
-    //this method is not fired automatically
-    //It has to be invoked once the input has been instanciated.
+    // this method is not fired automatically
+    // It has to be invoked once the input has been instantiated
+    // input instantiation is performed from what is found in the DOM
+    // @see api.CZR_Helpers.setupInputCollectionFromDOM
     ready : function() {
             var input = this;
             input.setupDOMListeners( input.input_event_map , { dom_el : input.container }, input );
