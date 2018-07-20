@@ -231,8 +231,9 @@ li#customize-control-custom_css textarea {
 	line-height: 19px;
 }
 .customize-control span.customize-control-title:first-child {
-    position: relative;
-    padding: 3px 14px;
+  position: relative;
+  padding: 10px 0px 5px;
+  margin-left: 14px;
 }
 
 /* since v4.3 */
