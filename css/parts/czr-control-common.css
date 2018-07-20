@@ -232,6 +232,7 @@ li#customize-control-custom_css textarea {
 }
 .customize-control span.customize-control-title:first-child {
     position: relative;
+    padding: 3px 14px;
 }
 
 /* since v4.3 */
