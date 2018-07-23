@@ -61,6 +61,16 @@ api.CZR_Helpers = $.extend( api.CZR_Helpers, {
                                     //console.log( 'api.CZR_Helpers.getModuleTmpl => ', _r_ );
                                     api.errare( 'api.CZR_Helpers.getModuleTmpl => Problem when fetching the ' + args.tmpl + ' tmpl from server for module : ' + args.module_id + ' ' + args.module_type, _r_);
                                     dfd.reject( _r_ );
+                                    // Nimble => display an error notification when
+                                    // - session has expired
+                                    // - when statusText is "Bad Request"
+                                    if ( _.isObject( _r_ ) ) {
+                                          if ( 'invalid_nonce' === _r_.code || 'Bad Request' === _r_.statusText ) {
+                                                if ( window.sektionsLocalizedData && sektionsLocalizedData.i18n ) {
+                                                      api.previewer.trigger( 'sek-notify', { type : 'error', duration : 30000, message : sektionsLocalizedData.i18n['Something went wrong, please refresh this page.'] });
+                                                }
+                                          }
+                                    }
                               });
                   }
             }
