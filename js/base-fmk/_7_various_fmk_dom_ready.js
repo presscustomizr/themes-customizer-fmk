@@ -21,10 +21,23 @@
             // });
 
             var fireHeaderButtons = function() {
-                  var $home_button = $('<span/>', { class:'customize-controls-home fas fa-home', html:'<span class="screen-reader-text">Home</span>' } );
-                  $.when( $('#customize-header-actions').append( $home_button ) )
+                  var $header_button,
+                      _title_ = ( window.sektionsLocalizedData && sektionsLocalizedData.i18n && sektionsLocalizedData.i18n['Drag and drop content'] ) ? sektionsLocalizedData.i18n['Drag and drop content'] : '';
+                  if ( api.czr_sektions ) {
+                        $header_button = $('<span/>', {
+                              class:'customize-controls-home-or-add',
+                              html:'<span class="screen-reader-text">Home</span><span class="material-icons" title="' + _title_ +'">add_circle_outline</span>'
+                        });
+                  } else {
+                        $header_button = $('<span/>', {
+                              class:'customize-controls-home-or-add fas fa-home',
+                              html:'<span class="screen-reader-text">Home</span>'
+                        });
+                  }
+
+                  $.when( $('#customize-header-actions').append( $header_button ) )
                         .done( function() {
-                              $home_button
+                              $header_button
                                     .keydown( function( event ) {
                                           if ( 9 === event.which ) // tab
                                             return;
@@ -32,19 +45,24 @@
                                             this.click();
                                           event.preventDefault();
                                     })
-                                    .on( 'click.customize-controls-home', function() {
-                                          //event.preventDefault();
-                                          //close everything
-                                          if ( api.section.has( api.czr_activeSectionId() ) ) {
-                                                api.section( api.czr_activeSectionId() ).expanded( false );
+                                    .on( 'click.customize-controls-home-or-add', function() {
+                                          if ( api.czr_sektions ) {
+                                                api.previewer.trigger( 'sek-pick-module', {});
                                           } else {
-                                                api.section.each( function( _s ) {
-                                                    _s.expanded( false );
+                                                //event.preventDefault();
+                                                //close everything
+                                                if ( api.section.has( api.czr_activeSectionId() ) ) {
+                                                      api.section( api.czr_activeSectionId() ).expanded( false );
+                                                } else {
+                                                      api.section.each( function( _s ) {
+                                                          _s.expanded( false );
+                                                      });
+                                                }
+                                                api.panel.each( function( _p ) {
+                                                      _p.expanded( false );
                                                 });
                                           }
-                                          api.panel.each( function( _p ) {
-                                                _p.expanded( false );
-                                          });
+
                                     });
                         });
             };
