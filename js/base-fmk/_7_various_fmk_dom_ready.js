@@ -64,7 +64,35 @@
                                           }
 
                                     });
-                        });
+                              // animate on init
+                              // @use button-see-mee css class declared in core in /wp-admin/css/customize-controls.css
+                              _.delay( function() {
+                                    if ( $header_button.hasClass( 'button-see-me') )
+                                      return;
+                                    var _seeMe = function() {
+                                              return $.Deferred(function(){
+                                                    var dfd = this;
+                                                    $header_button.addClass('button-see-me');
+                                                    _.delay( function() {
+                                                          $header_button.removeClass('button-see-me');
+                                                          dfd.resolve();
+                                                    }, 800 );
+                                              });
+                                        },
+                                        i = 0,
+                                        _seeMeLoop = function() {
+                                              _seeMe().done( function() {
+                                                    i--;
+                                                    if ( i >= 0 ) {
+                                                          _.delay( function() {
+                                                                _seeMeLoop();
+                                                          }, 50 );
+                                                    }
+                                              });
+                                        };
+                                    _seeMeLoop();
+                              }, 2000 );
+                        });// done()
             };
 
             fireHeaderButtons();
