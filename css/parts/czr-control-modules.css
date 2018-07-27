@@ -741,7 +741,7 @@ section .czr-sub-set:first-child {
 
 .tabs-style-topline nav a span {
   text-transform: uppercase;
-  letter-spacing: 1px;
+  /*letter-spacing: 1px;*/
   font-weight: 700;
 }
 
