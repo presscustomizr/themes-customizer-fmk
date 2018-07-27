@@ -611,6 +611,11 @@ li#customize-control-tc_theme_options-tc_custom_css textarea {
   margin-bottom: 10px;
 }
 
+/* NIMBLE */
+#customize-theme-controls #accordion-panel-__sektions__ {
+  margin-bottom: 10px;
+}
+
 /* HEADER => HOME AND ADD MODULE BUTTON */
 #customize-header-actions .customize-controls-close {
   left: 45px;
