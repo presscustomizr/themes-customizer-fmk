@@ -2,6 +2,15 @@
 (function (api, $, _) {
       api.CZR_Helpers = api.CZR_Helpers || {};
       api.CZR_Helpers = $.extend( api.CZR_Helpers, {
+            // @params {}. Example :
+            // origin : 'nimble',
+            // what : 'section',
+            // id : params.id,
+            // title: sektionsLocalizedData.i18n['Content for'] + ' ' + moduleName,
+            // panel : sektionsLocalizedData.sektionsPanelId,
+            // priority : 1000,
+            // track : false//don't register in the self.registered()
+            // constructWith : MainSectionConstructor,
             register : function( params ) {
                   if ( ! _.has( params, 'id' ) ) {
                         api.errare( 'register => missing id ', params );
@@ -92,7 +101,7 @@
                               }
 
                               if ( api.section.has( params.id ) ) {
-                                    //api.errare( 'registerSection => ' + params.id + ' is already registered');
+                                    //api.infoLog( 'registerSection => ' + params.id + ' is already registered');
                                     break;
                               }
 
