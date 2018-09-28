@@ -54,23 +54,21 @@
                                           event.preventDefault();
                                     })
                                     .on( 'click.customize-controls-home-or-add', function() {
-                                          if ( api.czr_sektions ) {
-                                                api.previewer.trigger( 'sek-pick-module', {});
+                                          // if ( api.czr_sektions ) {
+                                          //       api.previewer.trigger( 'sek-pick-content', {});
+                                          // }
+                                          //event.preventDefault();
+                                          //close everything
+                                          if ( api.section.has( api.czr_activeSectionId() ) ) {
+                                                api.section( api.czr_activeSectionId() ).expanded( false );
                                           } else {
-                                                //event.preventDefault();
-                                                //close everything
-                                                if ( api.section.has( api.czr_activeSectionId() ) ) {
-                                                      api.section( api.czr_activeSectionId() ).expanded( false );
-                                                } else {
-                                                      api.section.each( function( _s ) {
-                                                          _s.expanded( false );
-                                                      });
-                                                }
-                                                api.panel.each( function( _p ) {
-                                                      _p.expanded( false );
+                                                api.section.each( function( _s ) {
+                                                    _s.expanded( false );
                                                 });
                                           }
-
+                                          api.panel.each( function( _p ) {
+                                                _p.expanded( false );
+                                          });
                                     });
                               // animate on init
                               // @use button-see-mee css class declared in core in /wp-admin/css/customize-controls.css
