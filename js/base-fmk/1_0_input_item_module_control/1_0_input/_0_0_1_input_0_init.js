@@ -140,9 +140,9 @@ $.extend( CZRInputMths , {
 
           //@hack => todo
           //for text area inputs, the synchronizer is buggy
-          if ( is_textarea ) {
-                api.errorLog('TO DO : THE TEXTAREA INPUT ARE NOT IMPLEMENTED YET IN THE SYNCHRONIZER!');
-          }
+          // if ( is_textarea ) {
+          //       api.errorLog('TO DO : THE TEXTAREA INPUT ARE NOT IMPLEMENTED YET IN THE SYNCHRONIZER!');
+          // }
 
           var syncElement = new api.Element( $_input_el );
           input_parent.syncElements = input_parent.syncElements || {};
