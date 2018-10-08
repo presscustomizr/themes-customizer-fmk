@@ -200,13 +200,16 @@ $.extend( CZRModuleMths, {
                         });
                   }
 
-                  api.section( module.control.section() ).expanded.bind(function(to) {
-                        //set module ready on section expansion
-                        if ( 'resolved' != module.isReady.state() ) {
-                              module.embedded.then( function() {
-                                    module.ready();
-                              });
-                        }
+                  // defer the expanded callback when the section is instantiated
+                  api.section( module.control.section(), function( _section_ ) {
+                        _section_.expanded.bind(function(to) {
+                              //set module ready on section expansion
+                              if ( 'resolved' != module.isReady.state() ) {
+                                    module.embedded.then( function() {
+                                          module.ready();
+                                    });
+                              }
+                        });
                   });
             }
 
