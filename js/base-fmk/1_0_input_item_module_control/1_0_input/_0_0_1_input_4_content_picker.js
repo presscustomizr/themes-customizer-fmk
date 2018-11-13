@@ -1,4 +1,4 @@
-/* Fix caching, select2 default one seems to not correctly work, or it doesn't what I think it should */
+/* Fix caching, czrSelect2 default one seems to not correctly work, or it doesn't what I think it should */
 // the content_picker options are set in the module with :
 // $.extend( module.inputOptions, {
 //       'content_picker' : {
@@ -58,7 +58,7 @@ $.extend( CZRInputMths , {
                           name      : 'set_input_value',
                           actions   : function( obj ){
                                 var $_changed_input   = $( obj.dom_event.currentTarget, obj.dom_el ),
-                                    _raw_val          = $( $_changed_input, obj.dom_el ).select2( 'data' ),
+                                    _raw_val          = $( $_changed_input, obj.dom_el ).czrSelect2( 'data' ),
                                     _val_candidate    = {},
                                     _default          = {
                                           id          : '',
@@ -74,7 +74,7 @@ $.extend( CZRInputMths , {
                                     return;
                                 }
 
-                                //normalize and purge useless select2 fields
+                                //normalize and purge useless czrSelect2 fields
                                 //=> skip a possible _custom_ id, used for example in the slider module to set a custom url
                                 _.each( _default, function( val, k ){
                                       if ( '_custom_' !== _raw_val.id ) {
@@ -132,11 +132,11 @@ $.extend( CZRInputMths , {
 
               // reset the rendering status of the defaultContentPickerOption
               // fixes "Set Custom Url" being printed multiple times, @see https://github.com/presscustomizr/nimble-builder/issues/207
-              input.container.find( 'select' ).on('select2:select select2:unselect select2:close select2:open', function (e) {
+              input.container.find( 'select' ).on('czrSelect2:select czrSelect2:unselect czrSelect2:close czrSelect2:open', function (e) {
                     input.defaultValueHasBeenPushed = false;
               });
 
-              input.container.find( 'select' ).select2( {
+              input.container.find( 'select' ).czrSelect2( {
                     placeholder: {
                           id: '-1', // the value of the option
                           title: 'Select'
@@ -234,7 +234,7 @@ $.extend( CZRInputMths , {
                     templateSelection: input.czrFormatContentSelected,
                     templateResult: input.czrFormatContentSelected,
                     escapeMarkup: function ( markup ) { return markup; },
-             });//select2 setup
+             });//czrSelect2 setup
       },
 
       // item is structured this way :

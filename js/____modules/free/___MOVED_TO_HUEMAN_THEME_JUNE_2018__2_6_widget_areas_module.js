@@ -216,8 +216,8 @@ $.extend( CZRWidgetAreaModuleMths, {
 
                           $( 'select[data-type="contexts"]', input.container ).append( $('<option>', _attributes) );
                     });
-                    //fire select2
-                    $( 'select[data-type="contexts"]', input.container ).select2();
+                    //fire czrSelect2
+                    $( 'select[data-type="contexts"]', input.container ).czrSelect2();
             },
 
 
@@ -256,11 +256,11 @@ $.extend( CZRWidgetAreaModuleMths, {
                     }
 
                     if ( refresh ) {
-                          $( 'select[data-type="locations"]', input.container ).select2( 'destroy' );
+                          $( 'select[data-type="locations"]', input.container ).czrSelect2( 'destroy' );
                     }
 
-                    //fire select2
-                    $( 'select[data-type="locations"]', input.container ).select2( {
+                    //fire czrSelect2
+                    $( 'select[data-type="locations"]', input.container ).czrSelect2( {
                       templateResult: setAvailability,
                       templateSelection: setAvailability
                     });
