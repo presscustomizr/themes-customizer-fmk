@@ -14,7 +14,7 @@ $.extend( CZRMultiplePickerMths , {
                 _select  = this.container.find('select');
 
 
-            _select.select2({
+            _select.czrSelect2({
                   closeOnSelect: false,
                   templateSelection: czrEscapeMarkup
             });
