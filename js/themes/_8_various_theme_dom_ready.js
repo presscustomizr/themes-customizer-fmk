@@ -84,7 +84,6 @@
 
             /* NUMBER INPUT */
             api.czrSetupStepper = function( controlId, refresh ) {
-                  //Exclude no-selecter-js
                   var _ctrl = api.control( controlId );
                   $('input[type="number"]', _ctrl.container ).each( function() { $(this).stepper(); });
             };//api.czrSetupStepper()
