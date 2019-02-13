@@ -8,9 +8,7 @@
       api.CZRUploadControl          = api.Control.extend( CZRUploadMths );
       api.CZRLayoutControl          = api.Control.extend( CZRLayoutSelectMths );
       api.CZRMultiplePickerControl  = api.Control.extend( CZRMultiplePickerMths );
-      api.CZRColorAlpha = api.Control.extend({
-            ready: api.ColorControl.prototype.ready,
-      });//api.CZRColorAlpha
+      api.CZRColorAlpha = api.Control.extend({ready: api.ColorControl.prototype.ready});//api.CZRColorAlpha
 
       $.extend( api.controlConstructor, {
             czr_upload     : api.CZRUploadControl,
@@ -18,7 +16,7 @@
             //czr_socials    : api.CZRSocialControl,
             czr_multiple_picker : api.CZRMultiplePickerControl,
             czr_layouts    : api.CZRLayoutControl,
-            czr_color_alpha : api.CZRColorAlpha,
+            wp_color_alpha : api.CZRColorAlpha,
             //czr_background : api.CZRBackgroundControl
       });
 
