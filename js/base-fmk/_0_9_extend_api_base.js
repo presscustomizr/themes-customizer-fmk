@@ -37,7 +37,6 @@
             wp_color_alpha : 'setupColorPickerAlpha',
             wp_color  : 'setupWPColorPicker',//not used for the moment
             content_picker : 'setupContentPicker',
-            tiny_mce_editor : 'setupTinyMceEditor',
             password : '',
             range : 'setupSimpleRange',
             range_slider : 'setupRangeSlider',
