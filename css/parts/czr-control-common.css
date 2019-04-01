@@ -418,6 +418,13 @@ span.czr-notice {
 	display: block;
 	line-height: 18px;
 }
+
+.czr-html-before hr, .czr-html-after hr {
+    border-top: 1px solid #c5c5c5;
+    border-bottom: 1px solid #fafafa;
+    margin: 25px 0;
+}
+
 .czr-customizer-separator-invisible {
 	border:none;
 	margin-top:15px;
