@@ -27,7 +27,8 @@
             textarea  : '',
             check     : 'setupIcheck',
             checkbox     : 'setupIcheck',
-            gutencheck : 'setupGutenCheck',
+            //gutencheck : 'setupGutenCheck', // DEPRECATED since april 2nd 2019
+            nimblecheck : '',//setupNimbleCheck',
             select    : 'setupSelect',
             radio     : 'setupRadio',
             number    : 'setupStepper',
