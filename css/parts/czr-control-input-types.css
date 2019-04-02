@@ -795,11 +795,12 @@ credits : Gutenberg team @wordpress */
       flex-wrap: wrap;
   max-width: 100%;
 }
-.czr-sub-set[data-input-type="nimblecheck"] .czr-notice {
+.czr-sub-set[data-input-type="nimblecheck"] .czr-notice, .czr-sub-set[data-input-type="nimblecheck"] .czr-html-before {
   -ms-flex-preferred-size: 100%;
   flex-basis: 100%;
   -ms-flex-negative: 0;
           flex-shrink: 0;
+  flex: 0 0 100%;
 }
 .nimblecheck-wrap {
   position: relative;
