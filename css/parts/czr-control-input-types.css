@@ -779,7 +779,7 @@ credits : Gutenberg team @wordpress */
 
 
 /* NIMBLECHECK */
-/* Switch Container */
+/* ALIGNEMENT IN MODULES */
 .czr-sub-set[data-input-type="nimblecheck"] {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -802,6 +802,27 @@ credits : Gutenberg team @wordpress */
           flex-shrink: 0;
   flex: 0 0 100%;
 }
+/* ALIGNEMENT IN REGULAR CONTROLS */
+.czr-control-nimblecheck {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  /* flex-direction: column; */
+  -webkit-box-flex: 0;
+      -ms-flex: 0 0 100%;
+          flex: 0 0 100%;
+  -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+  max-width: 100%;
+}
+
+
+/* COMMON RULES TO MODULES AND CONTROLS */
 .nimblecheck-wrap {
   position: relative;
   display: inline-block;
