@@ -67,11 +67,16 @@ $.extend( CZRInputMths , {
                   }
           ];
 
-
-          // Try to find a match with the provided constructor type
+          // 1) Check the input instance to see if the default callback has been overriden in an extended Constructor
+          // ( @see column width module in Nimble Builder to see how the overrides works )
+          // 2) if not, try to find a match with the provided constructor type
           // => fire the relevant callback with the provided input_options
           // input.type_map is declared in extend_api_base
-          if ( api.czrInputMap && _.has( api.czrInputMap, input.type ) ) {
+          if ( input[input.type] && _.isFunction( input[input.type]) ) {
+                try { input[input.type]( options.input_options || null ); } catch( er ) {
+                      api.errare( 'Error in overriden callback method in input init => for input id :' + input.id + ' in module type : ' + input.module.module_type, er );
+                }
+          } else if ( api.czrInputMap && _.has( api.czrInputMap, input.type ) ) {
                 var _meth = api.czrInputMap[ input.type ];
                 if ( _.isFunction( input[_meth]) ) {
                       try { input[_meth]( options.input_options || null ); } catch( er ) {
