@@ -173,6 +173,9 @@ $.extend( CZRModuleMths, {
                                     if ( false !== module.sortable ) {
                                           module._makeItemsSortable();
                                     }
+
+                                    // this event is listened to by Nimble Builder to expand the module once all the items collection is populated
+                                    module.control.container.trigger('items-collection-populated');
                               });
 
                               //populate and instantiate the items now when a module is embedded in a regular control
