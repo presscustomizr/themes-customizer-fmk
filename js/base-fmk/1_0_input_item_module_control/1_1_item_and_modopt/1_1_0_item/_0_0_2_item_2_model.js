@@ -29,11 +29,20 @@ $.extend( CZRItemMths , {
             });
       },
 
+      // fired on click event
+      // @see initialize()
+      toggleRemoveAlert : function() {
+            var _isVisible = this.removeDialogVisible();
+            this.module.closeRemoveDialogs();
+            this.removeDialogVisible( ! _isVisible );
+      },
+
       //fired on click dom event
       //for dynamic multi input modules
       //@return void()
       //@param params : { dom_el : {}, dom_event : {}, event : {}, model {} }
       removeItem : function( params ) {
+            params = params || {};
             var item = this,
                 module = this.module,
                 _new_collection = _.clone( module.itemCollection() );

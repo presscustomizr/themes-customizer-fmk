@@ -72,11 +72,7 @@ $.extend( CZRItemMths , {
                         trigger   : 'click keydown',
                         selector  : [ '.' + item.module.control.css_attr.display_alert_btn, '.' + item.module.control.css_attr.cancel_alert_btn ].join(','),
                         name      : 'toggle_remove_alert',
-                        actions   : function() {
-                              var _isVisible = this.removeDialogVisible();
-                              this.module.closeRemoveDialogs();
-                              this.removeDialogVisible( ! _isVisible );
-                        }
+                        actions   : ['toggleRemoveAlert']
                   },
                   //removes item and destroys its view
                   {
