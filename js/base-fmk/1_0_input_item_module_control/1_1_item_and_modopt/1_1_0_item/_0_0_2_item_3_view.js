@@ -78,7 +78,7 @@ $.extend( CZRItemMths , {
                         if ( 1 > $( '#tmpl-' + _template_selector ).length ) {
                             dfd.reject( 'Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + _template_selector );
                         }
-                        appendAndResolve( wp.template( _template_selector )( item_model_for_template_injection ) );
+                        appendAndResolve( wp.template( _template_selector )( $.extend( item_model_for_template_injection, { is_sortable : module.sortable } ) ) );
                   } else {
 
                         // allow plugin to alter the ajax params before fetching
@@ -103,7 +103,7 @@ $.extend( CZRItemMths , {
                         } else {
                               api.CZR_Helpers.getModuleTmpl( requestParams ).done( function( _serverTmpl_ ) {
                                     //console.log( 'renderItemWrapper => success response =>', module.id, _serverTmpl_);
-                                    appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( { is_sortable : module.sortable } ) );
+                                    appendAndResolve( api.CZR_Helpers.parseTemplate( _serverTmpl_ )(  $.extend( item_model_for_template_injection, { is_sortable : module.sortable } ) ) );
                               }).fail( function( _r_ ) {
                                     //console.log( 'renderItemWrapper => fail response =>', _r_);
                                     dfd.reject( 'renderItemWrapper => Problem when fetching the rud-item-part tmpl from server for module : '+ module.id );
@@ -348,7 +348,7 @@ $.extend( CZRItemMths , {
                   if ( 1 > $( '#tmpl-' + tmplSelectorSuffix ).length ) {
                         dfd.reject( 'renderItemContent => No itemInputList content template defined for module ' + module.id + '. The template script id should be : #tmpl-' + tmplSelectorSuffix );
                   } else {
-                        appendAndResolve( wp.template( tmplSelectorSuffix )( item_model_for_template_injection ) );
+                        appendAndResolve( wp.template( tmplSelectorSuffix )( $.extend( item_model_for_template_injection, { control_id : module.control.id } ) ) );
                   }
 
             } else {
