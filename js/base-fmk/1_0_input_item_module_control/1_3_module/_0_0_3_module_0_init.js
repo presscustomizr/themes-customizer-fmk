@@ -50,13 +50,14 @@ $.extend( CZRModuleMths, {
             $.extend( module, constructorOptions || {} );
 
             //extend the module with new template Selectors
+            //can have been overriden at this stage from a module constructor
             $.extend( module, {
-                  crudModulePart : '', //'czr-crud-module-part',//create, read, update, delete
-                  rudItemPart : '',// 'czr-rud-item-part',//read, update, delete
-                  ruItemPart : '',// 'czr-ru-item-part',//read, update <= ONLY USED IN THE WIDGET MODULE
-                  alertPart : '',// 'czr-rud-item-alert-part',//used both for items and modules removal
-                  itemInputList : '',//is specific for each crud module
-                  modOptInputList : ''//is specific for each module
+                  crudModulePart : module.crudModulePart || '', //'czr-crud-module-part',//create, read, update, delete
+                  rudItemPart : module.rudItemPart || '',// 'czr-rud-item-part',//read, update, delete
+                  ruItemPart : module.ruItemPart || '',// 'czr-ru-item-part',//read, update <= ONLY USED IN THE WIDGET MODULE
+                  alertPart : module.alertPart || '',// 'czr-rud-item-alert-part',//used both for items and modules removal
+                  itemInputList : module.itemInputList || '',//is specific for each crud module
+                  modOptInputList : module.modOptInputList || ''//is specific for each module
             } );
 
             //embed : define a container, store the embed state, fire the render method
