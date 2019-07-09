@@ -123,6 +123,11 @@ $.extend( CZRModuleMths, {
                     if ( module.czr_Item.has(_item.id) && 'expanded' == module.czr_Item(_item.id)._getViewState(_item.id) )
                       module.czr_Item( _item.id ).viewState.set( 'closed' ); // => will fire the cb toggleItemExpansion
               } );
+
+              // 'czr-all-items-closed' has been introduced when coding the Simple Nimble slider module. @see https://github.com/presscustomizr/nimble-builder/issues/82
+              // When using the text editor in the items of in a multi-item module
+              // We need to clear the editor instances each time all items are closed, before opening a new one
+              api.trigger('czr-all-items-closed', { module_id : module.id } );
               return this;
       },
 
