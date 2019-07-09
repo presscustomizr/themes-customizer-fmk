@@ -204,19 +204,27 @@ $.extend( CZRInputMths , {
               canUpload     : true
         };
 
-        api.CZR_Helpers.getModuleTmpl( {
-              tmpl : 'img-uploader',
-              module_type: 'all_modules',
-              module_id : input.module.id
-        } ).done( function( _serverTmpl_ ) {
-              //console.log( 'renderModuleParts => success response =>', input.module.id, _serverTmpl_);
-              $_view_el.html( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( _template_params ) );
+        if ( $('#tmpl-czr-img-uploader').length > 0 ) {
+              $_view_el.html( wp.template( 'czr-img-uploader' )( _template_params ) );
               input.tmplRendered.resolve();
               input.container.trigger( input.id + ':content_rendered' );
-        }).fail( function( _r_ ) {
-              //console.log( 'renderModuleParts => fail response =>', _r_);
-              input.tmplRendered.reject( 'renderImageUploaderTemplate => Problem when fetching the tmpl from server for module : '+ input.module.id );
-        });
+        } else {
+              api.CZR_Helpers.getModuleTmpl( {
+                    tmpl : 'img-uploader',
+                    module_type: 'all_modules',
+                    module_id : input.module.id
+              } ).done( function( _serverTmpl_ ) {
+                    //console.log( 'renderModuleParts => success response =>', input.module.id, _serverTmpl_);
+                    $_view_el.html( api.CZR_Helpers.parseTemplate( _serverTmpl_ )( _template_params ) );
+                    input.tmplRendered.resolve();
+                    input.container.trigger( input.id + ':content_rendered' );
+              }).fail( function( _r_ ) {
+                    //console.log( 'renderModuleParts => fail response =>', _r_);
+                    input.tmplRendered.reject( 'renderImageUploaderTemplate => Problem when fetching the tmpl from server for module : '+ input.module.id );
+              });
+        }
+
+
         return true;
   },
 
