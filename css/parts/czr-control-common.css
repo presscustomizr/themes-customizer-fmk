@@ -370,6 +370,7 @@ input:-ms-input-placeholder {
 
 .customize-control select {
   cursor: pointer;
+  width: 99%;
 }
 
 
