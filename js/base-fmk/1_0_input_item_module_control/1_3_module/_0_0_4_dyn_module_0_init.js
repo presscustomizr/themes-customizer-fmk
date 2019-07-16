@@ -167,6 +167,14 @@ $.extend( CZRDynModuleMths, {
             module.trigger( 'pre-item-input-collection-ready' );
       },
 
+      // Intended to be overriden in a module
+      // introduced in July 2019 to make it simple for a multi-item module to set a default pre-item
+      // typically, in the slider image, this is a way to have a default image when adding an item
+      // @see https://github.com/presscustomizr/nimble-builder/issues/479
+      getPreItem : function() {
+            return this.preItem();
+      },
+
 
       // overridable method introduced with the flat skope
       // problem to solve in skope => an item, can't always be instantiated in a given context.
@@ -184,7 +192,7 @@ $.extend( CZRDynModuleMths, {
                   return dfd.reject().promise();
             }
             var module = this,
-                item_candidate = module.preItem(),
+                item_candidate = module.getPreItem(),
                 collapsePreItem = function() {
                       module.preItemExpanded.set( false );
                       //module.toggleSuccessMessage('off');
