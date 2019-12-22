@@ -374,12 +374,12 @@ input:-ms-input-placeholder {
 }
 
 /* Nov-dec 2019 => adapt for WP 5.3 */
-.czr-input .wp-picker-container .wp-color-result.button {
+.czr-input .wp-picker-container .wp-color-result.button, .customize-control .wp-color-result.button {
   border-color: #ccc;
   min-height: 25px;
 }
 
-.czr-input .wp-color-result-text {
+.czr-input .wp-color-result-text, .customize-control .wp-color-result-text {
   line-height: 24px;
   height: 24px;
 }
