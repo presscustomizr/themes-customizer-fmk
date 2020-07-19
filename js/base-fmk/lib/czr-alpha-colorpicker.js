@@ -13,11 +13,11 @@
  * Overwrite Automattic Iris for enabled Alpha Channel in wpColorPicker
  * activated when data-alpha is true
  *
- * Version: 2.1.3
+ * Version: v2.1.4
  * https://github.com/kallookoo/wp-color-picker-alpha
  * Licensed under the GPLv2 license.
  */
-/*! wp-color-picker-alpha 2.1.3, https://github.com/kallookoo/wp-color-picker-alpha, GPLv2 Licensed */
+/*! wp-color-picker-alpha v2.1.4, https://github.com/kallookoo/wp-color-picker-alpha, GPLv2 Licensed */
 ( function( $ ) {
   // Prevent double-init.
   if ( $.wp.wpColorPicker.prototype._hasAlpha ) {
@@ -217,7 +217,7 @@
 
             self.toggler.find( 'span.color-alpha' ).css( {
               'width'                     : '30px',
-              'height'                    : '24px',
+              'height'                    : '100%',
               'position'                  : 'absolute',
               'top'                       : 0,
               'left'                      : 0,
