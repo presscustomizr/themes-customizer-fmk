@@ -31,14 +31,15 @@
     _wrap = '<div class="wp-picker-container" />',
     _button = '<input type="button" class="button button-small" />',
     // Prevent CSS issues in < WordPress 4.9
-    _deprecated = ( wpColorPickerL10n.current !== undefined );
+    _deprecated = ( nb_wpColorPickerL10n.current !== undefined );
     // Declare some global variables when is deprecated or not
+    var _before;
     if ( _deprecated ) {
-      var _before = '<a tabindex="0" class="wp-color-result" />';
+        _before = '<a tabindex="0" class="wp-color-result" />';
     } else {
-      var _before = '<button type="button" class="button wp-color-result" aria-expanded="false"><span class="wp-color-result-text"></span></button>',
-        _wrappingLabel = '<label></label>',
-        _wrappingLabelText = '<span class="screen-reader-text"></span>';
+        _before = '<button type="button" class="button wp-color-result" aria-expanded="false"><span class="wp-color-result-text"></span></button>';
+        var _wrappingLabel = '<label></label>',
+            _wrappingLabelText = '<span class="screen-reader-text"></span>';
     }
   /**
    * Overwrite Color
@@ -113,8 +114,8 @@
         self.toggler         = $( _before )
           .insertBefore( el )
           .css( { backgroundColor : self.initialValue } )
-          .attr( 'title', wpColorPickerL10n.pick )
-          .attr( 'data-current', wpColorPickerL10n.current );
+          .attr( 'title', nb_wpColorPickerL10n.pick )
+          .attr( 'data-current', nb_wpColorPickerL10n.current );
         self.pickerContainer = $( _after ).insertAfter( el );
         self.button          = $( _button ).addClass('hidden');
       } else {
@@ -128,7 +129,7 @@
           // Insert the default label text.
           self.wrappingLabelText = $( _wrappingLabelText )
             .insertBefore( el )
-            .text( wpColorPickerL10n.defaultLabel );
+            .text( nb_wpColorPickerL10n.defaultLabel );
         }
 
         /*
@@ -146,7 +147,7 @@
           .insertBefore( self.wrappingLabel )
           .css( { backgroundColor: self.initialValue } );
         // Set the toggle button span element text.
-        self.toggler.find( '.wp-color-result-text' ).text( wpColorPickerL10n.pick );
+        self.toggler.find( '.wp-color-result-text' ).text( nb_wpColorPickerL10n.pick );
         // Set up the Iris container and insert it after the wrapping label.
         self.pickerContainer = $( _after ).insertAfter( self.wrappingLabel );
         // Store a reference to the Clear/Default button.
@@ -155,14 +156,14 @@
 
       // Set up the Clear/Default button.
       if ( self.options.defaultColor ) {
-        self.button.addClass( 'wp-picker-default' ).val( wpColorPickerL10n.defaultString );
+        self.button.addClass( 'wp-picker-default' ).val( nb_wpColorPickerL10n.defaultString );
         if ( ! _deprecated ) {
-          self.button.attr( 'aria-label', wpColorPickerL10n.defaultAriaLabel );
+          self.button.attr( 'aria-label', nb_wpColorPickerL10n.defaultAriaLabel );
         }
       } else {
-        self.button.addClass( 'wp-picker-clear' ).val( wpColorPickerL10n.clear );
+        self.button.addClass( 'wp-picker-clear' ).val( nb_wpColorPickerL10n.clear );
         if ( ! _deprecated ) {
-          self.button.attr( 'aria-label', wpColorPickerL10n.clearAriaLabel );
+          self.button.attr( 'aria-label', nb_wpColorPickerL10n.clearAriaLabel );
         }
       }
 
