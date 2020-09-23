@@ -43,7 +43,8 @@
             range_slider : 'setupRangeSlider',
             hidden : '',
             h_alignment : 'setupHAlignement',
-            h_text_alignment : 'setupHAlignement'
+            h_text_alignment : 'setupHAlignement',
+            inactive : '' // introduced sept 2020 for https://github.com/presscustomizr/nimble-builder-pro/issues/67
       });
 
 

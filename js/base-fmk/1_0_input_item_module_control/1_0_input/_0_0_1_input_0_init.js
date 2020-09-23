@@ -172,6 +172,11 @@ $.extend( CZRInputMths , {
           if ( ! input.enabled() )
             return;
 
+          // September 2020 => introduced an "inactive" input type in order to display pro info for Nimble
+          // this input should be "hidden" type, and should not trigger an API change.
+          if ( 'inactive' === input.type )
+            return;
+
           //make sure the _new_model is an object and is not empty
           _new_model =  ( ! _.isObject(_new_model) || _.isEmpty(_new_model) ) ? {} : _new_model;
           //set the new val to the changed property
