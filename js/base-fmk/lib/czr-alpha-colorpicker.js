@@ -230,7 +230,7 @@
             self.toggler.css( { backgroundColor : ui.color.toString() } );
           }
 
-          if ( $.isFunction( self.options.change ) ) {
+          if ( typeof self.options.change === "function" ) {
             self.options.change.call( this, event, ui );
           }
         }
@@ -314,7 +314,7 @@
           }
 
           // fire clear callback if we have one
-          if ( $.isFunction( self.options.clear ) )
+          if ( typeof self.options.clear === "function" )
             self.options.clear.call( this, event );
         }
       } );
@@ -342,11 +342,11 @@
             self.toggler.css( 'backgroundColor', '' );
           }
 
-          if ( $.isFunction( self.options.clear ) )
+          if ( typeof self.options.clear === "function" )
             self.options.clear.call( this, event );
 
         } else if ( $( this ).hasClass( 'wp-picker-default' ) ) {
-          self.element.val( self.options.defaultColor ).change();
+          self.element.val( self.options.defaultColor ).trigger('change');
         }
       });
     },//_addListeners

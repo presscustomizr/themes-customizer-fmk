@@ -56,7 +56,7 @@ $.extend( CZRInputMths , {
           input.input_event_map = [
                   //set input value
                   {
-                    trigger   : $.trim( ['change', trigger_map[input.type] || '' ].join(' ') ),//was 'propertychange change click keyup input',//colorpickerchange is a custom colorpicker event @see method setupColorPicker => otherwise we don't
+                    trigger   : ['change', trigger_map[input.type] || '' ].join(' ').trim(),//was 'propertychange change click keyup input',//colorpickerchange is a custom colorpicker event @see method setupColorPicker => otherwise we don't
                     selector  : 'input[data-czrtype], select[data-czrtype], textarea[data-czrtype]',
                     name      : 'set_input_value',
                     actions   : function( obj ) {
