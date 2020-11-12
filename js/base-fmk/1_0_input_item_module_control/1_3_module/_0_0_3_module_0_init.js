@@ -220,7 +220,7 @@ $.extend( CZRModuleMths, {
             /*-----------------------------------------------
             * Maybe resolve isReady() on custom control event
             // To be specified when registering the control
-            // used in Nimble to delay the instantiation of the input when the control accordion is expanded
+            // used in Nimble to delay the instantiation of the input when the control accordion is expanded with event 'sek-accordion-expanded'
             ------------------------------------------------*/
             var _control_event = api.czrModuleMap[ module.module_type ].ready_on_control_event;
             if ( ! _.isUndefined( _control_event ) ) {
@@ -234,6 +234,12 @@ $.extend( CZRModuleMths, {
                                     });
                               }
                         });
+
+                        // Nov 2020 => in WP 5.6, this setup was made too late
+                        // That's why we need to introduce an event + a property informing Nimble that we're ready
+                        // @see Nimble ::scheduleModuleAccordion
+                        _control_.module_ready_on_custom_control_event_is_setup = true;
+                        _control_.container.trigger('module_ready_on_custom_control_event_is_setup');
                   });
             }
 
