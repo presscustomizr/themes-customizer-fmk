@@ -50,7 +50,7 @@
                                           if ( 9 === event.which ) // tab
                                             return;
                                           if ( 13 === event.which ) // enter
-                                            this.click();
+                                            this.trigger('click');
                                           event.preventDefault();
                                     })
                                     .on( 'click.customize-controls-home-or-add', function() {
