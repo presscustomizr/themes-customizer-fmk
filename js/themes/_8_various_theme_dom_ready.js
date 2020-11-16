@@ -21,7 +21,7 @@
             // });
 
             /* RECENTER CURRENT SECTIONS */
-            $('.accordion-section').not('.control-panel').click( function () {
+            $('.accordion-section').not('.control-panel').on('click', function () {
                   _recenter_current_section($(this));
             });
 
