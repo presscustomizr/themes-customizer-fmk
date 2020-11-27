@@ -88,6 +88,13 @@
                   //=> the 'setting' event is used for normal and partial refresh post message actions
                   //=> the partial refresh is fired on the preview if a partial has been registered for this setting in the php customize API
                   //=> When a partial has been registered, the "normal" ( => the not partial refresh ones ) postMessage callbacks will be fired before the ajax ones
+
+                  // Nimble Builder => the 'setting' event triggers a refresh of the previewer dirty values
+                  // The dirties are then used to populate $_POST['customized'] params via $.ajaxPrefilter()
+                  // @see core customize-preview.js
+                  // This is how NB can :
+                  // - dynamically register settings server side in PHP customize manager while doing ajax actions
+                  // - get the customized sektion collection. @see sek_get_skoped_seks() and Nimble_Customizer_Setting::filter_previewed_sek_get_skoped_seks
                   setting.previewer.send( 'setting', [ setting.id, setting() ] );
 
                   dfd.resolve( arguments );
