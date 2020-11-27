@@ -45,6 +45,7 @@
 
                   $.when( $('#customize-header-actions').append( $header_button ) )
                         .done( function() {
+                              $('body').addClass('czr-has-home-btn');
                               $header_button
                                     .keydown( function( event ) {
                                           if ( 9 === event.which ) // tab
@@ -101,7 +102,11 @@
                         });// done()
             };
 
-            fireHeaderButtons();
+            // Nov 2020 => remove home button for users of blocksy theme
+            // https://github.com/presscustomizr/themes-customizer-fmk/issues/53
+            if ( !_.contains(['blocksy'], serverControlParams.activeTheme ) ) {
+                fireHeaderButtons();
+            }
 
       });//end of $( function($) ) dom ready
 })( wp, jQuery );
