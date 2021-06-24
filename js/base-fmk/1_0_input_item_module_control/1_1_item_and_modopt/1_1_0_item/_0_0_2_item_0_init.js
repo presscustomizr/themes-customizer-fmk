@@ -88,6 +88,26 @@ $.extend( CZRItemMths , {
                         name      : 'edit_view',
                         actions   : [ 'setViewVisibility' ]
                   },
+                  //clone view
+                  {
+                        trigger   : 'click keydown',
+                        selector  : '.czr-clone-item',
+                        name      : 'clone_view',
+                        actions   : function( args ) {
+                              args = args || {};
+                              var _cloned_item_model = $.extend( {}, true, item() );
+                              _cloned_item_model.id = '';
+                              this.module.addItem( args, _cloned_item_model ).done( function() {
+                                    // Nimble Builder => make sure the dynamic stylesheet is refreshed
+                                    if ( window.sektionsLocalizedData && api.czr_skopeBase ) {
+                                          api.previewer.trigger( 'sek-refresh-stylesheet', {
+                                                local_skope_id : api.czr_skopeBase.getSkopeProperty( 'skope_id' ),
+                                                location_skope_id : sektionsLocalizedData.globalSkopeId
+                                          });
+                                    }
+                              });
+                        }
+                  },
                   //tabs navigation
                   {
                         trigger   : 'click keydown',

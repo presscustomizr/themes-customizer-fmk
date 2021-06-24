@@ -186,7 +186,8 @@ $.extend( CZRDynModuleMths, {
       //the item is manually added.
       //@return a promise() with the item_id as param
       //@param params : { dom_el : {}, dom_event : {}, event : {}, model {} }
-      addItem : function( params ) {
+      //@param _cloned_item_model = { id : '', title : '', ... }
+      addItem : function( params, _cloned_item_model ) {
             var dfd = $.Deferred();
             if ( ! this.itemCanBeInstantiated() ) {
                   return dfd.reject().promise();
@@ -197,7 +198,10 @@ $.extend( CZRDynModuleMths, {
                       module.preItemExpanded.set( false );
                       //module.toggleSuccessMessage('off');
                 };
-
+            // June 2021 => introduction of clone item
+            if ( _cloned_item_model && _.has( _cloned_item_model, 'id' ) ) {
+                  item_candidate = _cloned_item_model;
+            }
             if ( _.isEmpty( item_candidate ) || ! _.isObject( item_candidate ) ) {
                   api.errorLog( 'addItem : an item_candidate should be an object and not empty. In : ' + module.id +'. Aborted.' );
                   return dfd.reject().promise();

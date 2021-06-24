@@ -78,7 +78,8 @@ $.extend( CZRItemMths , {
                         if ( 1 > $( '#tmpl-' + _template_selector ).length ) {
                             dfd.reject( 'Missing template for item ' + item.id + '. The provided template script has no been found : #tmpl-' + _template_selector );
                         }
-                        appendAndResolve( wp.template( _template_selector )( $.extend( item_model_for_template_injection, { is_sortable : module.sortable } ) ) );
+                        var items_are_clonable = api.czrModuleMap[module.module_type] && api.czrModuleMap[module.module_type].items_are_clonable;
+                        appendAndResolve( wp.template( _template_selector )( $.extend( item_model_for_template_injection, { is_sortable : module.sortable, items_are_clonable : items_are_clonable } ) ) );
                   } else {
 
                         // allow plugin to alter the ajax params before fetching
